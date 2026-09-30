@@ -228,11 +228,13 @@ const tools: { name: string; qodex?: boolean; values: string[] }[] = [
     color: var(--accent);
   }
 
-  /* Телефон и планшет: карточки листаются, рядом QODEX и одна альтернатива */
+  /* Телефон и планшет: карточки листаются вбок, край следующей виден — понятно, что есть ещё */
   @media (max-width: 960px) {
     .vs-wrap {
       overflow-x: auto;
       scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--gutter);
+      overscroll-behavior-x: contain;
       scrollbar-width: none;
       margin-inline: calc(var(--gutter) * -1);
       padding: 16px var(--gutter);
@@ -255,14 +257,14 @@ const tools: { name: string; qodex?: boolean; values: string[] }[] = [
     .vs__tool {
       display: block;
       flex: none;
-      width: min(46vw, 300px);
+      width: min(calc(100vw - var(--gutter) * 2 - 28px), 340px);
       scroll-snap-align: start;
-      padding: 0 16px 8px;
+      padding: 0 20px 8px;
     }
 
     .vs__tool--qodex {
       margin-block: 0;
-      padding: 0 16px 8px;
+      padding: 0 20px 8px;
     }
 
     .vs__list {
@@ -286,7 +288,7 @@ const tools: { name: string; qodex?: boolean; values: string[] }[] = [
 
     .vs__dd,
     .vs__tool--qodex .vs__dd {
-      font-size: 14px;
+      font-size: 15px;
     }
 
     .vs__name {
