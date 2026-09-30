@@ -1,0 +1,61 @@
+---
+import SectionHead from '../components/SectionHead.astro';
+import ProductCard from '../components/ProductCard.astro';
+---
+
+<section class="section" id="produkty">
+  <div class="container">
+    <SectionHead idx="02" label="Четыре продукта">Четыре продукта — одна цепочка учёта</SectionHead>
+
+    <div class="grid">
+      <ProductCard
+        id="robot"
+        icon="users"
+        index={0}
+        text="Находит жильцов, дома и юрлица, которые должны платить за вывоз ТКО, но не платят. Рост сбора без роста тарифа"
+        figure={{ big: '+10%', post: 'жильцов в базе за один день сверки' }}
+      />
+      <ProductCard
+        id="tracker"
+        icon="truck"
+        index={1}
+        text="Камеры на мусоровозе снимают сами, ИИ считает контейнеры и сверяет с планом маршрута. Платите перевозчику за фактический вывоз и видите левак"
+        figure={{ big: '+17%', post: 'контейнеров сверх плана' }}
+      />
+      <ProductCard
+        id="tonn"
+        icon="scale"
+        index={2}
+        text="Номер, фото и вес машины на весовой — без ручного ввода. Платите объекту только за реальный вес"
+        figure={{ big: '−57%', post: 'тоннажа в актах' }}
+      />
+      <ProductCard
+        id="kodeks"
+        icon="database"
+        index={3}
+        text="Принимает Excel объекта, проверяет ошибки и дубли и отправляет данные во ФГИС УТКО по API. Данные объектов уходят в срок"
+        figure={{ pre: 'Подключение за', big: '15 минут' }}
+      />
+    </div>
+  </div>
+</section>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  @media (max-width: 1100px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 620px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

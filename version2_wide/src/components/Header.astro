@@ -1,0 +1,478 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { CONTACTS, PRODUCTS, PRODUCT_ORDER, productHref, withBase } from '../config/site';
+
+const links = [
+  { href: '#balans', label: 'Как это работает' },
+  { href: '#pilot', label: 'Пилот' },
+  { href: '#bezopasnost', label: 'Безопасность' },
+  { href: '#o-kompanii', label: 'О компании' },
+  { href: '#kontakty', label: 'Контакты' },
+];
+---
+
+<header class="hdr" data-hdr>
+  <div class="container hdr__in">
+    <a href={withBase('/')} class="hdr__logo" aria-label="QODEX — на главную"><Logo height={19} /></a>
+
+    <nav class="hdr__nav" aria-label="Основное меню">
+      <ul class="hdr__list">
+        <li class="dd" data-dd>
+          <a href="#produkty" class="hdr__link">Продукты</a>
+          <button class="dd__toggle" type="button" aria-expanded="false" aria-controls="dd-products" aria-label="Список продуктов">
+            <Icon name="chevron-down" size={16} />
+          </button>
+          <div class="dd__menu" id="dd-products">
+            <ul>
+              {
+                PRODUCT_ORDER.map((id) => (
+                  <li>
+                    <a
+                      href={productHref(id, 'menu')}
+                      class="dd__item"
+                      style={`--pc:${PRODUCTS[id].color}`}
+                      data-goal="product_landing"
+                      data-goal-product={id}
+                    >
+                      <span class="tag__dot" aria-hidden="true" />
+                      <span class="dd__name">{PRODUCTS[id].name}</span>
+                      <span class="dd__host label">{PRODUCTS[id].url.replace('https://', '')}</span>
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+        </li>
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} class="hdr__link">
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="hdr__actions">
+      <a href={CONTACTS.phoneHref} class="hdr__phone" data-goal="phone_click">
+        <Icon name="phone" size={17} />
+        <span class="hdr__phone-text">{CONTACTS.phone}</span>
+        <span class="visually-hidden hdr__phone-sr">Позвонить {CONTACTS.phone}</span>
+      </a>
+      <a href="#forma" class="btn btn--primary btn--sm hdr__cta" data-goal="pilot_click">Запустить пилот</a>
+      <button class="hdr__burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Меню" data-burger>
+        <Icon name="menu" size={22} class="i-open" />
+        <Icon name="x" size={22} class="i-close" />
+      </button>
+    </div>
+  </div>
+
+  <div class="mnav" id="mnav" data-mnav hidden>
+    <div class="container">
+      <p class="label mnav__label">Продукты</p>
+      <ul class="mnav__products">
+        {
+          PRODUCT_ORDER.map((id) => (
+            <li>
+              <a
+                href={productHref(id, 'menu')}
+                style={`--pc:${PRODUCTS[id].color}`}
+                data-goal="product_landing"
+                data-goal-product={id}
+              >
+                <span class="tag__dot" aria-hidden="true" />
+                {PRODUCTS[id].name}
+                <Icon name="arrow-up-right" size={16} />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <ul class="mnav__links">
+        <li><a href="#produkty">Все продукты</a></li>
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href}>{l.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</header>
+
+<style>
+  .hdr {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: var(--header-h);
+    border-bottom: 1px solid transparent;
+    transition:
+      background-color 0.3s,
+      border-color 0.3s,
+      backdrop-filter 0.3s;
+  }
+
+  .hdr.is-scrolled,
+  .hdr.is-open {
+    background: rgb(228 230 234 / 0.82);
+    backdrop-filter: saturate(1.6) blur(14px);
+    -webkit-backdrop-filter: saturate(1.6) blur(14px);
+    border-bottom-color: var(--line);
+  }
+
+  .hdr__in {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    height: 100%;
+  }
+
+  .hdr__logo {
+    display: flex;
+    color: var(--ink);
+    flex: none;
+  }
+
+  .hdr__nav {
+    flex: 1;
+  }
+
+  .hdr__list {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .hdr__link {
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    letter-spacing: -0.005em;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+
+  .hdr__link:hover {
+    background: rgb(21 24 26 / 0.05);
+    color: var(--ink);
+  }
+
+  .dd {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .dd .hdr__link {
+    padding-right: 4px;
+  }
+
+  .dd__toggle {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--subtle);
+  }
+
+  .dd__toggle :global(svg) {
+    transition: transform 0.3s var(--ease-out);
+  }
+
+  .dd__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: -8px;
+    min-width: 320px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px) scale(0.98);
+    transform-origin: top left;
+    transition:
+      opacity 0.2s,
+      transform 0.3s var(--ease-out),
+      visibility 0.2s;
+  }
+
+  .dd__menu::before {
+    content: '';
+    position: absolute;
+    inset: -12px 0 auto;
+    height: 12px;
+  }
+
+  .dd:hover .dd__menu,
+  .dd.is-open .dd__menu,
+  .dd:focus-within .dd__menu {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  .dd:hover .dd__toggle :global(svg),
+  .dd.is-open .dd__toggle :global(svg) {
+    transform: rotate(180deg);
+  }
+
+  .dd__item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    transition: background-color 0.2s;
+  }
+
+  .dd__item:hover {
+    background: var(--paper);
+  }
+
+  .dd__name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: -0.015em;
+  }
+
+  .dd__host {
+    grid-column: 2;
+    font-size: 13px;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--subtle);
+  }
+
+  .hdr__actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-left: auto;
+  }
+
+  .hdr__phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hdr__phone :global(svg) {
+    color: var(--subtle);
+  }
+
+  .hdr__phone:hover {
+    color: var(--c-robot);
+  }
+
+  .hdr__burger {
+    display: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-right: -10px;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .hdr__burger :global(.i-close) {
+    display: none;
+  }
+
+  .hdr.is-open .hdr__burger :global(.i-open) {
+    display: none;
+  }
+
+  .hdr.is-open .hdr__burger :global(.i-close) {
+    display: block;
+  }
+
+  /* Мобильное меню */
+  .mnav {
+    position: absolute;
+    inset: 100% 0 auto;
+    max-height: calc(100dvh - var(--header-h));
+    overflow-y: auto;
+    padding: 20px 0 32px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 24px 48px -24px rgb(21 24 26 / 0.25);
+    animation: mnav-in 0.35s var(--ease-out);
+  }
+
+  @keyframes mnav-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+
+  .mnav__label {
+    color: var(--subtle);
+    margin-bottom: 8px;
+  }
+
+  .mnav__products {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .mnav__products a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 52px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .mnav__products a :global(svg) {
+    margin-left: auto;
+    color: var(--subtle);
+  }
+
+  .mnav__links a {
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    border-bottom: 1px solid var(--line);
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  @media (max-width: 1120px) {
+    .hdr__nav {
+      display: none;
+    }
+
+    .hdr__burger {
+      display: grid;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hdr__phone-text {
+      display: none;
+    }
+
+    .hdr__phone {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: var(--surface);
+    }
+
+    .hdr__phone :global(svg) {
+      color: var(--ink);
+    }
+
+    .hdr__actions {
+      gap: 8px;
+    }
+
+    .hdr__cta {
+      padding: 0 14px;
+    }
+
+    .mnav__products {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .hdr__in {
+      gap: 12px;
+    }
+
+    .hdr__logo :global(svg) {
+      width: 76px;
+      height: auto;
+    }
+
+    .hdr__actions {
+      gap: 6px;
+    }
+
+    .hdr__cta {
+      padding: 0 12px;
+      font-size: 13.5px;
+    }
+
+    .hdr__burger {
+      margin-right: -8px;
+    }
+  }
+</style>
+
+<script>
+  const hdr = document.querySelector<HTMLElement>('[data-hdr]')!;
+  const burger = hdr.querySelector<HTMLButtonElement>('[data-burger]')!;
+  const mnav = hdr.querySelector<HTMLElement>('[data-mnav]')!;
+  const dd = hdr.querySelector<HTMLElement>('[data-dd]')!;
+  const ddToggle = dd.querySelector<HTMLButtonElement>('.dd__toggle')!;
+
+  const onScroll = () => hdr.classList.toggle('is-scrolled', window.scrollY > 8);
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  const setMenu = (open: boolean) => {
+    mnav.hidden = !open;
+    hdr.classList.toggle('is-open', open);
+    burger.setAttribute('aria-expanded', String(open));
+  };
+  burger.addEventListener('click', () => setMenu(mnav.hidden));
+  mnav.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('a')) setMenu(false);
+  });
+
+  const setDd = (open: boolean) => {
+    dd.classList.toggle('is-open', open);
+    ddToggle.setAttribute('aria-expanded', String(open));
+  };
+  ddToggle.addEventListener('click', () => setDd(!dd.classList.contains('is-open')));
+  document.addEventListener('click', (e) => {
+    if (!dd.contains(e.target as Node)) setDd(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    setDd(false);
+    if (!mnav.hidden) {
+      setMenu(false);
+      burger.focus();
+    }
+  });
+</script>

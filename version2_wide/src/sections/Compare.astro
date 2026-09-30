@@ -1,0 +1,296 @@
+---
+import SectionHead from '../components/SectionHead.astro';
+import Icon from '../components/Icon.astro';
+import Logo from '../components/Logo.astro';
+
+const criteria = [
+  'Кто фиксирует вывоз',
+  'Сколько контейнеров погружено',
+  'Вывоз сверяется с весом на полигоне',
+  'Поиск неплательщиков в базе',
+  'Вес без ручного ввода на весовой',
+];
+
+const tools: { name: string; qodex?: boolean; values: string[] }[] = [
+  {
+    name: 'QODEX',
+    qodex: true,
+    values: [
+      'Камеры на машине, без участия водителя',
+      'ИИ считает по видео, 96,4%',
+      'Tracker + TONN',
+      'РО-БОТ: вся база за дни',
+      'TONN',
+    ],
+  },
+  {
+    name: '«Водитель ТКО» (РЭО)',
+    values: ['Водитель фотографирует вручную', 'По фото водителя', '—', '—', '—'],
+  },
+  { name: 'ГЛОНАСС-трек', values: ['Только трек проезда', 'Не видно', '—', '—', '—'] },
+  { name: 'Ручная сверка', values: ['—', '—', 'Выборочно, вручную', 'Месяцы работы', '—'] },
+];
+---
+
+<section class="section" aria-labelledby="sravnenie-title">
+  <div class="container">
+    <SectionHead idx="10" label="Сравнение" titleId="sravnenie-title">
+      Бесплатные инструменты видят часть картины — QODEX видит всю цепочку
+      <Fragment slot="lead">
+        Мы не заменяем приложение РЭО «Водитель ТКО» и ГЛОНАСС, а закрываем то, чего они не видят.
+      </Fragment>
+    </SectionHead>
+
+    <div class="vs-wrap" data-vs-scroll>
+      <div class="vs" data-reveal>
+        <div class="vs__labels" aria-hidden="true">
+          <span class="vs__corner"></span>
+          {criteria.map((c) => <span class="vs__label">{c}</span>)}
+        </div>
+        {
+          tools.map((t) => (
+            <article class:list={['vs__tool', { 'vs__tool--qodex': t.qodex }]}>
+              <h3 class="vs__name">
+                {t.qodex ? (
+                  <>
+                    <Logo height={20} class="vs__logo" />
+                    <span class="visually-hidden">QODEX</span>
+                  </>
+                ) : (
+                  t.name
+                )}
+              </h3>
+              <dl class="vs__list">
+                {t.values.map((v, i) => (
+                  <div class:list={['vs__cell', { 'is-none': v === '—' }]}>
+                    <dt class="vs__dt label">{criteria[i]}</dt>
+                    <dd class="vs__dd">
+                      {t.qodex && (
+                        <span class="vs__check">
+                          <Icon name="check" size={14} strokeWidth={2.75} />
+                        </span>
+                      )}
+                      {v === '—' ? (
+                        <>
+                          <span class="vs__none" aria-hidden="true">
+                            —
+                          </span>
+                          <span class="visually-hidden">нет</span>
+                        </>
+                      ) : (
+                        <span>{v}</span>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Колонки-карточки выровнены по строкам критериев (subgrid) */
+  .vs {
+    display: grid;
+    grid-template-columns: minmax(170px, 0.9fr) minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto repeat(5, auto);
+    column-gap: 12px;
+  }
+
+  .vs__labels,
+  .vs__tool {
+    grid-row: 1 / span 6;
+    display: grid;
+    grid-template-rows: subgrid;
+  }
+
+  .vs__list {
+    display: contents;
+  }
+
+  .vs__corner {
+    display: block;
+  }
+
+  .vs__label {
+    display: flex;
+    align-items: center;
+    padding: 18px 0;
+    border-top: 1px solid var(--line);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .vs__tool {
+    padding: 0 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+
+  .vs__name {
+    display: flex;
+    align-items: center;
+    min-height: 72px;
+    padding: 20px 0 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--subtle);
+  }
+
+  .vs__cell {
+    display: flex;
+    align-items: center;
+    padding: 18px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .vs__dt {
+    display: none;
+  }
+
+  .vs__dd {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .vs__none {
+    color: #b3b7be;
+  }
+
+  /* QODEX — фирменная фиолетовая колонка, приподнята и светится */
+  .vs__tool--qodex {
+    position: relative;
+    z-index: 1;
+    margin-block: -14px;
+    padding: 14px 24px;
+    border-color: var(--accent);
+    background:
+      radial-gradient(120% 60% at 100% 0%, rgb(255 255 255 / 0.22), transparent 60%),
+      var(--accent);
+    box-shadow: 0 34px 70px -28px rgb(109 40 246 / 0.6);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* точечная текстура */
+  .vs__tool--qodex::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(rgb(255 255 255 / 0.22) 1px, transparent 1.4px);
+    background-size: 12px 12px;
+    mask-image: linear-gradient(200deg, #000 0%, transparent 45%);
+  }
+
+  .vs__tool--qodex .vs__name {
+    color: #fff;
+  }
+
+  .vs__tool--qodex :global(.vs__logo) {
+    height: 20px;
+    width: auto;
+  }
+
+  .vs__tool--qodex :global(.vs__logo path) {
+    fill: #fff;
+  }
+
+  .vs__tool--qodex .vs__cell {
+    border-top-color: rgb(255 255 255 / 0.2);
+  }
+
+  .vs__tool--qodex .vs__dd {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .vs__check {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    border-radius: 7px;
+    background: #fff;
+    color: var(--accent);
+  }
+
+  /* Телефон и планшет: карточки листаются, рядом QODEX и одна альтернатива */
+  @media (max-width: 960px) {
+    .vs-wrap {
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      margin-inline: calc(var(--gutter) * -1);
+      padding: 16px var(--gutter);
+    }
+
+    .vs-wrap::-webkit-scrollbar {
+      display: none;
+    }
+
+    .vs {
+      display: flex;
+      gap: 10px;
+      width: max-content;
+    }
+
+    .vs__labels {
+      display: none;
+    }
+
+    .vs__tool {
+      display: block;
+      flex: none;
+      width: min(46vw, 300px);
+      scroll-snap-align: start;
+      padding: 0 16px 8px;
+    }
+
+    .vs__tool--qodex {
+      margin-block: 0;
+      padding: 0 16px 8px;
+    }
+
+    .vs__list {
+      display: block;
+    }
+
+    .vs__cell {
+      display: grid;
+      gap: 6px;
+      padding: 14px 0;
+    }
+
+    .vs__dt {
+      display: block;
+      color: var(--subtle);
+    }
+
+    .vs__tool--qodex .vs__dt {
+      color: rgb(255 255 255 / 0.75);
+    }
+
+    .vs__dd,
+    .vs__tool--qodex .vs__dd {
+      font-size: 14px;
+    }
+
+    .vs__name {
+      min-height: 60px;
+    }
+  }
+</style>

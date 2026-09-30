@@ -1,0 +1,192 @@
+---
+// Карточка истории клиента: задача, решение, результат. Без цитат и отзывов.
+// Результат: resultLead — начало предложения крупно (цифра), resultRest — продолжение той же фразы.
+import ProductTag from './ProductTag.astro';
+import type { ProductId } from '../config/site';
+
+interface Props {
+  client: string;
+  product: ProductId;
+  task: string;
+  solution: string;
+  resultLead: string;
+  resultRest: string;
+  feature?: boolean;
+  index?: number;
+  class?: string;
+}
+
+const { client, product, task, solution, resultLead, resultRest, feature = false, index = 0, class: className } = Astro.props;
+---
+
+<article class:list={['story', `p-${product}`, { 'story--feature': feature }, className]} style={`--d:${index}`} data-reveal>
+  <header class="story__head">
+    <h3 class="story__client">{client}</h3>
+    <ProductTag id={product} />
+  </header>
+
+  <dl class="story__rows">
+    <div class="story__row">
+      <dt class="label">Задача</dt>
+      <dd>{task}</dd>
+    </div>
+    <div class="story__row">
+      <dt class="label">Решение</dt>
+      <dd>{solution}</dd>
+    </div>
+    <div class="story__result">
+      <dt class="label">Результат</dt>
+      <dd>
+        <span class="story__lead">{resultLead}</span>{resultRest}
+      </dd>
+    </div>
+  </dl>
+</article>
+
+<style>
+  .story {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: clamp(22px, 2.4vw, 32px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--paper);
+    transition:
+      box-shadow 0.45s var(--ease-out),
+      border-color 0.3s;
+  }
+
+  .story:hover {
+    border-color: color-mix(in oklab, var(--pc) 35%, var(--line));
+    box-shadow: var(--shadow);
+  }
+
+  .story__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .story__client {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .story__rows {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 24px;
+    flex: 1;
+    grid-template-rows: auto 1fr;
+  }
+
+  .story__row {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+  }
+
+  .story__row dt,
+  .story__result dt {
+    color: var(--subtle);
+  }
+
+  .story__row dd {
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .story__row dd::first-letter {
+    text-transform: uppercase;
+  }
+
+  /* Результат — плашка в цвете продукта */
+  .story__result {
+    grid-column: 1 / -1;
+    align-self: end;
+    display: grid;
+    gap: 10px;
+    padding: clamp(18px, 2vw, 26px);
+    border-radius: calc(var(--radius-lg) - 6px);
+    background: var(--pc);
+    color: var(--pc-on);
+  }
+
+  .story__result dt {
+    color: inherit;
+    opacity: 0.8;
+  }
+
+  .story__result dd {
+    font-size: 16px;
+    line-height: 1.45;
+    font-weight: 500;
+    text-wrap: pretty;
+  }
+
+  .story__lead {
+    display: block;
+    margin-bottom: 6px;
+    font-size: clamp(2.2rem, 3.2vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  /* Главная история — крупнее */
+  .story--feature {
+    gap: 28px;
+  }
+
+  .story--feature .story__client {
+    font-size: clamp(1.4rem, 1.8vw, 1.9rem);
+  }
+
+  .story--feature .story__row dd {
+    font-size: 17px;
+  }
+
+  /* плашка результата заполняет всю оставшуюся высоту: подпись сверху, цифра и текст снизу */
+  .story--feature .story__result {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    align-self: stretch;
+    align-content: space-between;
+    min-height: 280px;
+    padding: clamp(24px, 3vw, 40px);
+  }
+
+  /* точечная текстура в верхней части плашки */
+  .story--feature .story__result::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(color-mix(in oklab, var(--pc-on) 22%, transparent) 1.2px, transparent 1.5px);
+    background-size: 14px 14px;
+    mask-image: linear-gradient(200deg, #000 0%, transparent 60%);
+  }
+
+  .story--feature .story__result dd {
+    font-size: clamp(17px, 1.3vw, 20px);
+  }
+
+  .story--feature .story__lead {
+    font-size: clamp(3.2rem, 6vw, 6.5rem);
+    margin-bottom: 12px;
+  }
+
+  @media (max-width: 600px) {
+    .story__rows {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

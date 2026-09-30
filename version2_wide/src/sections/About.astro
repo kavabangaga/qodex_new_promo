@@ -1,0 +1,402 @@
+---
+import SectionHead from '../components/SectionHead.astro';
+import { TIMELINE } from '../data/timeline';
+
+const clients: { name: string; partner?: boolean }[] = [
+  { name: 'РО «Эко-Сити»' },
+  { name: 'Башкирская содовая компания' },
+  { name: 'ООО «НУР»' },
+  { name: 'ЭкоВторИндустрия' },
+  { name: 'Управление отходами Мелеуз' },
+  { name: 'ЭКОИндустрия' },
+  { name: 'Альянс групп' },
+  { name: 'Экотех Мелеуз' },
+  { name: 'Грин Сити' },
+  { name: 'Ростелеком', partner: true },
+];
+---
+
+<section class="section" id="o-kompanii">
+  <!-- Заголовок и хронология: на компьютере блок закрепляется, и лента едет вбок при прокрутке страницы -->
+  <div class="tlx" data-tlx>
+    <div class="tlx__sticky">
+      <div class="container">
+        <SectionHead idx="14" label="О компании">
+          QODEX — IT-компания из Уфы, 73 клиента работают с нашими продуктами
+          <Fragment slot="lead">
+            QODEX (ООО «Кодекс Технологии») с 2020 года автоматизирует учёт отходов: от базы начислений регоператора до
+            весовой на полигоне и передачи данных во ФГИС УТКО. Резидент Сколково, аккредитованная IT-компания.
+          </Fragment>
+        </SectionHead>
+      </div>
+      <div class="container tlx__frame">
+        <div class="tlx__viewport" data-tlx-viewport>
+          <div class="tlx__track" data-tlx-track>
+            <span class="tlx__line" aria-hidden="true"><span class="tlx__fill"></span></span>
+            <ol class="tlx__list">
+            {
+              TIMELINE.map((e, i) => (
+                <li class:list={['tlx__item', { 'is-pending': e.pending }]} data-tlx-item style={`--i:${i}`}>
+                  <span class="tlx__node" aria-hidden="true" />
+                  <span class="tlx__year">{e.year}</span>
+                  <div class="tlx__card">
+                    {e.when && <span class="tlx__when">{e.when}</span>}
+                    <p class="tlx__text">{e.text}</p>
+                  </div>
+                </li>
+              ))
+            }
+            </ol>
+          </div>
+        </div>
+        <p class="tlx__hint" aria-hidden="true">
+          <span class="tlx__hint-bar"><span></span></span>
+          2020 — 2026
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="trust">
+      <p class="trust__label label" data-reveal>Нам доверяют:</p>
+      <ul class="logos">
+        {
+          clients.map((c, i) => (
+            <li class="logos__item" style={`--d:${i % 5}`} data-reveal>
+              <span class="logos__name">{c.name}</span>
+              {c.partner && <span class="logos__partner label">партнёр</span>}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Хронология ───────────────────────────────────────── */
+  .tlx {
+    position: relative;
+  }
+
+  .tlx__sticky {
+    position: relative;
+  }
+
+  .tlx.is-pinned .tlx__sticky {
+    position: sticky;
+    top: var(--tlx-top, calc(var(--header-h) + 24px));
+  }
+
+  .tlx__viewport {
+    overflow: hidden;
+    margin-inline: -8px;
+    padding: 8px;
+  }
+
+  .tlx__track {
+    position: relative;
+    width: max-content;
+    padding-top: clamp(96px, 9vw, 140px);
+    will-change: transform;
+  }
+
+  .tlx__list {
+    display: flex;
+    gap: clamp(16px, 1.6vw, 28px);
+  }
+
+  /* линия времени с заполнением по мере прокрутки */
+  .tlx__line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(clamp(96px, 9vw, 140px) - 28px);
+    height: 2px;
+    background: var(--line-2);
+  }
+
+  .tlx__fill {
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    transform: scaleX(var(--p, 0));
+    transform-origin: left;
+  }
+
+  .tlx__item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: clamp(260px, 24vw, 400px);
+    flex: none;
+  }
+
+  .tlx__node {
+    position: absolute;
+    top: -35px;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    border: 3px solid var(--paper);
+    border-radius: 50%;
+    background: var(--line-2);
+    box-shadow: 0 0 0 1px var(--line-2);
+    transition:
+      background-color 0.4s,
+      box-shadow 0.4s;
+  }
+
+  .tlx__item.is-past .tlx__node,
+  .tlx__item.is-active .tlx__node {
+    background: var(--ink);
+    box-shadow: 0 0 0 1px var(--ink);
+  }
+
+  .tlx__item.is-active .tlx__node {
+    background: var(--accent);
+    box-shadow:
+      0 0 0 1px var(--accent),
+      0 0 0 7px var(--accent-soft);
+  }
+
+  /* крупный год над карточкой */
+  .tlx__year {
+    position: absolute;
+    left: -4px;
+    bottom: calc(100% + 36px);
+    font-size: clamp(3.6rem, 6vw, 6.4rem);
+    font-weight: 700;
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+    color: var(--ink);
+    opacity: 0.14;
+    transition:
+      opacity 0.4s,
+      color 0.4s;
+  }
+
+  .tlx__item.is-active .tlx__year {
+    opacity: 1;
+  }
+
+  .tlx__card {
+    display: grid;
+    gap: 10px;
+    flex: 1;
+    min-height: 150px;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    transition:
+      transform 0.45s var(--ease-out),
+      box-shadow 0.45s var(--ease-out);
+  }
+
+  .tlx__item.is-active .tlx__card {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+  }
+
+  .tlx__when {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .tlx__text {
+    font-size: 16.5px;
+    line-height: 1.45;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  .tlx__item.is-pending .tlx__card {
+    border: 1.5px dashed var(--line-2);
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .tlx__item.is-pending .tlx__text {
+    color: var(--subtle);
+  }
+
+  .tlx__hint {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 28px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--subtle);
+  }
+
+  .tlx__hint-bar {
+    position: relative;
+    width: 120px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--line-2);
+    overflow: hidden;
+  }
+
+  .tlx__hint-bar span {
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleX(var(--p, 0));
+    transform-origin: left;
+  }
+
+  /* Без закрепления (телефон, «уменьшить движение»): лента листается пальцем */
+  .tlx:not(.is-pinned) .tlx__viewport {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .tlx:not(.is-pinned) .tlx__viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tlx:not(.is-pinned) .tlx__item {
+    scroll-snap-align: start;
+  }
+
+  .tlx:not(.is-pinned) .tlx__year {
+    opacity: 1;
+  }
+
+  /* ── Клиенты ──────────────────────────────────────────── */
+  .trust {
+    margin-top: clamp(64px, 7vw, 112px);
+  }
+
+  .trust__label {
+    margin-bottom: 18px;
+    color: var(--subtle);
+  }
+
+  .logos {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border-top: 1px solid var(--line-2);
+    border-left: 1px solid var(--line-2);
+  }
+
+  .logos__item {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 4px;
+    min-height: clamp(96px, 8vw, 132px);
+    padding: 16px;
+    border-right: 1px solid var(--line-2);
+    border-bottom: 1px solid var(--line-2);
+    text-align: center;
+    transition: background-color 0.3s;
+  }
+
+  .logos__item:hover {
+    background: var(--surface);
+  }
+
+  .logos__name {
+    font-size: clamp(15px, 1.1vw, 18px);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--ink-2);
+  }
+
+  .logos__partner {
+    color: var(--subtle);
+  }
+
+  @media (max-width: 900px) {
+    .tlx__item {
+      width: min(78vw, 320px);
+    }
+
+    .logos {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-tlx]');
+
+  if (root) {
+    const sticky = root.querySelector<HTMLElement>('.tlx__sticky')!;
+    const viewport = root.querySelector<HTMLElement>('[data-tlx-viewport]')!;
+    const track = root.querySelector<HTMLElement>('[data-tlx-track]')!;
+    const items = [...root.querySelectorAll<HTMLElement>('[data-tlx-item]')];
+    const pinMq = window.matchMedia('(min-width: 900px) and (prefers-reduced-motion: no-preference)');
+    let overflow = 0;
+    let raf = 0;
+
+    const setActive = (p: number) => {
+      // активный — последний элемент, чей узел уже прошла «игла» прогресса
+      const idx = Math.min(items.length - 1, Math.round(p * (items.length - 1)));
+      items.forEach((el, i) => {
+        el.classList.toggle('is-active', i === idx);
+        el.classList.toggle('is-past', i < idx);
+      });
+      root.style.setProperty('--p', p.toFixed(4));
+    };
+
+    const update = () => {
+      raf = 0;
+      if (!root.classList.contains('is-pinned')) return;
+      const top = parseFloat(getComputedStyle(sticky).top) || 0;
+      const r = root.getBoundingClientRect();
+      const p = overflow ? Math.min(1, Math.max(0, (top - r.top) / overflow)) : 0;
+      track.style.transform = `translate3d(${(-p * overflow).toFixed(1)}px, 0, 0)`;
+      setActive(p);
+    };
+
+    const measure = () => {
+      root.classList.remove('is-pinned');
+      root.style.height = '';
+      track.style.transform = '';
+      const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
+      const room = window.innerHeight - header - 32;
+      // закрепляем, только если весь блок помещается в экран
+      if (!pinMq.matches || sticky.offsetHeight > room) {
+        onNativeScroll();
+        return;
+      }
+      root.classList.add('is-pinned');
+      // блок стоит по центру свободной части экрана
+      const top = header + 16 + Math.max(0, (room - sticky.offsetHeight) / 2);
+      root.style.setProperty('--tlx-top', `${Math.round(top)}px`);
+      overflow = Math.max(0, track.scrollWidth - viewport.clientWidth + 16);
+      root.style.height = `${sticky.offsetHeight + overflow}px`;
+      update();
+    };
+
+    // без закрепления прогресс считается по горизонтальной прокрутке ленты
+    function onNativeScroll() {
+      if (root!.classList.contains('is-pinned')) return;
+      const max = viewport.scrollWidth - viewport.clientWidth;
+      setActive(max > 0 ? viewport.scrollLeft / max : 0);
+    }
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!raf) raf = requestAnimationFrame(update);
+      },
+      { passive: true },
+    );
+    viewport.addEventListener('scroll', onNativeScroll, { passive: true });
+    window.addEventListener('resize', measure);
+    pinMq.addEventListener('change', measure);
+    document.fonts?.ready.then(measure);
+    measure();
+  }
+</script>

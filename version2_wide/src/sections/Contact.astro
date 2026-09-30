@@ -1,0 +1,243 @@
+---
+import LeadForm from '../components/LeadForm.astro';
+import Icon from '../components/Icon.astro';
+import { CONTACTS } from '../config/site';
+---
+
+<section class="section dark cta" data-contact>
+  <div class="cta__bg" aria-hidden="true">
+    <div class="cta__grid-bg"></div>
+    <div class="cta__glow"></div>
+  </div>
+
+  <div class="container">
+    <div class="cta__top">
+      <div class="cta__head">
+        <span class="eyebrow label" data-reveal>
+          <span class="eyebrow__dot" aria-hidden="true"></span>
+          <span>Заявка</span>
+        </span>
+        <h2 class="cta__title" id="forma" data-reveal style="--d:1">
+          Покажем эффект в рублях на одном районе или одной весовой
+        </h2>
+      </div>
+      <div class="cta__aside" data-reveal style="--d:2">
+        <p class="lead">Пилот РО-БОТа — бесплатно. Напишите или позвоните — пришлём NDA и запустим пилот.</p>
+        <p class="cta__proof">
+          <span class="cta__dot" aria-hidden="true"></span>
+          73 клиента работают с продуктами QODEX
+        </p>
+      </div>
+    </div>
+
+    <div class="cta__form" data-reveal style="--d:2">
+      <LeadForm prefix="ft" layout="row" tone="dark" />
+    </div>
+
+    <ul class="cta__contacts" id="kontakty" aria-label="Контакты">
+      <li class="cta__contact" data-reveal>
+        <span class="label">Ваш контакт по пилоту</span>
+        <span class="cta__name">Данил Максадов</span>
+        <a href={CONTACTS.phoneHref} class="cta__big" data-goal="phone_click">
+          {CONTACTS.phone}
+          <Icon name="arrow-up-right" size={22} />
+        </a>
+      </li>
+      <li class="cta__contact" data-reveal style="--d:1">
+        <span class="label">Почта</span>
+        <a href={CONTACTS.emailHref} class="cta__big">
+          {CONTACTS.email}
+          <Icon name="arrow-up-right" size={22} />
+        </a>
+      </li>
+      <li class="cta__contact" data-reveal style="--d:2">
+        <span class="label">Telegram</span>
+        <a href={CONTACTS.telegramHref} class="cta__big" target="_blank" rel="noopener" data-goal="telegram_click">
+          {CONTACTS.telegram}
+          <Icon name="arrow-up-right" size={22} />
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .cta {
+    overflow: hidden;
+    isolation: isolate;
+    margin-inline: clamp(6px, 1vw, 12px);
+    border-radius: clamp(20px, 2.4vw, 32px) clamp(20px, 2.4vw, 32px) 0 0;
+    padding-bottom: clamp(56px, 6vw, 88px);
+  }
+
+  .cta__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .cta__grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 60% at 25% 10%, #000 20%, transparent 80%);
+  }
+
+  .cta__glow {
+    position: absolute;
+    width: 720px;
+    height: 520px;
+    left: -220px;
+    top: -220px;
+    border-radius: 50%;
+    background: var(--c-robot);
+    filter: blur(140px);
+    opacity: 0.4;
+  }
+
+  /* Верх: крупный заголовок слева, подзаголовок справа */
+  .cta__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    gap: 32px clamp(40px, 6vw, 120px);
+    align-items: end;
+    margin-bottom: clamp(40px, 5vw, 72px);
+  }
+
+  .cta__head {
+    display: grid;
+    gap: 22px;
+  }
+
+  .cta__title {
+    max-width: 18em;
+    font-size: clamp(2.2rem, 4.4vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+    color: #fff;
+    text-wrap: balance;
+  }
+
+  .cta__aside {
+    display: grid;
+    gap: 18px;
+    justify-items: start;
+    padding-bottom: 8px;
+  }
+
+  .cta__proof {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .cta__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c-tonn);
+    box-shadow: 0 0 0 4px rgb(18 184 134 / 0.25);
+  }
+
+  /* Горизонтальная форма прямо в тёмном блоке */
+  .cta__form {
+    padding: clamp(22px, 2.6vw, 36px);
+    border: 1px solid var(--night-line-2);
+    border-radius: 28px;
+    background: rgb(255 255 255 / 0.03);
+    backdrop-filter: blur(8px);
+  }
+
+  /* Контакты — крупной полосой */
+  .cta__contacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: clamp(40px, 5vw, 72px);
+    border-top: 1px solid var(--night-line-2);
+  }
+
+  .cta__contact {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    padding: 28px 28px 0 0;
+  }
+
+  .cta__contact + .cta__contact {
+    padding-left: 28px;
+    border-left: 1px solid var(--night-line);
+  }
+
+  .cta__contact .label {
+    color: var(--night-muted);
+  }
+
+  .cta__name {
+    font-size: 15px;
+    font-weight: 500;
+    color: #d6d8dc;
+  }
+
+  .cta__big {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    justify-self: start;
+    font-size: clamp(1.4rem, 2.1vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #fff;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+
+  .cta__big :global(svg) {
+    color: var(--night-muted);
+    transition:
+      transform 0.35s var(--ease-out),
+      color 0.2s;
+  }
+
+  .cta__big:hover {
+    color: #a594ff;
+  }
+
+  .cta__big:hover :global(svg) {
+    color: #a594ff;
+    transform: translate(3px, -3px);
+  }
+
+  @media (max-width: 1100px) {
+    .cta__top {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .cta__contacts {
+      grid-template-columns: 1fr;
+    }
+
+    .cta__contact,
+    .cta__contact + .cta__contact {
+      padding: 22px 0;
+      border-left: 0;
+    }
+
+    .cta__contact + .cta__contact {
+      border-top: 1px solid var(--night-line);
+    }
+
+    .cta__big {
+      white-space: normal;
+    }
+  }
+</style>

@@ -1,0 +1,158 @@
+---
+import SectionHead from '../components/SectionHead.astro';
+import BalanceChain from '../components/BalanceChain.astro';
+---
+
+<section class="section dark bal-sec" id="balans">
+  <div class="bal-sec__bg" aria-hidden="true">
+    <div class="bal-sec__grid"></div>
+    <div class="bal-sec__glow"></div>
+  </div>
+  <div class="container">
+    <SectionHead idx="06" label="Единый баланс ТКО">
+      Единый баланс ТКО: начислено <span class="eq">=</span> вывезено <span class="eq">=</span> взвешено
+      <span class="eq">=</span> передано
+    </SectionHead>
+
+    <BalanceChain
+      links={[
+        {
+          place: 'Лицевой счёт',
+          products: ['robot'],
+          icon: 'file-text',
+          text: 'Все, кто должен платить, есть в базе начислений.',
+        },
+        {
+          place: 'Контейнерная площадка',
+          products: ['tracker'],
+          icon: 'waste-bin',
+          text: 'Вывоз на видео: левак и недовывоз обнаружены.',
+        },
+        {
+          place: 'Весовая',
+          products: ['tonn'],
+          icon: 'scale',
+          text: 'Плата за реальный вес, а не приписанный.',
+        },
+        {
+          place: 'ФГИС УТКО',
+          products: ['kodeks', 'tonn'],
+          icon: 'cloud',
+          text: 'Быстрая отправка данных во ФГИС УТКО.',
+        },
+      ]}
+      result={{ title: 'Итог', text: 'Деньги РО: начисляете и платите по фактическим данным.' }}
+    />
+
+    <div class="bal-cards">
+      <article class="bal-card" data-reveal>
+        <span class="bal-card__mark" aria-hidden="true">?</span>
+        <h3 class="h3">Вывезли 100 контейнеров — а&nbsp;до полигона доехало&nbsp;60?</h3>
+        <p>
+          Tracker и TONN покажут разницу между вывезенным и взвешенным. Разница — это приписки или слив на свалку.
+        </p>
+      </article>
+      <article class="bal-card" data-reveal style="--d:1">
+        <span class="bal-card__mark" aria-hidden="true">!</span>
+        <h3 class="h3">Баланс ТКО собирает и РЭО во ФГИС УТКО.</h3>
+        <p>С QODEX вы увидите расхождения раньше регулятора.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  .bal-sec {
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .bal-sec__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .bal-sec__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, #000 20%, transparent 80%);
+  }
+
+  .bal-sec__glow {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    width: 1100px;
+    height: 420px;
+    transform: translate(-50%, -50%);
+    background: var(--c-robot);
+    filter: blur(140px);
+    opacity: 0.16;
+  }
+
+  .bal-sec :global(.sec-head > .h2) {
+    max-width: 24em;
+  }
+
+  .eq {
+    color: var(--night-muted);
+    font-weight: 400;
+  }
+
+  .bal-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: clamp(56px, 7vw, 88px);
+  }
+
+  .bal-card {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    padding: clamp(22px, 3vw, 32px);
+    padding-left: clamp(72px, 7vw, 88px);
+    border: 1px solid var(--night-line);
+    border-radius: var(--radius-lg);
+    background: rgb(255 255 255 / 0.03);
+    backdrop-filter: blur(6px);
+  }
+
+  .bal-card__mark {
+    position: absolute;
+    left: clamp(20px, 2.4vw, 28px);
+    top: clamp(22px, 3vw, 32px);
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-weight: 800;
+    font-size: 18px;
+  }
+
+  .bal-card .h3 {
+    color: #fff;
+  }
+
+  .bal-card p {
+    color: var(--night-muted);
+    text-wrap: pretty;
+  }
+
+  @media (max-width: 760px) {
+    .bal-cards {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

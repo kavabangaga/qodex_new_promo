@@ -1,0 +1,209 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { CONTACTS, PRODUCTS, PRODUCT_ORDER, productHref, SKOLKOVO_URL, withBase } from '../config/site';
+
+const NB = ' ';
+
+const docs = [
+  { href: withBase('/politika'), label: 'Политика конфиденциальности' },
+  { href: withBase('/soglasie'), label: 'Согласие на обработку персональных данных' },
+  { href: withBase('/soglashenie'), label: 'Пользовательское соглашение' },
+  { href: withBase('/documents'), label: 'Документы' },
+];
+---
+
+<footer class="ftr dark">
+  <div class="container">
+    <div class="ftr__top">
+      <div class="ftr__brand">
+        <a href={withBase('/')} aria-label="QODEX — на главную" class="ftr__logo"><Logo height={22} /></a>
+        <a href={SKOLKOVO_URL} class="ftr__sk" target="_blank" rel="noopener">
+          Резидент Сколково
+          <Icon name="arrow-up-right" size={15} />
+        </a>
+      </div>
+
+      <nav class="ftr__col" aria-label="Продукты">
+        <p class="label ftr__h">Продукты</p>
+        <ul>
+          {
+            PRODUCT_ORDER.map((id) => (
+              <li>
+                <a
+                  href={productHref(id, 'footer')}
+                  style={`--pc:${PRODUCTS[id].color}`}
+                  data-goal="product_landing"
+                  data-goal-product={id}
+                >
+                  <span class="tag__dot" aria-hidden="true" />
+                  {PRODUCTS[id].name}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <div class="ftr__col">
+        <p class="label ftr__h">Контакты</p>
+        <ul>
+          <li><a href={CONTACTS.phoneHref} data-goal="phone_click">{CONTACTS.phone}</a></li>
+          <li><a href={CONTACTS.emailHref}>{CONTACTS.email}</a></li>
+          <li>
+            <a href={CONTACTS.telegramHref} target="_blank" rel="noopener" data-goal="telegram_click">{CONTACTS.telegram}</a>
+          </li>
+        </ul>
+      </div>
+
+      <nav class="ftr__col" aria-label="Документы">
+        <p class="label ftr__h">Документы</p>
+        <ul>
+          {
+            docs.map((d) => (
+              <li>
+                <a href={d.href}>{d.label}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </div>
+
+    <div class="ftr__bottom">
+      <p class="ftr__req">
+        ООО «КОДЕКС ТЕХНОЛОГИИ» · ИНН 0278962265 · КПП 027801001 · ОГРН 1200200055791 · ОКВЭД 62.01 · Код вида
+        ИТ-деятельности 2.01 (приказ Минцифры №{NB}449 от 11.05.2023) · 450009, г.{NB}Уфа, ул.{NB}Братьев
+        Кадомцевых, д.{NB}12/2, подъезд 1, кв.{NB}1, комн.{NB}7.
+      </p>
+      <p class="ftr__copy">© 2020–2026 QODEX</p>
+    </div>
+  </div>
+  <div class="container ftr__mark" aria-hidden="true">
+    <Logo height={24} />
+  </div>
+</footer>
+
+<style>
+  /* Огромный приглушённый логотип во всю ширину */
+  .ftr__mark {
+    margin-top: clamp(40px, 5vw, 72px);
+    overflow: hidden;
+    line-height: 0;
+  }
+
+  .ftr__mark :global(svg) {
+    width: 100%;
+    height: auto;
+  }
+
+  .ftr__mark :global(path) {
+    fill: rgb(255 255 255 / 0.07);
+  }
+
+  .ftr {
+    margin: 0 clamp(6px, 1vw, 12px) clamp(6px, 1vw, 12px);
+    padding: clamp(56px, 7vw, 88px) 0 clamp(20px, 2vw, 32px);
+    border-radius: 0 0 clamp(20px, 2.4vw, 32px) clamp(20px, 2.4vw, 32px);
+    border-top: 1px solid var(--night-line);
+  }
+
+  .ftr__top {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr 1.3fr;
+    gap: 32px;
+  }
+
+  .ftr__brand {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 20px;
+  }
+
+  .ftr__logo {
+    color: #fff;
+  }
+
+  .ftr__sk {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: border-color 0.2s;
+  }
+
+  .ftr__sk:hover {
+    border-color: #fff;
+  }
+
+  .ftr__col ul {
+    display: grid;
+    gap: 10px;
+  }
+
+  .ftr__h {
+    margin-bottom: 16px;
+    color: var(--subtle);
+  }
+
+  .ftr__col a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    color: var(--night-muted);
+    transition: color 0.2s;
+  }
+
+  .ftr__col a:hover {
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  /* Реквизиты во всю ширину, копирайт справа */
+  .ftr__bottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 14px 48px;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--subtle);
+  }
+
+  .ftr__copy {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 700px) {
+    .ftr__bottom {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .ftr__top {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .ftr__brand {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .ftr__top {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,878 @@
+---
+import SectionHead from '../components/SectionHead.astro';
+import Icon from '../components/Icon.astro';
+import { productHref } from '../config/site';
+---
+
+<section class="section" id="obektam">
+  <div class="container">
+    <SectionHead idx="05" label="Полигонам и сортировкам">Вы полигон или сортировка? С чего начать в 2026 году</SectionHead>
+
+    <div class="ob" data-inview>
+      <!-- Шаг: Кодекс ТКО -->
+      <article class="ob__card p-kodeks">
+        <div class="ob__visual" aria-hidden="true">
+          <div class="ob__sheet">
+            {
+              [0, 1, 2, 3, 4].map((r) => (
+                <span class="ob__row" style={`--r:${r}`}>
+                  <i />
+                  <i />
+                  <i />
+                  <b>
+                    <Icon name="check" size={12} strokeWidth={3} />
+                  </b>
+                </span>
+              ))
+            }
+          </div>
+          <div class="ob__pipe">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="ob__target">
+            <Icon name="cloud-upload" size={26} />
+          </div>
+        </div>
+        <div class="ob__body">
+          <h3 class="ob__title">Начать передавать данные сейчас — <span class="ob__pname">Кодекс ТКО</span>.</h3>
+          <p class="ob__text">
+            Загружаете Excel из своей учётной системы, сервис проверяет ошибки и дубли и отправляет данные во ФГИС УТКО по
+            API. Без доработок 1С и обучения персонала. Подключение за 15&nbsp;минут, неделя бесплатно, поможем получить
+            ключ доступа к ФГИС.
+          </p>
+          <a
+            href={productHref('kodeks', 'obektam')}
+            class="link-arrow ob__link"
+            data-interest="kodeks"
+            data-goal="product_landing"
+            data-goal-product="kodeks"
+          >
+            Подробнее<span class="visually-hidden"> о Кодекс ТКО</span>
+            <Icon name="arrow-right" />
+          </a>
+        </div>
+      </article>
+
+      <div class="ob__next" aria-hidden="true">
+        <span class="ob__next-line"></span>
+        <span class="ob__next-chip">
+          Следующий шаг
+          <Icon name="arrow-right" size={15} strokeWidth={2.25} />
+        </span>
+      </div>
+
+      <!-- Шаг: QODEX TONN -->
+      <article class="ob__card p-tonn">
+        <div class="ob__visual tv" aria-hidden="true" data-tv>
+          <svg class="tv__wires" data-tv-svg></svg>
+          <div class="tv__hub">
+            <span class="tv__ring"></span>
+            <span class="tv__core" data-tv-hub><Icon name="scale" size={26} /></span>
+            <span class="tv__tag tv__tag--a">Номер</span>
+            <span class="tv__tag tv__tag--b">Фото</span>
+            <span class="tv__tag tv__tag--c">Вес</span>
+          </div>
+          <span class="tv__cloud" data-tv-cloud><Icon name="cloud-upload" size={24} /></span>
+          <ul class="tv__parties">
+            <li class="tv__party" data-tv-party>
+              <span class="tv__pi"><Icon name="building-2" size={16} /></span>
+              <span class="tv__full">Регоператор</span><span class="tv__short">РО</span>
+            </li>
+            <li class="tv__party" data-tv-party>
+              <span class="tv__pi"><Icon name="truck" size={16} /></span>
+              Перевозчик
+            </li>
+            <li class="tv__party" data-tv-party>
+              <span class="tv__pi"><Icon name="warehouse" size={16} /></span>
+              Площадка
+            </li>
+          </ul>
+        </div>
+        <div class="ob__body">
+          <h3 class="ob__title">Автоматизировать весовую — <span class="ob__pname">QODEX TONN</span>.</h3>
+          <p class="ob__text">
+            Номер, фото и вес машины без ручного ввода, акт сразу в облаке, данные уходят во ФГИС УТКО. Соответствует
+            п.&nbsp;36 ПП №&nbsp;567. Работает с любыми автовесами, монтаж от 3&nbsp;дней, месяц бесплатно после запуска.
+          </p>
+          <a
+            href={productHref('tonn', 'obektam')}
+            class="link-arrow ob__link"
+            data-interest="tonn"
+            data-goal="product_landing"
+            data-goal-product="tonn"
+          >
+            Подробнее<span class="visually-hidden"> о QODEX TONN</span>
+            <Icon name="arrow-right" />
+          </a>
+        </div>
+      </article>
+
+      <!-- Честный вес: одни и те же взвешивания видят обе стороны -->
+      <div class="ob__band dark">
+        <div class="ob__diagram" aria-hidden="true">
+          <span class="ob__party">Объект</span>
+          <span class="ob__wire ob__wire--l"><i></i></span>
+          <span class="ob__center"><Icon name="scale" size={22} /></span>
+          <span class="ob__wire ob__wire--r"><i></i></span>
+          <span class="ob__party">Регоператор</span>
+        </div>
+        <p class="ob__note">
+          Честный вес выгоден обеим сторонам: одни и те же взвешивания сразу видят и объект, и регоператор.
+        </p>
+        <a href="#forma" class="btn btn--primary btn--light ob__cta" data-interest="tonn kodeks" data-goal="objects_pick">
+          Подобрать решение для объекта
+          <Icon name="arrow-right" />
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ob {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  /* ── Карточка шага ─────────────────────────────────────── */
+  .ob__card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    overflow: hidden;
+    transition:
+      box-shadow 0.45s var(--ease-out),
+      transform 0.45s var(--ease-out);
+  }
+
+  .ob__card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 30px 60px -32px color-mix(in oklab, var(--pc) 70%, transparent);
+  }
+
+  .ob__visual {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(60px, 0.6fr) auto;
+    align-items: center;
+    gap: 14px;
+    height: clamp(170px, 14vw, 230px);
+    padding: 24px clamp(20px, 2.4vw, 36px);
+    background:
+      radial-gradient(90% 90% at 100% 0%, color-mix(in oklab, var(--pc) 30%, transparent), transparent 65%),
+      color-mix(in oklab, var(--pc) 12%, white);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .ob__visual::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(color-mix(in oklab, var(--pc) 40%, transparent) 1px, transparent 1.4px);
+    background-size: 14px 14px;
+    mask-image: linear-gradient(90deg, transparent, #000 60%);
+    opacity: 0.6;
+  }
+
+  /* Excel: строки проверяются по очереди */
+  .ob__sheet {
+    display: grid;
+    gap: 7px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 10px 30px -16px color-mix(in oklab, var(--pc) 70%, transparent);
+  }
+
+  .ob__row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 0.7fr 18px;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ob__row i {
+    height: 8px;
+    border-radius: 3px;
+    background: #e3e5e9;
+  }
+
+  .ob__row b {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    background: var(--pc);
+    color: var(--pc-on);
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  .ob.is-in .ob__row b {
+    animation: row-check 5s var(--ease-out) infinite;
+    animation-delay: calc(var(--r) * 0.45s);
+  }
+
+  @keyframes row-check {
+    0%,
+    6% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    14%,
+    80% {
+      opacity: 1;
+      transform: none;
+    }
+    92%,
+    100% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  /* Поток точек в ФГИС */
+  .ob__pipe {
+    position: relative;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, color-mix(in oklab, var(--pc) 50%, transparent) 0 6px, transparent 6px 11px);
+  }
+
+  .ob__pipe span {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: var(--pc);
+    box-shadow: 0 0 10px var(--pc);
+    opacity: 0;
+  }
+
+  .ob.is-in .ob__pipe span {
+    animation: pipe-dot 2.4s linear infinite;
+  }
+
+  .ob__pipe span:nth-child(2) {
+    animation-delay: 0.8s !important;
+  }
+
+  .ob__pipe span:nth-child(3) {
+    animation-delay: 1.6s !important;
+  }
+
+  @keyframes pipe-dot {
+    0% {
+      left: 0;
+      opacity: 0;
+    }
+    15%,
+    85% {
+      opacity: 1;
+    }
+    100% {
+      left: calc(100% - 8px);
+      opacity: 0;
+    }
+  }
+
+  .ob__target {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: var(--pc);
+    color: var(--pc-on);
+    box-shadow:
+      0 0 0 6px color-mix(in oklab, var(--pc) 20%, transparent),
+      0 14px 30px -12px var(--pc);
+  }
+
+  /* TONN: весы → облако → все участники процесса */
+  .tv {
+    grid-template-columns: auto minmax(20px, 1fr) auto minmax(28px, 1.2fr) auto;
+  }
+
+  .tv__wires {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .tv__hub {
+    position: relative;
+    grid-column: 1;
+    display: grid;
+    place-items: center;
+    width: 104px;
+    height: 104px;
+    margin-left: 52px;
+  }
+
+  .tv__ring {
+    position: absolute;
+    inset: 0;
+    border: 1.5px dashed color-mix(in oklab, var(--pc) 55%, transparent);
+    border-radius: 50%;
+  }
+
+  .ob.is-in .tv__ring {
+    animation: ring-spin 24s linear infinite;
+  }
+
+  @keyframes ring-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .tv__core {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--pc);
+    color: var(--pc-on);
+    box-shadow:
+      0 0 0 7px color-mix(in oklab, var(--pc) 18%, transparent),
+      0 16px 32px -14px var(--pc);
+  }
+
+  .tv__tag {
+    position: absolute;
+    z-index: 2;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    box-shadow: 0 8px 20px -10px rgb(11 12 15 / 0.35);
+    opacity: 0;
+    transform: translateX(8px);
+    transition:
+      opacity 0.5s var(--ease-out),
+      transform 0.6s var(--ease-out);
+  }
+
+  .ob.is-in .tv__tag {
+    opacity: 1;
+    transform: none;
+  }
+
+  .tv__tag--a {
+    right: 72%;
+    top: -2px;
+    transition-delay: 0.2s;
+  }
+
+  .tv__tag--b {
+    right: 88%;
+    top: 50%;
+    margin-top: -14px;
+    transition-delay: 0.35s;
+  }
+
+  .tv__tag--c {
+    right: 72%;
+    bottom: -2px;
+    transition-delay: 0.5s;
+  }
+
+  .tv__cloud {
+    position: relative;
+    z-index: 1;
+    grid-column: 3;
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--pc-ink);
+    box-shadow: 0 10px 26px -12px rgb(11 12 15 / 0.35);
+  }
+
+  /* облако «принимает» данные — мягкая волна */
+  .tv__cloud::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1.5px solid var(--pc);
+    opacity: 0;
+  }
+
+  .ob.is-in .tv__cloud::after {
+    animation: cloud-ping 3s ease-out infinite 1.2s;
+  }
+
+  @keyframes cloud-ping {
+    0% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(1.45);
+    }
+  }
+
+  .tv__parties {
+    position: relative;
+    z-index: 1;
+    grid-column: 5;
+    display: grid;
+    gap: 8px;
+  }
+
+  .tv__party {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px 5px 5px;
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    box-shadow: 0 8px 20px -12px rgb(11 12 15 / 0.35);
+    opacity: 0;
+    transform: translateX(-8px);
+    transition:
+      opacity 0.5s var(--ease-out),
+      transform 0.6s var(--ease-out);
+  }
+
+  .ob.is-in .tv__party {
+    opacity: 1;
+    transform: none;
+  }
+
+  .ob.is-in .tv__party:nth-child(2) {
+    transition-delay: 0.15s;
+  }
+
+  .ob.is-in .tv__party:nth-child(3) {
+    transition-delay: 0.3s;
+  }
+
+  .tv__pi {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--pc) 14%, white);
+    color: var(--pc-ink);
+  }
+
+  .tv__short {
+    display: none;
+  }
+
+  /* линии и бегущие по ним данные рисует скрипт */
+  .tv__wires :global(.tv-wire) {
+    fill: none;
+    stroke: color-mix(in oklab, var(--pc) 45%, transparent);
+    stroke-width: 1.5;
+    stroke-dasharray: 2 6;
+    stroke-linecap: round;
+  }
+
+  .tv__wires :global(.tv-dot) {
+    fill: var(--pc);
+  }
+
+  .ob__body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+    padding: clamp(22px, 2.4vw, 34px);
+  }
+
+  .ob__title {
+    font-size: clamp(1.2rem, 1.6vw, 1.55rem);
+    line-height: 1.22;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .ob__pname {
+    color: var(--pc-ink);
+  }
+
+  .ob__text {
+    max-width: 62ch;
+    font-size: 16px;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .ob__link {
+    margin-top: auto;
+    padding-top: 6px;
+    align-self: flex-start;
+    color: var(--pc-ink);
+  }
+
+  /* ── Связка «Следующий шаг» — плашка поверх стыка карточек ── */
+  .ob__next {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    top: clamp(170px, 14vw, 230px);
+    transform: translate(-50%, -50%);
+  }
+
+  .ob__next-line {
+    display: none;
+  }
+
+  .ob__next-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 4px solid var(--paper);
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 12px 30px -12px rgb(11 12 15 / 0.6);
+  }
+
+  .ob.is-in .ob__next-chip :global(svg) {
+    animation: next-nudge 1.6s var(--ease-in-out) infinite;
+  }
+
+  @keyframes next-nudge {
+    50% {
+      transform: translateX(3px);
+    }
+  }
+
+  /* ── Полоса «Честный вес» ──────────────────────────────── */
+  .ob__band {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px clamp(24px, 3vw, 56px);
+    padding: clamp(22px, 2.6vw, 36px) clamp(22px, 3vw, 44px);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+    isolation: isolate;
+  }
+
+  .ob__band::before {
+    content: '';
+    position: absolute;
+    left: -120px;
+    top: -160px;
+    z-index: -1;
+    width: 420px;
+    height: 360px;
+    border-radius: 50%;
+    background: var(--c-tonn);
+    filter: blur(110px);
+    opacity: 0.35;
+  }
+
+  .ob__diagram {
+    display: flex;
+    align-items: center;
+  }
+
+  .ob__party {
+    padding: 10px 16px;
+    border: 1px solid var(--night-line-2);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.05);
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  .ob__wire {
+    position: relative;
+    width: clamp(36px, 4vw, 72px);
+    height: 2px;
+    background: rgb(255 255 255 / 0.18);
+    overflow: hidden;
+  }
+
+  .ob__wire i {
+    position: absolute;
+    top: 0;
+    width: 40%;
+    height: 100%;
+    background: #45e0ae;
+    box-shadow: 0 0 8px #45e0ae;
+  }
+
+  /* сигнал идёт от весов к обеим сторонам одновременно */
+  .ob__wire--l i {
+    right: 0;
+    animation: wire-left 1.8s linear infinite;
+  }
+
+  .ob__wire--r i {
+    left: 0;
+    animation: wire-right 1.8s linear infinite;
+  }
+
+  @keyframes wire-left {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-260%);
+    }
+  }
+
+  @keyframes wire-right {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(260%);
+    }
+  }
+
+  .ob__center {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--c-tonn);
+    color: var(--ink);
+    box-shadow: 0 0 0 6px rgb(18 184 134 / 0.2);
+  }
+
+  .ob__note {
+    max-width: 52ch;
+    font-size: clamp(16px, 1.3vw, 19px);
+    line-height: 1.45;
+    font-weight: 500;
+    color: #fff;
+    text-wrap: pretty;
+  }
+
+  .ob__cta {
+    white-space: nowrap;
+  }
+
+  /* ── Планшет и телефон ─────────────────────────────────── */
+  @media (max-width: 1100px) {
+    .ob {
+      grid-template-columns: 1fr;
+    }
+
+    .ob__next {
+      position: relative;
+      left: auto;
+      top: auto;
+      transform: none;
+      display: grid;
+      place-items: center;
+      height: 20px;
+      margin-block: -17px;
+    }
+
+    .ob__next-chip :global(svg) {
+      transform: rotate(90deg);
+    }
+
+    .ob.is-in .ob__next-chip :global(svg) {
+      animation: none;
+    }
+
+    .ob__band {
+      grid-template-columns: 1fr;
+      justify-items: start;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .ob__visual {
+      grid-template-columns: minmax(0, 1fr) 40px auto;
+      gap: 10px;
+    }
+
+    .ob__target {
+      width: 52px;
+      height: 52px;
+    }
+
+    /* на телефоне видно только РО, линии к остальным уходят за край */
+    .tv {
+      grid-template-columns: auto minmax(16px, 1fr) auto minmax(20px, 1fr) auto;
+    }
+
+    .tv__hub {
+      width: 84px;
+      height: 84px;
+      margin-left: 0;
+    }
+
+    .tv__core {
+      width: 50px;
+      height: 50px;
+    }
+
+    .tv__tag {
+      display: none;
+    }
+
+    .tv__cloud {
+      width: 46px;
+      height: 46px;
+    }
+
+    .tv__party:not(:first-child) {
+      display: none;
+    }
+
+    .tv__full {
+      display: none;
+    }
+
+    .tv__short {
+      display: inline;
+    }
+
+    .tv__wires {
+      mask-image: linear-gradient(90deg, #000 88%, transparent);
+    }
+
+    .ob__party {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .ob__wire {
+      width: 28px;
+    }
+
+    .ob__cta {
+      width: 100%;
+      white-space: normal;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ob__row b,
+    .ob__pipe span {
+      opacity: 1;
+      transform: none;
+    }
+
+    .ob__pipe span:nth-child(n + 2) {
+      display: none;
+    }
+
+    .tv__wires :global(.tv-dot) {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // Линии TONN: весы → облако → участники. Строятся по реальным позициям элементов.
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const box = document.querySelector<HTMLElement>('[data-tv]');
+
+  if (box) {
+    const svg = box.querySelector<SVGSVGElement>('[data-tv-svg]')!;
+    const hub = box.querySelector<HTMLElement>('[data-tv-hub]')!;
+    const cloud = box.querySelector<HTMLElement>('[data-tv-cloud]')!;
+    const parties = [...box.querySelectorAll<HTMLElement>('[data-tv-party]')];
+
+    const el = (name: string, attrs: Record<string, string>) => {
+      const n = document.createElementNS(SVG_NS, name);
+      Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
+      return n;
+    };
+
+    // точки данных бегут по линии; begin — сдвиг, чтобы поток шёл равномерно
+    const addDots = (d: string, dur: number, count: number, delay = 0) => {
+      for (let i = 0; i < count; i++) {
+        const dot = el('circle', { r: '3', class: 'tv-dot', opacity: '0' });
+        const begin = `${(delay + (i * dur) / count).toFixed(2)}s`;
+        dot.appendChild(
+          el('animateMotion', { path: d, dur: `${dur}s`, begin, repeatCount: 'indefinite', calcMode: 'linear' }),
+        );
+        dot.appendChild(
+          el('animate', {
+            attributeName: 'opacity',
+            values: '0;1;1;0',
+            keyTimes: '0;0.12;0.85;1',
+            dur: `${dur}s`,
+            begin,
+            repeatCount: 'indefinite',
+          }),
+        );
+        svg.appendChild(dot);
+      }
+    };
+
+    const draw = () => {
+      const b = box.getBoundingClientRect();
+      const rel = (r: DOMRect) => ({ l: r.left - b.left, r: r.right - b.left, cy: r.top + r.height / 2 - b.top });
+      const h = rel(hub.getBoundingClientRect());
+      const c = rel(cloud.getBoundingClientRect());
+      svg.replaceChildren();
+      svg.setAttribute('viewBox', `0 0 ${b.width} ${b.height}`);
+
+      // весы → облако
+      const trunk = `M ${h.r + 6} ${h.cy} L ${c.l - 4} ${c.cy}`;
+      svg.appendChild(el('path', { d: trunk, class: 'tv-wire' }));
+      addDots(trunk, 2.4, 2);
+
+      // облако → каждый участник (скрытые на телефоне — за край блока)
+      parties.forEach((p, i) => {
+        const visible = p.offsetParent !== null;
+        const pr = rel(p.getBoundingClientRect());
+        const tx = visible ? pr.l - 4 : b.width + 30;
+        const ty = visible ? pr.cy : c.cy + (i === 1 ? -46 : 46);
+        const x0 = c.r + 4;
+        const mid = (tx - x0) * 0.5;
+        const d = `M ${x0} ${c.cy} C ${x0 + mid} ${c.cy} ${tx - mid} ${ty} ${tx} ${ty}`;
+        svg.appendChild(el('path', { d, class: 'tv-wire' }));
+        addDots(d, 2.4, 1, 1.2 + i * 0.25);
+      });
+    };
+
+    new ResizeObserver(draw).observe(box);
+    document.fonts?.ready.then(draw);
+    draw();
+  }
+</script>

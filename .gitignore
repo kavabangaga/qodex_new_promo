@@ -1,0 +1,15 @@
+# Зависимости и сборки
+node_modules/
+dist/
+.astro/
+_site/
+
+# Служебное
+.gh-test/
+.playwright-mcp/
+.DS_Store
+Thumbs.db
+
+# Не публикуем: ранняя версия и ТЗ
+version 1/
+qodex-home-claude-design*.md

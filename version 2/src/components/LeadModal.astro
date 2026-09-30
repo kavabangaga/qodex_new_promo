@@ -1,0 +1,347 @@
+---
+// Попап с формой заявки. Открывается по любой ссылке на #forma (кнопки пилота),
+// без JavaScript эти ссылки по-прежнему ведут к форме внизу страницы.
+import LeadForm from './LeadForm.astro';
+import Icon from './Icon.astro';
+import { CONTACTS } from '../config/site';
+---
+
+<dialog class="lm" data-lead-modal aria-labelledby="lm-title">
+  <div class="lm__panel">
+    <button class="lm__close" type="button" aria-label="Закрыть" data-lm-close>
+      <Icon name="x" size={20} />
+    </button>
+    <aside class="lm__side dark">
+      <div class="lm__side-bg" aria-hidden="true"></div>
+      <p class="eyebrow label"><span class="eyebrow__dot" aria-hidden="true"></span>Заявка</p>
+      <h2 class="lm__title" id="lm-title">Покажем эффект в рублях на одном районе или одной весовой</h2>
+      <p class="lm__lead">Пилот РО-БОТа — бесплатно. Напишите или позвоните — пришлём NDA и запустим пилот.</p>
+      <div class="lm__person">
+        <span class="label">Ваш контакт по пилоту</span>
+        <strong>Данил Максадов</strong>
+        <a href={CONTACTS.phoneHref} data-goal="phone_click">
+          <Icon name="phone" size={16} />
+          {CONTACTS.phone}
+        </a>
+      </div>
+      <p class="lm__proof"><span aria-hidden="true"></span>73 клиента работают с продуктами QODEX</p>
+    </aside>
+    <div class="lm__main">
+      <LeadForm prefix="lm" layout="stack" tone="light" />
+    </div>
+  </div>
+</dialog>
+
+<style>
+  .lm {
+    width: min(1080px, calc(100vw - 32px));
+    max-width: none;
+    max-height: calc(100dvh - 32px);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+    color: var(--ink);
+  }
+
+  .lm::backdrop {
+    background: rgb(11 12 15 / 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .lm[open] .lm__panel {
+    animation: lm-in 0.45s var(--ease-out);
+  }
+
+  .lm[open]::backdrop {
+    animation: lm-fade 0.3s ease;
+  }
+
+  .lm.is-closing .lm__panel {
+    animation: lm-out 0.18s ease-in forwards;
+  }
+
+  .lm.is-closing::backdrop {
+    animation: lm-fade 0.18s ease reverse forwards;
+  }
+
+  @keyframes lm-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.97);
+    }
+  }
+
+  @keyframes lm-out {
+    to {
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+    }
+  }
+
+  @keyframes lm-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .lm__panel {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    max-height: calc(100dvh - 32px);
+    border-radius: 28px;
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: 0 40px 120px -30px rgb(0 0 0 / 0.55);
+  }
+
+  /* Левая тёмная панель */
+  .lm__side {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: clamp(28px, 3vw, 44px);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .lm__side-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(60% 50% at 0% 0%, rgb(107 77 255 / 0.45), transparent 70%),
+      var(--night);
+  }
+
+  .lm__side-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 90% 70% at 20% 10%, #000 20%, transparent 80%);
+  }
+
+  .lm__title {
+    font-size: clamp(1.5rem, 2.2vw, 2.1rem);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    font-weight: 600;
+    color: #fff;
+    text-wrap: balance;
+  }
+
+  .lm__lead {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--night-muted);
+  }
+
+  .lm__person {
+    display: grid;
+    gap: 4px;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid var(--night-line);
+  }
+
+  .lm__person .label {
+    color: var(--night-muted);
+  }
+
+  .lm__person strong {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .lm__person a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .lm__person a:hover {
+    color: #a594ff;
+  }
+
+  .lm__proof {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #d6d8dc;
+  }
+
+  .lm__proof span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c-tonn);
+  }
+
+  /* Правая часть с формой */
+  .lm__main {
+    position: relative;
+    padding: clamp(28px, 3vw, 44px);
+    padding-top: clamp(56px, 4vw, 64px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .lm__close {
+    position: absolute;
+    z-index: 2;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--ink);
+    transition:
+      background-color 0.2s,
+      transform 0.3s var(--ease-out);
+  }
+
+  .lm__close:hover {
+    background: var(--paper);
+    transform: rotate(90deg);
+  }
+
+  /* Телефон: шторка снизу */
+  @media (max-width: 760px) {
+    .lm {
+      width: 100vw;
+      max-height: 94dvh;
+      margin: auto 0 0;
+    }
+
+    .lm__panel {
+      grid-template-columns: 1fr;
+      max-height: 94dvh;
+      border-radius: 24px 24px 0 0;
+      overflow-y: auto;
+    }
+
+    .lm[open] .lm__panel {
+      animation-name: lm-sheet;
+    }
+
+    @keyframes lm-sheet {
+      from {
+        transform: translateY(40%);
+        opacity: 0;
+      }
+    }
+
+    .lm__side {
+      gap: 10px;
+      padding: 24px 20px 20px;
+    }
+
+    .lm__lead,
+    .lm__person,
+    .lm__proof {
+      display: none;
+    }
+
+    .lm__title {
+      font-size: 1.35rem;
+      padding-right: 44px;
+    }
+
+    .lm__main {
+      overflow: visible;
+      padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
+    }
+
+    .lm__close {
+      top: 14px;
+      right: 14px;
+      border-color: rgb(255 255 255 / 0.2);
+      background: rgb(255 255 255 / 0.1);
+      color: #fff;
+    }
+  }
+
+  :global(html.is-modal) {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  const dlg = document.querySelector<HTMLDialogElement>('[data-lead-modal]');
+
+  if (dlg && typeof dlg.showModal === 'function') {
+    const html = document.documentElement;
+    let closing = false;
+
+    const resetIfDone = () => {
+      const form = dlg.querySelector<HTMLFormElement>('[data-lead-form]');
+      const done = form?.querySelector<HTMLElement>('[data-done]');
+      if (form && done && !done.hidden) {
+        form.reset();
+        form.querySelector<HTMLElement>('[data-lf-fields]')!.hidden = false;
+        done.hidden = true;
+      }
+    };
+
+    const open = () => {
+      if (dlg.open) return;
+      resetIfDone();
+      dlg.showModal();
+      html.classList.add('is-modal');
+      dlg.querySelector<HTMLInputElement>('input[name="name"]')?.focus({ preventScroll: true });
+    };
+
+    const close = () => {
+      if (!dlg.open || closing) return;
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduced) {
+        dlg.close();
+        return;
+      }
+      closing = true;
+      dlg.classList.add('is-closing');
+      window.setTimeout(() => {
+        dlg.classList.remove('is-closing');
+        dlg.close();
+        closing = false;
+      }, 180);
+    };
+
+    dlg.addEventListener('close', () => html.classList.remove('is-modal'));
+    // Esc — закрываем с анимацией
+    dlg.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      close();
+    });
+    // клик мимо окна (по подложке)
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) close();
+    });
+    dlg.querySelector('[data-lm-close]')!.addEventListener('click', close);
+
+    // Все кнопки пилота (ссылки на #forma) открывают попап
+    document.addEventListener('click', (e) => {
+      const link = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[href="#forma"]');
+      if (!link || dlg.contains(link)) return;
+      e.preventDefault();
+      open();
+    });
+  }
+</script>
