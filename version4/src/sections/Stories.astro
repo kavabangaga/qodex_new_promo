@@ -6,7 +6,7 @@
 import StoryCard from '../components/StoryCard.astro';
 import Icon from '../components/Icon.astro';
 import { PRODUCT_ICON } from '../components/ProductLabel.astro';
-import type { ProductId } from '../config/site';
+import { PRODUCTS, type ProductId } from '../config/site';
 
 const NB = '\u00a0';
 
@@ -82,11 +82,15 @@ const N = STORIES.length;
                   ]}
                   data-mini={i}
                 >
-                  <span class="sc__mini-chip">
-                    <span class:list={['plabel__ico', `p-${s.product}`]}>
-                      <Icon name={PRODUCT_ICON[s.product]} strokeWidth={2} />
+                  <span class="sc__mini-card">
+                    <span class="sc__mini-prod">
+                      <span class:list={['plabel__ico', `p-${s.product}`]}>
+                        <Icon name={PRODUCT_ICON[s.product]} strokeWidth={2} />
+                      </span>
+                      <span class="sc__mini-name">{PRODUCTS[s.product].name}</span>
                     </span>
-                    {s.resultLead}
+                    <b class="sc__mini-num">{s.resultLead}</b>
+                    <span class="sc__mini-client">{s.client}</span>
                   </span>
                 </span>
               ))}
@@ -308,11 +312,14 @@ const N = STORIES.length;
   }
 
   .sc__stage {
+    /* на широком экране боковые карточки заходят в поля страницы (до 120 px с каждой стороны) */
+    --sc-bleed: max(0px, min(120px, (100vw - 1200px) / 2 - 64px));
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 800px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 740px) minmax(0, 1fr);
     align-items: center;
     column-gap: var(--sc-gap);
+    margin-inline: calc(var(--sc-bleed) * -1);
     isolation: isolate;
   }
 
@@ -351,12 +358,14 @@ const N = STORIES.length;
     position: relative;
     grid-row: 1;
     display: grid;
-    width: min(100%, 176px);
-    height: clamp(300px, 25vw, 350px);
+    width: min(100%, 300px);
+    height: clamp(200px, 15.5vw, 236px);
     padding: 10px;
     border: 0;
     border-radius: 30px;
     background: #fff;
+    cursor: pointer;
+    container-type: inline-size;
     transition: transform 0.4s var(--ease-out);
   }
 
@@ -402,7 +411,7 @@ const N = STORIES.length;
     --gv-r: 22px;
     grid-area: 1 / 1;
     min-height: 0;
-    align-content: end;
+    place-items: center;
     padding: 12px;
     opacity: 0;
     transition: opacity 0.5s var(--ease-out);
@@ -412,19 +421,67 @@ const N = STORIES.length;
     opacity: 1;
   }
 
-  .sc__mini-chip {
+  /* Анонс соседней истории: продукт → крупная цифра результата → клиент */
+  .sc__mini-card {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    min-width: min(100%, 196px);
+    padding: 14px 20px 16px;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow:
+      0 0 0 6px rgb(255 255 255 / 0.4),
+      var(--shadow-soft);
+    color: var(--ink);
+    text-align: center;
+  }
+
+  .sc__mini-prod {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 12px 6px 6px;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: var(--shadow-soft);
-    font-size: 16px;
+    gap: 7px;
+    font-size: 13px;
     font-weight: 600;
-    letter-spacing: -0.03em;
     white-space: nowrap;
-    color: var(--ink);
+  }
+
+  .sc__mini-prod .plabel__ico {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+  }
+
+  .sc__mini-prod .plabel__ico :global(svg) {
+    width: 13px;
+    height: 13px;
+  }
+
+  .sc__mini-num {
+    font-size: clamp(1.9rem, 2.5vw, 2.4rem);
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: -0.045em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .sc__mini-client {
+    font-size: 12.5px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* узкая боковая карточка (ноутбук 1180–1280 px): у продукта только значок */
+  @container (max-width: 200px) {
+    .sc__mini-name {
+      display: none;
+    }
+
+    .sc__mini-card {
+      min-width: 0;
+      padding: 12px 14px 14px;
+    }
   }
 
   /* ── Стрелки и точки ──────────────────────────────────── */
