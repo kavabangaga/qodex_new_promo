@@ -16,6 +16,8 @@ const canonical = new URL(Astro.url.pathname, SITE.url).href;
 const ogImage = new URL(withBase(SITE.ogImage), Astro.site ?? SITE.url).href;
 // предварительная версия (не на qodex.tech) закрыта от поисковиков
 const noindex = Astro.site?.hostname !== 'qodex.tech';
+// версия значка: при замене фавикона увеличьте — браузеры держат старый значок в своём кэше
+const ICON_V = 2;
 // пробный шрифт заголовков (версия /v3/): класс на <html> + ранняя загрузка файла
 const lebowski = import.meta.env.HEADING_FONT === 'lebowski';
 ---
@@ -30,9 +32,9 @@ const lebowski = import.meta.env.HEADING_FONT === 'lebowski';
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <!-- фавикон: буква Q из логотипа; .ico — для старых браузеров, png — «На экран Домой» на iPhone -->
-    <link rel="icon" href={withBase('/favicon.ico')} sizes="32x32" />
-    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
-    <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
+    <link rel="icon" href={withBase(`/favicon.ico?v=${ICON_V}`)} sizes="32x32" />
+    <link rel="icon" href={withBase(`/favicon.svg?v=${ICON_V}`)} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={withBase(`/apple-touch-icon.png?v=${ICON_V}`)} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
     <meta name="theme-color" content="#e4e6ea" />
 
