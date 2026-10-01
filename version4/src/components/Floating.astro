@@ -1,0 +1,84 @@
+---
+// Баннер cookies. Плавающих кнопок связи в v4 нет, как у Calendly: телефон и «Запустить пилот» — в шапке.
+import { withBase } from '../config/site';
+---
+
+<div class="cookie" data-cookie hidden>
+  <p>
+    Мы используем файлы cookie, чтобы сайт работал корректно. Подробнее — в&nbsp;<a href={withBase('/politika')}
+      >политике конфиденциальности</a
+    >.
+  </p>
+  <button type="button" class="btn btn--primary btn--sm" data-cookie-ok>Понятно</button>
+</div>
+
+<style>
+  .cookie {
+    position: fixed;
+    left: 24px;
+    bottom: 24px;
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    max-width: 460px;
+    padding: 16px 16px 16px 20px;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(7 26 49 / 0.06),
+      var(--shadow-float);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--muted);
+    animation: cookie-in 0.6s var(--ease-out) 1.6s both;
+  }
+
+  @keyframes cookie-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+
+  .cookie a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    color: var(--ink);
+  }
+
+  .cookie[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 760px) {
+    .cookie {
+      left: 12px;
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      max-width: none;
+    }
+  }
+</style>
+
+<script>
+  const KEY = 'qodex:cookie-ok';
+  const cookie = document.querySelector<HTMLElement>('[data-cookie]');
+  if (cookie) {
+    let seen = false;
+    try {
+      seen = localStorage.getItem(KEY) === '1';
+    } catch {
+      /* хранилище недоступно */
+    }
+    cookie.hidden = seen;
+    cookie.querySelector('[data-cookie-ok]')!.addEventListener('click', () => {
+      cookie.hidden = true;
+      try {
+        localStorage.setItem(KEY, '1');
+      } catch {
+        /* хранилище недоступно */
+      }
+    });
+  }
+</script>

@@ -1,0 +1,30 @@
+---
+// Метка продукта, как у Calendly: цветная плитка со значком + название (+ плашка «Новое»).
+import Icon, { type IconName } from './Icon.astro';
+import { PRODUCTS, type ProductId } from '../config/site';
+
+export const PRODUCT_ICON: Record<ProductId, IconName> = {
+  robot: 'user-search',
+  tracker: 'truck',
+  tonn: 'scale',
+  kodeks: 'cloud-upload',
+};
+
+interface Props {
+  id: ProductId;
+  /** Подпись вместо названия продукта. */
+  text?: string;
+  /** Плашка справа, например «Новое». */
+  tag?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { id, text, tag, class: className, ...rest } = Astro.props;
+---
+
+<span class:list={['plabel', `p-${id}`, className]} {...rest}>
+  <span class="plabel__ico" aria-hidden="true"><Icon name={PRODUCT_ICON[id]} strokeWidth={2} /></span>
+  {text ?? PRODUCTS[id].name}
+  {tag && <span class="tag">{tag}</span>}
+</span>

@@ -1,0 +1,250 @@
+---
+// Плитка цифры, как у Calendly («75 hours saved monthly»): крупное число гротеском с плотной разрядкой,
+// подпись и внизу мелко — метка продукта. Нужна и на страницах продуктов (этап 2).
+// feature — главная цифра: белая карточка на градиенте палитры Calendly (+ метки продуктов под ней).
+// forecast — прогноз: видимая метка «прогноз», плитка с пунктиром и приглушённой цифрой.
+import ProductLabel from './ProductLabel.astro';
+import type { ProductId } from '../config/site';
+
+interface Props {
+  /** Знак перед числом: «+», «−», «>». */
+  prefix?: string;
+  /** Число для досчёта и его вид на странице (с запятой, неразрывными пробелами). */
+  count?: number;
+  decimals?: number;
+  value: string;
+  /** Единицы после числа — того же размера. */
+  unit?: string;
+  /** Хвост значения — мельче, в той же строке. */
+  tail?: string;
+  caption: string;
+  product?: ProductId;
+  forecast?: boolean;
+  feature?: boolean;
+  /** Градиент главной плитки — только пресеты палитры Calendly. */
+  preset?: 'sky' | 'aqua' | 'dusk' | 'mint' | 'lavender' | 'teal';
+  /** Метки продуктов под карточкой главной плитки. */
+  chips?: ProductId[];
+  index?: number;
+  class?: string;
+}
+
+const {
+  prefix,
+  count,
+  decimals = 0,
+  value,
+  unit,
+  tail,
+  caption,
+  product,
+  forecast = false,
+  feature = false,
+  preset = 'sky',
+  chips = [],
+  index = 0,
+  class: className,
+  ...rest
+} = Astro.props;
+
+// Названия продуктов и «РО «…»» не разрываем переносом (сами тексты — без изменений)
+const nb = (t: string) =>
+  t.replace(/(QODEX|Кодекс) (TONN|Tracker|ТКО)/g, '$1\u00a0$2').replace(/(^|\s)(РО|ООО) «/g, '$1$2\u00a0«');
+
+// Высоты полос «звуковой волны» у главной плитки — фиксированные
+const LEFT = [38, 62, 84, 56, 92, 70];
+const RIGHT = [52, 80, 46, 96, 64, 88];
+---
+
+<div
+  class:list={[
+    'stat',
+    product && `p-${product}`,
+    feature && ['stat--feature', 'gv', `gv--${preset}`],
+    { 'stat--forecast': forecast },
+    className,
+  ]}
+  style={`--d:${index}`}
+  data-reveal
+  {...rest}
+>
+  {
+    feature && (
+      <div class="gv__bars" aria-hidden="true">
+        <span>
+          {LEFT.map((h) => (
+            <i style={`--h:${h}%`} />
+          ))}
+        </span>
+        <span>
+          {RIGHT.map((h) => (
+            <i style={`--h:${h}%`} />
+          ))}
+        </span>
+      </div>
+    )
+  }
+
+  <div class:list={['stat__body', { ui: feature }]}>
+    <p class="stat__value">
+      <span class="stat__v">{prefix}<span data-count={count} data-decimals={decimals}>{value}</span>{unit}</span>
+      {tail && <span class="stat__tail">{tail}</span>}
+    </p>
+    {forecast && <span class="tag tag--forecast stat__badge">прогноз</span>}
+    <p class="stat__caption">{nb(caption)}</p>
+    {
+      product && (
+        <p class="stat__product">
+          <ProductLabel id={product} />
+        </p>
+      )
+    }
+  </div>
+
+  {
+    feature && chips.length > 0 && (
+      <ul class="stat__chips" aria-hidden="true">
+        {chips.map((id, i) => (
+          <li class="stat__chip" style={`--i:${i}`}>
+            <ProductLabel id={id} />
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</div>
+
+<style>
+  /* ── Обычная плитка: белая карточка ─────────────────────── */
+  .stat {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: clamp(22px, 2.4vw, 32px);
+    border-radius: var(--r-lg);
+    background: var(--card);
+    transition: box-shadow 0.45s var(--ease-out);
+  }
+
+  .stat:not(.stat--feature):hover {
+    box-shadow: var(--shadow-card);
+  }
+
+  .stat__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  /* Цифра: Geist 600 с плотной разрядкой */
+  .stat__value {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.26em;
+    font-size: clamp(2.4rem, 3.7vw, 3.5rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+
+  .stat__v {
+    white-space: nowrap;
+  }
+
+  .stat__tail {
+    font-size: 0.5em;
+    font-weight: 560;
+    letter-spacing: -0.02em;
+    color: var(--muted);
+  }
+
+  .stat__badge {
+    align-self: flex-start;
+  }
+
+  .stat__caption {
+    max-width: 42ch;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* метка продукта прижата к низу плитки */
+  .stat__product {
+    margin-top: auto;
+    padding-top: 10px;
+  }
+
+  /* ── Прогноз: пунктир, цифра приглушена ─────────────────── */
+  .stat--forecast {
+    border: 1.5px dashed var(--line-2);
+    background: transparent;
+  }
+
+  .stat--forecast .stat__value {
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  /* ── Главная плитка: белая карточка на градиенте ────────── */
+  .stat--feature {
+    --gv-r: var(--r-xl);
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(16px, 2vw, 26px);
+    padding: clamp(24px, 3.4vw, 52px) clamp(18px, 3vw, 44px);
+  }
+
+  .stat--feature .stat__body {
+    width: min(100%, 440px);
+    flex: none;
+    gap: 10px;
+    padding: clamp(24px, 2.6vw, 36px);
+  }
+
+  .stat--feature .stat__value {
+    font-size: clamp(5.5rem, 10.5vw, 9.5rem);
+    line-height: 0.86;
+    letter-spacing: -0.065em;
+  }
+
+  .stat--feature .stat__caption {
+    max-width: 18ch;
+    font-size: clamp(1.15rem, 1.6vw, 1.45rem);
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  .stat__chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    /* две метки в строке: 2 + 2 */
+    max-width: 340px;
+  }
+
+  .stat__chip {
+    padding: 7px 13px 7px 7px;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+  }
+
+  @media (max-width: 599px) {
+    .stat--feature {
+      min-height: 420px;
+      padding-inline: 12px;
+    }
+  }
+</style>

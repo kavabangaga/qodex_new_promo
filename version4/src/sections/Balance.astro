@@ -1,0 +1,349 @@
+---
+// Блок 6 «Единый баланс ТКО» [#balans]: цепочка из четырёх звеньев с итогом (BalanceChain)
+// и две карточки под схемой — расхождение «100 → 60» и баланс у РЭО во ФГИС УТКО.
+import SectionIntro from '../components/SectionIntro.astro';
+import BalanceChain from '../components/BalanceChain.astro';
+import ProductLabel from '../components/ProductLabel.astro';
+import Icon from '../components/Icon.astro';
+
+// 100 контейнеров вывезено, до полигона доехало 60: один значок — 10 контейнеров
+const BINS = Array.from({ length: 10 }, (_, i) => i);
+---
+
+<section class="section panel bal" id="balans" aria-labelledby="bal-title">
+  <div class="container">
+    <SectionIntro eyebrow="Как это работает" titleId="bal-title">
+      Единый баланс ТКО: начислено&nbsp;<span class="bal-eq">=</span> вывезено&nbsp;<span class="bal-eq">=</span>
+      взвешено&nbsp;<span class="bal-eq">=</span> передано
+    </SectionIntro>
+
+    <div data-reveal style="--d:2">
+      <BalanceChain
+        links={[
+          {
+            step: 'Начислено',
+            place: 'Лицевой счёт',
+            products: ['robot'],
+            icon: 'file-text',
+            art: 'account',
+            text: 'Все, кто должен платить, есть в базе начислений.',
+          },
+          {
+            step: 'Вывезено',
+            place: 'Контейнерная площадка',
+            products: ['tracker'],
+            icon: 'waste-bin',
+            art: 'video',
+            text: 'Вывоз на видео: левак и недовывоз обнаружены.',
+          },
+          {
+            step: 'Взвешено',
+            place: 'Весовая',
+            products: ['tonn'],
+            icon: 'scale',
+            art: 'weight',
+            text: 'Плата за реальный вес, а не приписанный.',
+          },
+          {
+            step: 'Передано',
+            place: 'ФГИС УТКО',
+            products: ['kodeks', 'tonn'],
+            icon: 'cloud',
+            art: 'fgis',
+            text: 'Быстрая отправка данных во ФГИС УТКО.',
+          },
+        ]}
+        result={{ title: 'Итог', text: 'Деньги РО: начисляете и платите по фактическим данным.' }}
+      />
+    </div>
+
+    <div class="bal-cards">
+      <article class="bal-card bal-card--diff" data-reveal>
+        <div class="bal-card__text">
+          <h3 class="bal-card__title">Вывезли 100 контейнеров — а&nbsp;до полигона доехало&nbsp;60?</h3>
+          <p class="bal-card__p">
+            Tracker и TONN покажут разницу между вывезенным и взвешенным. Разница — это приписки или слив на свалку.
+          </p>
+        </div>
+
+        <div class="bal-diff" data-inview aria-hidden="true">
+          <span class="bal-diff__label"><ProductLabel id="tracker" text="Вывезено" /></span>
+          {
+            BINS.map((k) => (
+              <span class="bal-diff__bin" style={`--k:${k}`}>
+                <Icon name="waste-bin" size={22} />
+              </span>
+            ))
+          }
+          <b class="bal-diff__n">100</b>
+
+          <span class="bal-diff__label"><ProductLabel id="tonn" text="Взвешено" /></span>
+          {
+            BINS.map((k) => (
+              <span class:list={['bal-diff__bin', { 'is-lost': k >= 6 }]} style={`--k:${k}`}>
+                <Icon name="waste-bin" size={22} />
+              </span>
+            ))
+          }
+          <b class="bal-diff__n">60</b>
+
+          <span class="bal-diff__gap">разница</span>
+        </div>
+      </article>
+
+      <article class="bal-card" data-reveal style="--d:1">
+        <div class="bal-card__text">
+          <h3 class="bal-card__title">Баланс ТКО собирает и РЭО во ФГИС УТКО.</h3>
+          <p class="bal-card__p">С QODEX вы увидите расхождения раньше регулятора.</p>
+        </div>
+
+        <div class="bal-check" aria-hidden="true">
+          <p class="bal-check__head">
+            <span class="bal-check__i"><Icon name="cloud-check" size={17} /></span>
+            ФГИС УТКО · баланс ТКО
+          </p>
+          <ul class="bal-check__list">
+            <li>
+              <span>Начислено</span>
+              <b class="bal-check__ok"><Icon name="check" size={13} strokeWidth={2.75} /></b>
+            </li>
+            <li>
+              <span>Вывезено</span>
+              <b class="bal-check__ok"><Icon name="check" size={13} strokeWidth={2.75} /></b>
+            </li>
+            <li class="is-bad">
+              <span>Взвешено</span>
+              <b class="bal-check__bad"><Icon name="equal-not" size={14} strokeWidth={2.5} />расхождение</b>
+            </li>
+            <li>
+              <span>Передано</span>
+              <b class="bal-check__ok"><Icon name="check" size={13} strokeWidth={2.75} /></b>
+            </li>
+          </ul>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* «=» в заголовке — тише слов */
+  .bal-eq {
+    color: var(--subtle);
+    font-weight: 400;
+  }
+
+  /* ── Две карточки под схемой ───────────────────────────── */
+  .bal-cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 24px;
+  }
+
+  .bal-card {
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 32px;
+    padding: clamp(24px, 3vw, 36px);
+    border-radius: var(--r-lg);
+    background: var(--card);
+  }
+
+  .bal-card__text {
+    display: grid;
+    gap: 12px;
+  }
+
+  .bal-card__title {
+    font-size: clamp(1.35rem, 2vw, 1.75rem);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .bal-card__p {
+    max-width: 52ch;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* 100 → 60: один значок — 10 контейнеров */
+  .bal-diff {
+    display: grid;
+    grid-template-columns: max-content repeat(10, 22px) max-content;
+    align-items: center;
+    column-gap: 6px;
+    row-gap: 14px;
+    padding: 20px 22px 16px;
+    border-radius: var(--r);
+    background: var(--bg);
+  }
+
+  .bal-diff__label {
+    grid-column: 1;
+    margin-right: 14px;
+    font-size: 15px;
+  }
+
+  .bal-diff__bin {
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    transition:
+      opacity 0.5s var(--ease-out),
+      transform 0.5s var(--ease-out);
+    transition-delay: calc(0.3s + (var(--k) - 6) * 0.12s);
+  }
+
+  /* не доехавшие до полигона контейнеры бледнеют, когда блок на экране */
+  .bal-diff__bin.is-lost {
+    color: #b81f30;
+  }
+
+  .bal-diff.is-in .bal-diff__bin.is-lost {
+    opacity: 0.25;
+    transform: translateY(3px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bal-diff__bin {
+      transition-delay: 0s;
+    }
+  }
+
+  .bal-diff__n {
+    margin-left: 12px;
+    font-size: 1.6rem;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bal-diff__gap {
+    grid-column: 8 / 12;
+    position: relative;
+    padding-top: 9px;
+    font-size: 13px;
+    font-weight: 560;
+    text-align: center;
+    color: #b81f30;
+  }
+
+  /* скобка над «разницей» */
+  .bal-diff__gap::before {
+    content: '';
+    position: absolute;
+    inset: 0 1px auto;
+    height: 7px;
+    border: 1.5px solid currentColor;
+    border-top: 0;
+    border-radius: 0 0 5px 5px;
+  }
+
+  /* Баланс у РЭО: одно звено не сходится */
+  .bal-check {
+    padding: 16px;
+    border-radius: var(--r);
+    background: var(--bg);
+  }
+
+  .bal-check__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 4px 12px;
+    font-size: 14px;
+    font-weight: 560;
+  }
+
+  .bal-check__i {
+    display: inline-flex;
+    color: var(--blue);
+  }
+
+  .bal-check__list {
+    display: grid;
+    gap: 6px;
+  }
+
+  .bal-check__list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--card);
+    font-size: 14.5px;
+  }
+
+  .bal-check__list li.is-bad {
+    box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--danger) 45%, white);
+  }
+
+  .bal-check__ok {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--ok) 14%, white);
+    color: #087a52;
+  }
+
+  .bal-check__bad {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px 3px 7px;
+    border-radius: 7px;
+    background: color-mix(in oklab, var(--danger) 10%, white);
+    font-size: 12.5px;
+    font-weight: 560;
+    color: #b81f30;
+  }
+
+  @media (max-width: 900px) {
+    .bal-cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 520px) {
+    .bal-cards {
+      gap: 16px;
+      margin-top: 16px;
+    }
+  }
+
+  /* узкая карточка: подписи над рядами значков */
+  @container (max-width: 560px) {
+    .bal-diff {
+      grid-template-columns: repeat(10, minmax(0, 24px)) max-content;
+      column-gap: 4px;
+      row-gap: 10px;
+      padding: 16px 16px 12px;
+    }
+
+    .bal-diff__label {
+      grid-column: 1 / -1;
+      margin: 4px 0 -2px;
+    }
+
+    .bal-diff__n {
+      margin-left: 10px;
+      font-size: 1.35rem;
+    }
+
+    .bal-diff__gap {
+      grid-column: 7 / 11;
+    }
+  }
+</style>

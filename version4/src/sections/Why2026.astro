@@ -1,0 +1,564 @@
+---
+// Блок 4 «Почему этим стоит заняться в 2026 году» [#pochemu-seychas]. Приём продуктового раздела
+// Calendly: слева надпись, заголовок антиквой и пункты-события с полосой прогресса, справа —
+// большая градиентная карточка, в которой у каждого пункта своя белая карточка-«документ».
+// Пункты свёрстаны той же разметкой, что FeatureAccordion (.acc и data-acc — поведение из kit.ts):
+// под описанием пункта нужны метки продуктов и метка «проект, ещё не принят», а компонент
+// выводит только текст.
+import SectionIntro from '../components/SectionIntro.astro';
+import GradientVisual from '../components/GradientVisual.astro';
+import ProductTag from '../components/ProductTag.astro';
+import Icon, { type IconName } from '../components/Icon.astro';
+import type { ProductId } from '../config/site';
+
+const NB = ' ';
+
+interface Item {
+  when: string;
+  text: string;
+  products: ProductId[];
+  icon: IconName;
+  draft?: boolean;
+}
+
+const items: Item[] = [
+  {
+    when: `1${NB}января 2026.`,
+    text: 'Весовой контроль на объектах стал обязательным. РЭО запретил загружать данные во ФГИС УТКО файлом.',
+    products: ['tonn', 'kodeks'],
+    icon: 'scale',
+  },
+  {
+    when: `1${NB}сентября 2026.`,
+    text: `Действуют новые Единые требования к объектам — ПП №${NB}567. По п.${NB}36 объект оснащается системой весового контроля и автоматизированной системой учёта и передачи данных во ФГИС УТКО.`,
+    products: ['tonn'],
+    icon: 'file-check',
+  },
+  {
+    when: '509 из 1100.',
+    text: 'Столько объектов подключили весовые посты к ФГИС УТКО на февраль 2026.',
+    products: ['kodeks'],
+    icon: 'chart-column',
+  },
+  {
+    when: `3${NB}года.`,
+    text: `За такой срок можно взыскать плату с юрлица, которое работало без договора: договор считается заключённым на типовых условиях (п.${NB}8(17) Правил №${NB}1156), срок исковой давности — ст.${NB}196 ГК РФ. Чем раньше найдено юрлицо, тем больше долга можно вернуть.`,
+    products: ['robot'],
+    icon: 'hourglass',
+  },
+  {
+    when: 'Готовится.',
+    text: 'Минприроды готовит передачу во ФГИС УТКО данных о начислениях и задолженности перед регоператорами, а сведения по жилым помещениям будут приходить туда из ГИС ЖКХ автоматически. Тогда расхождения в базе увидит и регулятор.',
+    products: ['robot'],
+    icon: 'circle-dashed',
+    draft: true,
+  },
+];
+---
+
+<section class="section why" id="pochemu-seychas" aria-labelledby="why-title">
+  <div class="container why__grid" data-acc-scope>
+    <div class="why__intro">
+      <SectionIntro eyebrow="Почему сейчас" titleId="why-title" align="left" serif>
+        Почему этим стоит заняться в 2026 году
+        <Fragment slot="lead">
+          Требования к данным об отходах ужесточились, а плату за прошлые периоды можно взыскать только за три года.
+        </Fragment>
+      </SectionIntro>
+    </div>
+
+    <div class="why__list" data-reveal style="--d:2">
+      <div class="acc" data-acc data-acc-ms="7000">
+        {
+          items.map((it, i) => (
+            <div class:list={['acc__item', { 'is-open': i === 0 }]} data-acc-item>
+              <h3 class="why__h">
+                <button
+                  class="acc__head"
+                  type="button"
+                  id={`why-h${i}`}
+                  aria-expanded={i === 0 ? 'true' : 'false'}
+                  aria-controls={`why-b${i}`}
+                >
+                  <Icon name={it.icon} />
+                  <span>{it.when}</span>
+                </button>
+              </h3>
+              <div class="acc__body" id={`why-b${i}`} role="region" aria-labelledby={`why-h${i}`}>
+                <div class="acc__inner">
+                  <div class="why__body">
+                    <p>{it.text}</p>
+                    {it.draft && <span class="tag tag--forecast why__draft">проект, ещё не принят</span>}
+                    <p class="why__tags">
+                      {it.products.map((id) => (
+                        <ProductTag id={id} />
+                      ))}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <span class="acc__progress" aria-hidden="true" />
+            </div>
+          ))
+        }
+      </div>
+      <p class="footnote why__note">Нормативные данные актуальны на сентябрь 2026.</p>
+    </div>
+
+    <div class="why__vis" data-reveal style="--d:1">
+      <GradientVisual preset="dusk" deco="bars">
+        <div class="why__panes" data-panes>
+          <!-- 1 января 2026 -->
+          <div class="why__pane is-active" data-pane>
+            <div class="ui doc">
+              <div class="doc__top">
+                <span class="doc__ico"><Icon name="scale" size={18} /></span>
+                <span class="doc__src">Требования к&nbsp;объектам</span>
+                <span class="doc__status is-on">действует</span>
+              </div>
+              <p class="doc__date">1&nbsp;января 2026</p>
+              <ul class="doc__rows">
+                <li style="--k:0">
+                  <span>Весовой контроль на&nbsp;объектах</span>
+                  <b class="doc__v is-ok"><Icon name="check" size={14} strokeWidth={2.5} />обязателен</b>
+                </li>
+                <li style="--k:1">
+                  <span>Загрузка во&nbsp;ФГИС УТКО файлом</span>
+                  <b class="doc__v is-bad"><Icon name="x" size={14} strokeWidth={2.5} />запрещена</b>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 1 сентября 2026 -->
+          <div class="why__pane" data-pane>
+            <div class="ui doc">
+              <div class="doc__top">
+                <span class="doc__ico"><Icon name="file-check" size={18} /></span>
+                <span class="doc__src">ПП №&nbsp;567 · Единые требования</span>
+                <span class="doc__status is-on">действует</span>
+              </div>
+              <p class="doc__date">1&nbsp;сентября 2026</p>
+              <ul class="doc__rows">
+                <li style="--k:0">
+                  <span>п.&nbsp;36 · система весового контроля</span>
+                  <b class="doc__v is-ok"><Icon name="check" size={14} strokeWidth={2.5} /></b>
+                </li>
+                <li style="--k:1">
+                  <span>п.&nbsp;36 · учёт и&nbsp;передача во&nbsp;ФГИС УТКО</span>
+                  <b class="doc__v is-ok"><Icon name="check" size={14} strokeWidth={2.5} /></b>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 509 из 1100 -->
+          <div class="why__pane" data-pane>
+            <div class="ui doc">
+              <div class="doc__top">
+                <span class="doc__ico"><Icon name="chart-column" size={18} /></span>
+                <span class="doc__src">Весовые посты во&nbsp;ФГИС УТКО</span>
+                <span class="doc__status">февраль 2026</span>
+              </div>
+              <p class="doc__date">509 <span class="doc__of">из&nbsp;1100</span></p>
+              <div class="doc__meter">
+                <span class="doc__track"><i style="--w:0.463"></i></span>
+                <span class="doc__scale"><span>подключены</span><span>все объекты</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3 года -->
+          <div class="why__pane" data-pane>
+            <div class="ui doc">
+              <div class="doc__top">
+                <span class="doc__ico"><Icon name="hourglass" size={18} /></span>
+                <span class="doc__src">Ст.&nbsp;196 ГК&nbsp;РФ · срок исковой давности</span>
+              </div>
+              <p class="doc__date">3&nbsp;года</p>
+              <div class="doc__years">
+                <span class="doc__span" style="--k:0">можно взыскать</span>
+                <span class="doc__ticks"><span>2023</span><span>2024</span><span>2025</span><span>2026</span></span>
+              </div>
+              <ul class="doc__rows">
+                <li style="--k:1">
+                  <span>Договор на типовых условиях · п.&nbsp;8(17) Правил №&nbsp;1156</span>
+                  <b class="doc__v is-ok"><Icon name="check" size={14} strokeWidth={2.5} /></b>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Готовится -->
+          <div class="why__pane" data-pane>
+            <div class="ui doc">
+              <div class="doc__top">
+                <span class="doc__ico"><Icon name="circle-dashed" size={18} /></span>
+                <span class="doc__src">Минприроды</span>
+                <span class="doc__status is-draft">проект, ещё не принят</span>
+              </div>
+              <p class="doc__date">Готовится</p>
+              <div class="doc__flow" style="--k:0">
+                <span class="doc__node">ГИС ЖКХ</span>
+                <span class="doc__pipe"><i></i></span>
+                <span class="doc__node doc__node--main">ФГИС УТКО</span>
+              </div>
+              <ul class="doc__rows">
+                <li style="--k:1">
+                  <span>Начисления и&nbsp;задолженность</span>
+                  <b class="doc__v">автоматически</b>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </GradientVisual>
+    </div>
+  </div>
+</section>
+
+<style>
+  .why__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'intro vis'
+      'list vis';
+    column-gap: clamp(48px, 7vw, 104px);
+  }
+
+  .why__intro {
+    grid-area: intro;
+  }
+
+  .why__list {
+    grid-area: list;
+  }
+
+  .why__vis {
+    grid-area: vis;
+    align-self: start;
+  }
+
+  /* Пункты: заголовок-событие и описание, под ним — метки */
+  .why__h {
+    font: inherit;
+  }
+
+  .why__body {
+    display: grid;
+    justify-items: start;
+    gap: 12px;
+    max-width: 52ch;
+  }
+
+  .why__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .why__note {
+    margin-top: 20px;
+  }
+
+  /* ── Белые карточки-«документы» на градиенте ────────────── */
+  .why__panes {
+    width: 100%;
+    justify-items: center;
+  }
+
+  .doc {
+    display: grid;
+    gap: 16px;
+    width: min(100%, 410px);
+  }
+
+  .doc__top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 34px;
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+
+  .doc__ico {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 10px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .doc__src {
+    min-width: 0;
+  }
+
+  .doc__status {
+    margin-left: auto;
+    padding: 4px 10px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 12.5px;
+    font-weight: 560;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .doc__status.is-on {
+    background: color-mix(in oklab, var(--ok) 13%, white);
+    color: #087a52;
+  }
+
+  .doc__status.is-draft {
+    border: 1px dashed var(--subtle);
+    background: transparent;
+    color: var(--muted);
+    white-space: normal;
+    text-align: center;
+  }
+
+  .doc__date {
+    font-size: clamp(1.75rem, 2.4vw, 2.25rem);
+    line-height: 1.05;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+  }
+
+  .doc__of {
+    color: var(--subtle);
+  }
+
+  .doc__rows {
+    display: grid;
+    gap: 8px;
+  }
+
+  .doc__rows li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 11px 12px 11px 14px;
+    border-radius: 12px;
+    background: var(--bg);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .doc__v {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: none;
+    padding: 3px 9px 3px 7px;
+    border-radius: 7px;
+    background: var(--panel);
+    font-size: 12.5px;
+    font-weight: 560;
+  }
+
+  .doc__v.is-ok {
+    background: color-mix(in oklab, var(--ok) 13%, white);
+    color: #087a52;
+  }
+
+  .doc__v.is-bad {
+    background: color-mix(in oklab, var(--danger) 10%, white);
+    color: #b81f30;
+  }
+
+  /* 509 из 1100 */
+  .doc__meter {
+    display: grid;
+    gap: 8px;
+  }
+
+  .doc__track {
+    height: 14px;
+    border-radius: 7px;
+    background: var(--panel-2);
+    overflow: hidden;
+  }
+
+  .doc__track i {
+    display: block;
+    height: 100%;
+    border-radius: 7px;
+    background: var(--ink);
+    transform: scaleX(var(--w));
+    transform-origin: left;
+    transition: transform 1s var(--ease-out) 0.25s;
+  }
+
+  .doc__scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* 3 года: шкала лет и отрезок «можно взыскать» */
+  .doc__years {
+    display: grid;
+    gap: 8px;
+  }
+
+  .doc__span {
+    display: block;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: var(--blue-soft);
+    font-size: 13px;
+    font-weight: 560;
+    color: #0050c0;
+    text-align: center;
+  }
+
+  .doc__ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Готовится: ГИС ЖКХ → ФГИС УТКО */
+  .doc__flow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .doc__node {
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    font-size: 13.5px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .doc__node--main {
+    border-style: dashed;
+    border-color: var(--subtle);
+  }
+
+  .doc__pipe {
+    position: relative;
+    flex: 1;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--line-2) 0 5px, transparent 5px 9px);
+    overflow: hidden;
+  }
+
+  .doc__pipe i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 100%;
+    transform: translateX(-100%);
+  }
+
+  .doc__pipe i::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -2px;
+    width: 18px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--blue);
+  }
+
+  /* Строки «документа» появляются по очереди, когда его панель становится активной */
+  .why__pane.is-active .doc__rows li,
+  .why__pane.is-active .doc__span,
+  .why__pane.is-active .doc__flow {
+    animation: doc-in 0.6s var(--ease-out) both;
+    animation-delay: calc(0.18s + var(--k, 0) * 0.12s);
+  }
+
+  .why__pane:not(.is-active) .doc__track i {
+    transform: scaleX(0);
+    transition-duration: 0s;
+    transition-delay: 0s;
+  }
+
+  .why.is-live .why__pane.is-active .doc__pipe i {
+    animation: doc-flow 2.2s var(--ease-in-out) infinite;
+  }
+
+  @keyframes doc-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes doc-flow {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .doc__pipe i {
+      transform: none;
+    }
+  }
+
+  /* ── Планшет и телефон: одна колонка, картинка между заголовком и пунктами ── */
+  @media (max-width: 900px) {
+    .why__grid {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: none;
+      grid-template-areas:
+        'intro'
+        'vis'
+        'list';
+    }
+
+    .why__vis {
+      margin-bottom: 36px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .doc {
+      gap: 14px;
+    }
+
+    .doc__top {
+      flex-wrap: wrap;
+    }
+
+    .doc__status {
+      margin-left: 44px;
+    }
+
+    .doc__rows li {
+      font-size: 13.5px;
+    }
+  }
+</style>
+
+<script>
+  // Бегущая точка в схеме «Готовится» — только пока раздел на экране
+  const why = document.querySelector<HTMLElement>('.why');
+  if (why && 'IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => why.classList.toggle('is-live', entry.isIntersecting), {
+      threshold: 0.1,
+    }).observe(why);
+  }
+</script>

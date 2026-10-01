@@ -1,0 +1,534 @@
+---
+// Шапка как у Calendly: в начале страницы — плоская на фоне, при прокрутке — белая «парящая» плашка.
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { PRODUCT_ICON } from './ProductLabel.astro';
+import { CONTACTS, PRODUCTS, PRODUCT_ORDER, productHref, withBase } from '../config/site';
+
+const links = [
+  { href: '#balans', label: 'Как это работает' },
+  { href: '#pilot', label: 'Пилот' },
+  { href: '#bezopasnost', label: 'Безопасность' },
+  { href: '#o-kompanii', label: 'О компании' },
+  { href: '#kontakty', label: 'Контакты' },
+];
+---
+
+<header class="hdr" data-hdr>
+  <div class="hdr__bar">
+    <a href={withBase('/')} class="hdr__logo" aria-label="QODEX — на главную"><Logo height={21} /></a>
+
+    <nav class="hdr__nav" aria-label="Основное меню">
+      <ul class="hdr__list">
+        <li class="dd" data-dd>
+          <button class="hdr__link dd__toggle" type="button" aria-expanded="false" aria-controls="dd-products">
+            Продукты
+            <Icon name="chevron-down" size={16} strokeWidth={2} />
+          </button>
+          <div class="dd__menu" id="dd-products">
+            <ul class="dd__grid">
+              {
+                PRODUCT_ORDER.map((id) => (
+                  <li>
+                    <a
+                      href={productHref(id, 'menu')}
+                      class:list={['dd__item', `p-${id}`]}
+                      data-goal="product_landing"
+                      data-goal-product={id}
+                    >
+                      <span class="dd__ico" aria-hidden="true">
+                        <Icon name={PRODUCT_ICON[id]} size={17} strokeWidth={2} />
+                      </span>
+                      <span class="dd__text">
+                        <span class="dd__name">{PRODUCTS[id].name}</span>
+                        <span class="dd__host">{PRODUCTS[id].url.replace('https://', '')}</span>
+                      </span>
+                      <Icon name="arrow-up-right" size={16} class="dd__arrow" />
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+            <a href="#produkty" class="dd__all">
+              Все продукты
+              <Icon name="arrow-right" size={16} />
+            </a>
+          </div>
+        </li>
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} class="hdr__link">
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="hdr__actions">
+      <a href={CONTACTS.phoneHref} class="hdr__phone" data-goal="phone_click">
+        <Icon name="phone" size={18} class="hdr__phone-ico" />
+        <span class="hdr__phone-text">{CONTACTS.phone}</span>
+        <span class="visually-hidden">Позвонить {CONTACTS.phone}</span>
+      </a>
+      <a href="#forma" class="btn btn--primary hdr__cta" data-goal="pilot_click">Запустить пилот</a>
+      <button class="hdr__burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Меню" data-burger>
+        <Icon name="menu" size={22} class="i-open" />
+        <Icon name="x" size={22} class="i-close" />
+      </button>
+    </div>
+  </div>
+
+  <div class="mnav" id="mnav" data-mnav hidden>
+    <ul class="mnav__products">
+      {
+        PRODUCT_ORDER.map((id) => (
+          <li>
+            <a
+              href={productHref(id, 'menu')}
+              class:list={['mnav__product', `p-${id}`]}
+              data-goal="product_landing"
+              data-goal-product={id}
+            >
+              <span class="dd__ico" aria-hidden="true">
+                <Icon name={PRODUCT_ICON[id]} size={16} strokeWidth={2} />
+              </span>
+              {PRODUCTS[id].name}
+              <Icon name="arrow-up-right" size={16} class="mnav__arrow" />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <ul class="mnav__links">
+      <li><a href="#produkty">Все продукты</a></li>
+      {
+        links.map((l) => (
+          <li>
+            <a href={l.href}>{l.label}</a>
+          </li>
+        ))
+      }
+    </ul>
+    <a href={CONTACTS.phoneHref} class="mnav__phone" data-goal="phone_click">
+      <Icon name="phone" size={18} />
+      {CONTACTS.phone}
+    </a>
+  </div>
+</header>
+
+<style>
+  .hdr {
+    --bar-x: 0px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: var(--header-h);
+    padding-inline: var(--page-pad);
+  }
+
+  /* Плашка: на старте — прозрачная во всю ширину контейнера, при прокрутке — белая «таблетка» */
+  .hdr__bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    max-width: calc(var(--container) + var(--gutter) * 2 + 56px);
+    height: 72px;
+    margin: 4px auto 0;
+    padding-inline: var(--gutter);
+    border-radius: 20px;
+    background: rgb(255 255 255 / 0);
+    box-shadow: 0 0 0 1px rgb(7 26 49 / 0);
+    transition:
+      background-color 0.35s var(--ease),
+      box-shadow 0.35s var(--ease),
+      margin 0.45s var(--ease-out),
+      padding 0.45s var(--ease-out),
+      max-width 0.45s var(--ease-out);
+  }
+
+  .hdr.is-scrolled .hdr__bar,
+  .hdr.is-open .hdr__bar {
+    max-width: calc(var(--container) + var(--gutter) * 2);
+    margin-top: 16px;
+    padding-inline: 16px 12px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(7 26 49 / 0.04),
+      0 12px 36px -16px rgb(7 26 49 / 0.25);
+  }
+
+  .hdr__logo {
+    display: flex;
+    flex: none;
+    color: var(--ink);
+  }
+
+  .hdr__nav {
+    flex: 1;
+  }
+
+  .hdr__list {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .hdr__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    font-size: 15.5px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    transition: background-color 0.2s;
+  }
+
+  .hdr__link:hover,
+  .dd.is-open .dd__toggle {
+    background: rgb(7 26 49 / 0.05);
+  }
+
+  .dd {
+    position: relative;
+  }
+
+  .dd__toggle :global(svg) {
+    transition: transform 0.3s var(--ease-out);
+  }
+
+  .dd.is-open .dd__toggle :global(svg) {
+    transform: rotate(180deg);
+  }
+
+  /* Меню продуктов: белая карточка с плитками продуктов */
+  .dd__menu {
+    position: absolute;
+    top: calc(100% + 14px);
+    left: -8px;
+    width: 520px;
+    padding: 10px;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(7 26 49 / 0.05),
+      var(--shadow-float);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition:
+      opacity 0.2s,
+      transform 0.3s var(--ease-out),
+      visibility 0s linear 0.2s;
+  }
+
+  .dd.is-open .dd__menu {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition-delay: 0s;
+  }
+
+  .dd__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .dd__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    transition: background-color 0.2s;
+  }
+
+  .dd__item:hover {
+    background: var(--bg);
+  }
+
+  .dd__ico {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 10px;
+    background: var(--pc);
+    color: #fff;
+  }
+
+  .dd__text {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .dd__name {
+    font-size: 15px;
+    font-weight: 560;
+    color: var(--ink);
+  }
+
+  .dd__host {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .dd__item :global(.dd__arrow) {
+    margin-left: auto;
+    color: var(--subtle);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .dd__item:hover :global(.dd__arrow) {
+    opacity: 1;
+  }
+
+  .dd__all {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding: 14px 14px;
+    border-radius: 14px;
+    background: var(--panel);
+    font-size: 14.5px;
+    font-weight: 560;
+  }
+
+  .dd__all:hover {
+    background: var(--panel-2);
+  }
+
+  .hdr__actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-left: auto;
+  }
+
+  .hdr__phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15.5px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .hdr__phone :global(.hdr__phone-ico) {
+    display: none;
+  }
+
+  .hdr__phone:hover .hdr__phone-text {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .hdr__cta {
+    min-height: 48px;
+  }
+
+  .hdr__burger {
+    display: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: none;
+    color: var(--ink);
+  }
+
+  .hdr__burger :global(.i-close),
+  .hdr.is-open .hdr__burger :global(.i-open) {
+    display: none;
+  }
+
+  .hdr.is-open .hdr__burger :global(.i-close) {
+    display: block;
+  }
+
+  /* Мобильное меню: белая карточка под плашкой */
+  .mnav {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: var(--page-pad);
+    right: var(--page-pad);
+    max-height: calc(100dvh - var(--header-h) - 24px);
+    overflow-y: auto;
+    padding: 12px;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(7 26 49 / 0.05),
+      var(--shadow-float);
+  }
+
+  .mnav__products {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .mnav__product {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 14px;
+    background: var(--bg);
+    font-size: 15px;
+    font-weight: 560;
+  }
+
+  .mnav__product :global(.mnav__arrow) {
+    margin-left: auto;
+    color: var(--subtle);
+  }
+
+  .mnav__links {
+    display: grid;
+    margin-top: 8px;
+  }
+
+  .mnav__links a {
+    display: block;
+    padding: 14px 10px;
+    border-bottom: 1px solid var(--line);
+    font-size: 17px;
+    font-weight: 500;
+  }
+
+  .mnav__phone {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 10px 6px;
+    font-size: 17px;
+    font-weight: 560;
+  }
+
+  @media (max-width: 1180px) {
+    .hdr__nav {
+      display: none;
+    }
+
+    .hdr__burger {
+      display: grid;
+    }
+
+    .hdr__actions {
+      gap: 8px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .hdr__phone {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+    }
+
+    .hdr__phone-text {
+      display: none;
+    }
+
+    .hdr__phone :global(.hdr__phone-ico) {
+      display: block;
+    }
+
+    .hdr__bar,
+    .hdr.is-scrolled .hdr__bar,
+    .hdr.is-open .hdr__bar {
+      gap: 12px;
+      padding-inline: 12px 6px;
+    }
+
+    .hdr__cta {
+      min-height: 42px;
+      padding: 0 14px;
+      font-size: 14.5px;
+      border-radius: 11px;
+    }
+
+    .mnav__products {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .hdr__logo :global(svg) {
+      width: 84px;
+      height: auto;
+    }
+
+    .hdr__actions {
+      gap: 2px;
+    }
+
+    .hdr__cta {
+      padding: 0 12px;
+      font-size: 14px;
+    }
+  }
+</style>
+
+<script>
+  const hdr = document.querySelector<HTMLElement>('[data-hdr]')!;
+  const burger = hdr.querySelector<HTMLButtonElement>('[data-burger]')!;
+  const mnav = hdr.querySelector<HTMLElement>('[data-mnav]')!;
+  const dd = hdr.querySelector<HTMLElement>('[data-dd]')!;
+  const ddToggle = dd.querySelector<HTMLButtonElement>('.dd__toggle')!;
+
+  const onScroll = () => hdr.classList.toggle('is-scrolled', window.scrollY > 12);
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  const setMenu = (open: boolean) => {
+    mnav.hidden = !open;
+    hdr.classList.toggle('is-open', open);
+    burger.setAttribute('aria-expanded', String(open));
+  };
+  burger.addEventListener('click', () => setMenu(mnav.hidden));
+  mnav.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('a')) setMenu(false);
+  });
+
+  const setDd = (open: boolean) => {
+    dd.classList.toggle('is-open', open);
+    ddToggle.setAttribute('aria-expanded', String(open));
+  };
+  ddToggle.addEventListener('click', () => setDd(!dd.classList.contains('is-open')));
+  dd.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('.dd__menu a')) setDd(false);
+  });
+  document.addEventListener('click', (e) => {
+    if (!dd.contains(e.target as Node)) setDd(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (dd.classList.contains('is-open')) {
+      setDd(false);
+      ddToggle.focus();
+    }
+    if (!mnav.hidden) {
+      setMenu(false);
+      burger.focus();
+    }
+  });
+</script>

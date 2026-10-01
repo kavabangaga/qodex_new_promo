@@ -1,0 +1,1610 @@
+---
+// Первый экран как у Calendly: крупный заголовок по центру, две кнопки, строка доверия,
+// ниже — градиентная панель с вкладками четырёх мест (база, маршрут, весы, ФГИС).
+// На компьютере панель раскрывается и вкладки переключаются при прокрутке (без перехвата прокрутки),
+// на планшете и телефоне — по нажатию и сами по таймеру.
+import Icon from '../components/Icon.astro';
+import ProductLabel, { PRODUCT_ICON } from '../components/ProductLabel.astro';
+import { PRODUCTS, type ProductId } from '../config/site';
+
+interface Place {
+  id: ProductId;
+  label: string;
+  text: string;
+  figure: { pre?: string; big: string; post?: string };
+}
+
+// Четыре места из заголовка = четыре продукта (тексты блока «Четыре продукта» из ТЗ)
+const places: Place[] = [
+  {
+    id: 'robot',
+    label: 'База начислений',
+    text: 'Находит жильцов, дома и юрлица, которые должны платить за вывоз ТКО, но не платят. Рост сбора без роста тарифа',
+    figure: { big: '+10%', post: 'жильцов в базе за один день сверки' },
+  },
+  {
+    id: 'tracker',
+    label: 'Маршрут',
+    text: 'Камеры на мусоровозе снимают сами, ИИ считает контейнеры и сверяет с планом маршрута. Платите перевозчику за фактический вывоз и видите левак',
+    figure: { big: '+17%', post: 'контейнеров сверх плана' },
+  },
+  {
+    id: 'tonn',
+    label: 'Весы',
+    text: 'Номер, фото и вес машины на весовой — без ручного ввода. Платите объекту только за реальный вес',
+    figure: { big: '−57%', post: 'тоннажа в актах' },
+  },
+  {
+    id: 'kodeks',
+    label: 'ФГИС',
+    text: 'Принимает Excel объекта, проверяет ошибки и дубли и отправляет данные во ФГИС УТКО по API. Данные объектов уходят в срок',
+    figure: { pre: 'Подключение за', big: '15 минут' },
+  },
+];
+
+// Демо-строки сверки РО-БОТа
+const robotRows = [
+  { addr: 'ул. Ленина, 12, кв. 4', note: 'в базе 1 — живут 4', chip: '+3 жильца' },
+  { addr: 'ООО «Вектор», пр. Мира, 7', note: 'нет договора на вывоз', chip: 'юрлицо' },
+  { addr: 'ул. Садовая, 21, кв. 9', note: 'в базе 2 — живут 3', chip: '+1 жилец' },
+  { addr: 'ИП Галиев, ул. Цюрупы, 40', note: 'нет договора на вывоз', chip: 'юрлицо' },
+];
+---
+
+<section class="hero" data-hero>
+  <div class="hero__box">
+    <div class="hero__intro container">
+      <p class="hero__kicker" data-reveal>
+        <span class="hero__kicker-dot" aria-hidden="true"></span>
+        Для региональных операторов ТКО
+      </p>
+      <h1 class="t-display hero__title" data-reveal style="--d:1">
+        Находим деньги регоператора в&nbsp;четырёх местах: база начислений, маршрут, весы, ФГИС
+      </h1>
+      <p class="t-lead hero__sub" data-reveal style="--d:2">
+        С 2020 года автоматизируем учёт отходов — от базы начислений регоператора до весовой на полигоне и передачи данных
+        во ФГИС УТКО. Вы начисляете и платите по фактическим данным.
+      </p>
+      <div class="hero__cta" data-reveal style="--d:3">
+        <a href="#forma" class="btn btn--primary" data-goal="pilot_click">
+          Запустить бесплатный пилот
+          <Icon name="arrow-right" />
+        </a>
+        <a href="#poteri" class="btn btn--outline">
+          Где вы теряете деньги
+          <Icon name="arrow-down" />
+        </a>
+      </div>
+      <ul class="hero__proof" data-reveal style="--d:4">
+        <li>73 клиента</li>
+        <li>Резидент Сколково</li>
+        <li>Аккредитованная IT-компания</li>
+      </ul>
+    </div>
+
+    <div class="hero__track" data-hero-track>
+      <div class="hero__sticky">
+        <div class="stage" id="produkty" data-stage style="--i:0; --e:0">
+          <div class="stage__bg" aria-hidden="true">
+            <div class="stage__mesh">
+              <span class="zone zone--a"></span>
+              <span class="zone zone--b"></span>
+              <span class="zone zone--c"></span>
+              <span class="zone zone--d"></span>
+            </div>
+          </div>
+
+          <div class="stage__in">
+            <h2 class="stage__title" data-reveal>Четыре продукта — одна цепочка учёта</h2>
+
+            <div class="stage__tabs" role="tablist" aria-label="Четыре места, где мы находим деньги" data-reveal style="--d:1">
+              {
+                places.map((pl, i) => (
+                  <button
+                    class:list={['stab', `p-${pl.id}`]}
+                    type="button"
+                    role="tab"
+                    id={`stab-${pl.id}`}
+                    aria-selected={i === 0 ? 'true' : 'false'}
+                    aria-controls={`spane-${pl.id}`}
+                    tabindex={i === 0 ? 0 : -1}
+                    data-tab
+                  >
+                    <span class="stab__ico" aria-hidden="true">
+                      <Icon name={PRODUCT_ICON[pl.id]} size={22} strokeWidth={1.9} />
+                    </span>
+                    <span class="stab__label">{pl.label}</span>
+                  </button>
+                ))
+              }
+              <svg class="stage__tail" viewBox="0 0 48 20" aria-hidden="true" data-tail>
+                <path d="M0 20C15 20 18 15 18 9V0h12v9c0 6 3 11 18 11Z" />
+              </svg>
+            </div>
+
+            <div class="stage__card" data-reveal style="--d:2">
+              {
+                places.map((pl, i) => (
+                  <div
+                    class:list={['spane', `p-${pl.id}`, { 'is-active': i === 0 }]}
+                    role="tabpanel"
+                    id={`spane-${pl.id}`}
+                    aria-labelledby={`stab-${pl.id}`}
+                    aria-hidden={i === 0 ? 'false' : 'true'}
+                    data-pane-hero
+                  >
+                    <div class="spane__text">
+                      <ProductLabel id={pl.id} />
+                      <h3 class="t-h3 spane__title">{pl.label}</h3>
+                      <p class="spane__desc">{pl.text}</p>
+                      <p class="spane__fig">
+                        {pl.figure.pre && <span class="spane__fig-pre">{pl.figure.pre}</span>}
+                        <span class="spane__fig-big t-num">{pl.figure.big}</span>
+                        {pl.figure.post && <span class="spane__fig-post">{pl.figure.post}</span>}
+                      </p>
+                      <a
+                        href={`#${pl.id}`}
+                        class="link-arrow spane__more"
+                        tabindex={i === 0 ? 0 : -1}
+                        aria-label={`Подробнее: ${PRODUCTS[pl.id].name}`}
+                      >
+                        Подробнее
+                        <Icon name="arrow-right" />
+                      </a>
+                    </div>
+
+                    <div class="spane__visual" aria-hidden="true">
+                      {pl.id === 'robot' && (
+                        <div class="mock mock--robot">
+                          <div class="mock__head">
+                            <span class="mock__title">Сверка с ГИС ЖКХ</span>
+                            <span class="mock__chip">Район: Кировский</span>
+                          </div>
+                          <ul class="rb__rows">
+                            {robotRows.map((r, k) => (
+                              <li class="rb__row" style={`--k:${k}`}>
+                                <span class="rb__addr">
+                                  <b>{r.addr}</b>
+                                  <small>{r.note}</small>
+                                </span>
+                                <span class="rb__chip">{r.chip}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          <div class="mock__foot">
+                            <span class="rb__bar">
+                              <i />
+                            </span>
+                            <span class="rb__found">
+                              Найдено: <b>247</b>
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {pl.id === 'tracker' && (
+                        <div class="mock mock--tracker">
+                          <div class="tr__cam">
+                            <span class="tr__rec">
+                              <i /> Камера 2
+                            </span>
+                            <span class="tr__bins">
+                              {[0, 1, 2].map((k) => (
+                                <span class="tr__bin" style={`--k:${k}`}>
+                                  <Icon name="waste-bin" size={34} strokeWidth={1.4} />
+                                </span>
+                              ))}
+                            </span>
+                            <span class="tr__frame" />
+                            <span class="tr__count">
+                              Погружено: <b class="tr__num" />
+                            </span>
+                          </div>
+                          <div class="tr__route">
+                            <span class="tr__line">
+                              <i />
+                            </span>
+                            {[0, 1, 2, 3, 4].map((k) => (
+                              <span class="tr__stop" style={`--k:${k}`} />
+                            ))}
+                            <span class="tr__truck">
+                              <Icon name="truck" size={16} strokeWidth={2} />
+                            </span>
+                          </div>
+                          <div class="mock__foot">
+                            <span>
+                              План: <b>12</b> · Факт: <b>14</b>
+                            </span>
+                            <span class="mock__ok">+17% сверх плана</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {pl.id === 'tonn' && (
+                        <div class="mock mock--tonn">
+                          <div class="mock__head">
+                            <span class="mock__title">Весовая № 1</span>
+                            <span class="mock__live">
+                              <i /> онлайн
+                            </span>
+                          </div>
+                          <div class="tn__plate">
+                            <span class="tn__num">А 983 ВВ</span>
+                            <span class="tn__reg">
+                              102
+                              <small>RUS</small>
+                            </span>
+                            <span class="tn__scan" />
+                          </div>
+                          <p class="tn__ok">
+                            <Icon name="check" size={15} strokeWidth={2.6} /> Номер распознан
+                          </p>
+                          <div class="tn__grid">
+                            <div class="tn__photo">
+                              <Icon name="truck" size={30} strokeWidth={1.5} />
+                              <small>Фото: 2</small>
+                            </div>
+                            <div class="tn__weight">
+                              <small>Вес брутто</small>
+                              <b class="t-num">
+                                12 480 <span>кг</span>
+                              </b>
+                            </div>
+                          </div>
+                          <div class="mock__foot">
+                            <span>Без ручного ввода</span>
+                            <span class="mock__ok">Акт сформирован</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {pl.id === 'kodeks' && (
+                        <div class="mock mock--kodeks">
+                          <div class="kd__file">
+                            <span class="kd__xls">XLS</span>
+                            <span class="kd__name">
+                              <b>Акты_сентябрь.xlsx</b>
+                              <small>80 актов · 1,2 МБ</small>
+                            </span>
+                          </div>
+                          <div class="kd__check">
+                            <span class="kd__label">
+                              Проверка актов <b class="kd__count" />
+                            </span>
+                            <span class="kd__bar">
+                              <i />
+                            </span>
+                            <ul class="kd__list">
+                              <li>
+                                <Icon name="check" size={14} strokeWidth={2.6} /> Ошибки: 0
+                              </li>
+                              <li>
+                                <Icon name="check" size={14} strokeWidth={2.6} /> Дубли: 0
+                              </li>
+                            </ul>
+                          </div>
+                          <div class="kd__send">
+                            <span class="kd__cloud">
+                              <Icon name="cloud-upload" size={20} strokeWidth={1.9} />
+                            </span>
+                            <span>
+                              <b>Отправлено во ФГИС УТКО</b>
+                              <small>Импорт из Excel: 80/80 актов верно</small>
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding: 0 var(--page-pad);
+  }
+
+  /* Большая тёплая панель первого экрана, как у Calendly */
+  .hero__box {
+    position: relative;
+    border-radius: var(--r-2xl);
+    background: var(--panel);
+    padding-top: clamp(48px, 7vw, 104px);
+    padding-bottom: clamp(16px, 2vw, 24px);
+  }
+
+  .hero__intro {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .hero__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    padding: 7px 14px 7px 12px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 0 0 1px var(--line);
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .hero__kicker-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 0 4px rgb(10 159 106 / 0.14);
+  }
+
+  .hero__title {
+    max-width: 1120px;
+    font-size: clamp(2.4rem, 4.7vw, 4.25rem);
+  }
+
+  .hero__sub {
+    max-width: 650px;
+    margin-top: 24px;
+  }
+
+  .hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 36px;
+  }
+
+  .hero__proof {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 18px;
+    margin-top: 22px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .hero__proof li + li::before {
+    content: '·';
+    margin-right: 18px;
+    color: var(--subtle);
+  }
+
+  /* ── Сцена с вкладками ─────────────────────────────── */
+  .hero__track {
+    position: relative;
+    margin-top: clamp(48px, 6vw, 80px);
+  }
+
+  .stage {
+    position: relative;
+    isolation: isolate;
+    padding: clamp(28px, 3.4vw, 48px) clamp(12px, 3vw, 40px) clamp(28px, 4vw, 64px);
+    border-radius: clamp(28px, 3.4vw, 48px);
+    scroll-margin-top: calc(var(--header-h) + 16px);
+  }
+
+  .stage__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    overflow: hidden;
+    background: #a9cff7;
+  }
+
+  /* Длинная лента цветных зон палитры Calendly — сдвигается к зоне активной вкладки */
+  .stage__mesh {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: flex;
+    width: 400%;
+    background: linear-gradient(
+      90deg,
+      #a7cdf6 0%,
+      #c3dcf8 11%,
+      #cdc2fa 25%,
+      #dccdf8 36%,
+      #a9d6f2 50%,
+      #b6e7ea 61%,
+      #a9e6df 75%,
+      #d5ecdf 100%
+    );
+    transform: translateX(calc(var(--i) * -25%));
+    transition: transform 1.5s var(--ease-in-out);
+  }
+
+  .zone {
+    flex: 1;
+    margin-inline: -8%;
+  }
+
+  .zone--a {
+    background:
+      radial-gradient(34% 58% at 50% 22%, #3d84df 0%, transparent 72%),
+      radial-gradient(30% 50% at 26% 78%, #c3b2fb 0%, transparent 72%),
+      radial-gradient(30% 50% at 72% 24%, #c7ecfb 0%, transparent 72%),
+      radial-gradient(34% 50% at 62% 90%, #8fd7ef 0%, transparent 72%);
+  }
+
+  .zone--b {
+    background:
+      radial-gradient(34% 56% at 34% 26%, #b89ffa 0%, transparent 72%),
+      radial-gradient(26% 50% at 70% 32%, #6bb1ff 0%, transparent 72%),
+      radial-gradient(32% 50% at 56% 92%, #f1b5e6 0%, transparent 72%);
+  }
+
+  .zone--c {
+    background:
+      radial-gradient(34% 58% at 42% 22%, #4890e3 0%, transparent 72%),
+      radial-gradient(30% 52% at 70% 72%, #5ddfd7 0%, transparent 72%),
+      radial-gradient(28% 48% at 28% 86%, #baf0ec 0%, transparent 72%);
+  }
+
+  .zone--d {
+    background:
+      radial-gradient(34% 56% at 56% 22%, #5ddfd7 0%, transparent 72%),
+      radial-gradient(28% 50% at 28% 72%, #d4c2ff 0%, transparent 72%),
+      radial-gradient(30% 50% at 72% 88%, #eef3a6 0%, transparent 72%);
+  }
+
+  .stage__in {
+    display: grid;
+    justify-items: center;
+    max-width: 1100px;
+    margin-inline: auto;
+  }
+
+  .stage__title {
+    margin-bottom: 18px;
+    font-size: clamp(1rem, 1.3vw, 1.15rem);
+    font-weight: 560;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-align: center;
+  }
+
+  /* Вкладки: плитки-значки в белой рамке; активная — в цвете продукта и с подписью */
+  .stage__tabs {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    padding-bottom: 14px;
+  }
+
+  .stab {
+    display: inline-flex;
+    align-items: center;
+    height: 58px;
+    padding: 0;
+    border: 3px solid var(--card-warm);
+    border-radius: 18px;
+    background: rgb(255 255 255 / 0.6);
+    color: var(--ink);
+    box-shadow: 0 6px 18px -10px rgb(7 26 49 / 0.35);
+    transition:
+      background-color 0.35s var(--ease),
+      color 0.35s var(--ease),
+      transform 0.3s var(--ease-out);
+  }
+
+  .stab:hover {
+    transform: translateY(-2px);
+    background: rgb(255 255 255 / 0.85);
+  }
+
+  .stab__ico {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: none;
+  }
+
+  .stab__label {
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 15.5px;
+    font-weight: 560;
+    opacity: 0;
+    transition:
+      max-width 0.55s var(--ease-out),
+      opacity 0.3s,
+      padding 0.55s var(--ease-out);
+  }
+
+  .stab[aria-selected='true'] {
+    background: var(--pc);
+    color: #fff;
+  }
+
+  .stab[aria-selected='true'] .stab__label {
+    max-width: 200px;
+    padding-right: 18px;
+    opacity: 1;
+  }
+
+  /* «Капля», соединяющая активную вкладку с карточкой */
+  .stage__tail {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 48px;
+    height: 20px;
+    fill: var(--card-warm);
+    transform: translateX(calc(var(--tail-x, 26px) - 24px));
+    transition: transform 0.55s var(--ease-out);
+  }
+
+  .stage__card {
+    display: grid;
+    width: min(100%, 1040px);
+    border-radius: clamp(24px, 2.6vw, 34px);
+    background: var(--card-warm);
+    filter: drop-shadow(0 4px 5px rgb(95 109 119 / 0.04)) drop-shadow(0 10px 15px rgb(95 109 119 / 0.04))
+      drop-shadow(0 40px 50px rgb(95 109 119 / 0.12));
+  }
+
+  .spane {
+    grid-area: 1 / 1;
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: clamp(24px, 3.6vw, 48px);
+    align-items: center;
+    padding: clamp(20px, 3.6vw, 48px);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.45s var(--ease-out),
+      visibility 0s linear 0.45s;
+  }
+
+  .spane.is-active {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .spane__text {
+    display: grid;
+    justify-items: start;
+    gap: 14px;
+  }
+
+  .spane.is-active .spane__text > * {
+    animation: rise 0.7s var(--ease-out) both;
+  }
+
+  .spane.is-active .spane__text > :nth-child(2) {
+    animation-delay: 0.06s;
+  }
+
+  .spane.is-active .spane__text > :nth-child(3) {
+    animation-delay: 0.12s;
+  }
+
+  .spane.is-active .spane__text > :nth-child(4) {
+    animation-delay: 0.18s;
+  }
+
+  .spane.is-active .spane__text > :nth-child(5) {
+    animation-delay: 0.24s;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  .spane__title {
+    margin-top: 4px;
+  }
+
+  .spane__desc {
+    max-width: 44ch;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .spane__fig {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    margin-top: 2px;
+  }
+
+  .spane__fig-big {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .spane__fig-pre,
+  .spane__fig-post {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  .spane__more {
+    margin-top: 10px;
+  }
+
+  /* Окно с иллюстрацией интерфейса */
+  .spane__visual {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 360px;
+    padding: 28px 20px;
+    border-radius: 24px;
+    overflow: hidden;
+    isolation: isolate;
+    background: #dbe9ff;
+  }
+
+  .spane__visual::before,
+  .spane__visual::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    height: 34%;
+    border-radius: 0 18px 18px 0;
+    background: rgb(255 255 255 / 0.5);
+    transform: translateY(-50%);
+    z-index: -1;
+  }
+
+  .spane__visual::before {
+    left: 0;
+  }
+
+  .spane__visual::after {
+    right: 0;
+    border-radius: 18px 0 0 18px;
+  }
+
+  .p-tracker .spane__visual {
+    background: #e8e1fc;
+  }
+
+  .p-tonn .spane__visual {
+    background: #d9f3f1;
+  }
+
+  .p-kodeks .spane__visual {
+    background: #e3f4ef;
+  }
+
+  /* ── Иллюстрации интерфейсов ───────────────────────── */
+  .mock {
+    width: min(100%, 380px);
+    padding: 18px;
+    border-radius: 20px;
+    background: #fff;
+    color: var(--ink);
+    box-shadow:
+      0 0 0 7px rgb(255 255 255 / 0.45),
+      var(--shadow-card);
+    font-size: 13.5px;
+  }
+
+  .mock__head,
+  .mock__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .mock__head {
+    margin-bottom: 12px;
+  }
+
+  .mock__title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .mock__chip {
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .mock__foot {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .mock__foot b {
+    color: var(--ink);
+  }
+
+  .mock__ok {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #e3f6ee;
+    font-weight: 600;
+    color: #087a52;
+  }
+
+  .mock__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .mock__live i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ok);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    50% {
+      opacity: 0.3;
+    }
+  }
+
+  /* РО-БОТ: строки сверки появляются по очереди, находки подсвечиваются */
+  .rb__rows {
+    display: grid;
+    gap: 6px;
+  }
+
+  .rb__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 12px;
+    background: var(--bg);
+  }
+
+  .rb__addr {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .rb__addr b {
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 560;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .rb__addr small {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .rb__chip {
+    flex: none;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--blue-soft);
+    font-size: 12px;
+    font-weight: 600;
+    color: #0050c8;
+  }
+
+  .spane.is-active .rb__row {
+    animation: rise 0.6s var(--ease-out) both;
+    animation-delay: calc(0.25s + var(--k) * 0.35s);
+  }
+
+  .spane.is-active .rb__chip {
+    animation: pop 0.45s var(--ease-out) both;
+    animation-delay: calc(0.55s + var(--k) * 0.35s);
+  }
+
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  .rb__bar {
+    position: relative;
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--panel-2);
+    overflow: hidden;
+  }
+
+  .rb__bar i {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--blue);
+    transform-origin: left;
+    transform: scaleX(0.96);
+  }
+
+  .spane.is-active .rb__bar i {
+    animation: fill 2.4s var(--ease-out) both 0.2s;
+  }
+
+  @keyframes fill {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  .rb__found {
+    flex: none;
+  }
+
+  /* Tracker: кадр с камеры — рамка находит контейнеры, счётчик «Погружено» растёт */
+  .tr__cam {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 170px;
+    border-radius: 14px;
+    overflow: hidden;
+    background:
+      radial-gradient(70% 60% at 50% 100%, #3a5a7a 0%, transparent 70%),
+      linear-gradient(180deg, #1c2c40 0%, #26405c 100%);
+    color: #cfe0f3;
+  }
+
+  .tr__rec {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: #dfe9f5;
+  }
+
+  .tr__rec i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff5a5a;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  .tr__bins {
+    display: flex;
+    gap: 22px;
+    margin-top: 6px;
+  }
+
+  .tr__bin {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  .tr__frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 64px;
+    height: 64px;
+    margin: -29px 0 0 -32px;
+    border: 2px solid #6bb1ff;
+    border-radius: 12px;
+    box-shadow: 0 0 0 4px rgb(107 177 255 / 0.18);
+    transform: translateX(-74px);
+  }
+
+  .spane.is-active .tr__frame {
+    animation: frame-move 4.8s var(--ease-in-out) infinite;
+  }
+
+  @keyframes frame-move {
+    0%,
+    22% {
+      transform: translateX(-74px);
+    }
+    33%,
+    55% {
+      transform: translateX(0);
+    }
+    66%,
+    92% {
+      transform: translateX(74px);
+    }
+    100% {
+      transform: translateX(-74px);
+    }
+  }
+
+  .tr__count {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 12.5px;
+    font-weight: 560;
+    color: var(--ink);
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  .tr__num::after {
+    content: '3';
+  }
+
+  .spane.is-active .tr__num::after {
+    animation: count3 4.8s steps(1) infinite;
+  }
+
+  @keyframes count3 {
+    0% {
+      content: '1';
+    }
+    33% {
+      content: '2';
+    }
+    66% {
+      content: '3';
+    }
+  }
+
+  .tr__route {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 34px;
+    margin: 14px 6px 0;
+  }
+
+  .tr__line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--panel-2);
+    overflow: hidden;
+  }
+
+  .tr__line i {
+    position: absolute;
+    inset: 0;
+    background: var(--blue);
+    transform-origin: left;
+  }
+
+  .spane.is-active .tr__line i {
+    animation: fill 4.8s linear infinite;
+  }
+
+  .tr__stop {
+    position: relative;
+    width: 12px;
+    height: 12px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    background: var(--blue);
+    box-shadow: 0 0 0 1px var(--line-2);
+  }
+
+  .tr__truck {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin-top: -15px;
+    border-radius: 9px;
+    background: var(--ink);
+    color: #fff;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .spane.is-active .tr__truck {
+    animation: drive 4.8s linear infinite;
+  }
+
+  @keyframes drive {
+    from {
+      left: 0;
+    }
+    to {
+      left: calc(100% - 30px);
+    }
+  }
+
+  /* TONN: рамка сканирует номер, вес досчитывается, акт готов */
+  .tn__plate {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    width: fit-content;
+    margin: 4px auto 0;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .tn__num {
+    padding: 6px 12px;
+    font-size: 22px;
+    line-height: 1.1;
+  }
+
+  .tn__reg {
+    display: grid;
+    place-items: center;
+    padding: 2px 9px;
+    border-left: 2px solid var(--ink);
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .tn__reg small {
+    font-size: 8px;
+    letter-spacing: 0.08em;
+  }
+
+  .tn__scan {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 30%;
+    background: linear-gradient(90deg, transparent, rgb(0 107 255 / 0.28), transparent);
+    transform: translateX(-120%);
+  }
+
+  .spane.is-active .tn__scan {
+    animation: scan 1.05s var(--ease-in-out) 0.2s 2 both;
+  }
+
+  @keyframes scan {
+    to {
+      transform: translateX(360%);
+    }
+  }
+
+  .tn__ok {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 10px 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #087a52;
+  }
+
+  .spane.is-active .tn__ok {
+    animation: pop 0.5s var(--ease-out) both 2.3s;
+  }
+
+  .tn__grid {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 10px;
+  }
+
+  .tn__photo {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 4px;
+    height: 86px;
+    border-radius: 12px;
+    background: linear-gradient(160deg, #dbe6f2, #b9cbe0);
+    color: #3c5672;
+  }
+
+  .tn__photo small {
+    font-size: 11px;
+  }
+
+  .tn__weight {
+    display: grid;
+    align-content: center;
+    gap: 4px;
+    padding: 0 14px;
+    border-radius: 12px;
+    background: var(--bg);
+  }
+
+  .tn__weight small {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .tn__weight b {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .tn__weight b span {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .spane.is-active .tn__weight b {
+    animation: rise 0.6s var(--ease-out) both 0.9s;
+  }
+
+  .spane.is-active .p-tonn .mock__ok,
+  .spane.is-active .mock--tonn .mock__ok {
+    animation: pop 0.5s var(--ease-out) both 2.7s;
+  }
+
+  /* Кодекс ТКО: файл → проверка 80/80 → отправка во ФГИС */
+  .kd__file {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 14px;
+    background: var(--bg);
+  }
+
+  .kd__xls {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 44px;
+    border-radius: 8px;
+    background: #1f9d55;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .kd__name {
+    display: grid;
+    gap: 2px;
+  }
+
+  .kd__name b {
+    font-size: 13.5px;
+  }
+
+  .kd__name small,
+  .kd__send small {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .kd__check {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+
+  .kd__label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 560;
+  }
+
+  .kd__count::after {
+    content: '80/80';
+    font-variant-numeric: tabular-nums;
+  }
+
+  .spane.is-active .kd__count::after {
+    animation: count80 2.2s steps(1) both 0.2s;
+  }
+
+  @keyframes count80 {
+    0% {
+      content: '0/80';
+    }
+    20% {
+      content: '16/80';
+    }
+    40% {
+      content: '33/80';
+    }
+    60% {
+      content: '51/80';
+    }
+    80% {
+      content: '67/80';
+    }
+    100% {
+      content: '80/80';
+    }
+  }
+
+  .kd__bar {
+    position: relative;
+    display: block;
+    height: 6px;
+    margin: 10px 0;
+    border-radius: 3px;
+    background: var(--panel-2);
+    overflow: hidden;
+  }
+
+  .kd__bar i {
+    position: absolute;
+    inset: 0;
+    background: var(--ok);
+    transform-origin: left;
+  }
+
+  .spane.is-active .kd__bar i {
+    animation: fill 2.2s linear both 0.2s;
+  }
+
+  .kd__list {
+    display: flex;
+    gap: 14px;
+    color: #087a52;
+    font-weight: 560;
+  }
+
+  .kd__list li {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .spane.is-active .kd__list li {
+    animation: pop 0.45s var(--ease-out) both 2.4s;
+  }
+
+  .kd__send {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    background: #e9f7f1;
+  }
+
+  .kd__send span:last-child {
+    display: grid;
+    gap: 2px;
+  }
+
+  .kd__cloud {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: 12px;
+    background: #fff;
+    color: var(--ok);
+  }
+
+  .spane.is-active .kd__send {
+    animation: rise 0.6s var(--ease-out) both 2.9s;
+  }
+
+  .spane.is-active .kd__cloud :global(svg) {
+    animation: lift 1.6s var(--ease-in-out) 3.4s infinite;
+  }
+
+  @keyframes lift {
+    50% {
+      transform: translateY(-3px);
+    }
+  }
+
+  /* ── Режим прокрутки (компьютер): сцена закреплена, вкладки идут по мере прокрутки ── */
+  .hero.is-scroll .hero__track {
+    height: calc(100vh + 270vh);
+  }
+
+  .hero.is-scroll .hero__sticky {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    height: 100vh;
+    padding-top: calc(var(--header-h) + 12px);
+    padding-bottom: 16px;
+  }
+
+  .hero.is-scroll .stage {
+    width: 100%;
+    max-height: 100%;
+  }
+
+  /* панель раскрывается от ширины контейнера до краёв сцены */
+  .hero.is-scroll .stage__bg {
+    clip-path: inset(
+      0 max(calc(24px * (1 - var(--e))), calc((50% - 620px) * (1 - var(--e)))) round
+        calc(48px - 12px * var(--e))
+    );
+  }
+
+  /* невысокий экран ноутбука: сцена компактнее, чтобы целиком помещалась при закреплении */
+  @media (max-height: 860px) {
+    .hero.is-scroll .stage {
+      padding-block: 20px 28px;
+    }
+
+    .hero.is-scroll .stage__title {
+      margin-bottom: 10px;
+    }
+
+    .hero.is-scroll .spane {
+      padding: 28px 36px;
+    }
+
+    .hero.is-scroll .spane__visual {
+      min-height: 300px;
+      padding-block: 18px;
+    }
+
+    .hero.is-scroll .spane__text {
+      gap: 10px;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .spane {
+      grid-template-columns: 1fr;
+    }
+
+    .spane__visual {
+      min-height: 320px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero__title {
+      font-size: clamp(2.05rem, 9vw, 2.6rem);
+    }
+
+    .hero__cta {
+      display: grid;
+      width: 100%;
+    }
+
+    .stage__tabs {
+      gap: 6px;
+    }
+
+    .stab {
+      height: 50px;
+      border-width: 2px;
+      border-radius: 15px;
+    }
+
+    .stab__ico {
+      width: 46px;
+      height: 46px;
+    }
+
+    .stab[aria-selected='true'] .stab__label {
+      padding-right: 12px;
+      font-size: 14px;
+    }
+
+    .spane__visual {
+      min-height: 0;
+      padding: 18px 12px;
+    }
+
+    .mock {
+      padding: 14px;
+    }
+
+    .mock__chip {
+      display: none;
+    }
+
+    .tr__bins {
+      gap: 12px;
+    }
+
+    .tr__frame {
+      transform: translateX(-64px);
+    }
+
+    @keyframes frame-move {
+      0%,
+      22% {
+        transform: translateX(-64px);
+      }
+      33%,
+      55% {
+        transform: translateX(0);
+      }
+      66%,
+      92% {
+        transform: translateX(64px);
+      }
+      100% {
+        transform: translateX(-64px);
+      }
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../scripts/motion';
+
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  if (hero) {
+    const track = hero.querySelector<HTMLElement>('[data-hero-track]')!;
+    const stage = hero.querySelector<HTMLElement>('[data-stage]')!;
+    const tabs = [...stage.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panes = [...stage.querySelectorAll<HTMLElement>('[data-pane-hero]')];
+    const tail = stage.querySelector<HTMLElement>('[data-tail]')!;
+    const tabsRow = tail.parentElement!;
+    const wide = window.matchMedia('(min-width: 1024px) and (min-height: 660px)');
+
+    let active = 0;
+    let scrollMode = false;
+    let autoTimer = 0;
+    let autoStopped = false;
+    let inView = false;
+
+    const moveTail = () => {
+      const tab = tabs[active];
+      const x = tab.offsetLeft + tab.offsetWidth / 2;
+      tabsRow.style.setProperty('--tail-x', `${x}px`);
+    };
+
+    const setActive = (i: number) => {
+      if (i === active && stage.style.getPropertyValue('--i') === String(i)) return;
+      active = i;
+      stage.style.setProperty('--i', String(i));
+      tabs.forEach((tab, k) => {
+        const on = k === i;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+      });
+      panes.forEach((pane, k) => {
+        const on = k === i;
+        pane.classList.toggle('is-active', on);
+        pane.setAttribute('aria-hidden', String(!on));
+        pane.querySelectorAll<HTMLElement>('a').forEach((a) => (a.tabIndex = on ? 0 : -1));
+      });
+      // подпись активной вкладки раскрывается — «капля» догоняет её центр
+      moveTail();
+      window.setTimeout(moveTail, 320);
+      window.setTimeout(moveTail, 600);
+    };
+
+    // ── Режим прокрутки: прогресс по высоте трека → раскрытие панели и номер вкладки
+    const EXPAND = 0.14;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (!scrollMode) return;
+        const rect = track.getBoundingClientRect();
+        const total = track.offsetHeight - window.innerHeight;
+        const p = Math.min(1, Math.max(0, -rect.top / total));
+        // раскрытие начинается чуть раньше, пока сцена въезжает снизу
+        const enter = Math.min(1, Math.max(0, 1 - (rect.top - 0) / (window.innerHeight * 0.6)));
+        const e = Math.min(1, Math.max(0, p / EXPAND)) * 0.75 + enter * 0.25;
+        stage.style.setProperty('--e', e.toFixed(3));
+        const k = Math.min(3, Math.max(0, Math.floor(((p - EXPAND) / (1 - EXPAND)) * 4)));
+        setActive(p <= EXPAND ? 0 : k);
+      });
+    };
+
+    // ── Без режима прокрутки: вкладки сами переключаются, пока сцена на экране
+    const stopAuto = () => {
+      autoStopped = true;
+      window.clearInterval(autoTimer);
+    };
+    const syncAuto = () => {
+      window.clearInterval(autoTimer);
+      if (scrollMode || autoStopped || !inView || reducedMotion()) return;
+      autoTimer = window.setInterval(() => setActive((active + 1) % tabs.length), 7000);
+    };
+
+    const applyMode = () => {
+      scrollMode = wide.matches && !reducedMotion();
+      hero.classList.toggle('is-scroll', scrollMode);
+      if (scrollMode) onScroll();
+      else stage.style.setProperty('--e', '1');
+      syncAuto();
+      moveTail();
+    };
+
+    // переход к вкладке: в режиме прокрутки — прокручиваем к её отрезку трека
+    const goTo = (i: number) => {
+      if (scrollMode) {
+        const top = track.getBoundingClientRect().top + window.scrollY;
+        const total = track.offsetHeight - window.innerHeight;
+        const p = EXPAND + ((i + 0.5) / tabs.length) * (1 - EXPAND);
+        window.scrollTo({ top: top + total * p, behavior: reducedMotion() ? 'auto' : 'smooth' });
+      }
+      setActive(i);
+    };
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => {
+        stopAuto();
+        goTo(i);
+      });
+      tab.addEventListener('keydown', (e) => {
+        const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        const edge = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : -1;
+        if (!dir && edge < 0) return;
+        e.preventDefault();
+        stopAuto();
+        const next = edge >= 0 ? edge : (active + dir + tabs.length) % tabs.length;
+        goTo(next);
+        tabs[next].focus();
+      });
+    });
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting;
+          syncAuto();
+        },
+        { threshold: 0.35 },
+      ).observe(stage);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', () => {
+      moveTail();
+      onScroll();
+    });
+    wide.addEventListener('change', applyMode);
+    applyMode();
+    document.fonts?.ready.then(moveTail);
+  }
+</script>

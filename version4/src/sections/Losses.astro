@@ -1,0 +1,1202 @@
+---
+// Блок 3 «Где теряете деньги» [#poteri]. Приём Calendly «Book → Prep → Capture → Follow up»:
+// цепочка из пяти карточек-проблем, одна раскрыта. Закрытая карточка — проблема, что это значит
+// и бледная пастельная форма внизу; раскрытая — сколько вы теряете, решение, переключатель
+// «Узнаю у себя» и маленькая иллюстрация на насыщенном градиенте.
+// Отметки «Узнаю у себя» собирают панель «С чего начать» (правило первого шага — из ТЗ).
+import SectionIntro from '../components/SectionIntro.astro';
+import ProductLabel from '../components/ProductLabel.astro';
+import Icon from '../components/Icon.astro';
+import { PRODUCT_ORDER, productHref, type ProductId } from '../config/site';
+
+const NB = ' ';
+
+interface Row {
+  problem: string;
+  meaning: string;
+  /** «Сколько вы теряете»: sum — крупно, rest — продолжение; вместе — дословно текст ТЗ. */
+  sum: string;
+  rest: string;
+  forecast?: boolean;
+  product: ProductId;
+  art: 'residents' | 'business' | 'route' | 'acts' | 'fgis';
+}
+
+const rows: Row[] = [
+  {
+    problem: 'Жильцов нет в базе',
+    meaning: 'Живут четверо, а платит один',
+    sum: `≈7,5${NB}млн${NB}₽`,
+    rest: `/год${NB}на${NB}район`,
+    product: 'robot',
+    art: 'residents',
+  },
+  {
+    problem: 'Юрлица без договора',
+    meaning: 'Бизнес работает, а договора нет',
+    sum: `До${NB}26%`,
+    rest: ` юрлиц вне базы и долг за 3${NB}года`,
+    product: 'robot',
+    art: 'business',
+  },
+  {
+    problem: 'Рейсы без контроля',
+    meaning: 'Левак и недовывоз не видны',
+    sum: `≈180${NB}тыс.${NB}₽`,
+    rest: `/год${NB}на${NB}машину`,
+    forecast: true,
+    product: 'tracker',
+    art: 'route',
+  },
+  {
+    problem: 'Приписки в актах',
+    meaning: 'По бумагам тонн больше, чем по факту',
+    sum: `До${NB}57%`,
+    rest: ' тоннажа — «бумажные» тонны',
+    product: 'tonn',
+    art: 'acts',
+  },
+  {
+    problem: 'Данные не во ФГИС',
+    meaning: 'Объекты не передают данные — баланс ТКО не сходится',
+    sum: `До${NB}150${NB}000${NB}₽`,
+    rest: ' штрафа',
+    product: 'kodeks',
+    art: 'fgis',
+  },
+];
+---
+
+<section class="section panel loss" id="poteri" aria-labelledby="poteri-title">
+  <div class="container">
+    <SectionIntro eyebrow="Где теряете деньги" titleId="poteri-title">
+      Проверьте, где вы теряете деньги, — а мы сразу покажем решение
+      <Fragment slot="lead">Отметьте то, что узнаёте у себя, — покажем, с чего начать.</Fragment>
+    </SectionIntro>
+
+    <div class="chain lc-chain" data-chain data-chain-ms="7000" data-chain-narrow="1199" data-losses data-reveal style="--d:2">
+      {
+        rows.map((r, i) => (
+          <article
+            class:list={['chain__card', 'lc', `lc--${i + 1}`, { 'is-open': i === 0 }]}
+            data-row
+            data-product={r.product}
+            aria-labelledby={`lc-t${i}`}
+          >
+            <div class="lc__in">
+              <div class="lc__text">
+                <h3 class="lc__title" id={`lc-t${i}`}>
+                  {r.problem}
+                </h3>
+                <p class="lc__meaning">{r.meaning}</p>
+
+                <div class="lc__more">
+                  <dl class="lc__facts">
+                    <div>
+                      <dt class="lc__dt">Сколько вы теряете</dt>
+                      <dd class:list={['lc__loss', { 'is-forecast': r.forecast }]}>
+                        <span class="lc__sum">{r.sum}</span>
+                        {r.rest}
+                        {r.forecast && <span class="tag tag--forecast lc__fc">прогноз</span>}
+                      </dd>
+                    </div>
+                    <div class="lc__sol-row">
+                      <dt class="lc__dt">Решение</dt>
+                      <dd>
+                        <a
+                          class="lc__sol"
+                          href={productHref(r.product, 'poteri')}
+                          data-goal="product_landing"
+                          data-goal-product={r.product}
+                        >
+                          <ProductLabel id={r.product} />
+                          <span class="lc__sol-arrow" aria-hidden="true">
+                            <Icon name="arrow-up-right" size={16} />
+                          </span>
+                        </a>
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <button
+                    class="lc__check"
+                    type="button"
+                    aria-pressed="false"
+                    data-check
+                    data-goal="selfcheck_toggle"
+                    data-goal-product={r.product}
+                  >
+                    <span>
+                      Узнаю у себя<span class="visually-hidden">: {r.problem}</span>
+                    </span>
+                    <span class="lc__switch" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+
+              <span class="lc__deco" aria-hidden="true" />
+
+              <div class="lc__art" aria-hidden="true">
+                {r.art === 'residents' && (
+                  <div class="ui mi">
+                    <p class="mi__head">
+                      <span class="mi__i">
+                        <Icon name="house" size={15} />
+                      </span>
+                      ул. Ленина, 12 · кв. 48
+                    </p>
+                    <div class="mi__people">
+                      <span class="mi__p is-ok">
+                        <Icon name="user" size={17} />
+                      </span>
+                      {[0, 1, 2].map((k) => (
+                        <span class="mi__p is-miss" style={`--k:${k}`}>
+                          <Icon name="user" size={17} />
+                        </span>
+                      ))}
+                    </div>
+                    <p class="mi__foot">
+                      <span>Живут: 4</span>
+                      <span class="mi__bad">Платит: 1</span>
+                    </p>
+                  </div>
+                )}
+
+                {r.art === 'business' && (
+                  <div class="ui mi">
+                    <p class="mi__head">
+                      <span class="mi__i">
+                        <Icon name="store" size={15} />
+                      </span>
+                      Магазин, ул. Мира, 7<span class="mi__live">работает</span>
+                    </p>
+                    <p class="mi__row">
+                      <span>Договор на вывоз ТКО</span>
+                      <span class="mi__tag is-bad">нет</span>
+                    </p>
+                    <p class="mi__row">
+                      <span>В базе начислений</span>
+                      <span class="mi__tag is-bad">нет</span>
+                    </p>
+                  </div>
+                )}
+
+                {r.art === 'route' && (
+                  <div class="ui mi">
+                    <p class="mi__head">
+                      <span class="mi__i">
+                        <Icon name="truck" size={15} />
+                      </span>
+                      Маршрут № 14
+                    </p>
+                    <div class="mi__route">
+                      <span class="mi__stop is-ok">
+                        <Icon name="check" size={12} strokeWidth={3} />
+                      </span>
+                      <i />
+                      <span class="mi__stop is-ok">
+                        <Icon name="check" size={12} strokeWidth={3} />
+                      </span>
+                      <i />
+                      {[0, 1, 2].map((k) => (
+                        <>
+                          <span class="mi__stop is-q" style={`--k:${k}`}>
+                            ?
+                          </span>
+                          {k < 2 && <i />}
+                        </>
+                      ))}
+                    </div>
+                    <p class="mi__foot">
+                      <span>Факт вывоза</span>
+                      <span class="mi__bad">не виден</span>
+                    </p>
+                  </div>
+                )}
+
+                {r.art === 'acts' && (
+                  <div class="ui mi">
+                    <p class="mi__head">
+                      <span class="mi__i">
+                        <Icon name="file-text" size={15} />
+                      </span>
+                      Тонны за месяц
+                    </p>
+                    <div class="mi__bars">
+                      <p class="mi__bar">
+                        <span>По бумагам</span>
+                        <b>
+                          <i style="--w:1" />
+                        </b>
+                      </p>
+                      <p class="mi__bar is-fact">
+                        <span>По факту</span>
+                        <b>
+                          <i style="--w:0.43" />
+                        </b>
+                      </p>
+                    </div>
+                    <p class="mi__foot">
+                      <span>Разница</span>
+                      <span class="mi__bad">«бумажные» тонны</span>
+                    </p>
+                  </div>
+                )}
+
+                {r.art === 'fgis' && (
+                  <div class="ui mi">
+                    <p class="mi__head">
+                      <span class="mi__i">
+                        <Icon name="cloud-upload" size={15} />
+                      </span>
+                      ФГИС УТКО
+                    </p>
+                    <p class="mi__row">
+                      <span>Полигон</span>
+                      <span class="mi__tag is-ok">передано</span>
+                    </p>
+                    <p class="mi__row">
+                      <span>Сортировка</span>
+                      <span class="mi__tag is-bad mi__blink">нет данных</span>
+                    </p>
+                    <p class="mi__foot">
+                      <span>Баланс ТКО</span>
+                      <span class="mi__bad">не сходится</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <span class="lc__mark" aria-hidden="true">
+                <span class="lc__mark-i">
+                  <Icon name="check" size={13} strokeWidth={2.75} />
+                </span>
+                Узнаю у себя
+              </span>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+
+    <div class="lr" data-result aria-live="polite">
+      <div class="lr__clip">
+        <div class="lr__panel">
+          <div class="lr__body">
+            <p class="lr__row">
+              <strong class="lr__label">С чего начать:</strong>
+              <span class="lr__products">
+                {
+                  PRODUCT_ORDER.map((id) => (
+                    <span class="lr__product" data-result-product={id} hidden>
+                      <ProductLabel id={id} />
+                    </span>
+                  ))
+                }
+              </span>
+            </p>
+            <p class="lr__row lr__step">
+              Первый шаг: <span class="lr__step-v" data-result-step></span>
+            </p>
+          </div>
+          <a href="#forma" class="btn btn--primary lr__cta" data-result-cta data-goal="selfcheck_to_form">
+            Перейти к заявке
+            <Icon name="arrow-right" />
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <p class="footnote lc-notes" data-reveal>
+      ≈7,5&nbsp;млн&nbsp;₽ и 26% — данные разных пилотов РО-БОТа. ≈180&nbsp;тыс.&nbsp;₽ — прогноз, а не фактический
+      результат. 57% — март 2025 к марту 2024, 4 района Башкортостана. Штраф — ч.&nbsp;13 ст.&nbsp;8.2 КоАП.
+    </p>
+  </div>
+</section>
+
+<style>
+  /* ── Цепочка из пяти карточек ─────────────────────────────
+     На ширине от 1200 px карточки стоят в ряд, одна раскрыта; уже — столбиком и все раскрыты. */
+  .lc-chain {
+    --chain-gap: 16px;
+    --lc-grow: 2.25;
+    --lc-pad: 24px;
+    --lc-h: 556px;
+    --lc-art-h: 216px;
+    --lc-deco-h: 258px;
+    /* ширина раскрытой карточки: её содержимое не перестраивается, пока карточка растёт */
+    --lc-open: calc((100cqi - 4 * var(--chain-gap)) * var(--lc-grow) / (4 + var(--lc-grow)));
+    container-type: inline-size;
+  }
+
+  .lc {
+    height: var(--lc-h);
+  }
+
+  .lc.is-open {
+    flex-grow: var(--lc-grow);
+  }
+
+  /* Палитра каждой карточки: d — бледная форма закрытой, a — насыщенный градиент раскрытой */
+  .lc--1 {
+    --d1: color-mix(in oklab, var(--g-lime) 36%, white);
+    --d2: color-mix(in oklab, var(--g-sky) 18%, white);
+    --a1: var(--g-lav);
+    --a2: var(--g-pink-soft);
+    --a3: var(--g-lav-2);
+  }
+
+  .lc--2 {
+    --d1: color-mix(in oklab, var(--g-lime) 36%, white);
+    --d2: color-mix(in oklab, var(--g-pink-soft) 32%, white);
+    --a1: var(--g-sky);
+    --a2: var(--g-teal);
+    --a3: var(--g-teal-soft);
+  }
+
+  .lc--3 {
+    --d1: color-mix(in oklab, var(--g-teal-soft) 42%, white);
+    --d2: color-mix(in oklab, var(--g-sky) 17%, white);
+    --a1: var(--g-teal);
+    --a2: var(--g-lime);
+    --a3: var(--g-teal-soft);
+  }
+
+  .lc--4 {
+    --d1: color-mix(in oklab, var(--g-lav-soft) 60%, white);
+    --d2: color-mix(in oklab, var(--g-pink-soft) 32%, white);
+    --a1: var(--g-lav);
+    --a2: var(--g-sky);
+    --a3: var(--g-lav-2);
+  }
+
+  .lc--5 {
+    --d1: color-mix(in oklab, var(--g-lime) 36%, white);
+    --d2: color-mix(in oklab, var(--g-teal-soft) 40%, white);
+    --a1: var(--g-pink);
+    --a2: var(--g-lav);
+    --a3: var(--g-pink-soft);
+  }
+
+  .lc__in {
+    position: relative;
+    height: 100%;
+    border-radius: inherit;
+    overflow: clip;
+  }
+
+  .lc__text {
+    position: relative;
+    z-index: 1;
+    padding: var(--lc-pad) var(--lc-pad) 0;
+  }
+
+  .lc__title {
+    font-size: 1.5rem;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .lc__meaning {
+    margin-top: 10px;
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* Что видно только в раскрытой карточке */
+  .lc__more {
+    width: calc(var(--lc-open) - 2 * var(--lc-pad));
+    margin-top: 22px;
+    transition: opacity 0.45s var(--ease-out) 0.2s;
+  }
+
+  .lc__facts {
+    display: grid;
+    gap: 14px;
+  }
+
+  .lc__dt {
+    font-size: 13.5px;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+
+  .lc__loss {
+    margin-top: 4px;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+
+  .lc__sum {
+    margin-right: 2px;
+    font-size: 2rem;
+    line-height: 1.05;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Прогноз оформлен иначе, чем фактические потери */
+  .lc__loss.is-forecast .lc__sum {
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: underline dashed var(--subtle);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 7px;
+  }
+
+  .lc__fc {
+    margin-left: 6px;
+    vertical-align: 2px;
+  }
+
+  .lc__sol-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+
+  .lc__sol {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px;
+  }
+
+  .lc__sol-arrow {
+    display: inline-flex;
+    color: var(--muted);
+    transition:
+      transform 0.3s var(--ease-out),
+      color 0.2s;
+  }
+
+  .lc__sol:hover .lc__sol-arrow {
+    color: var(--ink);
+    transform: translate(2px, -2px);
+  }
+
+  /* Переключатель «Узнаю у себя» — строка с тумблером, как настройки в интерфейсах Calendly */
+  .lc__check {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 50px;
+    margin-top: 16px;
+    padding: 8px 10px 8px 16px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--bg);
+    font-size: 15px;
+    font-weight: 560;
+    color: var(--ink);
+    text-align: left;
+    transition:
+      background-color 0.25s,
+      border-color 0.25s;
+  }
+
+  .lc__check:hover {
+    border-color: var(--line-2);
+    background: #fff;
+  }
+
+  .lc__switch {
+    position: relative;
+    width: 44px;
+    height: 26px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--line-2);
+    transition: background-color 0.3s;
+  }
+
+  .lc__switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgb(7 26 49 / 0.3);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  .lc__check[aria-pressed='true'] {
+    border-color: color-mix(in oklab, var(--blue) 28%, white);
+    background: var(--blue-soft);
+  }
+
+  .lc__check[aria-pressed='true'] .lc__switch {
+    background: var(--blue);
+  }
+
+  .lc__check[aria-pressed='true'] .lc__switch::after {
+    transform: translateX(18px);
+  }
+
+  /* Бледная пастельная форма внизу закрытой карточки (дуга и «уголок», как у Calendly) */
+  .lc__deco {
+    position: absolute;
+    inset: auto 0 0;
+    height: var(--lc-deco-h);
+    background: linear-gradient(180deg, var(--d1) 0%, var(--d2) 100%);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 260' preserveAspectRatio='none'%3E%3Cpath d='M0 0A140 138 0 0 1 140 138H62V260H0Z'/%3E%3Cpath d='M160 0H190V260H82V158H160Z'/%3E%3C/svg%3E")
+      left bottom / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 260' preserveAspectRatio='none'%3E%3Cpath d='M0 0A140 138 0 0 1 140 138H62V260H0Z'/%3E%3Cpath d='M160 0H190V260H82V158H160Z'/%3E%3C/svg%3E")
+      left bottom / 100% 100% no-repeat;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  /* Насыщенный градиент с белой карточкой интерфейса внизу раскрытой карточки */
+  .lc__art {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: var(--lc-open);
+    height: var(--lc-art-h);
+    background:
+      radial-gradient(65% 85% at 10% 100%, var(--a1) 0%, transparent 72%),
+      radial-gradient(65% 85% at 92% 100%, var(--a2) 0%, transparent 72%),
+      linear-gradient(180deg, rgb(255 255 255 / 0) 0%, var(--a3) 82%);
+    transition: opacity 0.5s var(--ease-out) 0.15s;
+  }
+
+  /* Отметка на закрытой карточке, если она уже отмечена */
+  .lc__mark {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px 5px 5px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+    font-size: 12.5px;
+    font-weight: 560;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition:
+      opacity 0.25s,
+      transform 0.35s var(--ease-out);
+  }
+
+  .lc__mark-i {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #fff;
+  }
+
+  /* ── Мини-иллюстрации (демо-данные) ──────────────────────── */
+  .mi {
+    position: absolute;
+    left: 50%;
+    bottom: 24px;
+    width: min(300px, calc(100% - 44px));
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.3;
+    translate: -50% 0;
+    transition:
+      transform 0.6s var(--ease-out) 0.22s,
+      opacity 0.5s 0.22s;
+  }
+
+  .mi__head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .mi__i {
+    display: inline-flex;
+    color: var(--muted);
+  }
+
+  .mi__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 500;
+    color: #087a52;
+  }
+
+  .mi__live::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ok);
+  }
+
+  .mi__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 7px 8px 7px 10px;
+    border-radius: 10px;
+    background: var(--bg);
+  }
+
+  .mi__tag {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .mi__tag.is-bad {
+    background: color-mix(in oklab, var(--danger) 10%, white);
+    color: #b81f30;
+  }
+
+  .mi__tag.is-ok {
+    background: color-mix(in oklab, var(--ok) 12%, white);
+    color: #087a52;
+  }
+
+  .mi__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px dashed var(--line-2);
+    color: var(--muted);
+  }
+
+  .mi__bad {
+    font-weight: 560;
+    color: #b81f30;
+  }
+
+  /* жильцы: один в базе, трое — нет */
+  .mi__people {
+    display: flex;
+    gap: 8px;
+    margin-top: 11px;
+  }
+
+  .mi__p {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .mi__p.is-ok {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .mi__p.is-miss {
+    border: 1.5px dashed var(--subtle);
+    color: var(--muted);
+  }
+
+  /* маршрут: подтверждены две площадки, остальные — вопрос */
+  .mi__route {
+    display: flex;
+    align-items: center;
+    margin: 13px 2px 3px;
+  }
+
+  .mi__route i {
+    flex: 1;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--line-2) 0 4px, transparent 4px 8px);
+  }
+
+  .mi__stop {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    flex: none;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .mi__stop.is-ok {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .mi__stop.is-q {
+    border: 1.5px dashed var(--subtle);
+    color: var(--muted);
+  }
+
+  /* приписки: по бумагам тонн больше, чем по факту */
+  .mi__bars {
+    display: grid;
+    gap: 9px;
+    margin-top: 12px;
+  }
+
+  .mi__bar {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+  }
+
+  .mi__bar b {
+    height: 12px;
+    border-radius: 6px;
+    background: var(--panel-2);
+    overflow: hidden;
+  }
+
+  .mi__bar.is-fact b {
+    background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--danger) 22%, white) 0 4px, #fff 4px 8px);
+  }
+
+  .mi__bar i {
+    display: block;
+    height: 100%;
+    border-radius: 6px;
+    background: var(--ink);
+    transform: scaleX(var(--w));
+    transform-origin: left;
+    transition: transform 0.9s var(--ease-out) 0.35s;
+  }
+
+  /* ── Раскрытие на широком экране ─────────────────────────── */
+  @media (min-width: 1200px) {
+    .lc:not(.is-open) {
+      cursor: pointer;
+    }
+
+    .lc:not(.is-open) .lc__more {
+      opacity: 0;
+      pointer-events: none;
+      transition-duration: 0.2s;
+      transition-delay: 0s;
+    }
+
+    .lc:not(.is-open) .lc__art {
+      opacity: 0;
+      transition-duration: 0.25s;
+      transition-delay: 0s;
+    }
+
+    .lc:not(.is-open) .lc__deco {
+      opacity: 1;
+      transition-delay: 0.2s;
+    }
+
+    .lc:not(.is-open) .mi {
+      opacity: 0;
+      transform: translateY(16px);
+      transition-delay: 0s;
+    }
+
+    .lc:not(.is-open) .mi__bar i {
+      transform: scaleX(0);
+      transition-delay: 0s;
+    }
+
+    .lc.is-on:not(.is-open) .lc__mark {
+      opacity: 1;
+      transform: none;
+      transition-delay: 0.2s;
+    }
+  }
+
+  /* узкий ряд (1200–1359 px): закрытые карточки уже, текст чуть мельче */
+  @media (min-width: 1200px) and (max-width: 1359px) {
+    .lc-chain {
+      --lc-pad: 20px;
+    }
+
+    .lc__title {
+      font-size: 1.375rem;
+    }
+  }
+
+  /* Лёгкое движение в раскрытой карточке — только пока цепочка на экране */
+  .lc-chain.is-live .lc.is-open .mi__p.is-miss,
+  .lc-chain.is-live .lc.is-open .mi__stop.is-q {
+    animation: mi-blink 2.4s var(--ease-in-out) infinite;
+    animation-delay: calc(var(--k) * 0.35s);
+  }
+
+  .lc-chain.is-live .lc.is-open .mi__blink {
+    animation: mi-blink 2.4s var(--ease-in-out) infinite;
+  }
+
+  .lc-chain.is-live .lc.is-open .mi__live::before {
+    animation: mi-dot 1.8s var(--ease-in-out) infinite;
+  }
+
+  @keyframes mi-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  @keyframes mi-dot {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(0.7);
+    }
+  }
+
+  /* ── Планшет и телефон: карточки столбиком, все раскрыты ─── */
+  @media (max-width: 1199px) {
+    .lc-chain {
+      flex-direction: column;
+    }
+
+    .lc {
+      flex: none;
+      height: auto;
+    }
+
+    .lc.is-open {
+      box-shadow: none;
+    }
+
+    /* звенья — вертикальные, как у общей цепочки на узком экране */
+    .lc + .lc::before,
+    .lc + .lc::after {
+      left: 34px;
+      top: calc(var(--chain-gap) * -1 - 4px);
+      width: 22px;
+      height: calc(var(--chain-gap) + 8px);
+    }
+
+    .lc + .lc::after {
+      left: auto;
+      right: 34px;
+    }
+
+    .lc__in {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    }
+
+    .lc__text {
+      padding: 26px 28px 28px;
+    }
+
+    .lc__more {
+      width: auto;
+    }
+
+    .lc__deco,
+    .lc__mark {
+      display: none;
+    }
+
+    .lc__art {
+      position: relative;
+      width: auto;
+      height: auto;
+      min-height: 230px;
+      margin: 10px;
+      border-radius: 14px;
+      background:
+        radial-gradient(70% 80% at 8% 100%, var(--a1) 0%, transparent 72%),
+        radial-gradient(70% 80% at 95% 95%, var(--a2) 0%, transparent 72%),
+        linear-gradient(180deg, color-mix(in oklab, var(--a3) 40%, white) 0%, var(--a3) 100%);
+    }
+
+    .mi {
+      top: 50%;
+      bottom: auto;
+      translate: -50% -50%;
+    }
+  }
+
+  /* ── Телефон: лента с прокруткой вбок, видно край следующей карточки ── */
+  @media (max-width: 640px) {
+    .lc-chain {
+      --chain-gap: 18px;
+      flex-direction: row;
+      margin-inline: calc(var(--gutter) * -1);
+      padding: 2px var(--gutter) 6px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--gutter);
+      scrollbar-width: none;
+    }
+
+    .lc-chain::-webkit-scrollbar {
+      display: none;
+    }
+
+    .lc {
+      flex: 0 0 min(86%, 340px);
+      scroll-snap-align: start;
+    }
+
+    /* звенья снова горизонтальные, как на широком экране */
+    .lc + .lc::before,
+    .lc + .lc::after {
+      left: calc(var(--chain-gap) * -1 - 4px);
+      right: auto;
+      width: calc(var(--chain-gap) + 8px);
+      height: 22px;
+    }
+
+    .lc + .lc::before {
+      top: 34px;
+    }
+
+    .lc + .lc::after {
+      top: 74px;
+    }
+
+    .lc__in {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .lc__text {
+      padding: 22px 20px 6px;
+    }
+
+    .lc__title {
+      font-size: 1.375rem;
+    }
+
+    .lc__sum {
+      font-size: 1.75rem;
+    }
+
+    .lc__check {
+      margin-top: 14px;
+    }
+
+    .lc__art {
+      min-height: 172px;
+      margin: auto 8px 8px;
+    }
+  }
+
+  /* ── Панель «С чего начать» ──────────────────────────────── */
+  .lr {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.55s var(--ease-out);
+  }
+
+  .lr.is-open {
+    grid-template-rows: 1fr;
+  }
+
+  .lr__clip {
+    min-height: 0;
+    overflow: hidden;
+    margin-inline: -24px;
+    padding-inline: 24px;
+  }
+
+  .lr__panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px 32px;
+    margin: 24px 0 30px;
+    padding: 20px 22px 20px 28px;
+    border-radius: var(--r);
+    background: var(--card);
+    box-shadow: var(--shadow-soft);
+    opacity: 0;
+    transform: translateY(-10px);
+    visibility: hidden;
+    transition:
+      opacity 0.35s,
+      transform 0.55s var(--ease-out),
+      visibility 0s linear 0.55s;
+  }
+
+  .lr.is-open .lr__panel {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .lr__body {
+    display: grid;
+    gap: 10px;
+  }
+
+  .lr__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    font-size: 16px;
+  }
+
+  .lr__label {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .lr__products {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+  }
+
+  .lr__product:not([hidden]) {
+    display: inline-flex;
+    animation: chip-in 0.4s var(--ease-out) both;
+  }
+
+  @keyframes chip-in {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+  }
+
+  .lr__step {
+    color: var(--muted);
+  }
+
+  .lr__step-v {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .lr__cta {
+    flex: none;
+  }
+
+  @media (max-width: 760px) {
+    .lr__panel {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 20px;
+    }
+
+    .lr__cta {
+      white-space: normal;
+    }
+  }
+
+  .lc-notes {
+    max-width: 860px;
+    margin: 28px auto 0;
+    text-align: center;
+  }
+
+  .lr.is-open + .lc-notes {
+    margin-top: 0;
+  }
+</style>
+
+<script>
+  import { PRODUCT_ORDER, type ProductId } from '../config/site';
+  import { addInterest, removeInterest } from '../scripts/interest';
+
+  const chain = document.querySelector<HTMLElement>('[data-losses]');
+  const result = document.querySelector<HTMLElement>('[data-result]');
+
+  if (chain && result) {
+    const cards = [...chain.querySelectorAll<HTMLElement>('[data-row]')];
+    const chips = [...result.querySelectorAll<HTMLElement>('[data-result-product]')];
+    const stepEl = result.querySelector<HTMLElement>('[data-result-step]')!;
+    const cta = result.querySelector<HTMLAnchorElement>('[data-result-cta]')!;
+
+    const isOn = (card: HTMLElement) => card.classList.contains('is-on');
+
+    const checkedProducts = (): ProductId[] => {
+      const set = new Set(cards.filter(isOn).map((c) => c.dataset.product as ProductId));
+      return PRODUCT_ORDER.filter((id) => set.has(id));
+    };
+
+    // Правило первого шага из ТЗ
+    const firstStep = (ids: ProductId[]): string => {
+      if (ids.includes('robot')) return 'бесплатный пилот РО-БОТа на одном районе';
+      if (ids.includes('tonn')) return 'месяц бесплатно после запуска';
+      if (ids.includes('kodeks')) return 'неделя бесплатно';
+      return 'покажем демо';
+    };
+
+    const render = () => {
+      const ids = checkedProducts();
+      result.classList.toggle('is-open', ids.length > 0);
+      chips.forEach((chip) => {
+        chip.hidden = !ids.includes(chip.dataset.resultProduct as ProductId);
+      });
+      if (ids.length) stepEl.textContent = firstStep(ids);
+    };
+
+    cards.forEach((card) => {
+      const btn = card.querySelector<HTMLButtonElement>('[data-check]')!;
+      btn.addEventListener('click', () => {
+        const on = !isOn(card);
+        card.classList.toggle('is-on', on);
+        btn.setAttribute('aria-pressed', String(on));
+        const product = card.dataset.product as ProductId;
+        if (on) addInterest([product]);
+        else if (!checkedProducts().includes(product)) removeInterest([product]);
+        render();
+      });
+    });
+
+    cta.addEventListener('click', () => addInterest(checkedProducts()));
+
+    // Лёгкие анимации иллюстраций идут, только пока цепочка на экране
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(([entry]) => chain.classList.toggle('is-live', entry.isIntersecting), {
+        threshold: 0.1,
+      }).observe(chain);
+    } else {
+      chain.classList.add('is-live');
+    }
+  }
+</script>

@@ -1,0 +1,66 @@
+---
+// Список пунктов с автопереключением и полосой прогресса (как в разделах продуктов Calendly).
+// Поведение — scripts/kit.ts → initAccordions(). Рядом можно положить <div data-panes> с панелями
+// <div data-pane> в том же порядке — они переключаются вместе с пунктами (общий предок [data-acc-scope]).
+import Icon, { type IconName } from './Icon.astro';
+
+export interface AccItem {
+  title: string;
+  text: string;
+  icon?: IconName;
+  /** Ссылка у открытого пункта (квадратная кнопка ↗). */
+  href?: string;
+  hrefLabel?: string;
+}
+
+interface Props {
+  items: AccItem[];
+  /** Идентификатор для связи кнопок с текстом (уникальный на странице). */
+  id: string;
+  /** Сколько миллисекунд открыт пункт до перехода к следующему. */
+  ms?: number;
+  /** false — без автопереключения. */
+  auto?: boolean;
+  /** Цвет полосы прогресса. */
+  color?: string;
+  class?: string;
+}
+
+const { items, id, ms = 6500, auto = true, color, class: className } = Astro.props;
+---
+
+<div
+  class:list={['acc', className]}
+  data-acc
+  data-acc-ms={ms}
+  data-acc-auto={auto ? undefined : 'false'}
+  style={color ? `--acc-color:${color}` : undefined}
+>
+  {
+    items.map((it, i) => (
+      <div class:list={['acc__item', { 'is-open': i === 0 }]} data-acc-item>
+        <button
+          class="acc__head"
+          type="button"
+          id={`${id}-h${i}`}
+          aria-expanded={i === 0 ? 'true' : 'false'}
+          aria-controls={`${id}-b${i}`}
+        >
+          {it.icon && <Icon name={it.icon} />}
+          <span>{it.title}</span>
+        </button>
+        <div class="acc__body" id={`${id}-b${i}`} role="region" aria-labelledby={`${id}-h${i}`}>
+          <div class="acc__inner">
+            <p>{it.text}</p>
+            {it.href && (
+              <a class="arrow-btn" href={it.href} aria-label={it.hrefLabel ?? `Подробнее: ${it.title}`}>
+                <Icon name="arrow-up-right" />
+              </a>
+            )}
+          </div>
+        </div>
+        <span class="acc__progress" aria-hidden="true" />
+      </div>
+    ))
+  }
+</div>

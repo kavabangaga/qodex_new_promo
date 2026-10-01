@@ -1,0 +1,87 @@
+---
+// Служебный просмотр одного раздела: /s/<имя> (и образец дизайн-системы /s/kit).
+// Работает только при разработке (npm run dev): в сборку для сайта эти страницы не попадают.
+import Base from '../../layouts/Base.astro';
+import LeadModal from '../../components/LeadModal.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Hero from '../../sections/Hero.astro';
+import Losses from '../../sections/Losses.astro';
+import Why2026 from '../../sections/Why2026.astro';
+import Objects from '../../sections/Objects.astro';
+import Balance from '../../sections/Balance.astro';
+import Interfaces from '../../sections/Interfaces.astro';
+import Numbers from '../../sections/Numbers.astro';
+import Stories from '../../sections/Stories.astro';
+import Compare from '../../sections/Compare.astro';
+import Security from '../../sections/Security.astro';
+import Pilot from '../../sections/Pilot.astro';
+import Questions from '../../sections/Questions.astro';
+import About from '../../sections/About.astro';
+import Contact from '../../sections/Contact.astro';
+import KitDemo from '../../components/dev/KitDemo.astro';
+
+const MAP = {
+  header: Header,
+  hero: Hero,
+  losses: Losses,
+  why2026: Why2026,
+  objects: Objects,
+  balance: Balance,
+  interfaces: Interfaces,
+  numbers: Numbers,
+  stories: Stories,
+  compare: Compare,
+  security: Security,
+  pilot: Pilot,
+  questions: Questions,
+  about: About,
+  contact: Contact,
+  footer: Footer,
+  kit: KitDemo,
+} as const;
+
+export function getStaticPaths() {
+  if (import.meta.env.PROD) return [];
+  return [
+    'header',
+    'hero',
+    'losses',
+    'why2026',
+    'objects',
+    'balance',
+    'interfaces',
+    'numbers',
+    'stories',
+    'compare',
+    'security',
+    'pilot',
+    'questions',
+    'about',
+    'contact',
+    'footer',
+    'kit',
+  ].map((name) => ({ params: { name } }));
+}
+
+const { name } = Astro.params as { name: keyof typeof MAP };
+const Section = MAP[name];
+---
+
+<Base title={`Раздел: ${name}`}>
+  <main>
+    <Section />
+  </main>
+  <LeadModal />
+</Base>
+
+<script>
+  import { initReveal, initCounters } from '../../scripts/motion';
+  import { initAccordions, initChains } from '../../scripts/kit';
+  import { initInterestLinks } from '../../scripts/interest';
+  initReveal();
+  initCounters();
+  initAccordions();
+  initChains();
+  initInterestLinks();
+</script>

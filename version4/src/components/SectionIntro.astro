@@ -1,0 +1,22 @@
+---
+// Вступление к разделу: надпись (обычный регистр) → крупный заголовок → подзаголовок → кнопка.
+// По центру, как у Calendly; align="left" — для двухколоночных разделов.
+interface Props {
+  eyebrow?: string;
+  titleId?: string;
+  align?: 'center' | 'left';
+  /** serif — заголовок антиквой (продуктовые разделы). */
+  serif?: boolean;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { eyebrow, titleId, align = 'center', serif = false, class: className, ...rest } = Astro.props;
+---
+
+<header class:list={['intro', { 'intro--left': align === 'left' }, className]} {...rest}>
+  {eyebrow && <p class="t-eyebrow" data-reveal>{eyebrow}</p>}
+  <h2 class={serif ? 't-serif' : 't-h2'} id={titleId} data-reveal style="--d:1"><slot /></h2>
+  {Astro.slots.has('lead') && <p class="t-lead" data-reveal style="--d:2"><slot name="lead" /></p>}
+  {Astro.slots.has('cta') && <div class="intro__cta" data-reveal style="--d:3"><slot name="cta" /></div>}
+</header>

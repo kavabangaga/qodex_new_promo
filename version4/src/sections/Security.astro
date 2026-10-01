@@ -1,0 +1,361 @@
+---
+// Блок 11. Безопасность, данные и интеграции — приём Calendly «интеграции»: плитки со значками,
+// соединённые перемычками (системы — названиями, без гербов и эмблем ведомств), и ниже большие
+// карточки с кнопкой ↗ для главных пунктов.
+import SectionIntro from '../components/SectionIntro.astro';
+import Icon, { type IconName } from '../components/Icon.astro';
+import { SKOLKOVO_URL } from '../config/site';
+import { FAQ } from '../data/faq';
+
+// Пункты «Интеграций» (тексты ТЗ) и системы из них — плитками
+const CHAINS: { text: string; systems: { name: string; icon: IconName }[] }[] = [
+  {
+    text: 'ГИС ЖКХ, Росреестр, ФИАС, ФНС',
+    systems: [
+      { name: 'ГИС ЖКХ', icon: 'house' },
+      { name: 'Росреестр', icon: 'map' },
+      { name: 'ФИАС', icon: 'map-pin' },
+      { name: 'ФНС', icon: 'landmark' },
+    ],
+  },
+  {
+    text: 'Биллинг и 1С: выгрузка в Excel, запись одной кнопкой',
+    systems: [
+      { name: 'Биллинг', icon: 'receipt' },
+      { name: '1С', icon: 'calculator' },
+      { name: 'Excel', icon: 'file-spreadsheet' },
+    ],
+  },
+  {
+    text: 'ФГИС УТКО по API; любые автовесы',
+    systems: [
+      { name: 'ФГИС УТКО', icon: 'server' },
+      { name: 'Автовесы', icon: 'scale' },
+    ],
+  },
+];
+
+// Ответ в частых вопросах «Где хранятся наши данные?» — якорь вопроса (см. components/Faq.astro)
+const dataQ = FAQ.findIndex((f) => f.q === 'Где хранятся наши данные?');
+const dataHref = `#faq-${dataQ + 1}`;
+const dataLabel = `Ответ в частых вопросах: ${FAQ[dataQ]?.q ?? ''}`;
+
+const CARDS: {
+  title: string;
+  icon: IconName;
+  items: string[];
+  href: string;
+  label: string;
+  external?: boolean;
+}[] = [
+  {
+    title: 'Данные и доступы',
+    icon: 'lock',
+    items: [
+      'Вся чувствительная информация хранится внутри контура вашей организации',
+      'Решение по расхождениям принимает ваш сотрудник',
+      'NDA, серверы в России',
+    ],
+    href: dataHref,
+    label: dataLabel,
+  },
+  {
+    title: 'Персональные данные',
+    icon: 'user-x',
+    items: ['Персональные данные не храним', 'Доступы к госсистемам остаются у ваших сотрудников'],
+    href: dataHref,
+    label: dataLabel,
+  },
+  {
+    title: 'Статус компании',
+    icon: 'badge-check',
+    items: ['Аккредитованная IT-компания', 'Резидент Сколково'],
+    href: SKOLKOVO_URL,
+    label: 'Резидент Сколково — открыть на сайте Сколково',
+    external: true,
+  },
+];
+---
+
+<section class="section" id="bezopasnost" aria-labelledby="bezopasnost-title">
+  <div class="container">
+    <SectionIntro eyebrow="Безопасность" titleId="bezopasnost-title">
+      Безопасность, данные и интеграции
+      <Fragment slot="lead">Ответы на вопросы юриста, службы безопасности и ИТ — до первой встречи.</Fragment>
+    </SectionIntro>
+
+    <!-- Интеграции: цепочки плиток, под каждой — пункт ТЗ -->
+    <div class="integr">
+      <h3 class="integr__title" data-reveal>
+        <Icon name="plug" size={20} />
+        Интеграции
+      </h3>
+      <ul class="integr__list">
+        {
+          CHAINS.map((c, ci) => (
+            <li class="integr__item" style={`--n:${c.systems.length}; --d:${ci + 1}`} data-reveal>
+              <div class="tiles" aria-hidden="true">
+                {c.systems.map((s) => (
+                  <span class="tile">
+                    <span class="tile__ico">
+                      <Icon name={s.icon} size={22} />
+                    </span>
+                    <span class="tile__name">{s.name}</span>
+                  </span>
+                ))}
+              </div>
+              <p class="integr__text">{c.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <!-- Большие карточки с кнопкой ↗ -->
+    <div class="cards">
+      {
+        CARDS.map((c, i) => (
+          <article class="card" style={`--d:${i + 1}`} data-reveal>
+            <div class="card__top">
+              <span class="card__ico" aria-hidden="true">
+                <Icon name={c.icon} size={22} />
+              </span>
+              <a
+                class="arrow-btn card__btn"
+                href={c.href}
+                aria-label={c.label}
+                target={c.external ? '_blank' : undefined}
+                rel={c.external ? 'noopener' : undefined}
+              >
+                <Icon name="arrow-up-right" />
+              </a>
+            </div>
+            <h3 class="card__title">{c.title}</h3>
+            <ul class="card__list">
+              {c.items.map((it) => (
+                <li>
+                  <span class="card__check" aria-hidden="true">
+                    <Icon name="check" size={18} strokeWidth={2} />
+                  </span>
+                  <span>{it}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Интеграции: плитки, соединённые перемычками ─────── */
+  .integr {
+    display: grid;
+    justify-items: center;
+    gap: clamp(22px, 2.6vw, 32px);
+  }
+
+  .integr__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25rem;
+    font-weight: 560;
+    letter-spacing: -0.012em;
+  }
+
+  .integr__list {
+    --tile: clamp(86px, 7.4vw, 106px);
+    --tile-gap: clamp(10px, 1.2vw, 16px);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: start;
+    gap: 28px clamp(22px, 3.4vw, 48px);
+  }
+
+  .integr__item {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    width: calc(var(--n) * var(--tile) + (var(--n) - 1) * var(--tile-gap));
+  }
+
+  .tiles {
+    display: flex;
+    gap: var(--tile-gap);
+    isolation: isolate;
+  }
+
+  .tile {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 9px;
+    width: var(--tile);
+    aspect-ratio: 1;
+    padding: 10px 4px;
+    border-radius: clamp(20px, 2vw, 26px);
+    background: var(--panel);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  .tile:hover {
+    transform: translateY(-3px);
+  }
+
+  /* перемычки к соседней плитке слева: две короткие полосы того же цвета */
+  .tile + .tile::before,
+  .tile + .tile::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: calc(var(--tile-gap) * -1 - 10px);
+    width: calc(var(--tile-gap) + 20px);
+    height: 14px;
+    border-radius: 7px;
+    background: var(--panel);
+  }
+
+  .tile + .tile::before {
+    top: calc(50% - 17px);
+  }
+
+  .tile + .tile::after {
+    top: calc(50% + 3px);
+  }
+
+  .tile__ico {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgb(7 26 49 / 0.06);
+  }
+
+  .tile__name {
+    font-size: clamp(12px, 1.05vw, 13.5px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    text-align: center;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+
+  .integr__text {
+    max-width: 34ch;
+    font-size: 15px;
+    line-height: 1.45;
+    text-align: center;
+    color: var(--muted);
+    text-wrap: balance;
+  }
+
+  /* ── Большие карточки ─────────────────────────────────── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(14px, 1.6vw, 24px);
+    margin-top: clamp(48px, 6vw, 80px);
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: clamp(22px, 2.4vw, 30px);
+    border-radius: var(--r);
+    background: var(--panel);
+  }
+
+  .card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .card__ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .card__btn {
+    background: #fff;
+  }
+
+  .card__btn:hover {
+    background: var(--line);
+  }
+
+  .card__title {
+    font-size: clamp(1.3rem, 1.7vw, 1.5rem);
+    font-weight: 560;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .card__list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .card__list li {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 10px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  .card__check {
+    display: grid;
+    margin-top: 3px;
+    color: var(--ink);
+  }
+
+  @media (max-width: 899px) {
+    .cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 599px) {
+    .integr__list {
+      --tile: calc((100vw - 2 * var(--gutter) - 3 * var(--tile-gap)) / 4);
+      --tile-gap: 10px;
+      flex-direction: column;
+      align-items: center;
+      gap: 26px;
+    }
+
+    .tile {
+      padding: 8px 4px;
+      gap: 7px;
+    }
+
+    .tile__ico {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+    }
+
+    .tile__name {
+      font-size: 12px;
+    }
+  }
+</style>

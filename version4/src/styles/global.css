@@ -1,0 +1,1033 @@
+/* QODEX v4 — дизайн-система по мотивам calendly.com.
+   Тёплый почти белый фон, тёмно-синий текст, большие скруглённые панели,
+   мягкие градиенты палитры Calendly (цвета продуктов — только в значках). */
+
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/source-serif-4/opsz.css';
+
+:root {
+  /* Фон и поверхности */
+  --bg: #fcfbf8;
+  --panel: #f5f3ee;
+  --panel-2: #efece6;
+  --card: #ffffff;
+  --card-warm: #fcfbf8;
+
+  /* Текст */
+  --ink: #071a31;
+  --ink-2: #213650;
+  --muted: #5f6d77;
+  --subtle: #7d8994;
+  --line: #e7e4dd;
+  --line-2: #d8d4cb;
+
+  /* Акцент интерфейса (активные состояния, ссылки, фокус) */
+  --blue: #006bff;
+  --blue-soft: #e5f0ff;
+  --ok: #0a9f6a;
+  --danger: #d6293b;
+
+  /* Палитра градиентов Calendly */
+  --g-sky: #6bb1ff;
+  --g-blue: #4890e3;
+  --g-deep: #1e5ea7;
+  --g-navy: #0f3566;
+  --g-teal: #5ddfd7;
+  --g-teal-soft: #baf0ec;
+  --g-lav: #b89ffa;
+  --g-lav-2: #d4c2ff;
+  --g-lav-soft: #eae3fa;
+  --g-pink: #eb8be7;
+  --g-pink-soft: #f6c2e6;
+  --g-lime: #eef3a6;
+
+  /* Цвета продуктов QODEX — только для значков и меток */
+  --c-robot: #6b4dff;
+  --c-tracker: #1669f0;
+  --c-tonn: #12b886;
+  --c-kodeks: #ff8a00;
+
+  --font-sans: 'Geist Variable', 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  /* совместимость со старыми компонентами */
+  --font-display: var(--font-sans);
+  --surface: var(--card);
+  --paper: var(--bg);
+  --accent: var(--blue);
+  --accent-soft: var(--blue-soft);
+
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r: 20px;
+  --r-lg: 28px;
+  --r-xl: 40px;
+  --r-2xl: clamp(28px, 4vw, 64px);
+  --radius-sm: var(--r-xs);
+  --radius: var(--r-sm);
+  --radius-lg: var(--r);
+
+  --shadow-card: 0 4px 5px rgb(95 109 119 / 0.04), 0 10px 15px rgb(95 109 119 / 0.04),
+    0 40px 50px rgb(95 109 119 / 0.1);
+  --shadow-soft: 0 1px 2px rgb(7 26 49 / 0.04), 0 12px 32px -14px rgb(7 26 49 / 0.18);
+  --shadow-float: 0 2px 6px rgb(7 26 49 / 0.05), 0 20px 50px -20px rgb(7 26 49 / 0.28);
+  --shadow: var(--shadow-soft);
+  --shadow-lg: var(--shadow-float);
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Сетка: панели отстоят от края экрана на --page-pad, контент — до 1200 px */
+  --page-pad: clamp(8px, 1.7vw, 24px);
+  --container: 1200px;
+  --gutter: clamp(16px, 3.4vw, 40px);
+  --header-h: 80px;
+  --section-y: clamp(72px, 9vw, 136px);
+}
+
+/* Значки продуктов: --pc — цвет продукта */
+.p-robot {
+  --pc: var(--c-robot);
+}
+
+.p-tracker {
+  --pc: var(--c-tracker);
+}
+
+.p-tonn {
+  --pc: var(--c-tonn);
+}
+
+.p-kodeks {
+  --pc: var(--c-kodeks);
+}
+
+/* ── База ───────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 24px);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 560;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+img,
+svg,
+canvas,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+
+.dark :focus-visible {
+  outline-color: #fff;
+}
+
+::selection {
+  background: var(--g-sky);
+  color: var(--ink);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Типографика ────────────────────────────────────────── */
+/* Главный заголовок страницы */
+.t-display,
+.h1 {
+  font-family: var(--font-sans);
+  font-size: clamp(2.5rem, 5.6vw, 4.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+/* Заголовок раздела по центру (крупный гротеск) */
+.t-h2,
+.h2 {
+  font-family: var(--font-sans);
+  font-size: clamp(2.1rem, 4.3vw, 3.75rem);
+  line-height: 1.07;
+  letter-spacing: -0.042em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+/* Заголовок продуктового раздела — антиква, как у Calendly */
+.t-serif {
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+  font-size: clamp(2rem, 3.6vw, 3.1rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+  text-wrap: balance;
+}
+
+/* Заголовок карточки (36 px) */
+.t-h3 {
+  font-size: clamp(1.6rem, 2.4vw, 2.25rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-weight: 560;
+  text-wrap: balance;
+}
+
+/* Подзаголовок пункта, мелкой карточки (20 px) */
+.t-h4,
+.h3 {
+  font-size: 1.25rem;
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+  font-weight: 560;
+}
+
+.t-lead,
+.lead {
+  font-size: clamp(1.06rem, 1.25vw, 1.2rem);
+  line-height: 1.5;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.t-body {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.t-small {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* Надпись над заголовком: обычный регистр, без разрядки */
+.t-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.dark .t-eyebrow {
+  color: inherit;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.num,
+.t-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+}
+
+.footnote {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+/* ── Раскладка ──────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: calc(var(--container) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.container--narrow {
+  max-width: calc(860px + var(--gutter) * 2);
+}
+
+/* Раздел на фоне страницы */
+.section {
+  position: relative;
+  padding-block: var(--section-y);
+}
+
+/* Большая скруглённая панель (#f5f3ee) с отступом от края экрана */
+.panel {
+  position: relative;
+  margin-inline: var(--page-pad);
+  border-radius: var(--r-2xl);
+  background: var(--panel);
+}
+
+.panel--white {
+  background: var(--card);
+}
+
+.panel--dark {
+  background: var(--ink);
+  color: #fff;
+}
+
+.section.panel {
+  padding-block: var(--section-y);
+}
+
+/* Вступление к разделу по центру: надпись → заголовок → подзаголовок → кнопка */
+.intro {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  max-width: 880px;
+  margin-inline: auto;
+  margin-bottom: clamp(40px, 5vw, 72px);
+  text-align: center;
+}
+
+.intro .t-lead {
+  max-width: 640px;
+}
+
+.intro__cta {
+  margin-top: 10px;
+}
+
+/* Вступление слева (для двухколоночных разделов) */
+.intro--left {
+  justify-items: start;
+  text-align: left;
+  margin-inline: 0;
+}
+
+.dark {
+  color: #fff;
+}
+
+.dark .t-lead,
+.dark .t-body,
+.dark .lead {
+  color: rgb(255 255 255 / 0.72);
+}
+
+/* ── Кнопки ─────────────────────────────────────────────── */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 560;
+  line-height: 1;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s,
+    box-shadow 0.25s,
+    transform 0.25s var(--ease-out);
+}
+
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.btn:hover svg.icon-arrow-right {
+  transform: translateX(3px);
+}
+
+.btn:hover svg.icon-arrow-down {
+  transform: translateY(2px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* тёмно-синяя основная */
+.btn--primary {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.btn--primary:hover {
+  background: #12305a;
+  box-shadow: 0 10px 24px -12px rgb(7 26 49 / 0.55);
+}
+
+/* контурная */
+.btn--outline,
+.btn--ghost {
+  background: transparent;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.btn--outline:hover,
+.btn--ghost:hover {
+  background: rgb(7 26 49 / 0.05);
+}
+
+/* белая — на тёмном и на градиенте */
+.btn--light {
+  background: #fff;
+  color: var(--ink);
+}
+
+.btn--light:hover {
+  background: #f1efe9;
+}
+
+.dark .btn--outline,
+.dark .btn--ghost {
+  border-color: rgb(255 255 255 / 0.55);
+  color: #fff;
+}
+
+.dark .btn--outline:hover,
+.dark .btn--ghost:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.btn--sm {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 15px;
+  border-radius: 10px;
+}
+
+/* Ссылка «Подробнее →» с линией снизу, как у Calendly */
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid currentColor;
+  font-size: 15px;
+  font-weight: 560;
+  color: var(--ink);
+}
+
+.link-arrow svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.link-arrow:hover svg {
+  transform: translateX(3px);
+}
+
+.dark .link-arrow {
+  color: #fff;
+}
+
+/* Квадратная кнопка-стрелка ↗ (у пунктов аккордеона и карточек) */
+.arrow-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--ink);
+  transition:
+    background-color 0.2s,
+    transform 0.3s var(--ease-out);
+}
+
+.arrow-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.arrow-btn:hover {
+  background: var(--line-2);
+  transform: translate(1px, -1px);
+}
+
+/* ── Метки ──────────────────────────────────────────────── */
+/* Метка продукта: цветная плитка со значком + название (+ «Новое») */
+.plabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 560;
+  color: var(--ink);
+}
+
+.plabel__ico {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 8px;
+  background: var(--pc, var(--ink));
+  color: #fff;
+}
+
+.plabel__ico svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Плашка: «Новое», «Бета», «демо-данные» */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: var(--panel-2);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tag__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--pc, var(--blue));
+}
+
+.tag--white {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: var(--shadow-soft);
+}
+
+.tag--forecast {
+  border: 1px dashed var(--line-2);
+  background: transparent;
+}
+
+.tag--demo {
+  background: rgb(255 255 255 / 0.85);
+  color: var(--ink);
+}
+
+/* ── Градиентная карточка-иллюстрация (как у разделов продуктов Calendly) ──
+   <div class="gv gv--sky"> + декор .gv__bars + белая карточка .ui внутри. */
+.gv {
+  --gv-r: clamp(28px, 3.4vw, 48px);
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: clamp(360px, 40vw, 580px);
+  padding: clamp(20px, 3vw, 48px);
+  border-radius: var(--gv-r);
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--g-sky);
+}
+
+/* мягкие пятна: размытые радиальные градиенты */
+.gv::before {
+  content: '';
+  position: absolute;
+  inset: -12%;
+  z-index: -2;
+  background: var(--gv-mesh);
+  filter: blur(36px);
+}
+
+/* Пресеты палитры Calendly */
+.gv--sky {
+  --gv-mesh: radial-gradient(60% 45% at 50% 0%, #6bb1ff 0%, transparent 70%),
+    radial-gradient(70% 40% at 50% 48%, #d3f4f6 0%, transparent 72%),
+    radial-gradient(80% 45% at 50% 100%, #133f78 0%, transparent 75%),
+    linear-gradient(180deg, #5aa5f7 0%, #a9d6ff 34%, #c8f1f2 52%, #4a90e2 76%, #12386c 100%);
+  background: #6fb0f5;
+}
+
+.gv--aqua {
+  --gv-mesh: radial-gradient(55% 40% at 50% 0%, #c7dcfb 0%, transparent 70%),
+    radial-gradient(45% 35% at 92% 58%, #f3eb8f 0%, transparent 70%),
+    radial-gradient(60% 40% at 15% 55%, #7fe3da 0%, transparent 70%),
+    linear-gradient(180deg, #cfe1fb 0%, #bfe8f3 30%, #8fe2d8 55%, #3f8f97 78%, #1c3f5a 100%);
+  background: #9fdcdc;
+}
+
+.gv--dusk {
+  --gv-mesh: radial-gradient(70% 45% at 50% 0%, #4d7cc6 0%, transparent 72%),
+    radial-gradient(45% 45% at 5% 62%, #f5b7d3 0%, transparent 70%),
+    radial-gradient(55% 50% at 100% 85%, #c3b0fb 0%, transparent 70%),
+    linear-gradient(180deg, #5582c8 0%, #9cb6ee 38%, #e8bde0 66%, #c8b6fb 100%);
+  background: #9db3e8;
+}
+
+.gv--mint {
+  --gv-mesh: radial-gradient(70% 40% at 50% 0%, #4e8fdf 0%, transparent 72%),
+    radial-gradient(70% 45% at 40% 58%, #a9e6ef 0%, transparent 72%),
+    radial-gradient(70% 40% at 50% 100%, #e9f6c6 0%, transparent 75%),
+    linear-gradient(180deg, #5b97e2 0%, #9fd8f0 40%, #cdeee3 70%, #eef6cf 100%);
+  background: #a8d8ea;
+}
+
+.gv--lavender {
+  --gv-mesh: radial-gradient(60% 45% at 50% 0%, #b89ffa 0%, transparent 70%),
+    radial-gradient(50% 45% at 0% 70%, #eb8be7 0%, transparent 70%),
+    radial-gradient(60% 45% at 100% 90%, #6bb1ff 0%, transparent 72%),
+    linear-gradient(180deg, #c3adfb 0%, #dccffd 45%, #eae3fa 70%, #d7c5ff 100%);
+  background: #cdbafc;
+}
+
+.gv--teal {
+  --gv-mesh: radial-gradient(60% 45% at 50% 0%, #5ddfd7 0%, transparent 70%),
+    radial-gradient(50% 45% at 0% 80%, #d4c2ff 0%, transparent 70%),
+    radial-gradient(60% 45% at 100% 85%, #6bb1ff 0%, transparent 72%),
+    linear-gradient(180deg, #7fe5de 0%, #baf0ec 45%, #dff6f3 70%, #cfe2ff 100%);
+  background: #9be8e1;
+}
+
+/* Декор: «звуковая волна» из полупрозрачных белых полос по бокам */
+.gv__bars {
+  position: absolute;
+  inset-block: 0;
+  inset-inline: 0;
+  z-index: -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: clamp(8px, 1.6vw, 22px);
+  pointer-events: none;
+}
+
+.gv__bars > span {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.1vw, 14px);
+  height: 60%;
+}
+
+.gv__bars i {
+  width: 3px;
+  height: var(--h, 50%);
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.45);
+}
+
+/* Декор: горизонтальные полосы по бокам */
+.gv__stripes {
+  position: absolute;
+  inset: 32% 0;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(180deg, rgb(255 255 255 / 0.42) 0 7px, transparent 7px 16px) left / 24% 100% no-repeat,
+    repeating-linear-gradient(180deg, rgb(255 255 255 / 0.42) 0 7px, transparent 7px 16px) right / 24% 100% no-repeat;
+  pointer-events: none;
+}
+
+/* Белая карточка интерфейса на градиенте: тень + полупрозрачная рамка */
+.ui {
+  position: relative;
+  width: min(100%, 420px);
+  padding: clamp(18px, 2vw, 28px);
+  border-radius: 24px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow:
+    0 0 0 8px rgb(255 255 255 / 0.4),
+    var(--shadow-card);
+}
+
+.ui--plain {
+  box-shadow: var(--shadow-card);
+}
+
+/* Строка внутри .ui */
+.ui-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 14px;
+}
+
+/* ── Цепочка карточек (Calendly «Book → Prep → Capture → Follow up») ──
+   <div class="chain" data-chain> с детьми .chain__card; открытая карточка .is-open шире. */
+.chain {
+  --chain-gap: 24px;
+  display: flex;
+  gap: var(--chain-gap);
+  align-items: stretch;
+  /* своя «стопка» слоёв: звенья (z-index:-1) рисуются под карточками, но над фоном панели */
+  isolation: isolate;
+}
+
+.chain__card {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: var(--r);
+  background: var(--card);
+  transition: flex-grow 0.6s var(--ease-out);
+}
+
+.chain__card.is-open {
+  flex-grow: 2.1;
+  box-shadow: var(--shadow-card);
+}
+
+/* «звенья» между карточками */
+.chain__card + .chain__card::before,
+.chain__card + .chain__card::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--chain-gap) * -1 - 4px);
+  width: calc(var(--chain-gap) + 8px);
+  height: 22px;
+  border-radius: 11px;
+  background: var(--chain-link, var(--line));
+  z-index: -1;
+}
+
+.chain__card + .chain__card::before {
+  top: 34px;
+}
+
+.chain__card + .chain__card::after {
+  top: 74px;
+}
+
+@media (max-width: 960px) {
+  .chain {
+    flex-direction: column;
+  }
+
+  .chain__card + .chain__card::before,
+  .chain__card + .chain__card::after {
+    left: 34px;
+    top: calc(var(--chain-gap) * -1 - 4px);
+    width: 22px;
+    height: calc(var(--chain-gap) + 8px);
+  }
+
+  .chain__card + .chain__card::after {
+    left: auto;
+    right: 34px;
+    top: calc(var(--chain-gap) * -1 - 4px);
+  }
+}
+
+/* ── Аккордеон с полосой прогресса (Calendly, пункты продукта) ──
+   Разметку и поведение задаёт scripts/kit.ts → initAccordions(). */
+.acc {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.acc__item {
+  position: relative;
+  border-bottom: 1px solid var(--line);
+}
+
+.acc__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 20px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-size: 1.25rem;
+  font-weight: 560;
+  letter-spacing: -0.012em;
+  line-height: 1.3;
+  color: var(--subtle);
+  transition: color 0.3s;
+}
+
+.acc__head svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.acc__head:hover,
+.acc__item.is-open .acc__head {
+  color: var(--ink);
+}
+
+.acc__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s var(--ease-out);
+}
+
+.acc__item.is-open .acc__body {
+  grid-template-rows: 1fr;
+}
+
+.acc__inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.acc__inner > :first-child {
+  padding-bottom: 22px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* полоса прогресса снизу открытого пункта */
+.acc__progress {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  width: 0;
+  background: var(--acc-color, var(--blue));
+  opacity: 0;
+}
+
+.acc__item.is-open .acc__progress {
+  opacity: 1;
+  animation: acc-progress var(--acc-ms, 6000ms) linear forwards;
+}
+
+.acc[data-paused] .acc__progress {
+  animation-play-state: paused;
+}
+
+@keyframes acc-progress {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* Панели, которые переключаются вместе с аккордеоном/вкладками: [data-pane] внутри [data-panes] */
+[data-panes] {
+  display: grid;
+}
+
+[data-panes] > [data-pane] {
+  grid-area: 1 / 1;
+  transition:
+    opacity 0.5s var(--ease-out),
+    transform 0.6s var(--ease-out),
+    visibility 0s linear 0.5s;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px) scale(0.985);
+}
+
+[data-panes] > [data-pane].is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+/* ── Появление при прокрутке ────────────────────────────── */
+html.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.8s var(--ease-out),
+    transform 0.9s var(--ease-out);
+  transition-delay: calc(var(--d, 0) * 90ms);
+}
+
+html.js [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* плавающие карточки интерфейсов слегка покачиваются */
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.float {
+  animation: float-y 6s var(--ease-in-out) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  html.js [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+
+  .float {
+    animation: none;
+  }
+}
+
+/* ── Таблицы (сравнение, документы) ─────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--r);
+  background: var(--card);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.table th,
+.table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table thead th {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+/* Ссылка на продукт */
+.product-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 560;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line-2);
+  transition: border-color 0.2s;
+}
+
+.product-link:hover {
+  border-bottom-color: var(--ink);
+}

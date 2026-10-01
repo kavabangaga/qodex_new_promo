@@ -1,0 +1,335 @@
+---
+// Блок 10 «Сравнение с бесплатными инструментами»: колонки-карточки на панели.
+// QODEX — на градиенте палитры Calendly с белым логотипом и отметками ✓, остальные — белые карточки.
+// На телефоне — горизонтальная лента карточек со scroll-snap, край следующей карточки виден.
+import SectionIntro from '../components/SectionIntro.astro';
+import Icon from '../components/Icon.astro';
+import Logo from '../components/Logo.astro';
+
+const criteria = [
+  'Кто фиксирует вывоз',
+  'Сколько контейнеров погружено',
+  'Вывоз сверяется с весом на полигоне',
+  'Поиск неплательщиков в базе',
+  'Вес без ручного ввода на весовой',
+];
+
+const tools: { name: string; qodex?: boolean; values: string[] }[] = [
+  {
+    name: 'QODEX',
+    qodex: true,
+    values: [
+      'Камеры на машине, без участия водителя',
+      'ИИ считает по видео, 96,4%',
+      'Tracker + TONN',
+      'РО-БОТ: вся база за дни',
+      'TONN',
+    ],
+  },
+  {
+    name: '«Водитель ТКО» (РЭО)',
+    values: ['Водитель фотографирует вручную', 'По фото водителя', '—', '—', '—'],
+  },
+  { name: 'ГЛОНАСС-трек', values: ['Только трек проезда', 'Не видно', '—', '—', '—'] },
+  { name: 'Ручная сверка', values: ['—', '—', 'Выборочно, вручную', 'Месяцы работы', '—'] },
+];
+---
+
+<section class="section panel cmp" aria-labelledby="sravnenie-title">
+  <div class="container">
+    <SectionIntro eyebrow="Сравнение" titleId="sravnenie-title">
+      Бесплатные инструменты видят часть картины — QODEX видит всю цепочку
+      <Fragment slot="lead">
+        Мы не заменяем приложение РЭО «Водитель ТКО» и ГЛОНАСС, а закрываем то, чего они не видят.
+      </Fragment>
+    </SectionIntro>
+
+    <div class="cmp__scroll" data-reveal>
+      <div class="cmp__grid">
+        <div class="cmp__labels" aria-hidden="true">
+          <span class="cmp__corner"></span>
+          {criteria.map((c) => <span class="cmp__label">{c}</span>)}
+        </div>
+
+        {
+          tools.map((t) => (
+            <article class:list={['cmp__col', { 'cmp__col--qodex': t.qodex }]}>
+              {t.qodex && <div class="gv gv--sky cmp__bg" aria-hidden="true" />}
+              <h3 class="cmp__name">
+                {t.qodex ? (
+                  <span class="cmp__logo">
+                    <Logo height={22} />
+                  </span>
+                ) : (
+                  t.name
+                )}
+              </h3>
+              <dl class="cmp__list">
+                {t.values.map((v, i) => (
+                  <div class:list={['cmp__cell', { 'is-none': v === '—' }]}>
+                    <dt class="cmp__dt">{criteria[i]}</dt>
+                    <dd class="cmp__dd">
+                      {t.qodex && (
+                        <span class="cmp__check" aria-hidden="true">
+                          <Icon name="check" size={13} strokeWidth={3} />
+                        </span>
+                      )}
+                      {v === '—' ? (
+                        <>
+                          <span class="cmp__none" aria-hidden="true">
+                            —
+                          </span>
+                          <span class="visually-hidden">нет</span>
+                        </>
+                      ) : (
+                        <span>{v}</span>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Компьютер: колонки-карточки выровнены по строкам критериев (subgrid) ── */
+  .cmp__grid {
+    display: grid;
+    grid-template-columns: minmax(160px, 0.9fr) minmax(0, 1.22fr) repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto repeat(5, auto);
+    column-gap: 12px;
+  }
+
+  .cmp__labels,
+  .cmp__col {
+    grid-row: 1 / span 6;
+    display: grid;
+    grid-template-rows: subgrid;
+  }
+
+  .cmp__list {
+    display: contents;
+  }
+
+  .cmp__corner {
+    display: block;
+  }
+
+  .cmp__label {
+    display: flex;
+    align-items: center;
+    padding: 18px 16px 18px 0;
+    border-top: 1px solid var(--line-2);
+    font-size: 15px;
+    font-weight: 560;
+    line-height: 1.35;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .cmp__col {
+    position: relative;
+    padding: 0 22px;
+    border-radius: var(--r-lg);
+    background: var(--card);
+  }
+
+  .cmp__name {
+    display: flex;
+    align-items: center;
+    min-height: 76px;
+    padding: 22px 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .cmp__cell {
+    display: flex;
+    align-items: center;
+    padding: 18px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  /* на компьютере критерий читает только скринридер — глазами он виден в левой колонке */
+  .cmp__dt {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .cmp__dd {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .cmp__none {
+    font-size: 17px;
+    color: var(--line-2);
+  }
+
+  /* QODEX: градиентная колонка, приподнята над остальными; значения — белыми плашками */
+  .cmp__col--qodex {
+    z-index: 1;
+    margin-block: -18px;
+    padding: 18px 14px;
+    overflow: hidden;
+    isolation: isolate;
+    background: none;
+    box-shadow: 0 30px 60px -30px rgb(18 56 108 / 0.55);
+  }
+
+  .cmp__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    min-height: 0;
+    padding: 0;
+    border-radius: inherit;
+  }
+
+  .cmp__col--qodex .cmp__name {
+    padding-inline: 8px;
+  }
+
+  /* белый логотип на градиенте */
+  .cmp__logo {
+    display: inline-flex;
+    filter: brightness(0) invert(1);
+  }
+
+  .cmp__col--qodex .cmp__cell {
+    margin-block: 4px;
+    padding: 12px 14px;
+    border-top: 0;
+    border-radius: 14px;
+    background: rgb(255 255 255 / 0.94);
+    box-shadow: 0 6px 18px -12px rgb(7 26 49 / 0.5);
+  }
+
+  .cmp__col--qodex .cmp__dd {
+    font-size: 15px;
+    font-weight: 560;
+    color: var(--ink);
+  }
+
+  .cmp__check {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #fff;
+  }
+
+  @media (max-width: 1140px) {
+    .cmp__grid {
+      grid-template-columns: minmax(140px, 0.95fr) minmax(0, 1.25fr) repeat(3, minmax(0, 1fr));
+      column-gap: 10px;
+    }
+
+    .cmp__col {
+      padding-inline: 16px;
+    }
+
+    .cmp__col--qodex {
+      padding-inline: 10px;
+    }
+
+    .cmp__label,
+    .cmp__dd {
+      font-size: 14.5px;
+    }
+  }
+
+  /* ── Планшет и телефон: карточки листаются вбок, край следующей виден ── */
+  @media (max-width: 960px) {
+    .cmp__scroll {
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--gutter);
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      margin-inline: calc(var(--gutter) * -1);
+      padding: 4px var(--gutter) 28px;
+    }
+
+    .cmp__scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cmp__grid {
+      display: flex;
+      align-items: stretch;
+      gap: 10px;
+      width: max-content;
+    }
+
+    .cmp__labels {
+      display: none;
+    }
+
+    .cmp__col {
+      display: block;
+      flex: none;
+      width: min(calc(100vw - var(--gutter) * 2 - 28px), 340px);
+      padding: 0 20px 10px;
+      scroll-snap-align: start;
+    }
+
+    .cmp__col--qodex {
+      margin-block: 0;
+      padding: 0 12px 12px;
+      box-shadow: 0 14px 26px -18px rgb(18 56 108 / 0.55);
+    }
+
+    .cmp__list {
+      display: block;
+    }
+
+    .cmp__name {
+      min-height: 64px;
+      padding: 18px 0 10px;
+    }
+
+    .cmp__cell {
+      display: grid;
+      gap: 6px;
+      padding: 14px 0;
+    }
+
+    .cmp__col--qodex .cmp__cell {
+      margin-block: 0 8px;
+    }
+
+    .cmp__dt {
+      position: static;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      clip: auto;
+      white-space: normal;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+  }
+</style>

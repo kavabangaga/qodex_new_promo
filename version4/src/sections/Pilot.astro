@@ -1,0 +1,420 @@
+---
+// Блок 12 «Пилот» — как раскрытая панель первого экрана Calendly: большая градиентная панель,
+// внутри белая карточка: слева факты пилота РО-БОТа и кнопка, справа — реестр расхождений
+// с метками 1–3 и пояснение «Так выглядит результат первого дня». Ниже в той же панели —
+// пилоты QODEX TONN и Кодекса ТКО (строки таблицы пилотов из ТЗ).
+import SectionIntro from '../components/SectionIntro.astro';
+import ProductLabel from '../components/ProductLabel.astro';
+import Shot from '../components/Shot.astro';
+import Icon, { type IconName } from '../components/Icon.astro';
+import type { ProductId } from '../config/site';
+
+const NB = ' ';
+
+const steps: { icon: IconName; text: string }[] = [
+  { icon: 'lock', text: 'NDA' },
+  { icon: 'file-spreadsheet', text: 'Выгрузка биллинга по одному району' },
+  { icon: 'list-checks', text: `Реестр неплательщиков в рублях — за 1${NB}день` },
+];
+
+const others: { id: ProductId; first: string; payback: string; need: string; pilot: string }[] = [
+  {
+    id: 'tonn',
+    first: 'Акты с фото с первого дня',
+    payback: `45${NB}дней — кейс объекта`,
+    need: 'Доступ к весовой',
+    pilot: `1${NB}месяц бесплатно после запуска`,
+  },
+  {
+    id: 'kodeks',
+    first: `Подключение за 15${NB}минут`,
+    payback: 'Сразу',
+    need: 'Ключ доступа к ФГИС',
+    pilot: 'Неделя бесплатно',
+  },
+];
+---
+
+<section class="section pilot" id="pilot" aria-labelledby="pilot-title">
+  <div class="container">
+    <SectionIntro eyebrow="Пилот" titleId="pilot-title">Первый результат — в первый же день пилота</SectionIntro>
+  </div>
+
+  <div class="pilot__stage">
+    <div class="gv gv--aqua pilot__bg" aria-hidden="true"></div>
+
+    <div class="pilot__in">
+      <!-- РО-БОТ: белая карточка, как раскрытая вкладка первого экрана Calendly -->
+      <article class="pilot__card" aria-labelledby="pilot-robot" data-reveal>
+        <div class="pilot__info">
+          <h3 class="pilot__product" id="pilot-robot">
+            <ProductLabel id="robot" />
+            <span class="tag">Бесплатно</span>
+          </h3>
+
+          <dl class="pilot__facts">
+            <div class="pilot__first">
+              <dt>Первый результат</dt>
+              <dd>Реестр неплательщиков за 1&nbsp;день</dd>
+            </div>
+            <div>
+              <dt>Окупаемость</dt>
+              <dd>9 из 247 найденных юрлиц окупают внедрение</dd>
+            </div>
+            <div>
+              <dt>Что нужно от вас</dt>
+              <dd>Выгрузка биллинга по одному району</dd>
+            </div>
+          </dl>
+
+          <div class="pilot__plan">
+            <p class="pilot__plan-title">Начнём с РО-БОТа: пилот бесплатный.</p>
+            <ol class="pilot__steps">
+              {
+                steps.map((s) => (
+                  <li>
+                    <span class="pilot__step-ico" aria-hidden="true">
+                      <Icon name={s.icon} size={15} strokeWidth={2} />
+                    </span>
+                    <span>{s.text}</span>
+                  </li>
+                ))
+              }
+            </ol>
+            <a href="#forma" class="btn btn--primary pilot__cta" data-interest="robot" data-goal="pilot_click">
+              Запустить пилот
+              <Icon name="arrow-right" />
+            </a>
+          </div>
+        </div>
+
+        <figure class="pilot__example">
+          <div class="pilot__shot">
+            <div class="pilot__shot-in" role="img" aria-label="Реестр расхождений из демо-аккаунта РО-БОТа">
+              <Shot id="registry" />
+            </div>
+            <span class="tag tag--demo pilot__demo" aria-hidden="true">демо-данные</span>
+          </div>
+          <figcaption class="pilot__caption">
+            <p class="pilot__text">
+              <strong>Так выглядит результат первого дня:</strong> реестр расхождений по району с источником и датой. Ваш
+              сотрудник проверяет расхождения и отправляет подтверждённые в биллинг или 1С одной кнопкой. Ничего не
+              начисляется автоматически.
+            </p>
+            <ol class="pilot__legend" aria-label="Обозначения на скриншоте">
+              <li><span class="pilot__mk" aria-hidden="true">1</span>источник</li>
+              <li><span class="pilot__mk" aria-hidden="true">2</span>дата</li>
+              <li><span class="pilot__mk" aria-hidden="true">3</span>решение принимает сотрудник</li>
+            </ol>
+          </figcaption>
+        </figure>
+      </article>
+
+      <!-- QODEX TONN и Кодекс ТКО -->
+      <div class="pilot__more">
+        {
+          others.map((o, i) => (
+            <article class="pilot__mini" aria-labelledby={`pilot-${o.id}`} data-reveal style={`--d:${i + 1}`}>
+              <h3 class="pilot__product" id={`pilot-${o.id}`}>
+                <ProductLabel id={o.id} />
+                <span class="tag">{o.pilot}</span>
+              </h3>
+              <dl class="pilot__facts pilot__facts--mini">
+                <div class="pilot__first">
+                  <dt>Первый результат</dt>
+                  <dd>{o.first}</dd>
+                </div>
+                <div>
+                  <dt>Окупаемость</dt>
+                  <dd>{o.payback}</dd>
+                </div>
+                <div>
+                  <dt>Что нужно от вас</dt>
+                  <dd>{o.need}</dd>
+                </div>
+              </dl>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Большая градиентная панель во всю ширину (с отступом от края экрана) */
+  .pilot__stage {
+    position: relative;
+    margin-inline: var(--page-pad);
+    padding: clamp(16px, 5vw, 80px) 0;
+    border-radius: var(--r-2xl);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .pilot__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    min-height: 0;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .pilot__in {
+    display: grid;
+    gap: clamp(12px, 1.4vw, 18px);
+    width: min(1120px, 100% - var(--gutter) * 2);
+    margin-inline: auto;
+  }
+
+  /* Белая карточка: факты слева, реестр справа */
+  .pilot__card {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    align-items: center;
+    gap: clamp(28px, 4vw, 56px);
+    padding: clamp(22px, 3.4vw, 48px);
+    border-radius: clamp(24px, 2.6vw, 36px);
+    background: var(--card-warm);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* метка продукта и плашка срока пилота; на узком экране плашка уходит на новую строку */
+  .pilot__product {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  .pilot__card,
+  .pilot__mini,
+  .pilot__info,
+  .pilot__example {
+    min-width: 0;
+  }
+
+  .pilot__facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 24px;
+    margin-top: 22px;
+  }
+
+  .pilot__facts > div {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+  }
+
+  .pilot__facts dt {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+
+  .pilot__facts dd {
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+
+  .pilot__first {
+    grid-column: 1 / -1;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .pilot__first dd {
+    font-size: clamp(1.6rem, 2.5vw, 2.3rem);
+    font-weight: 560;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  /* План пилота: шаги цепочкой, как список у Calendly в карточке Capture */
+  .pilot__plan {
+    display: grid;
+    gap: 16px;
+    margin-top: 26px;
+    padding: clamp(18px, 2vw, 24px);
+    border-radius: var(--r);
+    background: var(--panel);
+  }
+
+  .pilot__plan-title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .pilot__steps {
+    display: grid;
+    gap: 12px;
+  }
+
+  .pilot__steps li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15.5px;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .pilot__steps li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 30px;
+    width: 1px;
+    height: 10px;
+    background: var(--line-2);
+  }
+
+  .pilot__step-ico {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--blue);
+    box-shadow: 0 1px 2px rgb(7 26 49 / 0.08);
+  }
+
+  .pilot__cta {
+    justify-self: start;
+    margin-top: 4px;
+  }
+
+  /* Реестр на мягкой подложке (как интерфейс в раскрытой вкладке Calendly) */
+  .pilot__example {
+    display: grid;
+    gap: 20px;
+  }
+
+  .pilot__shot {
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: clamp(36px, 4vw, 52px) clamp(12px, 2.4vw, 28px) clamp(16px, 2.4vw, 28px);
+    border-radius: clamp(20px, 2vw, 28px);
+    background: linear-gradient(160deg, #dcebff 0%, #e6f1fb 55%, #e9e4fb 100%);
+  }
+
+  .pilot__shot-in {
+    width: 100%;
+    display: grid;
+    place-items: center;
+  }
+
+  .pilot__demo {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+  }
+
+  .pilot__caption {
+    display: grid;
+    gap: 16px;
+  }
+
+  .pilot__text {
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .pilot__text strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .pilot__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+  }
+
+  .pilot__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14.5px;
+    font-weight: 560;
+    color: var(--ink);
+  }
+
+  /* метки 1–3 — как на картинке реестра */
+  .pilot__mk {
+    display: grid;
+    place-items: center;
+    width: 21px;
+    height: 21px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* Пилоты QODEX TONN и Кодекса ТКО */
+  .pilot__more {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(12px, 1.4vw, 18px);
+  }
+
+  .pilot__mini {
+    padding: clamp(22px, 2.6vw, 32px);
+    border-radius: clamp(22px, 2.2vw, 30px);
+    background: var(--card-warm);
+    box-shadow: var(--shadow-card);
+  }
+
+  .pilot__facts--mini .pilot__first dd {
+    font-size: clamp(1.3rem, 1.8vw, 1.6rem);
+  }
+
+  @media (max-width: 960px) {
+    .pilot__card {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 700px) {
+    .pilot__more {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .pilot__stage {
+      padding-block: 24px;
+    }
+
+    .pilot__in {
+      width: calc(100% - 24px);
+    }
+
+    .pilot__facts {
+      grid-template-columns: 1fr;
+    }
+
+    .pilot__cta {
+      justify-self: stretch;
+    }
+  }
+</style>

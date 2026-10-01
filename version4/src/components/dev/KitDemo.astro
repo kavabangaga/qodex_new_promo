@@ -1,0 +1,99 @@
+---
+// Образец дизайн-системы v4 (только для разработки, открывается по адресу /s/kit).
+import Icon from '../Icon.astro';
+import ProductLabel from '../ProductLabel.astro';
+import SectionIntro from '../SectionIntro.astro';
+import GradientVisual from '../GradientVisual.astro';
+import FeatureAccordion from '../FeatureAccordion.astro';
+
+const presets = ['sky', 'aqua', 'dusk', 'mint', 'lavender', 'teal'] as const;
+---
+
+<div class="kit-demo">
+    <section class="section">
+      <div class="container">
+        <h1 class="t-display" style="text-align:center">Находим деньги регоператора в&nbsp;четырёх местах</h1>
+        <p class="t-lead" style="text-align:center;max-width:640px;margin:20px auto 0">
+          С 2020 года автоматизируем учёт отходов — от базы начислений регоператора до весовой на полигоне и передачи
+          данных во ФГИС УТКО.
+        </p>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap">
+          <a class="btn btn--primary" href="#">Запустить бесплатный пилот <Icon name="arrow-right" /></a>
+          <a class="btn btn--outline" href="#">Где вы теряете деньги <Icon name="arrow-down" /></a>
+          <a class="link-arrow" href="#">Подробнее <Icon name="arrow-right" /></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section panel">
+      <div class="container">
+        <SectionIntro eyebrow="Где теряете деньги">
+          Проверьте, где вы теряете деньги, — а мы сразу покажем решение
+          <Fragment slot="lead">Отметьте то, что узнаёте у себя, — покажем, с чего начать.</Fragment>
+          <a slot="cta" class="btn btn--primary" href="#">Запустить пилот</a>
+        </SectionIntro>
+        <div class="chain" data-chain>
+          {
+            ['Начислено', 'Вывезено', 'Взвешено', 'Передано'].map((t, i) => (
+              <article class:list={['chain__card', { 'is-open': i === 1 }]} style="padding:28px;min-height:320px">
+                <h3 class="t-h3">{t}</h3>
+                <p class="t-body" style="margin-top:10px">Короткое пояснение к шагу цепочки.</p>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container" data-acc-scope style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center">
+        <div>
+          <ProductLabel id="robot" tag="Новое" />
+          <h2 class="t-serif" style="margin:16px 0 40px">Работающие системы, а не концепция</h2>
+          <FeatureAccordion
+            id="kit-acc"
+            items={[
+              { icon: 'search', title: 'Сверка с ГИС ЖКХ', text: 'Находит жильцов, дома и юрлица, которые должны платить за вывоз ТКО, но не платят.', href: '#' },
+              { icon: 'file-check', title: 'Реестр неплательщиков', text: 'Реестр за один день сверки.' },
+              { icon: 'banknote', title: 'Рост сбора без роста тарифа', text: '+10% жильцов в базе за один день сверки.' },
+            ]}
+          />
+        </div>
+        <div data-panes>
+          {
+            ['sky', 'dusk', 'mint'].map((p, i) => (
+              <div data-pane class:list={{ 'is-active': i === 0 }}>
+                <GradientVisual preset={p as 'sky'}>
+                  <div class="ui">
+                    <p class="t-h4">Пункт {i + 1}</p>
+                    <div class="ui-row" style="margin-top:12px">
+                      <span>ул. Ленина, 12</span>
+                      <span class="tag">найдено +3</span>
+                    </div>
+                  </div>
+                </GradientVisual>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container" style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+        {
+          presets.map((p, i) => (
+            <div>
+              <GradientVisual preset={p} deco={i % 2 ? 'stripes' : 'bars'}>
+                <div class="ui ui--plain" style="width:70%">
+                  <ProductLabel id={(['robot', 'tracker', 'tonn', 'kodeks', 'robot', 'tonn'] as const)[i]} />
+                </div>
+              </GradientVisual>
+              <p class="t-small" style="margin-top:8px">gv--{p}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+</div>
+

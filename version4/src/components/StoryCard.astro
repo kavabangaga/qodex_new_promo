@@ -1,0 +1,213 @@
+---
+// Карточка истории клиента (приём Calendly «Real customers. Real results.»): слева результат крупной
+// цифрой, задача и решение антиквой, внизу плашка клиента и метка продукта; справа вместо фото —
+// градиентная иллюстрация интерфейса продукта (слот visual). Без цитат и отзывов.
+// Нужна и на страницах продуктов (этап 2).
+import ProductLabel from './ProductLabel.astro';
+import { PRODUCTS, type ProductId } from '../config/site';
+
+interface Props {
+  client: string;
+  product: ProductId;
+  task: string;
+  solution: string;
+  /** Начало фразы результата — крупно (цифра). */
+  resultLead: string;
+  /** Продолжение той же фразы. */
+  resultRest: string;
+  /** Градиент иллюстрации — только пресеты палитры Calendly. */
+  preset?: 'sky' | 'aqua' | 'dusk' | 'mint' | 'lavender' | 'teal';
+  /** Подпись слайда в карусели для скринридера, например «1 из 3». */
+  slideLabel?: string;
+  class?: string;
+}
+
+const {
+  client,
+  product,
+  task,
+  solution,
+  resultLead,
+  resultRest,
+  preset = 'sky',
+  slideLabel,
+  class: className,
+  ...rest
+} = Astro.props;
+
+// Названия продуктов и «РО «…»» не разрываем переносом (сами тексты — без изменений)
+const nb = (t: string) =>
+  t.replace(/(QODEX|Кодекс) (TONN|Tracker|ТКО)/g, '$1\u00a0$2').replace(/(^|\s)(РО|ООО) «/g, '$1$2\u00a0«');
+---
+
+<article
+  class:list={['story', `p-${product}`, className]}
+  aria-roledescription={slideLabel ? 'слайд' : undefined}
+  aria-label={slideLabel}
+  {...rest}
+>
+  <div class="story__in">
+  <div class="story__text">
+    <h3 class="visually-hidden">{client}, {PRODUCTS[product].name}</h3>
+    <p class="story__result">
+      <span class="story__lead">{resultLead}</span>
+      <span class="story__rest">{nb(resultRest.trim())}</span>
+    </p>
+    <dl class="story__qa">
+      <div class="story__q">
+        <dt>Задача:</dt>
+        <dd>{nb(task)}</dd>
+      </div>
+      <div class="story__q">
+        <dt>Решение:</dt>
+        <dd>{nb(solution)}</dd>
+      </div>
+    </dl>
+    <div class="story__who">
+      <span class="story__client">{nb(client)}</span>
+      <ProductLabel id={product} />
+    </div>
+  </div>
+
+  <div class:list={['story__visual', 'gv', `gv--${preset}`]} aria-hidden="true">
+    <div class="gv__stripes"></div>
+    <span class="tag tag--demo story__demo">демо-данные</span>
+    <slot name="visual" />
+  </div>
+  </div>
+</article>
+
+<style>
+  .story {
+    container-type: inline-size;
+    padding: clamp(12px, 1.2vw, 16px);
+    border-radius: clamp(28px, 2.8vw, 40px);
+    background: #fff;
+    box-shadow: var(--shadow-card);
+  }
+
+  .story__in {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: clamp(18px, 2.2vw, 30px);
+    min-height: clamp(440px, 36vw, 500px);
+  }
+
+  .story__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: clamp(14px, 1.8vw, 22px) 0 clamp(8px, 1vw, 12px) clamp(10px, 1.4vw, 18px);
+  }
+
+  /* Результат: начало фразы крупно, как «75 hours saved monthly» у Calendly */
+  .story__lead {
+    display: block;
+    font-size: clamp(2.6rem, 4.2vw, 3.6rem);
+    font-weight: 600;
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .story__rest {
+    display: block;
+    max-width: 34ch;
+    margin-top: 12px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  /* Задача и решение — антиквой, как цитата у Calendly (но без кавычек: это не отзыв) */
+  .story__qa {
+    display: grid;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 24px;
+  }
+
+  .story__q {
+    font-family: var(--font-serif);
+    font-optical-sizing: auto;
+    font-size: clamp(1.12rem, 1.45vw, 1.32rem);
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+
+  .story__q dt,
+  .story__q dd {
+    display: inline;
+  }
+
+  .story__q dt {
+    margin-right: 0.2em;
+    font-family: var(--font-sans);
+    font-size: 0.74em;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
+
+  /* Плашка клиента (как плашка с именем у Calendly) и метка продукта */
+  .story__who {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    margin-top: 22px;
+  }
+
+  .story__client {
+    padding: 5px 10px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink-2);
+  }
+
+  /* Иллюстрация: градиент палитры Calendly + белая карточка интерфейса */
+  .story__visual {
+    --gv-r: clamp(20px, 2.2vw, 28px);
+    min-height: 0;
+    align-content: center;
+    gap: 0;
+    padding: clamp(40px, 4vw, 52px) clamp(14px, 2vw, 26px);
+  }
+
+  .story__demo {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    font-size: 12px;
+  }
+
+  /* Узкая карточка (телефон, планшет): иллюстрация сверху, текст под ней */
+  @container (max-width: 620px) {
+    .story__in {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
+      min-height: 0;
+    }
+
+    .story__visual {
+      order: -1;
+      min-height: 250px;
+      padding: 44px 14px 26px;
+    }
+
+    .story__text {
+      padding: 16px 8px 8px;
+    }
+
+    .story__qa {
+      padding-top: 20px;
+    }
+  }
+</style>

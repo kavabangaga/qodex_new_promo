@@ -1,0 +1,68 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Floating from '../components/Floating.astro';
+import LeadModal from '../components/LeadModal.astro';
+import Hero from '../sections/Hero.astro';
+import Losses from '../sections/Losses.astro';
+import Why2026 from '../sections/Why2026.astro';
+import Objects from '../sections/Objects.astro';
+import Balance from '../sections/Balance.astro';
+import Interfaces from '../sections/Interfaces.astro';
+import Numbers from '../sections/Numbers.astro';
+import Stories from '../sections/Stories.astro';
+import Compare from '../sections/Compare.astro';
+import Security from '../sections/Security.astro';
+import Pilot from '../sections/Pilot.astro';
+import Questions from '../sections/Questions.astro';
+import About from '../sections/About.astro';
+import Contact from '../sections/Contact.astro';
+import { FAQ, faqJsonLd } from '../data/faq';
+---
+
+<Base jsonLd={[faqJsonLd(FAQ)]}>
+  <Header />
+  <main>
+    <Hero />
+    <Losses />
+    <Why2026 />
+    <Objects />
+    <Balance />
+    <Interfaces />
+    <Numbers />
+    <Stories />
+    <Compare />
+    <Security />
+    <Pilot />
+    <Questions />
+    <About />
+    <Contact />
+  </main>
+  <Footer />
+  <Floating />
+  <LeadModal />
+</Base>
+
+<script>
+  import { initReveal, initCounters } from '../scripts/motion';
+  import { initAccordions, initChains } from '../scripts/kit';
+  import { initGoals } from '../scripts/goals';
+  import { initInterestLinks } from '../scripts/interest';
+
+  initReveal();
+  initCounters();
+  initAccordions();
+  initChains();
+  initGoals();
+  initInterestLinks();
+
+  // Подсветка карточек за курсором
+  document.querySelectorAll<HTMLElement>('[data-spot]').forEach((el) => {
+    el.addEventListener('pointermove', (e) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      el.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  });
+</script>

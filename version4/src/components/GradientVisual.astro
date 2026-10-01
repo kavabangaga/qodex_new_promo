@@ -1,0 +1,46 @@
+---
+// Большая скруглённая градиентная карточка-иллюстрация (как справа в разделах продуктов Calendly).
+// Внутрь кладётся белая карточка интерфейса <div class="ui">…</div> или несколько панелей [data-pane].
+interface Props {
+  preset?: 'sky' | 'aqua' | 'dusk' | 'mint' | 'lavender' | 'teal';
+  /** Декор: «звуковая волна» из полос по бокам, горизонтальные полосы или ничего. */
+  deco?: 'bars' | 'stripes' | 'none';
+  class?: string;
+  /** Подпись для скринридера; без неё иллюстрация скрыта от него. */
+  label?: string;
+  [key: string]: unknown;
+}
+
+const { preset = 'sky', deco = 'bars', class: className, label, ...rest } = Astro.props;
+
+// Высоты полос «звуковой волны» — фиксированные, чтобы картинка не прыгала между сборками
+const LEFT = [38, 62, 84, 56, 92, 70, 44];
+const RIGHT = [52, 80, 46, 96, 64, 88, 40];
+---
+
+<div
+  class:list={['gv', `gv--${preset}`, className]}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  {...rest}
+>
+  {
+    deco === 'bars' && (
+      <div class="gv__bars">
+        <span>
+          {LEFT.map((h) => (
+            <i style={`--h:${h}%`} />
+          ))}
+        </span>
+        <span>
+          {RIGHT.map((h) => (
+            <i style={`--h:${h}%`} />
+          ))}
+        </span>
+      </div>
+    )
+  }
+  {deco === 'stripes' && <div class="gv__stripes" />}
+  <slot />
+</div>

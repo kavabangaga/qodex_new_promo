@@ -1,6 +1,7 @@
 # Публикация на GitHub Pages при каждой отправке в ветку main.
 # Главная ссылка — версия на всю ширину (version2_wide), по адресу /v2/ — версия по центру (version 2),
-# по адресу /v3/ — та же широкая версия с пробным шрифтом заголовков Lebowski.
+# по адресу /v3/ — та же широкая версия с пробным шрифтом заголовков Lebowski,
+# по адресу /v4/ — отдельный редизайн по мотивам calendly.com (version4).
 name: Публикация сайта
 
 on:
@@ -30,11 +31,13 @@ jobs:
           cache-dependency-path: |
             version2_wide/package-lock.json
             version 2/package-lock.json
+            version4/package-lock.json
 
       - name: Установка зависимостей
         run: |
           npm ci --prefix version2_wide
           npm ci --prefix "version 2"
+          npm ci --prefix version4
 
       - name: Сборка версий
         run: |
@@ -46,6 +49,7 @@ jobs:
           (cd version2_wide && SITE_BASE="$BASE" npx astro build --outDir ../_site)
           (cd "version 2" && SITE_BASE="${BASE}v2/" npx astro build --outDir ../_site/v2)
           (cd version2_wide && SITE_BASE="${BASE}v3/" HEADING_FONT=lebowski npx astro build --outDir ../_site/v3)
+          (cd version4 && SITE_BASE="${BASE}v4/" npx astro build --outDir ../_site/v4)
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1,0 +1,215 @@
+---
+// Частые вопросы (v4, как пункты Calendly): вопросы с линиями, закрытый — приглушённый, открытый —
+// тёмно-синий; значок «плюс» сменяется крестиком без поворота. По умолчанию все ответы закрыты.
+// У каждого вопроса якорь #faq-N: ссылка на него открывает ответ (кнопки ↗ в «Безопасности»).
+// Микроразметку FAQPage собирает index.astro из тех же данных. Нужен и на страницах продуктов (этап 2).
+import Icon from './Icon.astro';
+import type { FaqItem } from '../data/faq';
+
+interface Props {
+  items: FaqItem[];
+}
+
+const { items } = Astro.props;
+
+// Названия продуктов не разрываем переносом строки (сами тексты — из data/faq.ts, без изменений)
+const nb = (t: string) =>
+  t.replace(/(QODEX|Кодекс) (TONN|Tracker|ТКО)/g, '$1\u00a0$2').replace(/(^|\s)(РО|ООО) «/g, '$1$2\u00a0«');
+---
+
+<div class="faq" data-faq>
+  {
+    items.map((it, i) => (
+      <details class="faq__item" id={`faq-${i + 1}`} style={`--d:${Math.min(i, 5)}`} data-reveal>
+        <summary class="faq__q">
+          <span class="faq__qt">{nb(it.q)}</span>
+          <span class="faq__icon" aria-hidden="true">
+            <span class="faq__plus">
+              <Icon name="plus" size={18} strokeWidth={2} />
+            </span>
+            <span class="faq__x">
+              <Icon name="x" size={17} strokeWidth={2} />
+            </span>
+          </span>
+        </summary>
+        <div class="faq__a">
+          <p>{nb(it.a)}</p>
+        </div>
+      </details>
+    ))
+  }
+</div>
+
+<style>
+  .faq {
+    border-top: 1px solid var(--line-2);
+  }
+
+  .faq__item {
+    border-bottom: 1px solid var(--line-2);
+  }
+
+  .faq__q {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 32px;
+    align-items: center;
+    gap: 20px;
+    padding: 22px 0;
+    cursor: pointer;
+    list-style: none;
+    font-size: clamp(1.08rem, 1.4vw, 1.25rem);
+    font-weight: 560;
+    line-height: 1.35;
+    letter-spacing: -0.012em;
+    color: var(--muted);
+    transition: color 0.25s;
+  }
+
+  .faq__q::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq__q:hover,
+  .faq__item[open] .faq__q {
+    color: var(--ink);
+  }
+
+  .faq__q:focus-visible {
+    outline-offset: 4px;
+  }
+
+  /* Квадрат со значком, как кнопки у пунктов Calendly */
+  .faq__icon {
+    position: relative;
+    display: grid;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    color: var(--ink);
+    transition:
+      background-color 0.25s,
+      color 0.25s;
+  }
+
+  .faq__q:hover .faq__icon {
+    background: var(--line-2);
+  }
+
+  .faq__plus,
+  .faq__x {
+    grid-area: 1 / 1;
+    display: grid;
+    place-items: center;
+    transition:
+      opacity 0.25s var(--ease-out),
+      transform 0.35s var(--ease-out);
+  }
+
+  /* плюс → крестик без поворота: один гаснет и уменьшается, другой проявляется */
+  .faq__x {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  .faq__item[open] .faq__icon {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .faq__item[open] .faq__plus {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  .faq__item[open] .faq__x {
+    opacity: 1;
+    transform: none;
+  }
+
+  .faq__a {
+    overflow: hidden;
+  }
+
+  .faq__a p {
+    max-width: 64ch;
+    padding: 0 52px 26px 0;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  @media (max-width: 599px) {
+    .faq__q {
+      gap: 14px;
+      padding: 18px 0;
+    }
+
+    .faq__a p {
+      padding: 0 0 22px;
+      font-size: 16px;
+    }
+  }
+</style>
+
+<script>
+  import { goal } from '../scripts/goals';
+  import { reducedMotion } from '../scripts/motion';
+
+  const items = [...document.querySelectorAll<HTMLDetailsElement>('[data-faq] details')];
+  const qText = (d: HTMLDetailsElement) =>
+    d.querySelector('.faq__qt')?.textContent?.replace(/\u00a0/g, ' ').trim();
+
+  items.forEach((d) => {
+    const summary = d.querySelector('summary')!;
+    const body = d.querySelector<HTMLElement>('.faq__a')!;
+    let anim: Animation | null = null;
+
+    summary.addEventListener('click', (e) => {
+      if (reducedMotion()) {
+        if (!d.open) goal('faq_open', { question: qText(d) });
+        return;
+      }
+      e.preventDefault();
+      anim?.cancel();
+      if (!d.open) {
+        d.open = true;
+        goal('faq_open', { question: qText(d) });
+        const h = body.scrollHeight;
+        anim = body.animate(
+          [
+            { height: '0px', opacity: 0 },
+            { height: `${h}px`, opacity: 1 },
+          ],
+          { duration: 420, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+        );
+      } else {
+        const h = body.scrollHeight;
+        anim = body.animate(
+          [
+            { height: `${h}px`, opacity: 1 },
+            { height: '0px', opacity: 0 },
+          ],
+          { duration: 280, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' },
+        );
+        anim.onfinish = () => (d.open = false);
+      }
+    });
+  });
+
+  // Ссылка на вопрос (#faq-N) открывает его ответ
+  const openById = (id: string) => {
+    const d = document.getElementById(id);
+    if (!(d instanceof HTMLDetailsElement) || !items.includes(d) || d.open) return;
+    d.open = true;
+    goal('faq_open', { question: qText(d) });
+  };
+
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[href^="#faq-"]');
+    if (a) openById(a.hash.slice(1));
+  });
+  window.addEventListener('hashchange', () => openById(decodeURIComponent(location.hash.slice(1))));
+  if (location.hash.startsWith('#faq-')) openById(decodeURIComponent(location.hash.slice(1)));
+</script>

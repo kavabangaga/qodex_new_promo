@@ -1,0 +1,248 @@
+---
+// Блок 15. Заявка и контакты — приём Calendly «Get started»: надпись, крупный заголовок по центру,
+// подзаголовок, горизонтальная форма на белой карточке, ниже — ряд градиентных карточек палитры
+// Calendly с белыми плашками интерфейса (вместо фото людей): контакт по пилоту, почта, Telegram.
+import SectionIntro from '../components/SectionIntro.astro';
+import LeadForm from '../components/LeadForm.astro';
+import Icon from '../components/Icon.astro';
+import { CONTACTS } from '../config/site';
+
+// Высоты полос «звуковой волны» в центральной карточке
+const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
+---
+
+<section class="section contact" id="kontakty" data-contact aria-labelledby="forma">
+  <div class="container">
+    <SectionIntro eyebrow="Заявка" titleId="forma">
+      Покажем эффект в рублях на одном районе или одной весовой
+      <Fragment slot="lead">Пилот РО-БОТа — бесплатно. Напишите или позвоните — пришлём NDA и запустим пилот.</Fragment>
+      <p slot="cta" class="contact__proof">
+        <span class="contact__dot" aria-hidden="true"></span>
+        73 клиента работают с продуктами QODEX
+      </p>
+    </SectionIntro>
+
+    <div class="contact__form" data-reveal>
+      <LeadForm prefix="ft" layout="row" tone="light" />
+    </div>
+
+    <ul class="cc" aria-label="Контакты">
+      <li class="cc__item cc__item--person" data-reveal style="--d:1">
+        <a href={CONTACTS.phoneHref} class="cc__card gv gv--sky" data-goal="phone_click">
+          <span class="cc__bars" aria-hidden="true">
+            {BARS.map((h) => <i style={`--h:${h}%`} />)}
+          </span>
+          <span class="cc__label">Ваш контакт по пилоту</span>
+          <span class="cc__chips">
+            <span class="cc__chip">
+              <span class="cc__avatar" aria-hidden="true">ДМ</span>
+              {CONTACTS.pilotContact}
+            </span>
+            <span class="cc__chip cc__chip--big">
+              <Icon name="phone" size={22} />
+              {CONTACTS.phone}
+            </span>
+          </span>
+        </a>
+      </li>
+      <li class="cc__item cc__item--mail" data-reveal>
+        <a href={CONTACTS.emailHref} class="cc__card gv gv--lavender">
+          <span class="cc__label">Почта</span>
+          <span class="cc__chips">
+            <span class="cc__chip">
+              <Icon name="mail" size={20} />
+              {CONTACTS.email}
+            </span>
+          </span>
+        </a>
+      </li>
+      <li class="cc__item cc__item--tg" data-reveal style="--d:2">
+        <a
+          href={CONTACTS.telegramHref}
+          class="cc__card gv gv--teal"
+          target="_blank"
+          rel="noopener"
+          data-goal="telegram_click"
+        >
+          <span class="cc__label">Telegram</span>
+          <span class="cc__chips">
+            <span class="cc__chip">
+              <Icon name="send" size={20} />
+              {CONTACTS.telegram}
+            </span>
+          </span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  /* Строка у формы: «73 клиента…» */
+  .contact__proof {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 15px;
+    font-weight: 560;
+    color: var(--ink-2);
+  }
+
+  .contact__dot {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 0 4px rgb(10 159 106 / 0.16);
+  }
+
+  /* Горизонтальная форма на белой карточке */
+  .contact__form {
+    max-width: 1120px;
+    margin-inline: auto;
+    padding: clamp(20px, 2.8vw, 36px);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--card);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* ── Ряд градиентных карточек с белыми плашками ───────── */
+  .cc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: end;
+    gap: clamp(12px, 1.6vw, 24px);
+    margin-top: clamp(48px, 6vw, 88px);
+  }
+
+  .cc__item--mail {
+    order: 1;
+  }
+
+  .cc__item--person {
+    order: 2;
+  }
+
+  .cc__item--tg {
+    order: 3;
+  }
+
+  .cc__card {
+    --gv-r: clamp(24px, 2.6vw, 36px);
+    min-height: clamp(220px, 21vw, 280px);
+    place-items: end start;
+    align-content: space-between;
+    row-gap: 16px;
+    padding: clamp(16px, 1.8vw, 24px);
+    color: var(--ink);
+    transition: transform 0.45s var(--ease-out);
+  }
+
+  .cc__item--person .cc__card {
+    min-height: clamp(260px, 26vw, 340px);
+  }
+
+  .cc__card:hover {
+    transform: translateY(-4px);
+  }
+
+  /* «звуковая волна» из белых полос, как у Calendly */
+  .cc__bars {
+    position: absolute;
+    inset: 18% 10% 30%;
+    z-index: -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .cc__bars i {
+    width: 3px;
+    height: var(--h, 50%);
+    border-radius: 3px;
+    background: rgb(255 255 255 / 0.5);
+  }
+
+  .cc__label {
+    justify-self: start;
+    padding: 6px 11px;
+    border-radius: 9px;
+    background: rgb(255 255 255 / 0.9);
+    font-size: 13.5px;
+    font-weight: 560;
+    color: var(--ink-2);
+  }
+
+  .cc__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cc__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+    font-size: clamp(16px, 1.4vw, 19px);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    white-space: nowrap;
+    transition: transform 0.45s var(--ease-out);
+  }
+
+  .cc__chip--big {
+    padding: 12px 18px;
+    font-size: clamp(20px, 2.1vw, 30px);
+    letter-spacing: -0.03em;
+  }
+
+  .cc__card:hover .cc__chip {
+    transform: translateY(-2px);
+  }
+
+  .cc__avatar {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--blue-soft);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+
+  @media (max-width: 599px) {
+    .contact__proof {
+      padding: 7px 12px;
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 899px) {
+    .cc {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cc__item--person {
+      order: 0;
+    }
+
+    .cc__card,
+    .cc__item--person .cc__card {
+      min-height: 180px;
+    }
+  }
+</style>

@@ -1,0 +1,903 @@
+---
+// Блок 5 «Вы полигон или сортировка?» [#obektam]. Два продуктовых раздела в стиле Calendly
+// вперемешку (текст и картинка меняются местами): Кодекс ТКО и QODEX TONN. Картинки — белые
+// карточки интерфейса на градиенте с плавными движениями. В конце — тёмная полоса со схемой
+// «Объект → весы → Регоператор» и кнопкой подбора решения.
+import SectionIntro from '../components/SectionIntro.astro';
+import ProductLabel from '../components/ProductLabel.astro';
+import GradientVisual from '../components/GradientVisual.astro';
+import Icon from '../components/Icon.astro';
+import { productHref } from '../config/site';
+
+// Демо-строки файла из учётной системы объекта
+const ACTS = [
+  { n: 'Акт № 1041', d: '01.09', t: '12,4 т' },
+  { n: 'Акт № 1042', d: '01.09', t: '9,8 т' },
+  { n: 'Акт № 1043', d: '02.09', t: '11,1 т' },
+  { n: 'Акт № 1044', d: '02.09', t: '10,6 т' },
+];
+---
+
+<section class="section ob" id="obektam" aria-labelledby="ob-title">
+  <div class="container">
+    <SectionIntro eyebrow="Полигонам и сортировкам" titleId="ob-title">
+      Вы полигон или сортировка? С чего начать в 2026 году
+    </SectionIntro>
+
+    <!-- Кодекс ТКО: текст слева, картинка справа -->
+    <article class="ob__row" aria-labelledby="ob-kodeks">
+      <div class="ob__text" data-reveal>
+        <ProductLabel id="kodeks" />
+        <h3 class="t-serif ob__title" id="ob-kodeks">Начать передавать данные сейчас — Кодекс ТКО.</h3>
+        <p class="ob__p">
+          Загружаете Excel из своей учётной системы, сервис проверяет ошибки и дубли и отправляет данные во ФГИС УТКО по
+          API. Без доработок 1С и обучения персонала. Подключение за 15&nbsp;минут, неделя бесплатно, поможем получить
+          ключ доступа к ФГИС.
+        </p>
+        <a
+          href={productHref('kodeks', 'obektam')}
+          class="link-arrow"
+          data-interest="kodeks"
+          data-goal="product_landing"
+          data-goal-product="kodeks"
+        >
+          Подробнее<span class="visually-hidden"> о Кодекс ТКО</span>
+          <Icon name="arrow-right" />
+        </a>
+      </div>
+
+      <div class="ob__vis" data-live data-reveal style="--d:1">
+        <GradientVisual preset="mint" deco="stripes">
+          <div class="kx">
+            <div class="ui kx__sheet">
+              <div class="kx__head">
+                <span class="kx__file"><Icon name="file-spreadsheet" size={20} /></span>
+                <span class="kx__name">
+                  <b>Акты_сентябрь.xlsx</b>
+                  <small>Импорт из Excel</small>
+                </span>
+              </div>
+              <ol class="kx__rows">
+                {
+                  ACTS.map((a, i) => (
+                    <li class="kx__row" style={`--r:${i}`}>
+                      <span class="kx__n">{a.n}</span>
+                      <span class="kx__d">{a.d}</span>
+                      <span class="kx__t">{a.t}</span>
+                      <span class="kx__ok">
+                        <Icon name="check" size={12} strokeWidth={3} />
+                      </span>
+                    </li>
+                  ))
+                }
+              </ol>
+              <p class="kx__status">
+                <span class="kx__status-i"><Icon name="circle-check" size={16} /></span>
+                80/80 актов верно
+              </p>
+            </div>
+
+            <div class="ui ui--plain kx__send">
+              <span class="kx__cloud"><Icon name="cloud-upload" size={20} /></span>
+              <span class="kx__send-t">
+                <b>ФГИС УТКО</b>
+                <small>Отправка по API</small>
+              </span>
+              <span class="kx__done"><Icon name="check" size={14} strokeWidth={2.75} /></span>
+              <span class="kx__bar"><i></i></span>
+            </div>
+          </div>
+        </GradientVisual>
+      </div>
+    </article>
+
+    <!-- QODEX TONN: картинка слева, текст справа -->
+    <article class="ob__row ob__row--rev" aria-labelledby="ob-tonn">
+      <div class="ob__text" data-reveal>
+        <ProductLabel id="tonn" />
+        <h3 class="t-serif ob__title" id="ob-tonn">Автоматизировать весовую — QODEX TONN.</h3>
+        <p class="ob__p">
+          Номер, фото и вес машины без ручного ввода, акт сразу в облаке, данные уходят во ФГИС УТКО. Соответствует
+          п.&nbsp;36 ПП №&nbsp;567. Работает с любыми автовесами, монтаж от 3&nbsp;дней, месяц бесплатно после запуска.
+        </p>
+        <a
+          href={productHref('tonn', 'obektam')}
+          class="link-arrow"
+          data-interest="tonn"
+          data-goal="product_landing"
+          data-goal-product="tonn"
+        >
+          Подробнее<span class="visually-hidden"> о QODEX TONN</span>
+          <Icon name="arrow-right" />
+        </a>
+      </div>
+
+      <div class="ob__vis" data-live data-reveal style="--d:1">
+        <GradientVisual preset="aqua" deco="bars">
+          <div class="tx">
+            <div class="ui tx__scale">
+              <div class="tx__head">
+                <span class="tx__ico"><Icon name="scale" size={20} /></span>
+                <span class="tx__name">
+                  <b>Весовая</b>
+                  <small>Въезд · автовесы</small>
+                </span>
+                <span class="tx__live">онлайн</span>
+              </div>
+              <div class="tx__chips">
+                <span class="tx__chip" style="--c:0">
+                  <span class="tx__chip-i"><Icon name="scan-line" size={15} /></span>
+                  Номер
+                  <span class="tx__tick"><Icon name="check" size={11} strokeWidth={3} /></span>
+                </span>
+                <span class="tx__chip" style="--c:1">
+                  <span class="tx__chip-i"><Icon name="camera" size={15} /></span>
+                  Фото
+                  <span class="tx__tick"><Icon name="check" size={11} strokeWidth={3} /></span>
+                </span>
+                <span class="tx__chip" style="--c:2">
+                  <span class="tx__chip-i"><Icon name="scale" size={15} /></span>
+                  Вес
+                  <span class="tx__tick"><Icon name="check" size={11} strokeWidth={3} /></span>
+                </span>
+              </div>
+            </div>
+
+            <span class="tx__pipe"><i></i></span>
+            <span class="tx__cloud"><Icon name="cloud" size={24} /></span>
+            <span class="tx__pipe tx__pipe--2"><i></i></span>
+
+            <div class="ui tx__parties">
+              <p class="tx__party" style="--p:0">
+                <span class="tx__pi"><Icon name="building-2" size={17} /></span>
+                Регоператор
+                <span class="tx__seen"><Icon name="check" size={12} strokeWidth={3} /></span>
+              </p>
+              <p class="tx__party tx__party--more" style="--p:1">
+                <span class="tx__pi"><Icon name="truck" size={17} /></span>
+                Перевозчик
+                <span class="tx__seen"><Icon name="check" size={12} strokeWidth={3} /></span>
+              </p>
+              <p class="tx__party tx__party--more" style="--p:2">
+                <span class="tx__pi"><Icon name="warehouse" size={17} /></span>
+                Площадка
+                <span class="tx__seen"><Icon name="check" size={12} strokeWidth={3} /></span>
+              </p>
+            </div>
+          </div>
+        </GradientVisual>
+      </div>
+    </article>
+
+    <!-- Честный вес: одни и те же взвешивания видят обе стороны -->
+    <div class="ob__band dark" data-live data-reveal>
+      <div class="ob__band-main">
+        <div class="ob__schema" aria-hidden="true">
+          <span class="ob__node">Объект</span>
+          <span class="ob__wire ob__wire--l"><i></i></span>
+          <span class="ob__hub"><Icon name="scale" size={22} /></span>
+          <span class="ob__wire ob__wire--r"><i></i></span>
+          <span class="ob__node">Регоператор</span>
+        </div>
+        <p class="ob__note">
+          Честный вес выгоден обеим сторонам: одни и те же взвешивания сразу видят и объект, и регоператор.
+        </p>
+      </div>
+      <a href="#forma" class="btn btn--light ob__cta" data-interest="tonn kodeks" data-goal="objects_pick">
+        Подобрать решение для объекта
+        <Icon name="arrow-right" />
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Два продуктовых раздела, текст и картинка чередуются ── */
+  .ob__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+    grid-template-areas: 'text vis';
+    align-items: center;
+    column-gap: clamp(48px, 7vw, 104px);
+  }
+
+  .ob__row--rev {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+    grid-template-areas: 'vis text';
+  }
+
+  .ob__row + .ob__row {
+    margin-top: clamp(80px, 10vw, 136px);
+  }
+
+  .ob__text {
+    grid-area: text;
+    display: grid;
+    justify-items: start;
+    gap: 20px;
+  }
+
+  .ob__vis {
+    grid-area: vis;
+  }
+
+  .ob__title {
+    font-size: clamp(1.9rem, 3vw, 2.6rem);
+    max-width: 15em;
+  }
+
+  .ob__p {
+    max-width: 48ch;
+    font-size: clamp(1.03rem, 1.2vw, 1.15rem);
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .ob__text .link-arrow {
+    margin-top: 4px;
+  }
+
+  /* ── Кодекс ТКО: строки Excel → проверка → отправка во ФГИС УТКО ── */
+  .kx {
+    position: relative;
+    width: min(100%, 430px);
+    padding-bottom: 70px;
+  }
+
+  .kx__sheet {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .kx__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .kx__file {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: 11px;
+    background: color-mix(in oklab, var(--ok) 12%, white);
+    color: #087a52;
+  }
+
+  .kx__name,
+  .kx__send-t,
+  .tx__name {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  .kx__name b,
+  .kx__send-t b,
+  .tx__name b {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .kx__name small,
+  .kx__send-t small,
+  .tx__name small {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .kx__rows {
+    display: grid;
+    gap: 6px;
+    margin-top: 16px;
+  }
+
+  .kx__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr) minmax(0, 0.7fr) 22px;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px 9px 12px;
+    border-radius: 10px;
+    background: var(--bg);
+    font-size: 13.5px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .kx__d,
+  .kx__t {
+    color: var(--muted);
+  }
+
+  .kx__t {
+    text-align: right;
+  }
+
+  .kx__ok {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--ok);
+    color: #fff;
+  }
+
+  .kx__status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line-2);
+    font-size: 13.5px;
+    font-weight: 560;
+    color: #087a52;
+  }
+
+  .kx__status-i {
+    display: inline-flex;
+  }
+
+  .kx__send {
+    position: absolute;
+    right: -22px;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 12px;
+    width: min(290px, 78%);
+    padding: 14px 16px;
+    border-radius: 18px;
+  }
+
+  .kx__cloud {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: var(--blue-soft);
+    color: var(--blue);
+  }
+
+  .kx__done {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--ok);
+    color: #fff;
+  }
+
+  .kx__bar {
+    grid-column: 1 / -1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--panel-2);
+    overflow: hidden;
+  }
+
+  .kx__bar i {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--blue);
+    transform-origin: left;
+  }
+
+  /* Движение: строки проверяются по очереди, затем данные уходят во ФГИС (цикл 6,4 с) */
+  .ob__vis.is-live .kx__ok {
+    animation: ob-pop 6.4s var(--ease-out) infinite;
+    animation-delay: calc(var(--r) * 0.32s);
+  }
+
+  .ob__vis.is-live .kx__status {
+    animation: ob-fade 6.4s var(--ease-out) infinite;
+    animation-delay: 1.3s;
+  }
+
+  .ob__vis.is-live .kx__bar i {
+    animation: ob-fill 6.4s var(--ease-in-out) infinite;
+    animation-delay: 1.5s;
+  }
+
+  .ob__vis.is-live .kx__done {
+    animation: ob-pop 6.4s var(--ease-out) infinite;
+    animation-delay: 3s;
+  }
+
+  @keyframes ob-pop {
+    0%,
+    4% {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+    10%,
+    74% {
+      opacity: 1;
+      transform: none;
+    }
+    82%,
+    100% {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+  }
+
+  @keyframes ob-fade {
+    0%,
+    4% {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    12%,
+    66% {
+      opacity: 1;
+      transform: none;
+    }
+    74%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ob-fill {
+    0% {
+      transform: scaleX(0);
+    }
+    22%,
+    66% {
+      transform: scaleX(1);
+    }
+    74%,
+    100% {
+      transform: scaleX(0);
+    }
+  }
+
+  /* ── QODEX TONN: весы → облако → участники ─────────────── */
+  .tx {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(100%, 400px);
+  }
+
+  .tx__scale,
+  .tx__parties {
+    width: 100%;
+    padding: 18px;
+  }
+
+  .tx__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .tx__ico {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: 11px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .tx__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    font-size: 12.5px;
+    font-weight: 560;
+    color: #087a52;
+  }
+
+  .tx__live::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ok);
+  }
+
+  .tx__chips {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .tx__chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 6px;
+    border-radius: 10px;
+    background: var(--bg);
+    font-size: 13.5px;
+    font-weight: 560;
+  }
+
+  .tx__chip-i {
+    display: inline-flex;
+    color: var(--muted);
+  }
+
+  .tx__tick,
+  .tx__seen {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--ok);
+    color: #fff;
+  }
+
+  .tx__tick {
+    position: absolute;
+    top: -6px;
+    right: -5px;
+    box-shadow: 0 0 0 2px #fff;
+  }
+
+  /* соединения с бегущей точкой данных */
+  .tx__pipe {
+    position: relative;
+    width: 12px;
+    height: 34px;
+    overflow: hidden;
+    background: repeating-linear-gradient(180deg, rgb(7 26 49 / 0.35) 0 4px, transparent 4px 8px) center / 2px 100%
+      no-repeat;
+  }
+
+  .tx__pipe i {
+    position: absolute;
+    inset: 0;
+    transform: translateY(-100%);
+  }
+
+  .tx__pipe i::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    bottom: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+
+  .tx__cloud {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--blue);
+    box-shadow:
+      0 0 0 6px rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+  }
+
+  .tx__parties {
+    display: grid;
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .tx__party {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px 8px 8px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 560;
+  }
+
+  .tx__party + .tx__party {
+    border-top: 1px solid var(--line);
+    border-radius: 0 0 12px 12px;
+  }
+
+  .tx__pi {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .tx__seen {
+    margin-left: auto;
+  }
+
+  /* Движение: метки снимаются по очереди, акт уходит в облако и к участникам (цикл 6,4 с) */
+  .ob__vis.is-live .tx__tick {
+    animation: ob-pop 6.4s var(--ease-out) infinite;
+    animation-delay: calc(var(--c) * 0.35s);
+  }
+
+  .ob__vis.is-live .tx__pipe i {
+    animation: ob-drop 1.6s var(--ease-in-out) infinite;
+  }
+
+  .ob__vis.is-live .tx__pipe--2 i {
+    animation-delay: 0.8s;
+  }
+
+  .ob__vis.is-live .tx__cloud {
+    animation: ob-ping 3.2s var(--ease-in-out) infinite;
+  }
+
+  .ob__vis.is-live .tx__seen {
+    animation: ob-pop 6.4s var(--ease-out) infinite;
+    animation-delay: calc(1.6s + var(--p) * 0.3s);
+  }
+
+  .ob__vis.is-live .tx__live::before {
+    animation: ob-blink 1.8s var(--ease-in-out) infinite;
+  }
+
+  @keyframes ob-drop {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes ob-ping {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.06);
+    }
+  }
+
+  @keyframes ob-blink {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  /* ── Тёмная полоса «Честный вес» ───────────────────────── */
+  .ob__band {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 28px clamp(28px, 4vw, 56px);
+    margin-top: clamp(72px, 9vw, 120px);
+    padding: clamp(26px, 3vw, 40px) clamp(24px, 3.6vw, 48px);
+    border-radius: var(--r-xl);
+    background:
+      radial-gradient(60% 140% at 0% 0%, rgb(72 144 227 / 0.38) 0%, transparent 60%),
+      radial-gradient(45% 140% at 100% 100%, rgb(93 223 215 / 0.18) 0%, transparent 60%),
+      var(--ink);
+    overflow: hidden;
+  }
+
+  .ob__band-main {
+    display: grid;
+    justify-items: start;
+    gap: 22px;
+  }
+
+  .ob__schema {
+    display: flex;
+    align-items: center;
+  }
+
+  .ob__node {
+    padding: 10px 16px;
+    border: 1px solid rgb(255 255 255 / 0.18);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.07);
+    font-size: 15px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .ob__wire {
+    position: relative;
+    width: clamp(30px, 3.4vw, 56px);
+    height: 8px;
+    overflow: hidden;
+    background: linear-gradient(rgb(255 255 255 / 0.28), rgb(255 255 255 / 0.28)) center / 100% 2px no-repeat;
+  }
+
+  .ob__wire i {
+    position: absolute;
+    inset: 0;
+  }
+
+  .ob__wire i::after {
+    content: '';
+    position: absolute;
+    top: 1px;
+    width: 14px;
+    height: 6px;
+    border-radius: 3px;
+    background: #fff;
+  }
+
+  /* сигнал идёт от весов к обеим сторонам одновременно */
+  .ob__wire--l i {
+    transform: translateX(100%);
+  }
+
+  .ob__wire--l i::after {
+    left: 0;
+  }
+
+  .ob__wire--r i {
+    transform: translateX(-100%);
+  }
+
+  .ob__wire--r i::after {
+    right: 0;
+  }
+
+  .ob__band.is-live .ob__wire--l i {
+    animation: ob-left 1.8s var(--ease-in-out) infinite;
+  }
+
+  .ob__band.is-live .ob__wire--r i {
+    animation: ob-right 1.8s var(--ease-in-out) infinite;
+  }
+
+  @keyframes ob-left {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes ob-right {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  .ob__hub {
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    flex: none;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 0 0 7px rgb(255 255 255 / 0.12);
+  }
+
+  .ob__note {
+    max-width: 44ch;
+    font-size: clamp(1.2rem, 1.9vw, 1.6rem);
+    line-height: 1.3;
+    font-weight: 560;
+    letter-spacing: -0.02em;
+    text-wrap: pretty;
+  }
+
+  /* Без анимаций — статичное итоговое состояние */
+  @media (prefers-reduced-motion: reduce) {
+    .ob__vis .kx__ok,
+    .ob__vis .kx__status,
+    .ob__vis .kx__bar i,
+    .ob__vis .kx__done,
+    .ob__vis .tx__tick,
+    .ob__vis .tx__seen,
+    .ob__vis .tx__cloud,
+    .ob__vis .tx__pipe i,
+    .ob__band .ob__wire i {
+      animation: none !important;
+    }
+
+    .tx__pipe i,
+    .ob__wire i {
+      display: none;
+    }
+  }
+
+  /* ── Планшет и телефон ─────────────────────────────────── */
+  @media (max-width: 900px) {
+    .ob__row,
+    .ob__row--rev {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'text'
+        'vis';
+      row-gap: 36px;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .ob__band {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 22px;
+      border-radius: var(--r-lg);
+    }
+
+    .ob__cta {
+      width: 100%;
+      white-space: normal;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .kx__send {
+      right: -8px;
+    }
+
+    .kx__sheet {
+      padding: 16px;
+    }
+
+    .kx__row {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 0.8fr) 22px;
+      font-size: 13px;
+    }
+
+    /* на телефоне из участников видно только регоператора */
+    .tx__party--more {
+      display: none;
+    }
+
+    .ob__node {
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+
+    .ob__wire {
+      width: 26px;
+    }
+
+    .ob__hub {
+      width: 44px;
+      height: 44px;
+    }
+  }
+</style>
+
+<script>
+  // Движение в картинках и полосе — только пока они на экране
+  const live = document.querySelectorAll<HTMLElement>('.ob [data-live]');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.target.classList.toggle('is-live', e.isIntersecting)),
+      { threshold: 0.15 },
+    );
+    live.forEach((el) => io.observe(el));
+  } else {
+    live.forEach((el) => el.classList.add('is-live'));
+  }
+</script>

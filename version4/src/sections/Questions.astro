@@ -1,0 +1,40 @@
+---
+// Блок 13. Частые вопросы: слева липкий заголовок, справа список вопросов с линиями (как пункты Calendly).
+import SectionIntro from '../components/SectionIntro.astro';
+import Faq from '../components/Faq.astro';
+import { FAQ } from '../data/faq';
+---
+
+<section class="section" id="voprosy" aria-labelledby="voprosy-title">
+  <div class="container q">
+    <div class="q__head">
+      <SectionIntro eyebrow="Вопросы" titleId="voprosy-title" align="left">Частые вопросы</SectionIntro>
+    </div>
+    <Faq items={FAQ} />
+  </div>
+</section>
+
+<style>
+  .q {
+    display: grid;
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.6fr);
+    gap: clamp(32px, 6vw, 96px);
+    align-items: start;
+  }
+
+  .q__head {
+    position: sticky;
+    top: calc(var(--header-h) + 32px);
+  }
+
+  @media (max-width: 899px) {
+    .q {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .q__head {
+      position: static;
+    }
+  }
+</style>

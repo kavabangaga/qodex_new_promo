@@ -1,0 +1,167 @@
+---
+// Блок 8. Цифры: крупные числа на белых плитках, главная цифра — на градиенте (приём Calendly).
+import SectionIntro from '../components/SectionIntro.astro';
+import StatTile from '../components/StatTile.astro';
+import { PRODUCT_ORDER } from '../config/site';
+
+const NB = '\u00a0';
+---
+
+<section class="section panel" id="cifry" aria-labelledby="cifry-title">
+  <div class="container">
+    <SectionIntro eyebrow="Цифры" titleId="cifry-title">Результаты пилотов и внедрений</SectionIntro>
+
+    <div class="nums">
+      <StatTile
+        class="nums__a"
+        feature
+        preset="sky"
+        chips={PRODUCT_ORDER}
+        count={73}
+        value="73"
+        caption="клиента уже работают с продуктами QODEX"
+      />
+      <StatTile
+        class="nums__b"
+        index={1}
+        prefix="+"
+        count={7.5}
+        decimals={1}
+        value="7,5"
+        unit={`${NB}млн${NB}₽`}
+        tail="в год"
+        caption="только по жильцам в одном районе: +10% жильцов в базе за один день сверки"
+        product="robot"
+      />
+      <StatTile
+        class="nums__c"
+        index={2}
+        count={4}
+        value="4"
+        unit={`${NB}дня`}
+        caption={`сверка всех 755${NB}576 помещений регоператора с ГИС ЖКХ. Вручную это годы работы`}
+        product="robot"
+      />
+      <StatTile
+        class="nums__d"
+        index={1}
+        prefix="−"
+        count={57}
+        value="57"
+        unit="%"
+        caption="тоннажа в актах после установки: март 2025 к марту 2024, 4 района Башкортостана"
+        product="tonn"
+      />
+      <StatTile
+        class="nums__e"
+        index={2}
+        prefix=">"
+        count={60}
+        value="60"
+        unit={`${NB}млн${NB}₽`}
+        caption="сэкономил РО «Эко-Сити» за год"
+        product="tonn"
+      />
+      <StatTile
+        class="nums__f"
+        index={3}
+        prefix="+"
+        count={17}
+        value="17"
+        unit="%"
+        caption="контейнеров сверх плана: в среднем 10 на маршруте, которых нет в реестре. Пилот у РО «Эко-Сити»"
+        product="tracker"
+      />
+    </div>
+
+    <p class="footnote nums__note" data-reveal>
+      Кейсы РО-БОТа — разные проекты: +7,5&nbsp;млн&nbsp;₽ — пилот в одном районе, 4&nbsp;дня — сверка всей базы
+      регоператора. Регионы и операторы не раскрываются по условиям соглашений.
+    </p>
+  </div>
+</section>
+
+<style>
+  /* Бенто: главная цифра на градиенте слева, две плитки РО-БОТа справа, ниже три плитки */
+  .nums {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-areas:
+      'a a a b b b'
+      'a a a c c c'
+      'd d e e f f';
+    gap: clamp(12px, 1.4vw, 20px);
+  }
+
+  .nums__a {
+    grid-area: a;
+  }
+
+  .nums__b {
+    grid-area: b;
+  }
+
+  .nums__c {
+    grid-area: c;
+  }
+
+  .nums__d {
+    grid-area: d;
+  }
+
+  .nums__e {
+    grid-area: e;
+  }
+
+  .nums__f {
+    grid-area: f;
+  }
+
+  .nums__b,
+  .nums__c,
+  .nums__d,
+  .nums__e,
+  .nums__f {
+    min-height: clamp(220px, 19vw, 260px);
+  }
+
+  .nums__note {
+    max-width: 720px;
+    margin: clamp(24px, 3vw, 36px) auto 0;
+    text-align: center;
+  }
+
+  @media (max-width: 899px) {
+    .nums {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        'a a'
+        'b b'
+        'c d'
+        'e f';
+    }
+
+    .nums__a {
+      min-height: 440px;
+    }
+  }
+
+  @media (max-width: 599px) {
+    .nums {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'a' 'b' 'c' 'd' 'e' 'f';
+    }
+
+    .nums__b,
+    .nums__c,
+    .nums__d,
+    .nums__e,
+    .nums__f {
+      min-height: 0;
+    }
+
+    .nums__note {
+      text-align: left;
+    }
+  }
+</style>

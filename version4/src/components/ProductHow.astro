@@ -1,0 +1,232 @@
+---
+// Продукт в блоке «Работающие системы» (понадобится и на страницах продуктов, этап 2).
+// Как разделы продуктов Calendly: метка, заголовок антиквой, пункты «Как работает» с полосой
+// прогресса и ссылка на лендинг; рядом большая градиентная карточка — на каждый шаг своя
+// иллюстрация интерфейса (переключается вместе с пунктами). Ниже — «Что это даёт» и сноска.
+import ProductLabel from './ProductLabel.astro';
+import GradientVisual from './GradientVisual.astro';
+import FeatureAccordion, { type AccItem } from './FeatureAccordion.astro';
+import Shot from './Shot.astro';
+import Icon from './Icon.astro';
+import { PRODUCTS, productHref, type ProductId } from '../config/site';
+
+interface Props {
+  id: ProductId;
+  /** Заголовок — подпись к экрану продукта из ТЗ. */
+  title: string;
+  /** Шаги «Как работает»: короткое название пункта + текст шага из ТЗ. */
+  steps: AccItem[];
+  /** «Что это даёт». */
+  benefits: string[];
+  /** Мелкая сноска. */
+  note: string;
+  preset: 'sky' | 'aqua' | 'dusk' | 'mint' | 'lavender' | 'teal';
+  deco?: 'bars' | 'stripes' | 'none';
+  /** Цвет полосы прогресса у пунктов (из палитры градиента). */
+  accent?: string;
+  /** Картинка слева, текст справа. */
+  flip?: boolean;
+  /** utm_content ссылки на лендинг. */
+  from?: string;
+}
+
+const { id, title, steps, benefits, note, preset, deco = 'bars', accent, flip = false, from = 'interfaces' } = Astro.props;
+const p = PRODUCTS[id];
+---
+
+<article class:list={['how', { 'how--flip': flip }]} id={id} data-acc-scope aria-labelledby={`${id}-title`}>
+  <div class="how__text">
+    <div data-reveal>
+      <ProductLabel id={id} />
+    </div>
+    <h3 class="t-serif how__title" id={`${id}-title`} data-reveal style="--d:1">
+      <span class="visually-hidden">{p.name}. </span>{title}
+    </h3>
+    <div class="how__steps" data-reveal style="--d:2">
+      <h4 class="how__sub">Как работает</h4>
+      <FeatureAccordion id={`how-${id}`} items={steps} color={accent} />
+    </div>
+    <a
+      href={productHref(id, from)}
+      class="link-arrow how__more"
+      data-interest={id}
+      data-goal="product_landing"
+      data-goal-product={id}
+      data-reveal
+      style="--d:3"
+    >
+      Подробнее о продукте<span class="visually-hidden"> {p.name}</span>
+      <Icon name="arrow-up-right" />
+    </a>
+  </div>
+
+  <div class="how__visual" data-reveal style="--d:1">
+    <GradientVisual preset={preset} deco={deco}>
+      <Shot id={id} />
+    </GradientVisual>
+    <span class="tag tag--demo how__demo" aria-hidden="true">демо-данные</span>
+  </div>
+
+  <div class="how__gain" data-reveal>
+    <h4 class="how__sub">Что это даёт</h4>
+    <ul class:list={['how__list', { 'is-three': benefits.length > 2 }]}>
+      {
+        benefits.map((b) => (
+          <li>
+            <span class="how__check" aria-hidden="true">
+              <Icon name="check" size={14} strokeWidth={2.75} />
+            </span>
+            <span>{b}</span>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="footnote how__note">{note}</p>
+  </div>
+</article>
+
+<style>
+  .how {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'text visual'
+      'gain gain';
+    align-items: center;
+    column-gap: clamp(40px, 6.2vw, 88px);
+    row-gap: clamp(36px, 4vw, 56px);
+  }
+
+  .how--flip {
+    grid-template-areas:
+      'visual text'
+      'gain gain';
+  }
+
+  .how__text {
+    grid-area: text;
+    min-width: 0;
+  }
+
+  /* подписи к экранам из ТЗ длиннее заголовков Calendly — антиква чуть мельче, без «висячих» строк */
+  .how__title {
+    margin-top: 16px;
+    font-size: clamp(1.7rem, 2.35vw, 2.2rem);
+    line-height: 1.13;
+    text-wrap: pretty;
+  }
+
+  .how__steps {
+    margin-top: clamp(28px, 3.4vw, 48px);
+  }
+
+  .how__sub {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+
+  .how__steps .how__sub {
+    margin-bottom: 14px;
+  }
+
+  .how__more {
+    margin-top: 28px;
+  }
+
+  .how__visual {
+    grid-area: visual;
+    position: relative;
+    min-width: 0;
+  }
+
+  /* «демо-данные» в углу градиентной карточки */
+  .how__demo {
+    position: absolute;
+    z-index: 1;
+    top: clamp(14px, 1.6vw, 22px);
+    left: clamp(14px, 1.6vw, 22px);
+    pointer-events: none;
+  }
+
+  /* «Что это даёт»: подпись, пункты мягкими плитками, сноска */
+  .how__gain {
+    grid-area: gain;
+    display: grid;
+    gap: 14px;
+    padding-top: clamp(22px, 2.4vw, 30px);
+    border-top: 1px solid var(--line);
+  }
+
+  .how__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .how__list.is-three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .how__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 20px;
+    border-radius: var(--r);
+    background: var(--panel);
+    font-size: 15.5px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+
+  .how__check {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    flex: none;
+    margin-top: -1px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--ok);
+  }
+
+  .how__note {
+    max-width: 820px;
+  }
+
+  @media (max-width: 760px) {
+    .how__list.is-three {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Планшет и телефон: столбиком — текст, затем картинка, затем «Что это даёт» */
+  @media (max-width: 900px) {
+    .how,
+    .how--flip {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'text'
+        'visual'
+        'gain';
+      row-gap: 32px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .how__list,
+    .how__list.is-three {
+      grid-template-columns: 1fr;
+    }
+
+    .how__list li {
+      padding: 16px;
+      font-size: 15px;
+    }
+  }
+</style>
