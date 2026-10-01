@@ -39,7 +39,7 @@ import { CONTACTS } from '../config/site';
   .lm {
     width: min(1040px, calc(100vw - 32px));
     max-width: none;
-    max-height: calc(100dvh - 32px);
+    max-height: calc(var(--dvh) * 100 - 32px);
     padding: 0;
     border: 0;
     background: transparent;
@@ -93,7 +93,7 @@ import { CONTACTS } from '../config/site';
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
-    max-height: calc(100dvh - 32px);
+    max-height: calc(var(--dvh) * 100 - 32px);
     border-radius: var(--r-lg);
     background: var(--card);
     overflow: hidden;

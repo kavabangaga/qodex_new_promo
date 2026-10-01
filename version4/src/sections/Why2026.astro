@@ -220,7 +220,7 @@ const items: Item[] = [
 <style>
   .why__grid {
     /* высота картинки справа: как у градиентных карточек, но не выше окна за вычетом шапки */
-    --why-vis-h: min(clamp(360px, 40vw, 580px), calc(100vh - var(--header-h) - 80px));
+    --why-vis-h: min(clamp(360px, 40vw, 580px), calc(var(--vh) * 100 - var(--header-h) - 80px));
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
     grid-template-rows: auto 1fr;
@@ -244,7 +244,7 @@ const items: Item[] = [
     grid-area: vis;
     align-self: start;
     position: sticky;
-    top: max(calc(var(--header-h) + 32px), calc(50vh - var(--why-vis-h) / 2));
+    top: max(calc(var(--header-h) + 32px), calc(var(--vh) * 50 - var(--why-vis-h) / 2));
   }
 
   .why__vis :global(.gv) {
