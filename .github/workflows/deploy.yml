@@ -1,5 +1,6 @@
 # Публикация на GitHub Pages при каждой отправке в ветку main.
-# Главная ссылка — версия на всю ширину (version2_wide), по адресу /v2/ — версия по центру (version 2).
+# Главная ссылка — версия на всю ширину (version2_wide), по адресу /v2/ — версия по центру (version 2),
+# по адресу /v3/ — та же широкая версия с пробным шрифтом заголовков Lebowski.
 name: Публикация сайта
 
 on:
@@ -35,7 +36,7 @@ jobs:
           npm ci --prefix version2_wide
           npm ci --prefix "version 2"
 
-      - name: Сборка обеих версий
+      - name: Сборка версий
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER,,}"
           REPO="${{ github.event.repository.name }}"
@@ -44,6 +45,7 @@ jobs:
           if [[ "$REPO" == *.github.io ]]; then BASE="/"; else BASE="/${REPO}/"; fi
           (cd version2_wide && SITE_BASE="$BASE" npx astro build --outDir ../_site)
           (cd "version 2" && SITE_BASE="${BASE}v2/" npx astro build --outDir ../_site/v2)
+          (cd version2_wide && SITE_BASE="${BASE}v3/" HEADING_FONT=lebowski npx astro build --outDir ../_site/v3)
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -219,6 +219,27 @@ button {
   font-weight: 600;
 }
 
+/* Пробный шрифт заголовков (версия /v3/, класс hf-lebowski на <html>).
+   Lebowski by Pragmatica — pragmatica.design/lebowski, бесплатный, файл не изменён.
+   Одно начертание (Regular), поэтому без синтетического жирного. Шрифт узкий,
+   поэтому буквы чуть крупнее (font-size-adjust, ~×1,13), а строки плотнее. */
+@font-face {
+  font-family: 'Lebowski';
+  src: url('../assets/fonts/lebowski-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+html.hf-lebowski :is(.h1, .h2, .cta__title, .lm__title) {
+  font-family: 'Lebowski', var(--font-display);
+  font-weight: 400;
+  font-synthesis: none;
+  font-size-adjust: ex-height 0.69;
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
 /* Длина строки абзаца — не больше ~62 знаков (ui-ux-pro-max: Line Length / Container Width) */
 .lead {
   max-width: 62ch;

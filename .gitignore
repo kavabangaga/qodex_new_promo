@@ -13,3 +13,9 @@ Thumbs.db
 # Не публикуем: ранняя версия и ТЗ
 version 1/
 qodex-home-claude-design*.md
+
+# Исходные файлы шрифтов в корне (на сайт они попадают из src/assets/fonts)
+/*.woff2
+/*.woff
+/*.otf
+/*.ttf

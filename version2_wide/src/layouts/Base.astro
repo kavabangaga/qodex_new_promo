@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { SITE, METRIKA_ID, withBase } from '../config/site';
 import { LAYOUT } from '../config/layout';
+import lebowskiUrl from '../assets/fonts/lebowski-regular.woff2?url';
 
 interface Props {
   title?: string;
@@ -15,14 +16,17 @@ const canonical = new URL(Astro.url.pathname, SITE.url).href;
 const ogImage = new URL(withBase(SITE.ogImage), Astro.site ?? SITE.url).href;
 // предварительная версия (не на qodex.tech) закрыта от поисковиков
 const noindex = Astro.site?.hostname !== 'qodex.tech';
+// пробный шрифт заголовков (версия /v3/): класс на <html> + ранняя загрузка файла
+const lebowski = import.meta.env.HEADING_FONT === 'lebowski';
 ---
 
 <!doctype html>
-<html lang="ru" class={LAYOUT}>
+<html lang="ru" class:list={[LAYOUT, { 'hf-lebowski': lebowski }]}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
+    {lebowski && <link rel="preload" href={lebowskiUrl} as="font" type="font/woff2" crossorigin />}
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
