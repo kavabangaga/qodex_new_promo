@@ -136,10 +136,18 @@
 - `.float` — лёгкое покачивание.
 
 **Иконки**
-- `<Icon name>`: Lucide. Есть всё из старого набора и `src/components/icons/lucide-extra.ts`.
-- Новую иконку добавляйте в **свой** файл `src/components/icons/extra-<буква агента>.ts`.
-  Брать только официальные контуры: `curl -s https://unpkg.com/lucide-static@1.49.0/icons/<имя>.svg`,
-  внутренняя часть `<svg>` без переносов строк.
+- `<Icon name>`: Hugeicons Free, стиль Stroke Rounded (MIT). Контуры лежат в
+  `src/components/icons/hugeicons.ts`: ключ — имя иконки на сайте, в комментарии справа — имя в Hugeicons.
+- Толщина линии (`strokeWidth`): по умолчанию 1,75; в мелких местах 13–17 px — 2; в пилюлях 12 px —
+  2,2–2,6; галочки в кружках — 2,5–3,5.
+- Новая иконка — строка в `hugeicons.ts`. Контур берите в Iconify, только из набора `hugeicons`
+  (он бесплатный, остальные стили Hugeicons платные):
+  `curl -s "https://api.iconify.design/hugeicons.json?icons=<имя>"`, поле `body`. Уберите обёртки `<g>`
+  и атрибуты `stroke-width`, `fill="none"`, `stroke="currentColor"`, `stroke-linecap="round"`,
+  `stroke-linejoin="round"` — всё это задаёт корневой `<svg>` в `Icon.astro`. Если у незамкнутой линии
+  в оригинале нет `stroke-linecap`, поставьте ей `stroke-linecap="butt"`: иначе концы вылезут за контур.
+- Чего в наборе нет (мусорный контейнер на колёсах), нарисовано в том же стиле — `OWN` в `Icon.astro`.
+- Неизвестное имя иконки останавливает сборку с понятной ошибкой.
 
 ## Порядок страницы и ответственность
 
@@ -167,8 +175,8 @@
 
 ## Правила работы агентов
 
-1. Правьте **только свои файлы** из таблицы и свой `icons/extra-<буква>.ts`. Новые файлы
-   создавайте только для своего раздела.
+1. Правьте **только свои файлы** из таблицы. Новые файлы создавайте только для своего раздела.
+   Новая иконка — своя строка в общем `icons/hugeicons.ts` (см. «Иконки»).
 2. Не трогайте `global.css`, `kit.ts`, `Base.astro`, `index.astro`, `pages/s/[name].astro`
    и общие компоненты (SectionIntro, ProductLabel, GradientVisual, FeatureAccordion, Icon.astro).
    Если в них нужна правка, опишите её в итоговом отчёте.

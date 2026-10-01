@@ -20,12 +20,14 @@ npm install
 npm run dev
 ```
 
-## Шрифты
+## Шрифты и иконки
 
 Lebowski by Pragmatica (версия /v3/) — бесплатный шрифт студии Pragmatica,
 авторы Tamara Arkatova, Tanya Cherkiz, Olga Pankova: https://www.pragmatica.design/lebowski
 
-Шрифты v4 — Geist и Source Serif 4 (свободная лицензия OFL, пакеты Fontsource).
+Шрифт v4 — Geist (свободная лицензия OFL, пакет Fontsource).
+
+Иконки v4 — Hugeicons Free, стиль Stroke Rounded (лицензия MIT): https://hugeicons.com
 
 ## Публикация
 
