@@ -104,10 +104,6 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
           </p>
           <ul class="bal-check__list">
             <li>
-              <span>Начислено</span>
-              <b class="bal-check__ok"><Icon name="check" size={13} strokeWidth={2.75} /></b>
-            </li>
-            <li>
               <span>Вывезено</span>
               <b class="bal-check__ok"><Icon name="check" size={13} strokeWidth={2.75} /></b>
             </li>
@@ -162,8 +158,8 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 32px;
-    padding: clamp(24px, 3vw, 36px);
+    gap: 24px;
+    padding: clamp(22px, 2.6vw, 32px);
     border-radius: var(--r-lg);
     background: var(--card);
   }
@@ -195,8 +191,8 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
     grid-template-columns: max-content repeat(10, 22px) max-content;
     align-items: center;
     column-gap: 6px;
-    row-gap: 14px;
-    padding: 20px 22px 16px;
+    row-gap: 12px;
+    padding: 18px 22px 14px;
     border-radius: var(--r);
     background: var(--bg);
   }
@@ -265,7 +261,7 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
 
   /* Баланс у РЭО: одно звено не сходится */
   .bal-check {
-    padding: 16px;
+    padding: 14px;
     border-radius: var(--r);
     background: var(--bg);
   }
@@ -274,7 +270,7 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 4px 12px;
+    padding: 0 4px 10px;
     font-size: 14px;
     font-weight: 560;
   }
@@ -294,7 +290,7 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 9px 12px;
     border-radius: 12px;
     background: var(--card);
     font-size: 14.5px;
