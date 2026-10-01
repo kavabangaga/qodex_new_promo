@@ -219,6 +219,8 @@ const items: Item[] = [
 
 <style>
   .why__grid {
+    /* высота картинки справа: как у градиентных карточек, но не выше окна за вычетом шапки */
+    --why-vis-h: min(clamp(360px, 40vw, 580px), calc(100vh - var(--header-h) - 80px));
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
     grid-template-rows: auto 1fr;
@@ -236,9 +238,17 @@ const items: Item[] = [
     grid-area: list;
   }
 
+  /* Картинка «прилипает» по центру окна, пока листаются пункты слева, и уезжает вместе
+     с разделом в его конце: липкость ограничена колонкой раздела (сетка .why__grid) */
   .why__vis {
     grid-area: vis;
     align-self: start;
+    position: sticky;
+    top: max(calc(var(--header-h) + 32px), calc(50vh - var(--why-vis-h) / 2));
+  }
+
+  .why__vis :global(.gv) {
+    min-height: var(--why-vis-h);
   }
 
   /* Пункты: заголовок-событие и описание, под ним — метки */
@@ -530,7 +540,12 @@ const items: Item[] = [
     }
 
     .why__vis {
+      position: static;
       margin-bottom: 36px;
+    }
+
+    .why__vis :global(.gv) {
+      min-height: clamp(320px, 70vw, 460px);
     }
   }
 
