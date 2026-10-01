@@ -90,7 +90,7 @@ const NB = '\u00a0';
       'a a a b b b'
       'a a a c c c'
       'd d e e f f';
-    gap: clamp(12px, 1.4vw, 20px);
+    gap: clamp(12px, calc(var(--vw) * 1.4), 20px);
   }
 
   .nums__a {
@@ -122,12 +122,12 @@ const NB = '\u00a0';
   .nums__d,
   .nums__e,
   .nums__f {
-    min-height: clamp(220px, 19vw, 260px);
+    min-height: clamp(220px, calc(var(--vw) * 19), 260px);
   }
 
   .nums__note {
     max-width: 720px;
-    margin: clamp(24px, 3vw, 36px) auto 0;
+    margin: clamp(24px, calc(var(--vw) * 3), 36px) auto 0;
     text-align: center;
   }
 

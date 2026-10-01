@@ -18,7 +18,7 @@ import { FAQ } from '../data/faq';
   .q {
     display: grid;
     grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.6fr);
-    gap: clamp(32px, 6vw, 96px);
+    gap: clamp(32px, calc(var(--vw) * 6), 96px);
     align-items: start;
   }
 

@@ -129,7 +129,7 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
   }
 
   .bal-intro :global(.t-h2) {
-    font-size: clamp(2rem, 3.6vw, 3.15rem);
+    font-size: clamp(2rem, calc(var(--vw) * 3.6), 3.15rem);
   }
 
   @media (min-width: 1100px) {
@@ -159,7 +159,7 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
     flex-direction: column;
     justify-content: space-between;
     gap: 24px;
-    padding: clamp(22px, 2.6vw, 32px);
+    padding: clamp(22px, calc(var(--vw) * 2.6), 32px);
     border-radius: var(--r-lg);
     background: var(--card);
   }
@@ -170,7 +170,7 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
   }
 
   .bal-card__title {
-    font-size: clamp(1.35rem, 2vw, 1.75rem);
+    font-size: clamp(1.35rem, calc(var(--vw) * 2), 1.75rem);
     line-height: 1.2;
     letter-spacing: -0.025em;
     font-weight: 560;

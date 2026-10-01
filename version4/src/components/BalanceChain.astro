@@ -486,12 +486,12 @@ const { links, result, highlight } = Astro.props;
   }
 
   @media (min-width: 1200px) and (max-width: 1359px) {
-    .bl-chain {
+    :global(html:not(.is-autoscale)) .bl-chain {
       --bl-pad: 24px;
       --chain-gap: 24px;
     }
 
-    .bl__title {
+    :global(html:not(.is-autoscale)) .bl__title {
       font-size: 1.5rem;
     }
   }
@@ -526,7 +526,7 @@ const { links, result, highlight } = Astro.props;
   }
 
   /* ── Планшет: карточки столбиком, все раскрыты ──────────── */
-  @media (max-width: 1199px) {
+  @media (max-width: 1199.98px) {
     .bl-chain {
       flex-direction: column;
     }
@@ -673,7 +673,7 @@ const { links, result, highlight } = Astro.props;
   }
 
   .bl-result__text {
-    font-size: clamp(1.05rem, 1.4vw, 1.25rem);
+    font-size: clamp(1.05rem, calc(var(--vw) * 1.4), 1.25rem);
     line-height: 1.4;
     font-weight: 500;
     text-wrap: pretty;

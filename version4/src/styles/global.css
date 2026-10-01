@@ -62,7 +62,7 @@
   --r: 20px;
   --r-lg: 28px;
   --r-xl: 40px;
-  --r-2xl: clamp(28px, 4vw, 64px);
+  --r-2xl: clamp(28px, calc(var(--vw) * 4), 64px);
   --radius-sm: var(--r-xs);
   --radius: var(--r-sm);
   --radius-lg: var(--r);
@@ -79,23 +79,26 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
   /* Сетка: панели отстоят от края экрана на --page-pad, контент — до 1200 px */
-  --page-pad: clamp(8px, 1.7vw, 24px);
+  --page-pad: clamp(8px, calc(var(--vw) * 1.7), 24px);
   --container: 1200px;
-  --gutter: clamp(16px, 3.4vw, 40px);
+  --gutter: clamp(16px, calc(var(--vw) * 3.4), 40px);
   --header-h: 80px;
-  --section-y: clamp(72px, 9vw, 136px);
+  --section-y: clamp(72px, calc(var(--vw) * 9), 136px);
 
-  /* Масштаб страницы (см. ниже) и высота окна с поправкой на него.
-     При CSS-масштабе vh уменьшается вместе со страницей, поэтому «во всю высоту окна» —
-     только через var(--vh): calc(var(--vh) * 100), а не 100vh. */
+  /* Автомасштаб страницы (см. ниже) и размеры окна с поправкой на него.
+     При CSS-масштабе vw/vh уменьшаются вместе со страницей, поэтому в стилях вместо них —
+     var(--vw) / var(--vh): calc(var(--vw) * 5.6), calc(var(--vh) * 100). Тогда размеры считаются
+     от ширины раскладки (до 1760 px), а «во всю высоту окна» остаётся во всю высоту. */
   --z: 1;
+  --vw: calc(1vw / var(--z));
   --vh: calc(1vh / var(--z));
   --dvh: calc(1dvh / var(--z));
 }
 
-/* Масштаб страницы --z задаёт скрипт в <head> (layouts/Base.astro) по реальному разрешению
-   монитора: на FHD и меньших экранах страница выглядит как при масштабе браузера 75–85 %,
-   на 2K, 4K и Retina — в обычном размере. */
+/* Автомасштаб: --z задаёт скрипт в <head> (layouts/Base.astro). Страница рассчитана на окно
+   шириной 1760 px; если окно уже (от 1200 px), она пропорционально уменьшается — до 75 %, —
+   и выглядит так же, как на широком экране. Уже 1200 px — планшетная и мобильная раскладки
+   без масштаба. */
 html {
   zoom: var(--z);
 }
@@ -259,7 +262,7 @@ button {
 .t-display,
 .h1 {
   font-family: var(--font-sans);
-  font-size: clamp(2.5rem, 5.6vw, 4.75rem);
+  font-size: clamp(2.5rem, calc(var(--vw) * 5.6), 4.75rem);
   line-height: 1.04;
   letter-spacing: -0.045em;
   font-weight: 600;
@@ -270,7 +273,7 @@ button {
 .t-h2,
 .h2 {
   font-family: var(--font-sans);
-  font-size: clamp(2.1rem, 4.3vw, 3.75rem);
+  font-size: clamp(2.1rem, calc(var(--vw) * 4.3), 3.75rem);
   line-height: 1.07;
   letter-spacing: -0.042em;
   font-weight: 600;
@@ -280,7 +283,7 @@ button {
 /* Заголовок продуктового раздела — тем же гротеском, что и главный заголовок */
 .t-serif {
   font-family: var(--font-sans);
-  font-size: clamp(1.9rem, 3.2vw, 2.75rem);
+  font-size: clamp(1.9rem, calc(var(--vw) * 3.2), 2.75rem);
   line-height: 1.08;
   letter-spacing: -0.04em;
   font-weight: 600;
@@ -289,7 +292,7 @@ button {
 
 /* Заголовок карточки (36 px) */
 .t-h3 {
-  font-size: clamp(1.6rem, 2.4vw, 2.25rem);
+  font-size: clamp(1.6rem, calc(var(--vw) * 2.4), 2.25rem);
   line-height: 1.12;
   letter-spacing: -0.03em;
   font-weight: 560;
@@ -307,7 +310,7 @@ button {
 
 .t-lead,
 .lead {
-  font-size: clamp(1.06rem, 1.25vw, 1.2rem);
+  font-size: clamp(1.06rem, calc(var(--vw) * 1.25), 1.2rem);
   line-height: 1.5;
   color: var(--muted);
   text-wrap: pretty;
@@ -407,7 +410,7 @@ button {
   gap: 18px;
   max-width: 880px;
   margin-inline: auto;
-  margin-bottom: clamp(40px, 5vw, 72px);
+  margin-bottom: clamp(40px, calc(var(--vw) * 5), 72px);
   text-align: center;
 }
 
@@ -674,12 +677,12 @@ button {
 /* ── Градиентная карточка-иллюстрация (как у разделов продуктов Calendly) ──
    <div class="gv gv--sky"> + декор .gv__bars + белая карточка .ui внутри. */
 .gv {
-  --gv-r: clamp(28px, 3.4vw, 48px);
+  --gv-r: clamp(28px, calc(var(--vw) * 3.4), 48px);
   position: relative;
   display: grid;
   place-items: center;
-  min-height: clamp(360px, 40vw, 580px);
-  padding: clamp(20px, 3vw, 48px);
+  min-height: clamp(360px, calc(var(--vw) * 40), 580px);
+  padding: clamp(20px, calc(var(--vw) * 3), 48px);
   border-radius: var(--gv-r);
   overflow: hidden;
   isolation: isolate;
@@ -754,14 +757,14 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-inline: clamp(8px, 1.6vw, 22px);
+  padding-inline: clamp(8px, calc(var(--vw) * 1.6), 22px);
   pointer-events: none;
 }
 
 .gv__bars > span {
   display: flex;
   align-items: center;
-  gap: clamp(8px, 1.1vw, 14px);
+  gap: clamp(8px, calc(var(--vw) * 1.1), 14px);
   height: 60%;
 }
 
@@ -787,7 +790,7 @@ button {
 .ui {
   position: relative;
   width: min(100%, 420px);
-  padding: clamp(18px, 2vw, 28px);
+  padding: clamp(18px, calc(var(--vw) * 2), 28px);
   border-radius: 24px;
   background: #fff;
   color: var(--ink);
@@ -869,7 +872,7 @@ button {
   mask: var(--bridge-mask-row);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 960.98px) {
   .chain {
     flex-direction: column;
   }

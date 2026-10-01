@@ -104,7 +104,7 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
   .contact__form {
     max-width: 1120px;
     margin-inline: auto;
-    padding: clamp(20px, 2.8vw, 36px);
+    padding: clamp(20px, calc(var(--vw) * 2.8), 36px);
     border: 1px solid var(--line);
     border-radius: var(--r-lg);
     background: var(--card);
@@ -116,8 +116,8 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
     align-items: end;
-    gap: clamp(12px, 1.6vw, 24px);
-    margin-top: clamp(48px, 6vw, 88px);
+    gap: clamp(12px, calc(var(--vw) * 1.6), 24px);
+    margin-top: clamp(48px, calc(var(--vw) * 6), 88px);
   }
 
   .cc__item--mail {
@@ -133,18 +133,18 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
   }
 
   .cc__card {
-    --gv-r: clamp(24px, 2.6vw, 36px);
-    min-height: clamp(220px, 21vw, 280px);
+    --gv-r: clamp(24px, calc(var(--vw) * 2.6), 36px);
+    min-height: clamp(220px, calc(var(--vw) * 21), 280px);
     place-items: end start;
     align-content: space-between;
     row-gap: 16px;
-    padding: clamp(16px, 1.8vw, 24px);
+    padding: clamp(16px, calc(var(--vw) * 1.8), 24px);
     color: var(--ink);
     transition: transform 0.45s var(--ease-out);
   }
 
   .cc__item--person .cc__card {
-    min-height: clamp(260px, 26vw, 340px);
+    min-height: clamp(260px, calc(var(--vw) * 26), 340px);
   }
 
   .cc__card:hover {
@@ -194,7 +194,7 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
     border-radius: 14px;
     background: #fff;
     box-shadow: var(--shadow-soft);
-    font-size: clamp(16px, 1.4vw, 19px);
+    font-size: clamp(16px, calc(var(--vw) * 1.4), 19px);
     font-weight: 600;
     letter-spacing: -0.015em;
     white-space: nowrap;
@@ -203,7 +203,7 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
 
   .cc__chip--big {
     padding: 12px 18px;
-    font-size: clamp(20px, 2.1vw, 30px);
+    font-size: clamp(20px, calc(var(--vw) * 2.1), 30px);
     letter-spacing: -0.03em;
   }
 

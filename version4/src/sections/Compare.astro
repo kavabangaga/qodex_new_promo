@@ -289,7 +289,7 @@ const tools: { name: string; qodex?: boolean; values: string[] }[] = [
     .cmp__col {
       display: block;
       flex: none;
-      width: min(calc(100vw - var(--gutter) * 2 - 28px), 340px);
+      width: min(calc(calc(var(--vw) * 100) - var(--gutter) * 2 - 28px), 340px);
       padding: 0 20px 10px;
       scroll-snap-align: start;
     }

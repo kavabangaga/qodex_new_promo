@@ -109,7 +109,7 @@ const docs = [
     position: relative;
     overflow: hidden;
     isolation: isolate;
-    padding: clamp(56px, 7vw, 104px) 0 clamp(24px, 3vw, 40px);
+    padding: clamp(56px, calc(var(--vw) * 7), 104px) 0 clamp(24px, calc(var(--vw) * 3), 40px);
     border-radius: var(--r-2xl);
     background: #1f1f22;
     color: #fff;
@@ -130,7 +130,7 @@ const docs = [
   .ftr__top {
     display: grid;
     grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-    gap: clamp(40px, 6vw, 96px);
+    gap: clamp(40px, calc(var(--vw) * 6), 96px);
   }
 
   .ftr__lead {
@@ -142,7 +142,7 @@ const docs = [
 
   .ftr__slogan {
     max-width: 13ch;
-    font-size: clamp(2.3rem, 4.6vw, 4.25rem);
+    font-size: clamp(2.3rem, calc(var(--vw) * 4.6), 4.25rem);
     font-weight: 600;
     line-height: 1.04;
     letter-spacing: -0.045em;
@@ -193,12 +193,12 @@ const docs = [
 
   .ftr__logo {
     display: inline-flex;
-    margin-top: clamp(56px, 7vw, 104px);
+    margin-top: clamp(56px, calc(var(--vw) * 7), 104px);
     color: #fff;
   }
 
   .ftr__logo :global(svg) {
-    width: clamp(180px, 22vw, 290px);
+    width: clamp(180px, calc(var(--vw) * 22), 290px);
     height: auto;
   }
 

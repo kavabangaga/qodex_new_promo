@@ -267,7 +267,7 @@ const N = STORIES.length;
     top: var(--page-pad);
     left: var(--page-pad);
     right: var(--page-pad);
-    height: clamp(760px, 64vw, 940px);
+    height: clamp(760px, calc(var(--vw) * 64), 940px);
     border-radius: var(--r-2xl);
     overflow: hidden;
     background: var(--g-blue);
@@ -313,7 +313,7 @@ const N = STORIES.length;
 
   .sc__stage {
     /* на широком экране боковые карточки заходят в поля страницы (до 120 px с каждой стороны) */
-    --sc-bleed: max(0px, min(120px, (100vw - 1200px) / 2 - 64px));
+    --sc-bleed: max(0px, min(120px, (calc(var(--vw) * 100) - 1200px) / 2 - 64px));
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 740px) minmax(0, 1fr);
@@ -359,7 +359,7 @@ const N = STORIES.length;
     grid-row: 1;
     display: grid;
     width: min(100%, 300px);
-    height: clamp(200px, 15.5vw, 236px);
+    height: clamp(200px, calc(var(--vw) * 15.5), 236px);
     padding: 10px;
     border: 0;
     border-radius: 30px;
@@ -458,7 +458,7 @@ const N = STORIES.length;
   }
 
   .sc__mini-num {
-    font-size: clamp(1.9rem, 2.5vw, 2.4rem);
+    font-size: clamp(1.9rem, calc(var(--vw) * 2.5), 2.4rem);
     line-height: 1;
     font-weight: 600;
     letter-spacing: -0.045em;
@@ -490,7 +490,7 @@ const N = STORIES.length;
     align-items: center;
     justify-content: center;
     gap: 18px;
-    margin-top: clamp(24px, 3vw, 36px);
+    margin-top: clamp(24px, calc(var(--vw) * 3), 36px);
   }
 
   .sc__arrow {
@@ -591,7 +591,7 @@ const N = STORIES.length;
 
   .stories__note {
     max-width: 640px;
-    margin: clamp(20px, 2.4vw, 28px) auto 0;
+    margin: clamp(20px, calc(var(--vw) * 2.4), 28px) auto 0;
     text-align: center;
   }
 
@@ -746,7 +746,7 @@ const N = STORIES.length;
     z-index: 1;
     justify-self: end;
     margin-top: -16px;
-    margin-right: clamp(-8px, -1vw, 0px);
+    margin-right: clamp(-8px, calc(var(--vw) * -1), 0px);
     padding: 9px 14px;
     border-radius: 12px;
     background: #fff;
@@ -789,7 +789,7 @@ const N = STORIES.length;
   }
 
   /* ── Без боковых карточек: ноутбук поуже ──────────────── */
-  @media (max-width: 1179px) {
+  @media (max-width: 1199.98px) {
     .sc__stage {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -808,7 +808,7 @@ const N = STORIES.length;
   /* ── Телефон и планшет: лента со scroll-snap ──────────── */
   @media (max-width: 979px) {
     .stories__band {
-      height: clamp(640px, 150vw, 820px);
+      height: clamp(640px, calc(var(--vw) * 150), 820px);
     }
 
     .sc__track {

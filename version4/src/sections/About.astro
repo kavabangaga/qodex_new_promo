@@ -88,7 +88,7 @@ const nb = (t: string) =>
 <style>
   /* ── Хронология ───────────────────────────────────────── */
   .tl {
-    margin-top: clamp(8px, 1vw, 16px);
+    margin-top: clamp(8px, calc(var(--vw) * 1), 16px);
   }
 
   .tl__head {
@@ -167,7 +167,7 @@ const nb = (t: string) =>
     display: flex;
     flex-direction: column;
     gap: 12px;
-    flex: 0 0 clamp(240px, 19vw, 272px);
+    flex: 0 0 clamp(240px, calc(var(--vw) * 19), 272px);
     min-height: 240px;
     padding: 24px;
     border-radius: var(--r);
@@ -198,7 +198,7 @@ const nb = (t: string) =>
   }
 
   .tl__year {
-    font-size: clamp(2.6rem, 3.6vw, 3.4rem);
+    font-size: clamp(2.6rem, calc(var(--vw) * 3.6), 3.4rem);
     font-weight: 600;
     line-height: 1;
     letter-spacing: -0.05em;
@@ -245,7 +245,7 @@ const nb = (t: string) =>
 
   /* ── Клиенты: плитки с перемычками ────────────────────── */
   .trust {
-    margin-top: clamp(56px, 7vw, 104px);
+    margin-top: clamp(56px, calc(var(--vw) * 7), 104px);
     text-align: center;
   }
 
@@ -257,7 +257,7 @@ const nb = (t: string) =>
   }
 
   .logos {
-    --lg-gap: clamp(12px, 1.6vw, 20px);
+    --lg-gap: clamp(12px, calc(var(--vw) * 1.6), 20px);
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: var(--lg-gap);
@@ -270,9 +270,9 @@ const nb = (t: string) =>
     place-content: center;
     justify-items: center;
     gap: 6px;
-    min-height: clamp(96px, 9vw, 120px);
+    min-height: clamp(96px, calc(var(--vw) * 9), 120px);
     padding: 14px 12px;
-    border-radius: clamp(18px, 1.8vw, 24px);
+    border-radius: clamp(18px, calc(var(--vw) * 1.8), 24px);
     background: var(--card);
     transition: transform 0.4s var(--ease-out);
   }
@@ -299,7 +299,7 @@ const nb = (t: string) =>
   }
 
   .logo__name {
-    font-size: clamp(14.5px, 1.25vw, 17px);
+    font-size: clamp(14.5px, calc(var(--vw) * 1.25), 17px);
     font-weight: 600;
     line-height: 1.25;
     letter-spacing: -0.015em;

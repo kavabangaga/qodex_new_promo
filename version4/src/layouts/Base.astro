@@ -48,35 +48,37 @@ const ICON_V = 2;
     <script is:inline>
       document.documentElement.classList.add('js');
 
-      // Масштаб страницы на мониторах FHD и меньше (как при масштабе браузера 75–85 %).
-      // Монитор определяем по реальному разрешению (CSS-пиксели × масштаб системы): у FHD по высоте
-      // 1080 px при любой настройке Windows, у 2K — 1440. На 2K, 4K и Retina страница в обычном размере.
+      // Автомасштаб. Страница рассчитана на окно шириной 1760 px. Если окно уже (ноутбук, FHD-монитор
+      // с масштабом Windows 125–150 %), вся страница пропорционально уменьшается — не сильнее чем
+      // до 75 % — и выглядит как на широком экране. Уже 1200 px работают планшетная и мобильная
+      // раскладки, там масштаб не нужен.
       (function () {
+        var REF = 1760; // ширина окна, на которую рассчитан макет
+        var MIN_W = 1200; // от этой ширины — раскладка для компьютера
+        var MIN_Z = 0.75; // сильнее не уменьшаем: мелкий текст перестаёт читаться
         var root = document.documentElement;
+        // границу проверяем медиа-запросом: он видит настоящую ширину окна, а innerWidth
+        // при уже уменьшенной странице может округляться на 1 px
+        var desktop = window.matchMedia('(min-width: ' + MIN_W + 'px)');
         function apply() {
-          var dpr = window.devicePixelRatio || 1;
-          var physH = Math.round(Math.min(screen.width, screen.height) * dpr);
           var w = window.innerWidth;
-          var z = 1;
-          if (physH <= 1200) z = w >= 1800 ? 0.75 : w >= 1500 ? 0.85 : 1;
+          var z = desktop.matches ? Math.max(MIN_Z, Math.min(1, w / REF)) : 1;
+          z = Math.round(z * 1000) / 1000;
           root.style.setProperty('--z', String(z));
-          return { physW: Math.round(Math.max(screen.width, screen.height) * dpr), physH: physH, w: w, h: window.innerHeight, dpr: dpr, z: z };
+          root.classList.toggle('is-autoscale', z < 1);
+          return { w: w, h: window.innerHeight, dpr: window.devicePixelRatio || 1, z: z };
         }
-        var info = apply();
+        apply();
         window.addEventListener('resize', apply);
-        if (screen.addEventListener) screen.addEventListener('change', apply);
-        // окно перетащили на монитор с другим масштабом системы
-        try {
-          matchMedia('(resolution: ' + (window.devicePixelRatio || 1) + 'dppx)').addEventListener('change', apply);
-        } catch (e) {}
-        // подсказка для проверки: страница с ?zoominfo показывает данные экрана в углу
+        desktop.addEventListener('change', apply);
+        // подсказка для проверки: страница с ?zoominfo показывает данные окна в углу
         if (/[?&]zoominfo/.test(location.search)) {
           addEventListener('DOMContentLoaded', function () {
             var b = document.createElement('div');
             b.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:9999;padding:10px 14px;border-radius:12px;background:#1d1d1f;color:#fff;font:600 14px/1.5 system-ui';
             var paint = function () {
               var i = apply();
-              b.textContent = 'Экран ' + i.physW + '×' + i.physH + ' · окно ' + i.w + '×' + i.h + ' · масштаб системы ' + Math.round(i.dpr * 100) + '% · страница ' + Math.round(i.z * 100) + '%';
+              b.textContent = 'Окно ' + i.w + '×' + i.h + ' · масштаб системы ' + Math.round(i.dpr * 100) + '% · страница ' + Math.round(i.z * 100) + '% (как окно ' + Math.round(i.w / i.z) + '×' + Math.round(i.h / i.z) + ')';
             };
             paint();
             addEventListener('resize', paint);

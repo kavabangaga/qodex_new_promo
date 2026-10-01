@@ -146,7 +146,7 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
   .pilot__stage {
     position: relative;
     margin-inline: var(--page-pad);
-    padding: clamp(16px, 5vw, 80px) 0;
+    padding: clamp(16px, calc(var(--vw) * 5), 80px) 0;
     border-radius: var(--r-2xl);
     overflow: hidden;
     isolation: isolate;
@@ -163,7 +163,7 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
 
   .pilot__in {
     display: grid;
-    gap: clamp(12px, 1.4vw, 18px);
+    gap: clamp(12px, calc(var(--vw) * 1.4), 18px);
     width: min(1120px, 100% - var(--gutter) * 2);
     margin-inline: auto;
   }
@@ -173,9 +173,9 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     display: grid;
     grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
     align-items: center;
-    gap: clamp(28px, 4vw, 56px);
-    padding: clamp(22px, 3.4vw, 48px);
-    border-radius: clamp(24px, 2.6vw, 36px);
+    gap: clamp(28px, calc(var(--vw) * 4), 56px);
+    padding: clamp(22px, calc(var(--vw) * 3.4), 48px);
+    border-radius: clamp(24px, calc(var(--vw) * 2.6), 36px);
     background: var(--card-warm);
     box-shadow: var(--shadow-card);
   }
@@ -231,7 +231,7 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
   }
 
   .pilot__first dd {
-    font-size: clamp(1.6rem, 2.5vw, 2.3rem);
+    font-size: clamp(1.6rem, calc(var(--vw) * 2.5), 2.3rem);
     font-weight: 560;
     line-height: 1.1;
     letter-spacing: -0.03em;
@@ -243,7 +243,7 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     display: grid;
     gap: 16px;
     margin-top: 26px;
-    padding: clamp(18px, 2vw, 24px);
+    padding: clamp(18px, calc(var(--vw) * 2), 24px);
     border-radius: var(--r);
     background: var(--panel);
   }
@@ -306,8 +306,8 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     position: relative;
     display: grid;
     place-items: center;
-    padding: clamp(36px, 4vw, 52px) clamp(12px, 2.4vw, 28px) clamp(16px, 2.4vw, 28px);
-    border-radius: clamp(20px, 2vw, 28px);
+    padding: clamp(36px, calc(var(--vw) * 4), 52px) clamp(12px, calc(var(--vw) * 2.4), 28px) clamp(16px, calc(var(--vw) * 2.4), 28px);
+    border-radius: clamp(20px, calc(var(--vw) * 2), 28px);
     background: linear-gradient(160deg, #dcebff 0%, #e6f1fb 55%, #e9e4fb 100%);
   }
 
@@ -374,18 +374,18 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
   .pilot__more {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: clamp(12px, 1.4vw, 18px);
+    gap: clamp(12px, calc(var(--vw) * 1.4), 18px);
   }
 
   .pilot__mini {
-    padding: clamp(22px, 2.6vw, 32px);
-    border-radius: clamp(22px, 2.2vw, 30px);
+    padding: clamp(22px, calc(var(--vw) * 2.6), 32px);
+    border-radius: clamp(22px, calc(var(--vw) * 2.2), 30px);
     background: var(--card-warm);
     box-shadow: var(--shadow-card);
   }
 
   .pilot__facts--mini .pilot__first dd {
-    font-size: clamp(1.3rem, 1.8vw, 1.6rem);
+    font-size: clamp(1.3rem, calc(var(--vw) * 1.8), 1.6rem);
   }
 
   @media (max-width: 960px) {

@@ -149,7 +149,9 @@ export function initChains(): void {
     const cards = [...chain.querySelectorAll<HTMLElement>(':scope > .chain__card')];
     if (!cards.length) return;
     const ms = Number(chain.dataset.chainMs ?? 5000);
-    const narrow = window.matchMedia(`(max-width: ${Number(chain.dataset.chainNarrow ?? 960)}px)`);
+    // .98 — чтобы при дробной ширине окна (масштаб системы 125–150 %) не было «щели» между
+    // этим условием и соседним min-width
+    const narrow = window.matchMedia(`(max-width: ${Number(chain.dataset.chainNarrow ?? 960) + 0.98}px)`);
     let index = Math.max(0, cards.findIndex((c) => c.classList.contains('is-open')));
     let inView = false;
     let hover = false;

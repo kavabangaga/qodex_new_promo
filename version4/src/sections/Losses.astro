@@ -843,11 +843,11 @@ const rows: Row[] = [
 
   /* узкий ряд (1200–1359 px): закрытые карточки уже, текст чуть мельче */
   @media (min-width: 1200px) and (max-width: 1359px) {
-    .lc-chain {
+    :global(html:not(.is-autoscale)) .lc-chain {
       --lc-pad: 20px;
     }
 
-    .lc__title {
+    :global(html:not(.is-autoscale)) .lc__title {
       font-size: 1.375rem;
     }
   }
@@ -890,7 +890,7 @@ const rows: Row[] = [
   }
 
   /* ── Планшет и телефон: карточки столбиком, все раскрыты ─── */
-  @media (max-width: 1199px) {
+  @media (max-width: 1199.98px) {
     .lc-chain {
       flex-direction: column;
     }
