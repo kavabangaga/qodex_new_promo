@@ -29,7 +29,10 @@ const lebowski = import.meta.env.HEADING_FONT === 'lebowski';
     {lebowski && <link rel="preload" href={lebowskiUrl} as="font" type="font/woff2" crossorigin />}
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <!-- фавикон: буква Q из логотипа; .ico — для старых браузеров, png — «На экран Домой» на iPhone -->
+    <link rel="icon" href={withBase('/favicon.ico')} sizes="32x32" />
     <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
     <meta name="theme-color" content="#e4e6ea" />
 
