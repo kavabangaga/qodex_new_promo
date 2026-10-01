@@ -37,7 +37,7 @@ const p = PRODUCTS[id];
 <article class:list={['how', { 'how--flip': flip }]} id={id} data-acc-scope aria-labelledby={`${id}-title`}>
   <div class="how__text">
     <div data-reveal>
-      <ProductLabel id={id} />
+      <ProductLabel id={id} size="lg" />
     </div>
     <h3 class="t-serif how__title" id={`${id}-title`} data-reveal style="--d:1">
       <span class="visually-hidden">{p.name}. </span>{title}

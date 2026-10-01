@@ -104,11 +104,27 @@ const docs = [
     padding: 0 var(--page-pad) var(--page-pad);
   }
 
+  /* Графит в тон кнопкам; по углам — мягкое свечение цветов палитры (лаванда, бирюза, небо) */
   .ftr__panel {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
     padding: clamp(56px, 7vw, 104px) 0 clamp(24px, 3vw, 40px);
     border-radius: var(--r-2xl);
-    background: var(--ink);
+    background: #1f1f22;
     color: #fff;
+  }
+
+  .ftr__panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(42% 60% at 96% 0%, rgb(184 159 250 / 0.26) 0%, transparent 70%),
+      radial-gradient(36% 55% at 70% 8%, rgb(107 177 255 / 0.16) 0%, transparent 72%),
+      radial-gradient(40% 60% at 0% 100%, rgb(93 223 215 / 0.16) 0%, transparent 70%);
+    pointer-events: none;
   }
 
   .ftr__top {

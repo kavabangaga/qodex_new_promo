@@ -12,9 +12,9 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
 
 <section class="section panel bal" id="balans" aria-labelledby="bal-title">
   <div class="container">
-    <SectionIntro eyebrow="Как это работает" titleId="bal-title">
-      Единый баланс ТКО: начислено&nbsp;<span class="bal-eq">=</span> вывезено&nbsp;<span class="bal-eq">=</span>
-      взвешено&nbsp;<span class="bal-eq">=</span> передано
+    <SectionIntro eyebrow="Как это работает" titleId="bal-title" class="bal-intro">
+      Единый баланс ТКО: <span class="bal-line">начислено&nbsp;<span class="bal-eq">=</span> вывезено&nbsp;<span
+          class="bal-eq">=</span> взвешено&nbsp;<span class="bal-eq">=</span> передано</span>
     </SectionIntro>
 
     <div data-reveal style="--d:2">
@@ -127,6 +127,22 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
 </section>
 
 <style>
+  /* Заголовок в две строки: «Единый баланс ТКО:» и цепочка равенств целиком */
+  .bal-intro {
+    max-width: none;
+  }
+
+  .bal-intro :global(.t-h2) {
+    font-size: clamp(2rem, 3.6vw, 3.15rem);
+  }
+
+  @media (min-width: 1100px) {
+    .bal-line {
+      display: block;
+      white-space: nowrap;
+    }
+  }
+
   /* «=» в заголовке — тише слов */
   .bal-eq {
     color: var(--subtle);

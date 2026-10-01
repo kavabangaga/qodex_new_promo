@@ -16,14 +16,16 @@ interface Props {
   text?: string;
   /** Плашка справа, например «Новое». */
   tag?: string;
+  /** lg — крупная метка-плашка над заголовком продукта. */
+  size?: 'md' | 'lg';
   class?: string;
   [key: string]: unknown;
 }
 
-const { id, text, tag, class: className, ...rest } = Astro.props;
+const { id, text, tag, size = 'md', class: className, ...rest } = Astro.props;
 ---
 
-<span class:list={['plabel', `p-${id}`, className]} {...rest}>
+<span class:list={['plabel', `p-${id}`, { 'plabel--lg': size === 'lg' }, className]} {...rest}>
   <span class="plabel__ico" aria-hidden="true"><Icon name={PRODUCT_ICON[id]} strokeWidth={2} /></span>
   {text ?? PRODUCTS[id].name}
   {tag && <span class="tag">{tag}</span>}

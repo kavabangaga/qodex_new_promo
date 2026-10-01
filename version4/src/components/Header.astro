@@ -137,15 +137,17 @@ const links = [
     gap: 28px;
     max-width: calc(var(--container) + var(--gutter) * 2 + 56px);
     height: 72px;
-    margin: 4px auto 0;
+    margin: 0 auto;
     padding-inline: var(--gutter);
     border-radius: 20px;
     background: rgb(255 255 255 / 0);
-    box-shadow: 0 0 0 1px rgb(7 26 49 / 0);
+    box-shadow: 0 0 0 1px rgb(29 29 31 / 0);
+    /* сдвиг вниз — через transform: отступ сверху не «схлопывается» и не прилипает к краю окна */
+    transform: translateY(4px);
     transition:
       background-color 0.35s var(--ease),
       box-shadow 0.35s var(--ease),
-      margin 0.45s var(--ease-out),
+      transform 0.45s var(--ease-out),
       padding 0.45s var(--ease-out),
       max-width 0.45s var(--ease-out);
   }
@@ -153,12 +155,12 @@ const links = [
   .hdr.is-scrolled .hdr__bar,
   .hdr.is-open .hdr__bar {
     max-width: calc(var(--container) + var(--gutter) * 2);
-    margin-top: 16px;
     padding-inline: 16px 12px;
     background: #fff;
     box-shadow:
-      0 0 0 1px rgb(7 26 49 / 0.04),
-      0 12px 36px -16px rgb(7 26 49 / 0.25);
+      0 0 0 1px rgb(29 29 31 / 0.05),
+      0 12px 36px -16px rgb(29 29 31 / 0.25);
+    transform: translateY(14px);
   }
 
   .hdr__logo {
@@ -194,7 +196,7 @@ const links = [
 
   .hdr__link:hover,
   .dd.is-open .dd__toggle {
-    background: rgb(7 26 49 / 0.05);
+    background: rgb(29 29 31 / 0.05);
   }
 
   .dd {
@@ -219,7 +221,7 @@ const links = [
     border-radius: 20px;
     background: #fff;
     box-shadow:
-      0 0 0 1px rgb(7 26 49 / 0.05),
+      0 0 0 1px rgb(29 29 31 / 0.05),
       var(--shadow-float);
     opacity: 0;
     visibility: hidden;
@@ -364,7 +366,7 @@ const links = [
   /* Мобильное меню: белая карточка под плашкой */
   .mnav {
     position: absolute;
-    top: calc(100% + 4px);
+    top: calc(100% + 16px);
     left: var(--page-pad);
     right: var(--page-pad);
     max-height: calc(100dvh - var(--header-h) - 24px);
@@ -373,7 +375,7 @@ const links = [
     border-radius: 20px;
     background: #fff;
     box-shadow:
-      0 0 0 1px rgb(7 26 49 / 0.05),
+      0 0 0 1px rgb(29 29 31 / 0.05),
       var(--shadow-float);
   }
 

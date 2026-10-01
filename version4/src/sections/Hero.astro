@@ -84,7 +84,7 @@ const robotRows = [
 
     <div class="hero__track" data-hero-track>
       <div class="hero__sticky">
-        <div class="stage" id="produkty" data-stage style="--i:0; --e:0">
+        <div class="stage" id="produkty" data-stage style="--i:0">
           <div class="stage__bg" aria-hidden="true">
             <div class="stage__mesh">
               <span class="zone zone--a"></span>
@@ -113,13 +113,12 @@ const robotRows = [
                     <span class="stab__ico" aria-hidden="true">
                       <Icon name={PRODUCT_ICON[pl.id]} size={22} strokeWidth={1.9} />
                     </span>
-                    <span class="stab__label">{pl.label}</span>
+                    <span class="stab__label">
+                      <span>{pl.label}</span>
+                    </span>
                   </button>
                 ))
               }
-              <svg class="stage__tail" viewBox="0 0 48 20" aria-hidden="true" data-tail>
-                <path d="M0 20C15 20 18 15 18 9V0h12v9c0 6 3 11 18 11Z" />
-              </svg>
             </div>
 
             <div class="stage__card" data-reveal style="--d:2">
@@ -134,7 +133,7 @@ const robotRows = [
                     data-pane-hero
                   >
                     <div class="spane__text">
-                      <ProductLabel id={pl.id} />
+                      <ProductLabel id={pl.id} size="lg" />
                       <h3 class="t-h3 spane__title">{pl.label}</h3>
                       <p class="spane__desc">{pl.text}</p>
                       <p class="spane__fig">
@@ -207,8 +206,10 @@ const robotRows = [
                             {[0, 1, 2, 3, 4].map((k) => (
                               <span class="tr__stop" style={`--k:${k}`} />
                             ))}
-                            <span class="tr__truck">
-                              <Icon name="truck" size={16} strokeWidth={2} />
+                            <span class="tr__ride">
+                              <span class="tr__truck">
+                                <Icon name="truck" size={16} strokeWidth={2} />
+                              </span>
                             </span>
                           </div>
                           <div class="mock__foot">
@@ -485,6 +486,7 @@ const robotRows = [
   }
 
   .stab {
+    position: relative;
     display: inline-flex;
     align-items: center;
     height: 58px;
@@ -493,11 +495,41 @@ const robotRows = [
     border-radius: 18px;
     background: rgb(255 255 255 / 0.6);
     color: var(--ink);
-    box-shadow: 0 6px 18px -10px rgb(7 26 49 / 0.35);
+    box-shadow: 0 6px 18px -10px rgb(29 29 31 / 0.35);
     transition:
       background-color 0.35s var(--ease),
       color 0.35s var(--ease),
       transform 0.3s var(--ease-out);
+  }
+
+  /* «Капля», соединяющая активную вкладку с карточкой: начинается от нижней рамки вкладки
+     и плавно расширяется к карточке. Стоит у самой вкладки — двигается вместе с ней. */
+  .stab::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 2px);
+    width: 44px;
+    height: 17px;
+    margin-left: -22px;
+    background: var(--card-warm);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 17' preserveAspectRatio='none'%3E%3Cpath d='M0 17C14 17 16 12 16 6V0h12v6c0 6 2 11 16 11Z'/%3E%3C/svg%3E")
+      center / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 17' preserveAspectRatio='none'%3E%3Cpath d='M0 17C14 17 16 12 16 6V0h12v6c0 6 2 11 16 11Z'/%3E%3C/svg%3E")
+      center / 100% 100% no-repeat;
+    opacity: 0;
+    transform: scaleY(0.2);
+    transform-origin: 50% 100%;
+    transition:
+      opacity 0.2s,
+      transform 0.45s var(--ease-out);
+    pointer-events: none;
+  }
+
+  .stab[aria-selected='true']::after {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0.08s;
   }
 
   .stab:hover {
@@ -513,17 +545,24 @@ const robotRows = [
     flex: none;
   }
 
+  /* Подпись раскрывается ровно до своей ширины (сетка 0fr → 1fr), поэтому соседние подписи
+     сворачиваются и разворачиваются синхронно и ряд вкладок плавно перецентрируется */
   .stab__label {
-    max-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
+    display: grid;
+    grid-template-columns: 0fr;
     font-size: 15.5px;
     font-weight: 560;
+    white-space: nowrap;
     opacity: 0;
     transition:
-      max-width 0.55s var(--ease-out),
-      opacity 0.3s,
-      padding 0.55s var(--ease-out);
+      grid-template-columns 0.5s var(--ease-in-out),
+      opacity 0.3s;
+  }
+
+  .stab__label > span {
+    min-width: 0;
+    overflow: hidden;
+    padding-right: 18px;
   }
 
   .stab[aria-selected='true'] {
@@ -532,21 +571,8 @@ const robotRows = [
   }
 
   .stab[aria-selected='true'] .stab__label {
-    max-width: 200px;
-    padding-right: 18px;
+    grid-template-columns: 1fr;
     opacity: 1;
-  }
-
-  /* «Капля», соединяющая активную вкладку с карточкой */
-  .stage__tail {
-    position: absolute;
-    left: 0;
-    bottom: -1px;
-    width: 48px;
-    height: 20px;
-    fill: var(--card-warm);
-    transform: translateX(calc(var(--tail-x, 26px) - 24px));
-    transition: transform 0.55s var(--ease-out);
   }
 
   .stage__card {
@@ -554,8 +580,10 @@ const robotRows = [
     width: min(100%, 1040px);
     border-radius: clamp(24px, 2.6vw, 34px);
     background: var(--card-warm);
-    filter: drop-shadow(0 4px 5px rgb(95 109 119 / 0.04)) drop-shadow(0 10px 15px rgb(95 109 119 / 0.04))
-      drop-shadow(0 40px 50px rgb(95 109 119 / 0.12));
+    box-shadow:
+      0 4px 5px rgb(96 96 102 / 0.04),
+      0 10px 15px rgb(96 96 102 / 0.04),
+      0 40px 50px rgb(96 96 102 / 0.12);
   }
 
   .spane {
@@ -768,6 +796,9 @@ const robotRows = [
     height: 7px;
     border-radius: 50%;
     background: var(--ok);
+  }
+
+  .spane.is-active .mock__live i {
     animation: pulse 1.6s ease-in-out infinite;
   }
 
@@ -901,6 +932,9 @@ const robotRows = [
     height: 7px;
     border-radius: 50%;
     background: #ff5a5a;
+  }
+
+  .spane.is-active .tr__rec i {
     animation: pulse 1.2s ease-in-out infinite;
   }
 
@@ -1029,31 +1063,38 @@ const robotRows = [
     box-shadow: 0 0 0 1px var(--line-2);
   }
 
-  .tr__truck {
+  .tr__ride {
     position: absolute;
     top: 50%;
+    left: 0;
+    right: 30px;
+    height: 0;
+  }
+
+  .tr__truck {
+    position: absolute;
+    top: -15px;
     left: 0;
     display: grid;
     place-items: center;
     width: 30px;
     height: 30px;
-    margin-top: -15px;
     border-radius: 9px;
     background: var(--ink);
     color: #fff;
     box-shadow: var(--shadow-soft);
   }
 
-  .spane.is-active .tr__truck {
+  .spane.is-active .tr__ride {
     animation: drive 4.8s linear infinite;
   }
 
   @keyframes drive {
     from {
-      left: 0;
+      transform: translateX(0);
     }
     to {
-      left: calc(100% - 30px);
+      transform: translateX(100%);
     }
   }
 
@@ -1351,7 +1392,7 @@ const robotRows = [
     display: flex;
     align-items: center;
     height: 100vh;
-    padding-top: calc(var(--header-h) + 12px);
+    padding-top: calc(var(--header-h) + 24px);
     padding-bottom: 16px;
   }
 
@@ -1360,12 +1401,14 @@ const robotRows = [
     max-height: 100%;
   }
 
-  /* панель раскрывается от ширины контейнера до краёв сцены */
+  /* панель раскрывается от ширины контейнера до краёв сцены: масштаб слоя по горизонтали
+     (его задаёт скрипт) — это дёшево, в отличие от перерисовки маски на каждом кадре */
   .hero.is-scroll .stage__bg {
-    clip-path: inset(
-      0 max(calc(24px * (1 - var(--e))), calc((50% - 620px) * (1 - var(--e)))) round
-        calc(48px - 12px * var(--e))
-    );
+    will-change: transform;
+  }
+
+  .hero.is-scroll .stage__mesh {
+    will-change: transform;
   }
 
   /* невысокий экран ноутбука: сцена компактнее, чтобы целиком помещалась при закреплении */
@@ -1427,9 +1470,12 @@ const robotRows = [
       height: 46px;
     }
 
-    .stab[aria-selected='true'] .stab__label {
-      padding-right: 12px;
+    .stab__label {
       font-size: 14px;
+    }
+
+    .stab__label > span {
+      padding-right: 12px;
     }
 
     .spane__visual {
@@ -1480,10 +1526,9 @@ const robotRows = [
   if (hero) {
     const track = hero.querySelector<HTMLElement>('[data-hero-track]')!;
     const stage = hero.querySelector<HTMLElement>('[data-stage]')!;
+    const bg = stage.querySelector<HTMLElement>('.stage__bg')!;
     const tabs = [...stage.querySelectorAll<HTMLButtonElement>('[data-tab]')];
     const panes = [...stage.querySelectorAll<HTMLElement>('[data-pane-hero]')];
-    const tail = stage.querySelector<HTMLElement>('[data-tail]')!;
-    const tabsRow = tail.parentElement!;
     const wide = window.matchMedia('(min-width: 1024px) and (min-height: 660px)');
 
     let active = 0;
@@ -1492,14 +1537,8 @@ const robotRows = [
     let autoStopped = false;
     let inView = false;
 
-    const moveTail = () => {
-      const tab = tabs[active];
-      const x = tab.offsetLeft + tab.offsetWidth / 2;
-      tabsRow.style.setProperty('--tail-x', `${x}px`);
-    };
-
     const setActive = (i: number) => {
-      if (i === active && stage.style.getPropertyValue('--i') === String(i)) return;
+      if (i === active) return;
       active = i;
       stage.style.setProperty('--i', String(i));
       tabs.forEach((tab, k) => {
@@ -1513,31 +1552,49 @@ const robotRows = [
         pane.setAttribute('aria-hidden', String(!on));
         pane.querySelectorAll<HTMLElement>('a').forEach((a) => (a.tabIndex = on ? 0 : -1));
       });
-      // подпись активной вкладки раскрывается — «капля» догоняет её центр
-      moveTail();
-      window.setTimeout(moveTail, 320);
-      window.setTimeout(moveTail, 600);
     };
 
     // ── Режим прокрутки: прогресс по высоте трека → раскрытие панели и номер вкладки
     const EXPAND = 0.14;
+    // после нажатия на вкладку страница плавно едет к её отрезку — пока едет, вкладку не трогаем
+    let lockTarget = -1;
+    let lockUntil = 0;
+    let lastScale = '';
     let ticking = false;
+
+    const indexAt = (p: number) =>
+      p <= EXPAND ? 0 : Math.min(3, Math.max(0, Math.floor(((p - EXPAND) / (1 - EXPAND)) * 4)));
+
+    const update = () => {
+      ticking = false;
+      if (!scrollMode) return;
+      const rect = track.getBoundingClientRect();
+      const total = track.offsetHeight - window.innerHeight;
+      const p = Math.min(1, Math.max(0, -rect.top / total));
+      // раскрытие начинается чуть раньше, пока сцена въезжает снизу
+      const enter = Math.min(1, Math.max(0, 1 - rect.top / (window.innerHeight * 0.6)));
+      const e = Math.min(1, Math.max(0, p / EXPAND)) * 0.75 + enter * 0.25;
+      // видимая ширина панели: от ширины контейнера (1240 px) до краёв сцены
+      const w = bg.offsetWidth;
+      const inset = Math.max(24, (w - 1240) / 2) * (1 - e);
+      const scale = ((w - 2 * inset) / w).toFixed(4);
+      if (scale !== lastScale) {
+        bg.style.transform = `scaleX(${scale})`;
+        lastScale = scale;
+      }
+
+      const k = indexAt(p);
+      if (lockTarget >= 0) {
+        if (k === lockTarget || performance.now() > lockUntil) lockTarget = -1;
+        else return;
+      }
+      setActive(k);
+    };
+
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => {
-        ticking = false;
-        if (!scrollMode) return;
-        const rect = track.getBoundingClientRect();
-        const total = track.offsetHeight - window.innerHeight;
-        const p = Math.min(1, Math.max(0, -rect.top / total));
-        // раскрытие начинается чуть раньше, пока сцена въезжает снизу
-        const enter = Math.min(1, Math.max(0, 1 - (rect.top - 0) / (window.innerHeight * 0.6)));
-        const e = Math.min(1, Math.max(0, p / EXPAND)) * 0.75 + enter * 0.25;
-        stage.style.setProperty('--e', e.toFixed(3));
-        const k = Math.min(3, Math.max(0, Math.floor(((p - EXPAND) / (1 - EXPAND)) * 4)));
-        setActive(p <= EXPAND ? 0 : k);
-      });
+      requestAnimationFrame(update);
     };
 
     // ── Без режима прокрутки: вкладки сами переключаются, пока сцена на экране
@@ -1554,19 +1611,25 @@ const robotRows = [
     const applyMode = () => {
       scrollMode = wide.matches && !reducedMotion();
       hero.classList.toggle('is-scroll', scrollMode);
-      if (scrollMode) onScroll();
-      else stage.style.setProperty('--e', '1');
+      if (scrollMode) {
+        lastScale = '';
+        update();
+      } else {
+        bg.style.transform = '';
+      }
       syncAuto();
-      moveTail();
     };
 
-    // переход к вкладке: в режиме прокрутки — прокручиваем к её отрезку трека
+    // переход к вкладке: в режиме прокрутки — плавно едем к её отрезку трека
     const goTo = (i: number) => {
       if (scrollMode) {
         const top = track.getBoundingClientRect().top + window.scrollY;
         const total = track.offsetHeight - window.innerHeight;
         const p = EXPAND + ((i + 0.5) / tabs.length) * (1 - EXPAND);
-        window.scrollTo({ top: top + total * p, behavior: reducedMotion() ? 'auto' : 'smooth' });
+        const smooth = !reducedMotion();
+        lockTarget = i;
+        lockUntil = performance.now() + (smooth ? 1500 : 200);
+        window.scrollTo({ top: top + total * p, behavior: smooth ? 'smooth' : 'auto' });
       }
       setActive(i);
     };
@@ -1599,12 +1662,15 @@ const robotRows = [
     }
 
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('scrollend', () => {
+      lockTarget = -1;
+      onScroll();
+    });
     window.addEventListener('resize', () => {
-      moveTail();
+      lastScale = '';
       onScroll();
     });
     wide.addEventListener('change', applyMode);
     applyMode();
-    document.fonts?.ready.then(moveTail);
   }
 </script>

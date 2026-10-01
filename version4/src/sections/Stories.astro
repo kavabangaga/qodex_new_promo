@@ -61,7 +61,7 @@ const N = STORIES.length;
       <h2 class="t-h2" id="istorii-title" data-reveal style="--d:1">Истории клиентов: задача, решение, результат</h2>
     </header>
 
-    <div class="sc" data-stories role="region" aria-roledescription="карусель" aria-label="Истории клиентов" data-reveal style="--d:2">
+    <div class="sc bridged" data-stories role="region" aria-roledescription="карусель" aria-label="Истории клиентов" data-reveal style="--d:2">
       <div class="sc__stage">
         {
           (['prev', 'next'] as const).map((side) => (
@@ -361,7 +361,7 @@ const N = STORIES.length;
   }
 
   .sc__side:hover {
-    transform: translateY(-4px);
+    transform: scale(1.015);
   }
 
   .sc__side--prev {
@@ -374,34 +374,28 @@ const N = STORIES.length;
     justify-self: start;
   }
 
-  /* «Звенья»: две короткие перемычки между боковой и центральной карточкой */
-  .sc__side::before,
-  .sc__side::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    width: calc(var(--sc-gap) + 32px);
-    height: 18px;
-    border-radius: 9px;
-    background: #fff;
+  /* «Мостик» между боковой и центральной карточкой (маски — .bridged в global.css) */
+  .sc {
+    --gap: var(--sc-gap);
   }
 
   .sc__side::before {
-    top: calc(50% - 22px);
+    content: '';
+    position: absolute;
+    top: calc(50% - (var(--gap) + 18px) / 2);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 18px);
+    background: #fff;
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
   }
 
-  .sc__side::after {
-    top: calc(50% + 4px);
+  .sc__side--prev::before {
+    right: calc(var(--gap) * -1 - 1px);
   }
 
-  .sc__side--prev::before,
-  .sc__side--prev::after {
-    right: calc((var(--sc-gap) + 16px) * -1);
-  }
-
-  .sc__side--next::before,
-  .sc__side--next::after {
-    left: calc((var(--sc-gap) + 16px) * -1);
+  .sc__side--next::before {
+    left: calc(var(--gap) * -1 - 1px);
   }
 
   .sc__mini {
@@ -656,7 +650,7 @@ const N = STORIES.length;
     overflow: hidden;
     border-radius: 12px;
     background:
-      linear-gradient(180deg, rgb(255 255 255 / 0) 55%, rgb(7 26 49 / 0.18) 100%),
+      linear-gradient(180deg, rgb(255 255 255 / 0) 55%, rgb(29 29 31 / 0.18) 100%),
       linear-gradient(160deg, #cfe0f4 0%, #9fb9d8 60%, #7f9bbd 100%);
   }
 
@@ -674,7 +668,7 @@ const N = STORIES.length;
     position: absolute;
     inset: 22% 14% 0;
     border-radius: 4px 4px 2px 2px;
-    background: rgb(7 26 49 / 0.55);
+    background: rgb(29 29 31 / 0.55);
   }
 
   .sv__cam-tag {
@@ -790,8 +784,8 @@ const N = STORIES.length;
     /* лента обрезает всё, что за её краем, — тень делаем короткой, чтобы не было видно среза */
     .sc__track .sc__slide {
       box-shadow:
-        0 1px 2px rgb(7 26 49 / 0.05),
-        0 10px 22px -12px rgb(7 26 49 / 0.22);
+        0 1px 2px rgb(29 29 31 / 0.05),
+        0 10px 22px -12px rgb(29 29 31 / 0.22);
     }
 
     .sc__nav {

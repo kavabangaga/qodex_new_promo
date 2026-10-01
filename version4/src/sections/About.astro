@@ -49,7 +49,7 @@ const nb = (t: string) =>
       </div>
     </div>
 
-    <ol class="tl__list" data-tl-list tabindex="0" aria-labelledby="tl-title">
+    <ol class="tl__list bridged" data-tl-list tabindex="0" aria-labelledby="tl-title">
       {
         TIMELINE.map((e, i) => (
           <li class:list={['tl__item', { 'is-pending': e.pending }]} style={`--d:${Math.min(i, 4)}`} data-reveal>
@@ -71,7 +71,7 @@ const nb = (t: string) =>
   <div class="container">
     <div class="trust">
       <h3 class="trust__title" data-reveal>Нам доверяют:</h3>
-      <ul class="logos">
+      <ul class="logos bridged">
         {
           clients.map((c, i) => (
             <li class="logo" style={`--d:${i % 5}`} data-reveal>
@@ -175,25 +175,26 @@ const nb = (t: string) =>
     scroll-snap-align: start;
   }
 
-  /* «звенья» между карточками, как в цепочке Calendly */
-  .tl__item + .tl__item::before,
-  .tl__item + .tl__item::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    left: calc(var(--tl-gap) * -1 - 6px);
-    width: calc(var(--tl-gap) + 12px);
-    height: 20px;
-    border-radius: 10px;
-    background: var(--line);
+  /* «Мостики» между карточками, как в цепочке Calendly (маски — .bridged в global.css) */
+  .tl__list {
+    --gap: var(--tl-gap);
   }
 
   .tl__item + .tl__item::before {
-    top: 34px;
+    content: '';
+    position: absolute;
+    top: 46px;
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
   }
 
-  .tl__item + .tl__item::after {
-    top: 70px;
+  /* к будущим событиям (пунктирные заглушки) мостик не ведём */
+  .tl__item.is-pending::before {
+    content: none;
   }
 
   .tl__year {
@@ -277,28 +278,24 @@ const nb = (t: string) =>
   }
 
   .logo:hover {
-    transform: translateY(-3px);
+    transform: scale(1.02);
   }
 
-  /* перемычки к соседней плитке слева (кроме первой в строке) */
-  .logo:not(:nth-child(5n + 1))::before,
-  .logo:not(:nth-child(5n + 1))::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    left: calc(var(--lg-gap) * -1 - 10px);
-    width: calc(var(--lg-gap) + 20px);
-    height: 14px;
-    border-radius: 7px;
-    background: var(--card);
+  /* мостик к соседней плитке слева (кроме первой в строке) */
+  .logos {
+    --gap: var(--lg-gap);
   }
 
   .logo:not(:nth-child(5n + 1))::before {
-    top: calc(50% - 17px);
-  }
-
-  .logo:not(:nth-child(5n + 1))::after {
-    top: calc(50% + 3px);
+    content: '';
+    position: absolute;
+    top: calc(50% - (var(--gap) + 12px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 12px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
   }
 
   .logo__name {
@@ -319,13 +316,11 @@ const nb = (t: string) =>
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .logo:not(:nth-child(5n + 1))::before,
-    .logo:not(:nth-child(5n + 1))::after {
+    .logo:not(:nth-child(5n + 1))::before {
       content: none;
     }
 
-    .logo:nth-child(2n)::before,
-    .logo:nth-child(2n)::after {
+    .logo:nth-child(2n)::before {
       content: '';
     }
 

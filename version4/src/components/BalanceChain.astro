@@ -160,7 +160,8 @@ const { links, result, highlight } = Astro.props;
      на телефоне — лента с прокруткой вбок. */
   .bl-chain {
     --chain-gap: 28px;
-    --chain-link: var(--subtle);
+    --bridge-y: 30px;
+    --bridge: 20px;
     --bl-grow: 2.1;
     --bl-pad: 28px;
     --bl-h: 452px;
@@ -171,19 +172,16 @@ const { links, result, highlight } = Astro.props;
     container-type: inline-size;
   }
 
-  /* «Звенья» — знак «=» между карточками */
-  .bl + .bl::before,
+  /* Карточки соединены «мостиками» (см. .chain в global.css), на каждом мостике — знак «=» */
   .bl + .bl::after {
-    height: 5px;
-    border-radius: 3px;
-  }
-
-  .bl + .bl::before {
-    top: 37px;
-  }
-
-  .bl + .bl::after {
-    top: 48px;
+    content: '';
+    position: absolute;
+    left: calc(var(--gap) / -2 - 7px);
+    top: calc(var(--bridge-y) + (var(--gap) + var(--bridge)) / 2 - 4px);
+    width: 14px;
+    height: 8px;
+    border-radius: 1px;
+    background: linear-gradient(var(--subtle) 0 2px, transparent 2px 6px, var(--subtle) 6px 8px);
   }
 
   .bl {
@@ -542,21 +540,19 @@ const { links, result, highlight } = Astro.props;
       box-shadow: none;
     }
 
-    /* «=» между карточками, стоящими друг под другом */
-    .bl + .bl::before,
-    .bl + .bl::after {
-      left: calc(50% - 16px);
-      right: auto;
-      width: 32px;
-      height: 5px;
-    }
-
+    /* карточки друг под другом — мостик к карточке сверху, на нём «=» */
     .bl + .bl::before {
-      top: calc(var(--chain-gap) / -2 - 8px);
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(50% - (var(--gap) + var(--bridge)) / 2);
+      width: calc(var(--gap) + var(--bridge));
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
     }
 
     .bl + .bl::after {
-      top: calc(var(--chain-gap) / -2 + 3px);
+      left: calc(50% - 7px);
+      top: calc(var(--gap) / -2 - 4px);
     }
 
     .bl__in {
@@ -619,18 +615,19 @@ const { links, result, highlight } = Astro.props;
       scroll-snap-align: start;
     }
 
-    .bl + .bl::before,
-    .bl + .bl::after {
-      left: calc(var(--chain-gap) * -1 - 4px);
-      width: calc(var(--chain-gap) + 8px);
-    }
-
+    /* лента вбок — мостик снова между карточками в ряд */
     .bl + .bl::before {
-      top: 33px;
+      top: var(--bridge-y);
+      left: calc(var(--gap) * -1 - 1px);
+      width: calc(var(--gap) + 2px);
+      height: calc(var(--gap) + var(--bridge));
+      -webkit-mask: var(--bridge-mask-row);
+      mask: var(--bridge-mask-row);
     }
 
     .bl + .bl::after {
-      top: 44px;
+      left: calc(var(--gap) / -2 - 7px);
+      top: calc(var(--bridge-y) + (var(--gap) + var(--bridge)) / 2 - 4px);
     }
 
     .bl__in {

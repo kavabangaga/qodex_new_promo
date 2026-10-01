@@ -318,12 +318,13 @@ const rows: Row[] = [
   /* ── Цепочка из пяти карточек ─────────────────────────────
      На ширине от 1200 px карточки стоят в ряд, одна раскрыта; уже — столбиком и все раскрыты. */
   .lc-chain {
-    --chain-gap: 16px;
+    --chain-gap: 20px;
+    --bridge-y: 52px;
     --lc-grow: 2.25;
-    --lc-pad: 24px;
-    --lc-h: 556px;
-    --lc-art-h: 216px;
-    --lc-deco-h: 258px;
+    --lc-pad: 22px;
+    --lc-h: 462px;
+    --lc-art-h: 174px;
+    --lc-deco-h: 206px;
     /* ширина раскрытой карточки: её содержимое не перестраивается, пока карточка растёт */
     --lc-open: calc((100cqi - 4 * var(--chain-gap)) * var(--lc-grow) / (4 + var(--lc-grow)));
     container-type: inline-size;
@@ -410,13 +411,13 @@ const rows: Row[] = [
   /* Что видно только в раскрытой карточке */
   .lc__more {
     width: calc(var(--lc-open) - 2 * var(--lc-pad));
-    margin-top: 22px;
+    margin-top: 14px;
     transition: opacity 0.45s var(--ease-out) 0.2s;
   }
 
   .lc__facts {
     display: grid;
-    gap: 14px;
+    gap: 10px;
   }
 
   .lc__dt {
@@ -462,7 +463,7 @@ const rows: Row[] = [
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding-top: 14px;
+    padding-top: 10px;
     border-top: 1px solid var(--line);
   }
 
@@ -493,9 +494,9 @@ const rows: Row[] = [
     justify-content: space-between;
     gap: 12px;
     width: 100%;
-    min-height: 50px;
-    margin-top: 16px;
-    padding: 8px 10px 8px 16px;
+    min-height: 44px;
+    margin-top: 12px;
+    padding: 6px 10px 6px 16px;
     border: 1px solid var(--line);
     border-radius: 14px;
     background: var(--bg);
@@ -532,17 +533,17 @@ const rows: Row[] = [
     height: 20px;
     border-radius: 50%;
     background: #fff;
-    box-shadow: 0 1px 3px rgb(7 26 49 / 0.3);
+    box-shadow: 0 1px 3px rgb(29 29 31 / 0.3);
     transition: transform 0.4s var(--ease-out);
   }
 
   .lc__check[aria-pressed='true'] {
-    border-color: color-mix(in oklab, var(--blue) 28%, white);
-    background: var(--blue-soft);
+    border-color: var(--line-2);
+    background: #fff;
   }
 
   .lc__check[aria-pressed='true'] .lc__switch {
-    background: var(--blue);
+    background: var(--ink);
   }
 
   .lc__check[aria-pressed='true'] .lc__switch::after {
@@ -607,7 +608,7 @@ const rows: Row[] = [
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: var(--blue);
+    background: var(--ink);
     color: #fff;
   }
 
@@ -615,7 +616,7 @@ const rows: Row[] = [
   .mi {
     position: absolute;
     left: 50%;
-    bottom: 24px;
+    bottom: 16px;
     width: min(300px, calc(100% - 44px));
     padding: 14px 16px;
     border-radius: 16px;
@@ -903,18 +904,14 @@ const rows: Row[] = [
       box-shadow: none;
     }
 
-    /* звенья — вертикальные, как у общей цепочки на узком экране */
-    .lc + .lc::before,
-    .lc + .lc::after {
-      left: 34px;
-      top: calc(var(--chain-gap) * -1 - 4px);
-      width: 22px;
-      height: calc(var(--chain-gap) + 8px);
-    }
-
-    .lc + .lc::after {
-      left: auto;
-      right: 34px;
+    /* карточки друг под другом — мостик к карточке сверху */
+    .lc + .lc::before {
+      top: calc(var(--gap) * -1 - 1px);
+      left: 56px;
+      width: calc(var(--gap) + var(--bridge, 14px));
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
     }
 
     .lc__in {
@@ -978,21 +975,14 @@ const rows: Row[] = [
       scroll-snap-align: start;
     }
 
-    /* звенья снова горизонтальные, как на широком экране */
-    .lc + .lc::before,
-    .lc + .lc::after {
-      left: calc(var(--chain-gap) * -1 - 4px);
-      right: auto;
-      width: calc(var(--chain-gap) + 8px);
-      height: 22px;
-    }
-
+    /* лента вбок — мостик снова между карточками в ряд */
     .lc + .lc::before {
-      top: 34px;
-    }
-
-    .lc + .lc::after {
-      top: 74px;
+      top: 48px;
+      left: calc(var(--gap) * -1 - 1px);
+      width: calc(var(--gap) + 2px);
+      height: calc(var(--gap) + var(--bridge, 14px));
+      -webkit-mask: var(--bridge-mask-row);
+      mask: var(--bridge-mask-row);
     }
 
     .lc__in {

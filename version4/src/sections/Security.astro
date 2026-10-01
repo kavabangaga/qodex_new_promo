@@ -94,7 +94,7 @@ const CARDS: {
         {
           CHAINS.map((c, ci) => (
             <li class="integr__item" style={`--n:${c.systems.length}; --d:${ci + 1}`} data-reveal>
-              <div class="tiles" aria-hidden="true">
+              <div class="tiles bridged" aria-hidden="true">
                 {c.systems.map((s) => (
                   <span class="tile">
                     <span class="tile__ico">
@@ -207,24 +207,21 @@ const CARDS: {
   }
 
   /* перемычки к соседней плитке слева: две короткие полосы того же цвета */
-  .tile + .tile::before,
-  .tile + .tile::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    left: calc(var(--tile-gap) * -1 - 10px);
-    width: calc(var(--tile-gap) + 20px);
-    height: 14px;
-    border-radius: 7px;
-    background: var(--panel);
+  /* мостик к соседней плитке (маски — .bridged в global.css) */
+  .tiles {
+    --gap: var(--tile-gap);
   }
 
   .tile + .tile::before {
-    top: calc(50% - 17px);
-  }
-
-  .tile + .tile::after {
-    top: calc(50% + 3px);
+    content: '';
+    position: absolute;
+    top: calc(50% - (var(--gap) + 12px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 12px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
   }
 
   .tile__ico {
@@ -235,7 +232,7 @@ const CARDS: {
     border-radius: 12px;
     background: #fff;
     color: var(--ink);
-    box-shadow: 0 1px 2px rgb(7 26 49 / 0.06);
+    box-shadow: 0 1px 2px rgb(29 29 31 / 0.06);
   }
 
   .tile__name {
