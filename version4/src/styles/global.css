@@ -869,14 +869,18 @@ button {
 .bridged,
 .chain {
   --bridge-cut: calc(var(--gap, 24px) / 2);
+  /* половины маски заходят друг на друга на 1px: иначе при дробных размерах (автомасштаб, Safari)
+     между ними остаётся волосяная щель — на цветных мостиках её видно */
   --bridge-mask-row:
-    radial-gradient(circle var(--bridge-cut) at 50% 0, #0000 calc(100% - 0.6px), #000 100%) top / 100% 50% no-repeat,
-    radial-gradient(circle var(--bridge-cut) at 50% 100%, #0000 calc(100% - 0.6px), #000 100%) bottom / 100% 50%
-      no-repeat;
+    radial-gradient(circle var(--bridge-cut) at 50% 0, #0000 calc(100% - 0.6px), #000 100%) top / 100% calc(50% + 1px)
+      no-repeat,
+    radial-gradient(circle var(--bridge-cut) at 50% 100%, #0000 calc(100% - 0.6px), #000 100%) bottom / 100%
+      calc(50% + 1px) no-repeat;
   --bridge-mask-col:
-    radial-gradient(circle var(--bridge-cut) at 0 50%, #0000 calc(100% - 0.6px), #000 100%) left / 50% 100% no-repeat,
-    radial-gradient(circle var(--bridge-cut) at 100% 50%, #0000 calc(100% - 0.6px), #000 100%) right / 50% 100%
-      no-repeat;
+    radial-gradient(circle var(--bridge-cut) at 0 50%, #0000 calc(100% - 0.6px), #000 100%) left / calc(50% + 1px) 100%
+      no-repeat,
+    radial-gradient(circle var(--bridge-cut) at 100% 50%, #0000 calc(100% - 0.6px), #000 100%) right / calc(50% + 1px)
+      100% no-repeat;
 }
 
 /* ── Цепочка карточек (Calendly «Book → Prep → Capture → Follow up») ──

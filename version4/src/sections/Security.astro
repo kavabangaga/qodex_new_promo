@@ -7,10 +7,12 @@ import Icon, { type IconName } from '../components/Icon.astro';
 import { SKOLKOVO_URL } from '../config/site';
 import { FAQ } from '../data/faq';
 
-// Пункты «Интеграций» (тексты ТЗ) и системы из них — плитками
-const CHAINS: { text: string; systems: { name: string; icon: IconName }[] }[] = [
+// Пункты «Интеграций» (тексты ТЗ) и системы из них — плитками.
+// tone — цвет ленты цепочки: те же три семьи палитры, что у карточек в «Контактах».
+const CHAINS: { text: string; tone: 'sky' | 'lav' | 'teal'; systems: { name: string; icon: IconName }[] }[] = [
   {
     text: 'ГИС ЖКХ, Росреестр, ФИАС, ФНС',
+    tone: 'sky',
     systems: [
       { name: 'ГИС ЖКХ', icon: 'house' },
       { name: 'Росреестр', icon: 'map' },
@@ -20,6 +22,7 @@ const CHAINS: { text: string; systems: { name: string; icon: IconName }[] }[] = 
   },
   {
     text: 'Биллинг и 1С: выгрузка в Excel, запись одной кнопкой',
+    tone: 'lav',
     systems: [
       { name: 'Биллинг', icon: 'receipt' },
       { name: '1С', icon: 'calculator' },
@@ -28,6 +31,7 @@ const CHAINS: { text: string; systems: { name: string; icon: IconName }[] }[] = 
   },
   {
     text: 'ФГИС УТКО по API; любые автовесы',
+    tone: 'teal',
     systems: [
       { name: 'ФГИС УТКО', icon: 'server' },
       { name: 'Автовесы', icon: 'scale' },
@@ -93,10 +97,10 @@ const CARDS: {
       <ul class="integr__list">
         {
           CHAINS.map((c, ci) => (
-            <li class="integr__item" style={`--n:${c.systems.length}; --d:${ci + 1}`} data-reveal>
+            <li class="integr__item" data-tone={c.tone} style={`--n:${c.systems.length}; --d:${ci + 1}`} data-reveal>
               <div class="tiles bridged" aria-hidden="true">
-                {c.systems.map((s) => (
-                  <span class="tile">
+                {c.systems.map((s, si) => (
+                  <span class="tile" style={`--i:${si}`}>
                     <span class="tile__ico">
                       <Icon name={s.icon} size={22} />
                     </span>
@@ -175,11 +179,42 @@ const CARDS: {
     gap: 28px clamp(22px, calc(var(--vw) * 3.4), 48px);
   }
 
+  /* Цепочка — одна цветная лента, разрезанная на плитки и мостики: сверху цвет гуще,
+     слева направо лента светлеет, в правом нижнем углу мягкий свет. Цвета — у семьи (data-tone). */
   .integr__item {
+    --ribbon-w: calc(var(--n) * var(--tile) + (var(--n) - 1) * var(--tile-gap));
+    --ribbon:
+      linear-gradient(180deg, rgb(var(--deep) / 0.55) 0%, rgb(var(--deep) / 0) 72%),
+      radial-gradient(55% 150% at 100% 100%, rgb(var(--glow)) 0%, rgb(var(--glow) / 0) 75%),
+      linear-gradient(90deg, var(--from) 0%, var(--to) 100%);
     display: grid;
     justify-items: center;
     gap: 16px;
-    width: calc(var(--n) * var(--tile) + (var(--n) - 1) * var(--tile-gap));
+    width: var(--ribbon-w);
+  }
+
+  .integr__item[data-tone='sky'] {
+    --deep: 107 177 255; /* --g-sky */
+    --glow: 179 220 252;
+    --from: #74b6fe;
+    --to: #a0cffd;
+    --chip-shadow: rgb(30 94 167 / 0.3);
+  }
+
+  .integr__item[data-tone='lav'] {
+    --deep: 184 159 250; /* --g-lav */
+    --glow: 219 205 253;
+    --from: #bda6fa;
+    --to: #d0befc;
+    --chip-shadow: rgb(94 62 190 / 0.28);
+  }
+
+  .integr__item[data-tone='teal'] {
+    --deep: 93 223 215; /* --g-teal */
+    --glow: 178 239 234;
+    --from: #6be1da;
+    --to: #9ceae4;
+    --chip-shadow: rgb(22 120 118 / 0.3);
   }
 
   .tiles {
@@ -188,7 +223,9 @@ const CARDS: {
     isolation: isolate;
   }
 
+  /* плитка — окно в ленту: рисунок шириной в цепочку сдвинут на место плитки (--i — её номер) */
   .tile {
+    --ribbon-x: calc(var(--i) * -1 * (var(--tile) + var(--tile-gap)));
     position: relative;
     display: grid;
     justify-items: center;
@@ -199,33 +236,38 @@ const CARDS: {
     padding: 10px 4px;
     border-radius: calc(clamp(20px, calc(var(--vw) * 2), 26px) * var(--rk));
     corner-shape: var(--corner);
-    background: var(--panel);
-    transition: transform 0.4s var(--ease-out);
+    background-color: var(--to);
+    background-image: var(--ribbon);
+    background-size: var(--ribbon-w) 100%;
+    background-position: var(--ribbon-x) 0;
+    background-repeat: no-repeat;
   }
 
-  .tile:hover {
-    transform: translateY(-3px);
-  }
-
-  /* перемычки к соседней плитке слева: две короткие полосы того же цвета */
   /* мостик к соседней плитке (маски — .bridged в global.css) */
   .tiles {
     --gap: var(--tile-gap);
   }
 
+  /* у мостика тот же рисунок ленты: он начинается на (зазор + 2px) левее плитки и ниже её верха.
+     На плитки мостик заходит на 2px с каждой стороны — на цветном фоне шов в 1px был бы заметен. */
   .tile + .tile::before {
     content: '';
     position: absolute;
     top: calc(50% - (var(--gap) + 12px) / 2);
-    left: calc(var(--gap) * -1 - 1px);
-    width: calc(var(--gap) + 2px);
+    left: calc(var(--gap) * -1 - 2px);
+    width: calc(var(--gap) + 4px);
     height: calc(var(--gap) + 12px);
-    background: var(--panel);
+    background-color: var(--to);
+    background-image: var(--ribbon);
+    background-size: var(--ribbon-w) var(--tile);
+    background-position: calc(var(--ribbon-x) + var(--gap) + 2px) calc((var(--gap) + 12px - var(--tile)) / 2);
+    background-repeat: no-repeat;
     -webkit-mask: var(--bridge-mask-row);
     mask: var(--bridge-mask-row);
   }
 
   .tile__ico {
+    position: relative;
     display: grid;
     place-items: center;
     width: 44px;
@@ -234,7 +276,32 @@ const CARDS: {
     corner-shape: var(--corner);
     background: #fff;
     color: var(--ink);
-    box-shadow: 0 1px 2px rgb(29 29 31 / 0.06);
+    box-shadow:
+      0 1px 2px rgb(29 29 31 / 0.06),
+      0 8px 16px -8px var(--chip-shadow);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  /* тень приподнятой плашки — отдельным слоем, проявляется через opacity */
+  .tile__ico::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    corner-shape: inherit;
+    box-shadow: 0 12px 18px -8px var(--chip-shadow);
+    opacity: 0;
+    transition: opacity 0.4s var(--ease-out);
+    pointer-events: none;
+  }
+
+  /* при наведении приподнимается плашка значка, а не плитка: стыки с мостиками остаются на месте */
+  .tile:hover .tile__ico {
+    transform: translateY(-2px) scale(1.06);
+  }
+
+  .tile:hover .tile__ico::after {
+    opacity: 1;
   }
 
   .tile__name {
