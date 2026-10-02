@@ -1,0 +1,1485 @@
+---
+// «Функционал системы» [#funkcional]: пять экранов сервиса во вкладках. Приём — раскрытая панель
+// первого экрана Calendly (на главной это «Четыре продукта»): ряд вкладок со значками, под ним белая
+// карточка на лавандовой градиентной панели — слева заголовок и текст, справа экран сервиса,
+// перерисованный по настоящим скриншотам. Вкладки переключает скрипт в конце файла; сами они
+// не листаются: тексты длинные. Все пять панелей есть в HTML, неактивные скрыты классом.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = ' ';
+
+interface Tab {
+  id: 'vzveshivaniya' | 'import-excel' | 'transport' | 'klienty' | 'nastroyki';
+  icon: IconName;
+  label: string;
+  title: string;
+  text: string;
+}
+
+// Тексты блока «Функционал системы» с лендинга продукта
+const tabs: Tab[] = [
+  {
+    id: 'vzveshivaniya',
+    icon: 'scale',
+    label: 'Взвешивания',
+    title: 'Добавляйте акты за минуту',
+    text: 'Создайте акт взвешивания в пару кликов — укажите дату, вес брутто, тару и госномер. Нетто рассчитается автоматически. Все госномера и контрагенты из актов сами появятся в разделах «Транспорт» и «Клиенты» — ничего не нужно заполнять отдельно. Когда акты готовы — нажмите «Отправить во ФГИС» и данные уйдут в систему.',
+  },
+  {
+    id: 'import-excel',
+    icon: 'file-spreadsheet',
+    label: 'Импорт из Excel',
+    title: 'Загрузите Excel — мы сделаем остальное',
+    text: 'Уже ведёте учёт взвешиваний в таблицах? Скачайте наш готовый шаблон или загрузите свой файл. Сервис сам проверит данные на ошибки и дубли — если такие акты уже есть в системе, повторно добавить их не получится. Как только всё корректно — акты появятся на странице «Взвешивания» и будут готовы к отправке во ФГИС.',
+  },
+  {
+    id: 'transport',
+    icon: 'truck',
+    label: 'Транспорт',
+    title: 'Все машины — в одном списке',
+    text: 'Госномера из актов взвешивания автоматически попадают в раздел «Транспорт». Можно добавить машины и вручную — они появятся в выпадающем списке при создании нового акта. Удобный поиск по госномеру и фильтры по клиенту и перевозчику помогут быстро найти нужное ТС.',
+  },
+  {
+    id: 'klienty',
+    icon: 'users',
+    label: 'Клиенты',
+    title: 'Контрагенты всегда под рукой',
+    text: 'Компании из актов взвешивания автоматически сохраняются в разделе «Клиенты» с ИНН и КПП. Можно добавить контрагента заранее — при создании акта он будет доступен в выпадающем списке. Поиск по названию или ИНН поможет быстро найти нужную компанию.',
+  },
+  {
+    id: 'nastroyki',
+    icon: 'settings',
+    label: 'Настройки',
+    title: 'Настройка за пару минут',
+    text: `Укажите ИНН, КПП и номер телефона, а затем добавьте ключи доступа к ФГИС${NB}УТКО — ObjectID и AccessKey. Это всё, что нужно для подключения. Не знаете, где взять ключи? Не переживайте — мы поможем их запросить и настроить интеграцию вместе с вами.`,
+  },
+];
+
+// ── Демо-данные макетов: те же, что в демо-аккаунте сервиса и на первом экране страницы ──
+const DAY = '30.09.2026';
+
+// акты в списке; новый акт (В 121 АА 777) заполняется в форме поверх списка
+const acts = [
+  { plate: 'Е 834 УУ 777', time: '09:27', net: '4,998', sent: false },
+  { plate: 'М 847 МА 77', time: '09:11', net: '5,551', sent: false },
+  { plate: 'А 124 ВВ 777', time: '08:36', net: '5,000', sent: true },
+];
+const todo = acts.filter((a) => !a.sent).length;
+
+// колонки шаблона Excel
+const columns = [
+  'Дата и время заезда ТС',
+  'Регистрационный номер ТС',
+  'Код ФККО',
+  'Масса ТС на въезде, т',
+  'Масса ТС на выезде, т',
+];
+
+const cars = [
+  { plate: 'А 124 ВВ 777', client: 'ООО «Аврора Консалт»' },
+  { plate: 'В 733 ОО 107', client: 'ООО «Гранит Строй»' },
+  { plate: 'Е 834 УУ 777', client: 'ООО «Меридиан Логистик»' },
+];
+const CARRIER = 'ООО «ВекторПлюс»';
+
+const clients = [
+  { name: 'ООО «Аврора Консалт»', inn: '5406781234', kpp: '540601001' },
+  { name: 'ООО «ВекторПлюс»', inn: '7812345678', kpp: '781201001' },
+  { name: 'ООО «Гранит Строй»', inn: '5009876543', kpp: '500901001' },
+  { name: 'ООО «Меридиан Логистик»', inn: '6315432109', kpp: '631501001' },
+];
+---
+
+<section class="section kfe" id="funkcional" aria-labelledby="funkcional-title">
+  <div class="container">
+    <SectionIntro eyebrow="Что внутри" titleId="funkcional-title">Функционал системы</SectionIntro>
+  </div>
+
+  <div class="kfe__stage" data-kfe>
+    <div class="gv gv--lavender kfe__bg" aria-hidden="true"></div>
+
+    <div class="kfe__in" data-reveal>
+      <div class="kfe__tabs" role="tablist" aria-labelledby="funkcional-title" data-kfe-tabs>
+        {
+          tabs.map((t, i) => (
+            <button
+              class="kfe__tab"
+              type="button"
+              role="tab"
+              id={`kfe-tab-${t.id}`}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              aria-controls={`kfe-pane-${t.id}`}
+              tabindex={i === 0 ? 0 : -1}
+              data-kfe-tab
+            >
+              <span class="kfe__tab-ico" aria-hidden="true">
+                <Icon name={t.icon} size={22} strokeWidth={1.9} />
+              </span>
+              <span class="kfe__tab-label">{t.label}</span>
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="kfe__card">
+        {
+          tabs.map((t, i) => (
+            <div
+              class:list={['kfe__pane', { 'is-active': i === 0 }]}
+              role="tabpanel"
+              id={`kfe-pane-${t.id}`}
+              aria-labelledby={`kfe-tab-${t.id}`}
+              aria-hidden={i === 0 ? 'false' : 'true'}
+              tabindex={i === 0 ? 0 : -1}
+              data-kfe-pane
+            >
+              <div class="kfe__text">
+                <h3 class="t-h3 kfe__title">{t.title}</h3>
+                <p class="kfe__desc">{t.text}</p>
+              </div>
+
+              <div class="kfe__visual" aria-hidden="true" data-kfe-visual data-idle>
+                <span class="tag tag--demo kfe__demo">демо-данные</span>
+
+                {/* 1. Взвешивания: список актов, поверх — форма «Добавить акт» */}
+                {t.id === 'vzveshivaniya' && (
+                  <div class="kmx">
+                    <div class="ui km">
+                      <div class="km__bar">
+                        <span class="km__btn km__btn--ink km__btn--add">
+                          <Icon name="plus" size={15} strokeWidth={2.4} />
+                          <span class="km__btn-text">Добавить акт</span>
+                        </span>
+                        <span class="km__btn km__btn--blue">
+                          <Icon name="send" size={14} strokeWidth={2} />
+                          Отправить во ФГИС ({todo})
+                        </span>
+                      </div>
+                      <ul class="km__rows">
+                        {acts.map((a) => (
+                          <li class="km__row act">
+                            <span class:list={['km__box', { 'km__box--on': !a.sent }]}>
+                              {!a.sent && <Icon name="check" size={12} strokeWidth={3.2} />}
+                            </span>
+                            <span class="act__main">
+                              <span class="km__plate">{a.plate}</span>
+                              {a.sent ? (
+                                <span class="km__pill km__pill--ok">
+                                  <Icon name="check" size={11} strokeWidth={3} />
+                                  Отправлено
+                                </span>
+                              ) : (
+                                <span class="km__pill">Не отправлено</span>
+                              )}
+                            </span>
+                            {/* части подписей стоят вплотную: перенос строки в разметке дал бы лишний пробел */}
+                            <span class="act__net">
+                              <b>{a.net}{NB}т</b>
+                              <small>{DAY}{NB}·{NB}{a.time}</small>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div class="ui ui--plain km km--form a-in" style="--t:0.2s">
+                      <div class="form__head">
+                        <span class="km__title">Добавить акт</span>
+                        <span class="form__date">
+                          <Icon name="calendar" size={14} strokeWidth={2} />
+                          {DAY}
+                        </span>
+                      </div>
+                      <div class="form__rows">
+                        <span class="form__row">
+                          Госномер
+                          <span class="km__plate a-in" style="--t:0.6s">В 121 АА 777</span>
+                        </span>
+                        <span class="form__row">
+                          Вес до выгрузки (Брутто)
+                          <b class="a-in" style="--t:0.95s">24,000{NB}т</b>
+                        </span>
+                        <span class="form__row">
+                          Вес после выгрузки (Тара)
+                          <b class="a-in" style="--t:1.3s">18,000{NB}т</b>
+                        </span>
+                        <span class="form__row form__row--sum">
+                          <span class="form__auto">
+                            <Icon name="calculator" size={14} strokeWidth={2} />
+                            Вес груза (Нетто)
+                          </span>
+                          <b class="a-pop" style="--t:1.75s">6,000{NB}т</b>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Импорт из Excel: файл, колонки шаблона, итог проверки */}
+                {t.id === 'import-excel' && (
+                  <div class="ui km">
+                    <div class="km__head">
+                      <span class="km__title">Импорт актов из Excel</span>
+                      <span class="km__btn km__btn--sm km__push">
+                        Скачать шаблон
+                        <Icon name="clipboard" size={14} strokeWidth={2} />
+                      </span>
+                    </div>
+                    <div class="imp__file">
+                      <span class="km__ico km__ico--xls">
+                        <Icon name="file-spreadsheet" size={19} strokeWidth={1.8} />
+                      </span>
+                      <span class="imp__name">
+                        <b>Акты_сентябрь.xlsx</b>
+                        <small>80 актов</small>
+                      </span>
+                      <span class="imp__bar">
+                        <i class="a-fill" style="--t:0.2s; --dur:1.2s" />
+                      </span>
+                    </div>
+                    <ul class="imp__cols">
+                      {columns.map((c, k) => (
+                        <li class="imp__col">
+                          <span class="imp__letter">{'ABCDE'[k]}</span>
+                          <span class="imp__cname">{c}</span>
+                          <span class="km__ok a-pop" style={`--t:${(0.45 + k * 0.18).toFixed(2)}s`}>
+                            <Icon name="check" size={11} strokeWidth={3.2} />
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div class="imp__res a-in" style="--t:1.55s">
+                      <span class="imp__res-text">
+                        <b>80/80 актов заполнены верно</b>
+                        <small>Ошибки: 0 · Дубли: 0</small>
+                      </span>
+                      <span class="km__btn km__btn--sm km__btn--load">
+                        Загрузить
+                        <Icon name="file-spreadsheet" size={14} strokeWidth={2} />
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Транспорт: поиск, два фильтра, список машин */}
+                {t.id === 'transport' && (
+                  <div class="ui km">
+                    <div class="km__head">
+                      <span class="km__title">Транспорт</span>
+                      <span class="km__btn km__btn--sm km__btn--ink km__push">
+                        <Icon name="plus" size={14} strokeWidth={2.4} />
+                        Добавить ТС
+                      </span>
+                    </div>
+                    <span class="km__search">
+                      <Icon name="search" size={15} strokeWidth={2} />
+                      Поиск по госномеру…
+                    </span>
+                    <div class="km__filters">
+                      <span class="km__select">
+                        Все клиенты
+                        <Icon name="chevron-down" size={14} strokeWidth={2.2} />
+                      </span>
+                      <span class="km__select">
+                        Все перевозчики
+                        <Icon name="chevron-down" size={14} strokeWidth={2.2} />
+                      </span>
+                    </div>
+                    <ul class="km__rows">
+                      {cars.map((c, k) => (
+                        <li class="km__row car a-in" style={`--t:${(0.15 + k * 0.14).toFixed(2)}s`}>
+                          <span class="km__plate">{c.plate}</span>
+                          <span class="car__who">
+                            <span>Клиент: {c.client}</span>
+                            <span>Перевозчик: {CARRIER}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* 4. Клиенты: поиск и список контрагентов с ИНН и КПП */}
+                {t.id === 'klienty' && (
+                  <div class="ui km">
+                    <div class="km__head">
+                      <span class="km__title">Клиенты</span>
+                      <span class="km__btn km__btn--sm km__btn--ink km__push">
+                        <Icon name="plus" size={14} strokeWidth={2.4} />
+                        Добавить клиента
+                      </span>
+                    </div>
+                    <span class="km__search">
+                      <Icon name="search" size={15} strokeWidth={2} />
+                      Поиск по названию или ИНН…
+                    </span>
+                    <ul class="km__rows">
+                      {clients.map((c, k) => (
+                        <li class="km__row cl a-in" style={`--t:${(0.15 + k * 0.12).toFixed(2)}s`}>
+                          <span class="cl__ava">
+                            <Icon name="building-2" size={16} strokeWidth={1.9} />
+                          </span>
+                          <span class="cl__main">
+                            <b>{c.name}</b>
+                            <small>ИНН {c.inn} · КПП {c.kpp}</small>
+                          </span>
+                          <span class="km__edit">
+                            <Icon name="pencil" size={15} strokeWidth={1.9} />
+                            <Icon name="trash" size={15} strokeWidth={1.9} />
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* 5. Настройки: ключи доступа к ФГИС УТКО */}
+                {t.id === 'nastroyki' && (
+                  <div class="ui km km--set">
+                    <div class="km__head">
+                      <span class="km__ico km__ico--key">
+                        <Icon name="key-round" size={19} strokeWidth={1.9} />
+                      </span>
+                      <span class="set__head">
+                        <span class="km__title">Интеграция с ФГИС{NB}УТКО</span>
+                        <span class="set__on a-in" style="--t:2.3s">
+                          <Icon name="circle-check" size={15} strokeWidth={2.2} />
+                          Интеграция активна
+                        </span>
+                      </span>
+                    </div>
+                    <span class="km__field">
+                      <small>ObjectID</small>
+                      <span class="km__input">
+                        <span class="km__val">550e8400-e29b-41d4-a716-446655440000</span>
+                        <i class="km__type a-type" style="--t:0.3s; --dur:0.9s" />
+                      </span>
+                    </span>
+                    <span class="km__field">
+                      <small>AccessKey</small>
+                      <span class="km__input">
+                        <span class="km__val km__val--key">••••••••••••••••••••••••</span>
+                        <i class="km__type a-type" style="--t:1.25s; --dur:0.6s" />
+                        <span class="km__eye">
+                          <Icon name="eye" size={16} strokeWidth={2} />
+                        </span>
+                      </span>
+                    </span>
+                    <span class="km__btn km__btn--ink km__btn--block a-press" style="--t:1.95s">
+                      Сохранить настройки интеграции
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .kfe {
+    /* выделение выбранной вкладки — фирменный фиолетовый (не чёрный и не цвет продукта) */
+    --kfe-accent: #6b4dff;
+  }
+
+  /* Большая лавандовая панель во всю ширину с отступом от края экрана, как в блоке «Пилот» */
+  .kfe__stage {
+    position: relative;
+    margin-inline: var(--page-pad);
+    padding: clamp(18px, calc(var(--vw) * 3), 42px) 0 clamp(12px, calc(var(--vw) * 4.4), 64px);
+    border-radius: calc(var(--r-2xl) * var(--rk));
+    corner-shape: var(--corner);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .kfe__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    --gv-r: var(--r-2xl);
+    min-height: 0;
+    padding: 0;
+  }
+
+  .kfe__in {
+    display: grid;
+    justify-items: center;
+  }
+
+  /* ── Вкладки: плитки в белой рамке со значком и подписью ──
+     Ряд сам становится лентой с прокруткой, когда не помещается (планшет, телефон). */
+  .kfe__tabs {
+    --inset: var(--gutter);
+    position: relative;
+    display: flex;
+    gap: 10px;
+    max-width: 100%;
+    /* поля внутри ленты: сверху — под кольцо фокуса, снизу — под «каплю» выбранной вкладки;
+       лента на 2px заходит на карточку, чтобы капля срослась с ней без шва */
+    padding: 6px var(--inset) 16px;
+    margin-bottom: -2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .kfe__tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .kfe__tab {
+    --bw: 3px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    height: 58px;
+    padding: 0;
+    border: var(--bw) solid var(--card-warm);
+    border-radius: calc(18px * var(--rk));
+    corner-shape: var(--corner);
+    background: rgb(255 255 255 / 0.6);
+    color: var(--ink);
+    box-shadow: 0 6px 18px -10px rgb(29 29 31 / 0.35);
+    scroll-snap-align: center;
+    transition:
+      background-color 0.35s var(--ease),
+      color 0.35s var(--ease),
+      transform 0.3s var(--ease-out);
+  }
+
+  /* на сенсорном экране наведения нет: после нажатия плитка не остаётся «приподнятой» */
+  @media (hover: hover) {
+    .kfe__tab:hover {
+      background: rgb(255 255 255 / 0.85);
+      transform: translateY(-2px);
+    }
+  }
+
+  .kfe__tab[aria-selected='true'] {
+    background: var(--kfe-accent);
+    color: #fff;
+    transform: none;
+  }
+
+  .kfe__tab-ico {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: none;
+  }
+
+  .kfe__tab-label {
+    padding-right: 18px;
+    font-size: 15.5px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  /* «Капля», соединяющая выбранную вкладку с карточкой (как на первом экране главной):
+     начинается в рамке вкладки и кончается ровно у нижнего края ленты */
+  .kfe__tab::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: calc(100% + var(--bw) - 1px);
+    width: 44px;
+    height: 17px;
+    margin-left: -22px;
+    background: var(--card-warm);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 17' preserveAspectRatio='none'%3E%3Cpath d='M0 17C14 17 16 12 16 6V0h12v6c0 6 2 11 16 11Z'/%3E%3C/svg%3E")
+      center / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 17' preserveAspectRatio='none'%3E%3Cpath d='M0 17C14 17 16 12 16 6V0h12v6c0 6 2 11 16 11Z'/%3E%3C/svg%3E")
+      center / 100% 100% no-repeat;
+    opacity: 0;
+    transform: scaleY(0.2);
+    transform-origin: 50% 100%;
+    transition:
+      opacity 0.2s,
+      transform 0.45s var(--ease-out);
+    pointer-events: none;
+  }
+
+  .kfe__tab[aria-selected='true']::after {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0.08s;
+  }
+
+  /* ── Белая карточка: слева заголовок и текст, справа экран сервиса ── */
+  .kfe__card {
+    display: grid;
+    width: min(1120px, 100% - var(--gutter) * 2);
+    border-radius: calc(clamp(24px, calc(var(--vw) * 2.6), 36px) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card-warm);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* панели лежат в одной ячейке: высота карточки не меняется, одна панель плавно сменяет другую */
+  .kfe__pane {
+    grid-area: 1 / 1;
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: center;
+    gap: clamp(22px, calc(var(--vw) * 3.6), 56px);
+    padding: clamp(20px, calc(var(--vw) * 3.4), 48px);
+    border-radius: inherit;
+    corner-shape: inherit;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.4s var(--ease-out),
+      visibility 0s linear 0.4s;
+  }
+
+  .kfe__pane.is-active {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .kfe__pane:focus-visible {
+    outline-offset: -8px;
+  }
+
+  .kfe__text {
+    display: grid;
+    justify-items: start;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .kfe__desc {
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .kfe__pane.is-active .kfe__text > * {
+    animation: kfe-rise 0.7s var(--ease-out) both;
+  }
+
+  .kfe__pane.is-active .kfe__text > :nth-child(2) {
+    animation-delay: 0.06s;
+  }
+
+  @keyframes kfe-rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  /* Окно с экраном сервиса: мягкая лавандовая подложка, по бокам — «язычки», как на главной.
+     Тянется на всю высоту панели: у всех вкладок окно одного размера. */
+  .kfe__visual {
+    position: relative;
+    display: grid;
+    place-items: center;
+    align-self: stretch;
+    min-width: 0;
+    min-height: 444px;
+    padding: 44px 22px;
+    border-radius: calc(24px * var(--rk));
+    corner-shape: var(--corner);
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--g-lav-soft);
+  }
+
+  .kfe__visual::before,
+  .kfe__visual::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    height: 34%;
+    border-radius: 0 18px 18px 0;
+    background: rgb(255 255 255 / 0.5);
+    transform: translateY(-50%);
+    z-index: -1;
+  }
+
+  .kfe__visual::before {
+    left: 0;
+  }
+
+  .kfe__visual::after {
+    right: 0;
+    border-radius: 18px 0 0 18px;
+  }
+
+  .kfe__demo {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 1;
+  }
+
+  /* ── Макеты экранов сервиса (по настоящим скриншотам; внутри углы обычные) ── */
+  .km {
+    --m-row: #f5f6f8;
+    --m-line: #dfe3e8;
+    --m-chip: #eceef2;
+    --m-blue: #006bff;
+    --m-blue-soft: #e8f1ff;
+    --m-blue-ink: #0b56c4;
+    --m-ok: #0fa86f;
+    --m-ok-soft: #e1f5ec;
+    --m-ok-ink: #087a52;
+    width: min(100%, 420px);
+    padding: 16px;
+    border-radius: 20px;
+    font-size: 13.5px;
+    line-height: 1.35;
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .km__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .km__title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  .km__push {
+    margin-left: auto;
+  }
+
+  .km__bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .km__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: none;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 10px;
+    background: var(--m-chip);
+    font-size: 13px;
+    font-weight: 560;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .km__btn--ink {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .km__btn--blue {
+    background: var(--m-blue);
+    color: #fff;
+  }
+
+  .km__btn--load {
+    background: #fff;
+    color: var(--m-ok-ink);
+    box-shadow: inset 0 0 0 1.5px rgb(15 168 111 / 0.35);
+  }
+
+  .km__btn--sm {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 9px;
+    font-size: 12.5px;
+  }
+
+  .km__btn--block {
+    display: flex;
+    width: 100%;
+    height: 44px;
+    margin-top: 18px;
+    border-radius: 11px;
+    font-size: 14px;
+  }
+
+  .km__rows {
+    display: grid;
+    gap: 6px;
+  }
+
+  .km__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--m-row);
+  }
+
+  /* госномер — как табличка на машине */
+  .km__plate {
+    flex: none;
+    padding: 2px 8px;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    line-height: 1.35;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .km__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--m-chip);
+    font-size: 12px;
+    font-weight: 560;
+    line-height: 1;
+    color: #5c6066;
+    white-space: nowrap;
+  }
+
+  .km__pill--ok {
+    background: var(--m-ok-soft);
+    color: var(--m-ok-ink);
+  }
+
+  .km__box {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    border: 1.5px solid #c3c8d0;
+    border-radius: 5px;
+    background: #fff;
+    color: #fff;
+  }
+
+  .km__box--on {
+    border-color: var(--m-blue);
+    background: var(--m-blue);
+  }
+
+  .km__ok {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--m-ok);
+    color: #fff;
+  }
+
+  .km__ico {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    border-radius: 11px;
+  }
+
+  .km__ico--xls {
+    background: #1d8f55;
+    color: #fff;
+  }
+
+  .km__ico--key {
+    background: var(--m-blue-soft);
+    color: var(--m-blue);
+  }
+
+  .km__edit {
+    display: inline-flex;
+    gap: 8px;
+    flex: none;
+    margin-left: auto;
+    color: #a2a6ad;
+  }
+
+  .km__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 12px;
+    border: 1.5px solid var(--m-line);
+    border-radius: 11px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* два фильтра рядом; в узком макете, где оба не помещаются, встают друг под другом */
+  .km__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .km__select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex: 1 1 40%;
+    height: 34px;
+    padding: 0 9px 0 12px;
+    border: 1.5px solid var(--m-line);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+
+  .km__search + .km__rows,
+  .km__filters + .km__rows {
+    margin-top: 10px;
+  }
+
+  /* 1. Взвешивания: форма «Добавить акт» лежит поверх списка и выступает вправо и вниз */
+  .kmx {
+    display: grid;
+    width: min(100%, 434px);
+    padding-right: 14px;
+  }
+
+  .kmx .km {
+    width: 100%;
+  }
+
+  .act {
+    padding-left: 10px;
+  }
+
+  .act__main {
+    display: grid;
+    justify-items: start;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .act__net {
+    display: grid;
+    justify-items: end;
+    gap: 2px;
+    flex: none;
+    margin-left: auto;
+  }
+
+  .act__net b {
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .act__net small {
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .kmx .km--form {
+    position: relative;
+    justify-self: end;
+    width: 252px;
+    margin: -150px -14px 0 0;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .form__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .form__date {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .form__rows {
+    display: grid;
+    gap: 5px;
+  }
+
+  .form__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 34px;
+    padding: 4px 10px;
+    border-radius: 9px;
+    background: var(--m-row);
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .form__row b {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* нетто считается само — строка выделена */
+  .form__row--sum {
+    background: var(--m-blue-soft);
+    color: var(--m-blue-ink);
+  }
+
+  .form__row--sum b {
+    color: var(--m-blue-ink);
+  }
+
+  .form__auto {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* 2. Импорт из Excel */
+  .imp__file {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px 12px;
+    padding: 10px 12px 12px;
+    border-radius: 14px;
+    background: var(--m-row);
+  }
+
+  .imp__name {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .imp__name b {
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 560;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .imp__name small {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .imp__bar {
+    position: relative;
+    grid-column: 1 / -1;
+    height: 5px;
+    border-radius: 3px;
+    background: #e3e7ec;
+    overflow: hidden;
+  }
+
+  .imp__bar i {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--m-blue);
+    transform-origin: left center;
+  }
+
+  /* колонки шаблона — как строки таблицы */
+  .imp__cols {
+    display: grid;
+    margin-top: 6px;
+  }
+
+  .imp__col {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 31px;
+    padding: 0 6px 0 2px;
+    font-size: 13px;
+  }
+
+  .imp__col + .imp__col {
+    border-top: 1px solid #eceef2;
+  }
+
+  .imp__letter {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    flex: none;
+    border-radius: 5px;
+    background: var(--m-chip);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #5c6066;
+  }
+
+  .imp__cname {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .imp__res {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 8px 8px 8px 12px;
+    border-radius: 12px;
+    background: var(--m-ok-soft);
+  }
+
+  .imp__res-text {
+    display: grid;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+    color: var(--m-ok-ink);
+  }
+
+  .imp__res-text b {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .imp__res-text small {
+    font-size: 12px;
+  }
+
+  /* 3. Транспорт */
+  .car__who {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .car__who span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 4. Клиенты */
+  .cl {
+    padding-block: 8px;
+  }
+
+  .cl__ava {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--ink-2);
+    box-shadow: 0 0 0 1px var(--m-line);
+  }
+
+  .cl__main {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .cl__main b {
+    overflow: hidden;
+    font-weight: 560;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cl__main small {
+    overflow: hidden;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 5. Настройки */
+  .km--set {
+    padding: 20px;
+  }
+
+  .km--set .km__head {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .km--set .km__ico {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+  }
+
+  .set__head {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .set__on {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    font-weight: 560;
+    color: var(--m-ok-ink);
+  }
+
+  .km__field {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .km__field small {
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .km__input {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 12px;
+    overflow: hidden;
+    border: 1.5px solid var(--m-line);
+    border-radius: 11px;
+    background: #fff;
+    font-size: 13.5px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .km__val {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .km__val--key {
+    font-size: 15px;
+    letter-spacing: 0.08em;
+  }
+
+  /* «набор текста»: белая шторка отъезжает вправо */
+  .km__type {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 10px;
+    right: 2px;
+    background: #fff;
+    transform-origin: right center;
+    transform: scaleX(0);
+  }
+
+  .km__eye {
+    position: relative;
+    display: grid;
+    margin-left: auto;
+    color: var(--subtle);
+  }
+
+  /* ── Движение в макетах: один раз при открытии вкладки, только transform и opacity.
+     Без анимации (и при «уменьшить движение») виден итог. ── */
+  .kfe__pane.is-active .a-in {
+    animation: kfe-in 0.6s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kfe__pane.is-active .a-pop {
+    animation: kfe-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kfe__pane.is-active .a-fill {
+    animation: kfe-fill var(--dur, 1.2s) var(--ease-in-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kfe__pane.is-active .a-type {
+    animation: kfe-wipe var(--dur, 0.8s) steps(14, end) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kfe__pane.is-active .a-press {
+    animation: kfe-press 0.4s ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  @keyframes kfe-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes kfe-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+  }
+
+  @keyframes kfe-fill {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes kfe-wipe {
+    from {
+      transform: scaleX(1);
+    }
+    to {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes kfe-press {
+    50% {
+      transform: scale(0.97);
+    }
+  }
+
+  /* за экраном макет стоит на первом кадре: data-idle снимает скрипт, когда макет виден */
+  .kfe__visual[data-idle] * {
+    animation-play-state: paused !important;
+  }
+
+  @media (scripting: none) {
+    .kfe__visual[data-idle] * {
+      animation-play-state: running !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kfe__visual *,
+    .kfe__text > * {
+      animation: none !important;
+    }
+  }
+
+  /* ── Планшет и телефон: панель в один столбец, вкладки меньше ── */
+  @media (max-width: 1023.98px) {
+    .kfe__tabs {
+      gap: 6px;
+    }
+
+    .kfe__tab {
+      height: 50px;
+      border-radius: calc(15px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .kfe__tab-ico {
+      width: 42px;
+      height: 44px;
+    }
+
+    .kfe__tab-label {
+      padding-right: 13px;
+      font-size: 14px;
+    }
+
+    .kfe__pane {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* высота карточки — по выбранной панели */
+    .kfe__pane:not(.is-active) {
+      display: none;
+    }
+
+    .kfe__pane.is-active {
+      animation: kfe-fade 0.35s ease both;
+    }
+
+    .kfe__desc {
+      max-width: 64ch;
+    }
+
+    .kfe__visual {
+      min-height: 0;
+    }
+  }
+
+  @keyframes kfe-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .kfe__tabs {
+      --inset: 12px;
+    }
+
+    .kfe__tab {
+      border-width: 2px;
+    }
+
+    .kfe__tab-label {
+      font-size: 13.5px;
+    }
+
+    .kfe__card {
+      width: calc(100% - 24px);
+    }
+
+    .kfe__pane {
+      padding: 22px 16px 16px;
+    }
+
+    .kfe__text {
+      gap: 12px;
+      padding-inline: 4px;
+    }
+
+    .kfe__desc {
+      font-size: 16px;
+    }
+
+    .kfe__visual {
+      padding: 46px 10px 14px;
+      border-radius: calc(18px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .km {
+      padding: 14px;
+      font-size: 13px;
+    }
+
+    .kmx {
+      padding-right: 6px;
+    }
+
+    .kmx .km--form {
+      width: min(100%, 252px);
+      margin: -58px -6px 0 0;
+    }
+
+    .act__net small,
+    .km__edit {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  const stage = document.querySelector<HTMLElement>('[data-kfe]');
+  if (stage) {
+    const strip = stage.querySelector<HTMLElement>('[data-kfe-tabs]')!;
+    const tabs = [...stage.querySelectorAll<HTMLButtonElement>('[data-kfe-tab]')];
+    const panes = [...stage.querySelectorAll<HTMLElement>('[data-kfe-pane]')];
+    const visuals = [...stage.querySelectorAll<HTMLElement>('[data-kfe-visual]')];
+    let active = 0;
+
+    const show = (i: number) => {
+      if (i === active) return;
+      active = i;
+      tabs.forEach((tab, k) => {
+        const on = k === i;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+      });
+      panes.forEach((pane, k) => {
+        const on = k === i;
+        pane.classList.toggle('is-active', on);
+        pane.setAttribute('aria-hidden', String(!on));
+        pane.tabIndex = on ? 0 : -1;
+      });
+      // в ленте (планшет, телефон) выбранная вкладка встаёт по центру — видны края соседних
+      const tab = tabs[i];
+      strip.scrollTo({
+        left: tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2,
+        behavior: reducedMotion() ? 'auto' : 'smooth',
+      });
+    };
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => show(i));
+      tab.addEventListener('keydown', (e) => {
+        const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        const edge = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : -1;
+        if (!dir && edge < 0) return;
+        e.preventDefault();
+        const next = edge >= 0 ? edge : (active + dir + tabs.length) % tabs.length;
+        show(next);
+        tabs[next].focus({ preventScroll: true });
+      });
+    });
+
+    // Движение в макете идёт, только пока он на экране. При «уменьшить движение» анимации
+    // выключены в CSS — следить не нужно.
+    if (reducedMotion() || !('IntersectionObserver' in window)) {
+      visuals.forEach((el) => delete el.dataset.idle);
+    } else {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const el = entry.target as HTMLElement;
+            if (entry.isIntersecting) delete el.dataset.idle;
+            else el.dataset.idle = '';
+          }
+        },
+        { threshold: 0.3 },
+      );
+      visuals.forEach((el) => io.observe(el));
+    }
+  }
+</script>

@@ -1,0 +1,390 @@
+---
+// Раздел 3 страницы «Кодекс ТКО» [#o-servise]. Две карточки рядом, как колонки в «Сравнении»:
+// слева, на градиенте, — что делает сервис: три шага цепочкой сверху вниз, отметки «готово»
+// появляются по очереди; справа, бежевая, — без чего обходится подключение.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = ' ';
+
+// Тексты — с лендинга продукта, дословно
+const STEPS: { icon: IconName; text: string }[] = [
+  { icon: 'scale', text: 'принимает данные о взвешиваниях на предприятии' },
+  { icon: 'file-check', text: 'подготавливает их к отправке' },
+  { icon: 'cloud-upload', text: `передаёт данные во${NB}ФГИС${NB}УТКО` },
+];
+
+const SPARED = ['сложных внедрений', `доработок${NB}1С`, 'месячных проектов', 'обучения персонала'];
+---
+
+<section class="section" id="o-servise" aria-labelledby="o-servise-title">
+  <div class="container">
+    <SectionIntro eyebrow="О сервисе" titleId="o-servise-title">
+      Сервис быстрого запуска передачи данных во&nbsp;ФГИС&nbsp;УТКО
+    </SectionIntro>
+
+    <div class="ksv">
+      <!-- Что делает сервис: три шага на градиенте -->
+      <article class="ksv__card ksv__ours gv gv--aqua" aria-labelledby="ksv-ours" data-ksv-live data-reveal>
+        <h3 class="ksv__title" id="ksv-ours">Наш сервис:</h3>
+        <ol class="ksv__flow">
+          {
+            STEPS.map((s, i) => (
+              <li class="ui ksv__step">
+                {i > 0 && (
+                  <span class="ksv__pipe" aria-hidden="true">
+                    <i />
+                  </span>
+                )}
+                <span class="ksv__ico" aria-hidden="true">
+                  <Icon name={s.icon} size={22} />
+                </span>
+                <span class="ksv__text">{s.text}</span>
+                <span class="ksv__st" aria-hidden="true">
+                  <span class="ksv__ok">
+                    <Icon name="check" size={14} strokeWidth={3} />
+                  </span>
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+      </article>
+
+      <!-- Без чего обходится подключение -->
+      <article class="ksv__card ksv__spared" aria-labelledby="ksv-spared" data-reveal style="--d:1">
+        <h3 class="ksv__title" id="ksv-spared">Не требуется:</h3>
+        <ul class="ksv__list">
+          {
+            SPARED.map((t) => (
+              <li class="ksv__item">
+                <span class="ksv__no" aria-hidden="true">
+                  <Icon name="x" size={14} strokeWidth={2.4} />
+                </span>
+                <span>{t}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Две карточки: слева шире ──────────────────────────── */
+  .ksv {
+    --ksv-r: clamp(24px, calc(var(--vw) * 2.6), 36px);
+    --ksv-pad: clamp(20px, calc(var(--vw) * 3), 40px);
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: clamp(14px, calc(var(--vw) * 1.6), 24px);
+  }
+
+  .ksv__card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: var(--ksv-pad);
+  }
+
+  /* фон, скругление и обрезку даёт .gv; свой радиус — через --gv-r (см. .gv::before в global.css) */
+  .ksv__ours {
+    --gv-r: var(--ksv-r);
+    align-items: stretch;
+    min-height: 0;
+    color: var(--ink);
+  }
+
+  /* последняя строка списка сама даёт воздух снизу — поле карточки там меньше */
+  .ksv__spared {
+    padding-bottom: max(8px, calc(var(--ksv-pad) - 22px));
+    border-radius: calc(var(--ksv-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .ksv__title {
+    font-size: clamp(1.5rem, calc(var(--vw) * 2.2), 2rem);
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    font-weight: 560;
+  }
+
+  /* ── Три шага: белые строки в полупрозрачной рамке, между ними — перемычка того же «стекла»,
+        по ней сверху вниз идёт точка данных ── */
+  .ksv__flow {
+    --ksv-pipe: clamp(26px, calc(var(--vw) * 2.4), 34px);
+    --ksv-ring: 6px;
+    --ksv-chip: 44px;
+    --ksv-row: 14px;
+    display: grid;
+    gap: var(--ksv-pipe);
+    margin-top: clamp(20px, calc(var(--vw) * 2.6), 30px);
+  }
+
+  .ksv__step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: var(--ksv-row) 16px var(--ksv-row) var(--ksv-row);
+    border-radius: 18px;
+    box-shadow:
+      0 0 0 var(--ksv-ring) rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+  }
+
+  .ksv__ico {
+    display: grid;
+    place-items: center;
+    width: var(--ksv-chip);
+    height: var(--ksv-chip);
+    flex: none;
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .ksv__text {
+    min-width: 0;
+    font-size: clamp(1rem, calc(var(--vw) * 1.45), 1.125rem);
+    line-height: 1.3;
+    font-weight: 560;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+  }
+
+  /* отметка шага: пунктирный кружок «ожидание», поверх — зелёная галочка «готово» */
+  .ksv__st {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    margin-left: auto;
+    border: 1.5px dashed var(--line-2);
+    border-radius: 50%;
+  }
+
+  .ksv__ok {
+    position: absolute;
+    inset: -1.5px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--ok);
+    color: #fff;
+  }
+
+  /* перемычка к строке выше — под значком; закрашена только между рамками строк */
+  .ksv__pipe {
+    position: absolute;
+    left: calc(var(--ksv-row) + var(--ksv-chip) / 2 - 8px);
+    bottom: 100%;
+    width: 16px;
+    height: var(--ksv-pipe);
+    overflow: hidden;
+    background: linear-gradient(rgb(255 255 255 / 0.4) 0 0) center / 100% calc(100% - 2 * var(--ksv-ring)) no-repeat;
+  }
+
+  .ksv__pipe i {
+    position: absolute;
+    inset: 0;
+    transform: translateY(-100%);
+  }
+
+  .ksv__pipe i::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    bottom: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+
+  /* Движение (цикл 8 с): шаг отмечен → точка идёт вниз → следующий шаг; в конце отметки гаснут вместе.
+     Без движения видно итог: все три шага отмечены. */
+  .ksv__ours.is-live .ksv__ok {
+    animation: ksv-ok-1 8s linear infinite;
+  }
+
+  .ksv__ours.is-live .ksv__step:nth-child(2) .ksv__ok {
+    animation-name: ksv-ok-2;
+  }
+
+  .ksv__ours.is-live .ksv__step:nth-child(3) .ksv__ok {
+    animation-name: ksv-ok-3;
+  }
+
+  .ksv__ours.is-live .ksv__pipe i {
+    animation: ksv-dot-1 8s linear infinite;
+  }
+
+  .ksv__ours.is-live .ksv__step:nth-child(3) .ksv__pipe i {
+    animation-name: ksv-dot-2;
+  }
+
+  @keyframes ksv-ok-1 {
+    0%,
+    11% {
+      opacity: 0;
+      transform: scale(0.4);
+      animation-timing-function: cubic-bezier(0.2, 1.4, 0.4, 1);
+    }
+    16%,
+    88% {
+      opacity: 1;
+      transform: none;
+      animation-timing-function: ease-in;
+    }
+    93%,
+    100% {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+  }
+
+  @keyframes ksv-ok-2 {
+    0%,
+    25% {
+      opacity: 0;
+      transform: scale(0.4);
+      animation-timing-function: cubic-bezier(0.2, 1.4, 0.4, 1);
+    }
+    30%,
+    88% {
+      opacity: 1;
+      transform: none;
+      animation-timing-function: ease-in;
+    }
+    93%,
+    100% {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+  }
+
+  @keyframes ksv-ok-3 {
+    0%,
+    39% {
+      opacity: 0;
+      transform: scale(0.4);
+      animation-timing-function: cubic-bezier(0.2, 1.4, 0.4, 1);
+    }
+    44%,
+    88% {
+      opacity: 1;
+      transform: none;
+      animation-timing-function: ease-in;
+    }
+    93%,
+    100% {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+  }
+
+  @keyframes ksv-dot-1 {
+    0%,
+    16% {
+      transform: translateY(-100%);
+      animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+    }
+    25%,
+    100% {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes ksv-dot-2 {
+    0%,
+    30% {
+      transform: translateY(-100%);
+      animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+    }
+    39%,
+    100% {
+      transform: translateY(100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ksv__ours .ksv__ok,
+    .ksv__ours .ksv__pipe i {
+      animation: none !important;
+    }
+  }
+
+  /* ── «Не требуется»: спокойный список с приглушёнными отметками ── */
+  .ksv__list {
+    display: grid;
+    grid-auto-rows: 1fr;
+    flex: 1;
+    margin-top: clamp(14px, calc(var(--vw) * 1.8), 22px);
+  }
+
+  .ksv__item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-block: 14px;
+    border-top: 1px solid var(--line-2);
+    font-size: clamp(1rem, calc(var(--vw) * 1.45), 1.125rem);
+    line-height: 1.3;
+    font-weight: 560;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+  }
+
+  .ksv__no {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--muted);
+  }
+
+  /* ── Узкий экран: карточки друг под другом ─────────────── */
+  @media (max-width: 699.98px) {
+    .ksv {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 559.98px) {
+    .ksv__flow {
+      --ksv-chip: 40px;
+      --ksv-row: 12px;
+    }
+
+    .ksv__step {
+      gap: 12px;
+      padding-right: 12px;
+      border-radius: 16px;
+    }
+
+    .ksv__st {
+      width: 26px;
+      height: 26px;
+    }
+  }
+</style>
+
+<script>
+  // Отметки шагов появляются по очереди, только пока карточка на экране
+  const live = document.querySelectorAll<HTMLElement>('[data-ksv-live]');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.target.classList.toggle('is-live', e.isIntersecting)),
+      { threshold: 0.3 },
+    );
+    live.forEach((el) => io.observe(el));
+  } else {
+    live.forEach((el) => el.classList.add('is-live'));
+  }
+</script>

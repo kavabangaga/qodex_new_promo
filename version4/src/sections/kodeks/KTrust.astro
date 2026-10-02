@@ -1,0 +1,238 @@
+---
+// Раздел страницы «Кодекс ТКО» — клиенты [#klienty]. Заголовок по центру, плитки клиентов,
+// соединённые перемычками (как «Нам доверяют» на главной; пока вместо логотипов — названия),
+// и два факта о компании. Раздел стоит на фоне страницы, поэтому плитки цвета панели, а не белые.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon from '../../components/Icon.astro';
+import { CLIENTS } from '../../data/clients';
+import { SKOLKOVO_URL } from '../../config/site';
+
+// Названия продуктов и «РО «…»» не разрываем переносом (сами тексты — без изменений)
+const nb = (t: string) =>
+  t.replace(/(QODEX|Кодекс) (TONN|Tracker|ТКО)/g, '$1 $2').replace(/(^|\s)(РО|ООО) «/g, '$1$2 «');
+
+// Неполный последний ряд встаёт по центру (как у плиток Calendly). Сетка вдвое мельче числа плиток
+// в ряду — плитка занимает две колонки, — поэтому ряд можно сдвинуть и на полплитки.
+// rowStart — первая плитка такого ряда и колонка, с которой она начинается.
+const rowStart = (cols: number) => {
+  const rest = CLIENTS.length % cols;
+  return rest ? { index: CLIENTS.length - rest, col: 1 + cols - rest } : null;
+};
+const starts = { c5: rowStart(5), c4: rowStart(4), c2: rowStart(2) };
+const tileStyle = (i: number) =>
+  [
+    `--d:${i % 5}`,
+    ...Object.entries(starts)
+      .filter(([, s]) => s?.index === i)
+      .map(([name, s]) => `--${name}:${s!.col}`),
+  ].join(';');
+---
+
+<section class="section" id="klienty" aria-labelledby="klienty-title">
+  <div class="container">
+    <SectionIntro eyebrow="Клиенты" titleId="klienty-title">
+      Работаем с десятками предприятий по всей России
+    </SectionIntro>
+
+    <!-- Клиенты: плитки с перемычками -->
+    <ul class="kt-logos bridged">
+      {
+        CLIENTS.map((c, i) => (
+          <li class="kt-logo" style={tileStyle(i)} data-reveal>
+            <span class="kt-logo__name">{nb(c.name)}</span>
+            {c.partner && <span class="tag kt-logo__tag">партнёр</span>}
+          </li>
+        ))
+      }
+    </ul>
+
+    <!-- Два факта о компании -->
+    <ul class="kt-facts" data-reveal>
+      <li>
+        <a class="kt-fact kt-fact--link" href={SKOLKOVO_URL} target="_blank" rel="noopener">
+          <span class="kt-fact__ico" aria-hidden="true"><Icon name="rocket" size={18} strokeWidth={1.9} /></span>
+          <span>Резидент Сколково<span class="visually-hidden"> — открыть на сайте Сколково</span></span>
+          <span class="kt-fact__arrow" aria-hidden="true"><Icon name="arrow-up-right" size={16} strokeWidth={2} /></span>
+        </a>
+      </li>
+      <li>
+        <span class="kt-fact">
+          <span class="kt-fact__ico" aria-hidden="true"><Icon name="badge-check" size={18} strokeWidth={1.9} /></span>
+          <span>Аккредитованная IT-компания</span>
+        </span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  /* ── Клиенты: плитки с перемычками ────────────────────── */
+  .kt-logos {
+    --lg-gap: clamp(12px, calc(var(--vw) * 1.6), 20px);
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: var(--lg-gap);
+    isolation: isolate;
+    text-align: center;
+  }
+
+  .kt-logo {
+    position: relative;
+    grid-column: var(--c5, auto) / span 2;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 6px;
+    min-height: clamp(96px, calc(var(--vw) * 9), 120px);
+    padding: 14px 12px;
+    border-radius: calc(clamp(18px, calc(var(--vw) * 1.8), 24px) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  .kt-logo:hover {
+    transform: scale(1.02);
+  }
+
+  /* мостик к соседней плитке слева; у первой плитки ряда его нет (см. ниже и правила для узких экранов) */
+  .kt-logos {
+    --gap: var(--lg-gap);
+  }
+
+  .kt-logo::before {
+    content: none;
+    position: absolute;
+    top: calc(50% - (var(--gap) + 12px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 12px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  .kt-logo:not(:nth-child(5n + 1))::before {
+    content: '';
+  }
+
+  .kt-logo__name {
+    font-size: clamp(14.5px, calc(var(--vw) * 1.25), 17px);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    color: var(--ink-2);
+    text-wrap: balance;
+  }
+
+  /* на плитке цвета панели метка белая: серая на ней теряется */
+  .kt-logo__tag {
+    background: #fff;
+    font-size: 12px;
+  }
+
+  /* ── Два факта о компании ─────────────────────────────── */
+  .kt-facts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 12px;
+    margin-top: clamp(28px, calc(var(--vw) * 3.2), 44px);
+  }
+
+  .kt-fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 6px 18px 6px 6px;
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 15px;
+    font-weight: 560;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+
+  .kt-fact__ico {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .kt-fact--link {
+    padding-right: 14px;
+    transition: background-color 0.2s;
+  }
+
+  .kt-fact--link:hover {
+    background: var(--panel-2);
+  }
+
+  .kt-fact__arrow {
+    display: inline-flex;
+    margin-left: -2px;
+    color: var(--muted);
+    transition:
+      transform 0.3s var(--ease-out),
+      color 0.2s;
+  }
+
+  .kt-fact--link:hover .kt-fact__arrow {
+    color: var(--ink);
+    transform: translate(2px, -2px);
+  }
+
+  /* ── Планшет: четыре плитки в ряд ─────────────────────── */
+  /* в пять плиток ряд здесь тесен: самое длинное название без пробелов упирается в края плитки */
+  @media (max-width: 999.98px) {
+    .kt-logos {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+    }
+
+    .kt-logo {
+      grid-column: var(--c4, auto) / span 2;
+      padding-inline: 8px;
+    }
+
+    .kt-logo:not(:nth-child(5n + 1))::before {
+      content: none;
+    }
+
+    .kt-logo:not(:nth-child(4n + 1))::before {
+      content: '';
+    }
+  }
+
+  /* ── Телефон: две плитки в ряд ────────────────────────── */
+  @media (max-width: 699.98px) {
+    .kt-logos {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .kt-logo {
+      grid-column: var(--c2, auto) / span 2;
+    }
+
+    .kt-logo:not(:nth-child(4n + 1))::before {
+      content: none;
+    }
+
+    .kt-logo:nth-child(2n)::before {
+      content: '';
+    }
+
+    .kt-facts {
+      gap: 8px;
+    }
+
+    .kt-fact {
+      font-size: 14.5px;
+    }
+  }
+</style>

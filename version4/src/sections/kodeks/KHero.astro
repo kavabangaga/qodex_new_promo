@@ -1,0 +1,1086 @@
+---
+// Первый экран страницы «Кодекс ТКО» [#kodeks-tko]. Устроен как первый экран главной: большая тёплая
+// панель, всё по центру — метка продукта, заголовок, подзаголовок, две кнопки и три факта.
+// Ниже в той же панели — градиентная карточка с главным экраном сервиса «Взвешивания»:
+// неотправленные акты отмечаются, уходят во ФГИС УТКО и получают статус «Отправлено».
+import Icon from '../../components/Icon.astro';
+import ProductLabel from '../../components/ProductLabel.astro';
+import GradientVisual from '../../components/GradientVisual.astro';
+
+const NB = ' ';
+
+// Три факта под кнопками (тексты с лендинга продукта). Длинные на компьютере стоят в две строки:
+// место переноса задано, чтобы плашка была шириной ровно по тексту и ряд стоял по центру.
+const FACTS = [
+  { icon: 'calendar', lines: ['Первая неделя бесплатно'] },
+  { icon: 'users', lines: [`Справится любой${NB}— без обучения`, 'и сложных настроек'] },
+  { icon: 'shield-check', lines: ['Зарегистрируйтесь сейчас и защитите себя', `от штрафа до 150${NB}000${NB}рублей`] },
+];
+
+// Демо-акты экрана «Взвешивания» (те же, что в демо-аккаунте сервиса); последний уже отправлен
+const DAY = '30.09.2026';
+const ACTS = [
+  { time: '09:42', plate: 'В 121 АА 777', w: ['24,000', '18,000', '6,000'], sent: false },
+  { time: '09:27', plate: 'Е 834 УУ 777', w: ['11,532', '6,534', '4,998'], sent: false },
+  { time: '09:11', plate: 'М 847 МА 77', w: ['20,374', '14,823', '5,551'], sent: false },
+  { time: '08:54', plate: 'В 733 ОО 107', w: ['18,345', '12,423', '5,922'], sent: false },
+  { time: '08:36', plate: 'А 124 ВВ 777', w: ['15,000', '10,000', '5,000'], sent: true },
+];
+const TODO = ACTS.filter((a) => !a.sent).length;
+
+// Подписи весов как в сервисе; в узкой карточке остаётся только слово в скобках
+const WEIGHTS = [
+  { pre: 'Вес до выгрузки (', name: 'Брутто' },
+  { pre: 'Вес после выгрузки (', name: 'Тара' },
+  { pre: 'Вес груза (', name: 'Нетто' },
+];
+
+const TABS = [
+  { icon: 'scale', label: 'Взвешивания' },
+  { icon: 'truck', label: 'Транспорт' },
+  { icon: 'users', label: 'Клиенты' },
+  { icon: 'settings', label: 'Настройки' },
+];
+---
+
+<section class="kh" id="kodeks-tko" aria-labelledby="kodeks-tko-title">
+  <div class="kh__box">
+    <div class="kh__intro container">
+      <div class="kh__label" data-reveal>
+        <ProductLabel id="kodeks" size="lg" />
+      </div>
+      {/* пробел перед br стоит в той же строке: перенос строки в разметке перед тегом Astro убирает, и слова слиплись бы */}
+      <h1 class="t-display kh__title" id="kodeks-tko-title" data-reveal style="--d:1">
+        Сделаем вам передачу данных <br class="kh__br" />о&nbsp;взвешиваниях во&nbsp;ФГИС&nbsp;УТКО <br class="kh__br" />сегодня
+        за&nbsp;15&nbsp;минут
+      </h1>
+      <p class="t-lead kh__sub" data-reveal style="--d:2">
+        Мы сделали простой сервис, который помогает быстро включиться в&nbsp;передачу данных во&nbsp;ФГИС&nbsp;УТКО&nbsp;—
+        без внедрения сложных систем.
+      </p>
+      <div class="kh__cta" data-reveal style="--d:3">
+        <a href="#forma" class="btn btn--primary" data-interest="kodeks" data-goal="pilot_click">
+          Подключиться бесплатно
+          <Icon name="arrow-right" />
+        </a>
+        <a href="#kak-eto-rabotaet" class="btn btn--outline">
+          Как это работает
+          <Icon name="arrow-down" />
+        </a>
+      </div>
+      <ul class="kh__facts" data-reveal style="--d:4">
+        {
+          FACTS.map((f) => (
+            <li class="kh__fact">
+              <span class="kh__fact-ico" aria-hidden="true">
+                <Icon name={f.icon} size={17} strokeWidth={1.9} />
+              </span>
+              <span class="kh__fact-text">
+                {f.lines.map((line, k) => (k ? [' ', <br class="kh__br" />, line] : line))}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="container kh__stage">
+      <div class="kh__vis">
+        <GradientVisual
+          preset="sky"
+          deco="bars"
+          class="kh__gv"
+          label="Экран «Взвешивания» сервиса Кодекс ТКО: акты взвешивания отправляются во ФГИС УТКО"
+        >
+          <div class="ui kh-ui" data-kh-mock data-idle>
+            <!-- панель действий -->
+            <div class="kh-bar">
+              <span class="kh-btn kh-btn--add">
+                <Icon name="plus" size={15} strokeWidth={2.4} />
+                <span class="kh-btn__t">Добавить акт</span>
+              </span>
+              <span class="kh-btn kh-btn--pick">
+                <Icon name="list-checks" size={16} strokeWidth={2} />
+                <span class="kh-btn__t">Выбрать неотправленные</span>
+              </span>
+              <span class="kh-send">
+                <span class="kh-btn kh-send__off">
+                  <Icon name="send" size={15} strokeWidth={2} />
+                  <span>Отправить во ФГИС (0)</span>
+                </span>
+                <span class="kh-btn kh-send__on">
+                  <Icon name="send" size={15} strokeWidth={2} />
+                  <span>
+                    Отправить во ФГИС (<span class="kh-n"
+                      >{
+                        Array.from({ length: TODO }, (_, k) => (
+                          <b class={k + 1 === TODO ? 'kh-n__last' : 'kh-n__step'} style={`--k:${k}`}>
+                            {k + 1}
+                          </b>
+                        ))
+                      }</span
+                    >)
+                  </span>
+                </span>
+              </span>
+              <span class="kh-btn kh-btn--ico kh-btn--filter">
+                <Icon name="filter" size={16} strokeWidth={2} />
+              </span>
+              <span class="kh-bar__sep"></span>
+              <span class="kh-btn kh-btn--tpl">
+                <span class="kh-btn__t">Скачать шаблон</span>
+                <Icon name="file-down" size={16} strokeWidth={2} />
+              </span>
+              <span class="kh-btn kh-btn--load">
+                <span class="kh-btn__t">Загрузить</span>
+                <Icon name="file-spreadsheet" size={16} strokeWidth={2} />
+              </span>
+            </div>
+
+            <!-- акты взвешивания -->
+            <ul class="kh-rows">
+              {
+                ACTS.map((a, i) => (
+                  <li class:list={['kh-row', a.sent ? 'kh-row--sent' : 'kh-row--todo']} style={`--r:${i}`}>
+                    {!a.sent && <span class="kh-row__tint" />}
+                    <span class="kh-check">
+                      {!a.sent && (
+                        <span class="kh-check__on">
+                          <Icon name="check" size={12} strokeWidth={3.2} />
+                        </span>
+                      )}
+                    </span>
+                    <span class="kh-status">
+                      {!a.sent && <span class="kh-pill kh-pill--off">Не отправлено</span>}
+                      <span class="kh-pill kh-pill--on">
+                        <Icon name="check" size={11} strokeWidth={3} />
+                        Отправлено
+                      </span>
+                    </span>
+                    <span class="kh-meta">
+                      {/* части подписей стоят вплотную: перенос строки в разметке дал бы лишний пробел */}
+                      <span class="kh-date"><span class="kh-date__d">{DAY}{NB}·{NB}</span>{a.time}</span>
+                      <span class="kh-plate">{a.plate}</span>
+                    </span>
+                    <span class="kh-weights">
+                      {WEIGHTS.map((wt, k) => (
+                        <span class="kh-w">
+                          <small><span class="kh-w__x">{wt.pre}</span>{wt.name}<span class="kh-w__x">)</span></small>
+                          <b>{a.w[k]}{NB}т</b>
+                        </span>
+                      ))}
+                    </span>
+                    <span class="kh-acts">
+                      <Icon name="pencil" size={16} strokeWidth={1.9} />
+                      <Icon name="trash" size={16} strokeWidth={1.9} />
+                    </span>
+                  </li>
+                ))
+              }
+            </ul>
+
+            <!-- сообщение об успешной отправке -->
+            <div class="kh-foot">
+              <span class="kh-toast">
+                <span class="kh-toast__ico">
+                  <Icon name="check" size={13} strokeWidth={3.2} />
+                </span>
+                Принято ФГИС{NB}УТКО · 10:05
+              </span>
+            </div>
+
+            <!-- нижнее меню сервиса -->
+            <div class="kh-nav">
+              {
+                TABS.map((t, i) => (
+                  <span class:list={['kh-tab', { 'is-on': i === 0 }]}>
+                    <Icon name={t.icon} size={20} strokeWidth={1.8} />
+                    <span>{t.label}</span>
+                  </span>
+                ))
+              }
+            </div>
+          </div>
+        </GradientVisual>
+        <span class="tag tag--demo kh__demo" aria-hidden="true">демо-данные</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .kh {
+    padding: 0 var(--page-pad);
+  }
+
+  /* Большая тёплая панель первого экрана — как на главной */
+  .kh__box {
+    position: relative;
+    border-radius: calc(var(--r-2xl) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    padding-top: clamp(48px, calc(var(--vw) * 7), 104px);
+    padding-bottom: clamp(8px, calc(var(--vw) * 4.2), 72px);
+  }
+
+  .kh__intro {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .kh__label {
+    margin-bottom: 22px;
+  }
+
+  .kh__title {
+    max-width: 1120px;
+    font-size: clamp(2.4rem, calc(var(--vw) * 4.7), 4.25rem);
+  }
+
+  .kh__sub {
+    max-width: 690px;
+    margin-top: 24px;
+  }
+
+  .kh__cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 36px;
+  }
+
+  /* Три факта: значок в белом кружке и текст, одна спокойная строка */
+  .kh__facts {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px 44px;
+    margin-top: 26px;
+  }
+
+  .kh__fact {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-size: 14.5px;
+    line-height: 1.4;
+    color: var(--ink-2);
+    text-align: left;
+  }
+
+  .kh__fact-ico {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 1px var(--line);
+    color: var(--ink);
+  }
+
+  /* переносы на компьютере заданы в разметке (.kh__br) */
+  .kh__fact-text {
+    white-space: nowrap;
+  }
+
+  /* ── Градиентная карточка с экраном сервиса ─────────────── */
+  .kh__stage {
+    margin-top: clamp(32px, calc(var(--vw) * 3), 48px);
+    animation: kh-in 0.9s var(--ease-out) 0.4s backwards;
+  }
+
+  /* карточка всегда видна на первом экране, поэтому появляется сразу при загрузке, а не по прокрутке */
+  @keyframes kh-in {
+    from {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+  }
+
+  .kh__vis {
+    position: relative;
+  }
+
+  .kh__gv {
+    min-height: 0;
+    padding: 64px clamp(10px, calc(var(--vw) * 3), 48px) clamp(12px, calc(var(--vw) * 3.6), 64px);
+  }
+
+  /* «демо-данные» в углу градиентной карточки */
+  .kh__demo {
+    position: absolute;
+    z-index: 1;
+    top: 20px;
+    left: 22px;
+    pointer-events: none;
+  }
+
+  /* ── Экран «Взвешивания» ─────────────────────────────────
+     Раскладку строк и панели действий задаёт ширина самой карточки (@container), а не окна. */
+  .kh-ui {
+    --k-row: #f5f6f8;
+    --k-line: #e6e8ec;
+    --k-chip: #eceef2;
+    --k-blue: #006bff;
+    --k-blue-soft: #e8f1ff;
+    --k-blue-ink: #0b56c4;
+    --k-ok: #0fa86f;
+    --k-ok-soft: #e1f5ec;
+    --k-ok-ink: #087a52;
+    container: kh / inline-size;
+    width: min(100%, 1040px);
+    padding: 0;
+    overflow: hidden;
+    font-size: 13.5px;
+    line-height: 1.3;
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Панель действий */
+  .kh-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 22px 0;
+  }
+
+  .kh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex: none;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
+    background: var(--k-chip);
+    font-size: 13.5px;
+    font-weight: 560;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .kh-btn--add {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .kh-btn--ico {
+    width: 40px;
+    padding: 0;
+    color: var(--ink-2);
+  }
+
+  .kh-btn--load {
+    background: var(--k-ok-soft);
+    color: var(--k-ok-ink);
+  }
+
+  .kh-bar__sep {
+    flex: none;
+    width: 1px;
+    height: 24px;
+    margin-inline: auto 4px;
+    background: var(--k-line);
+  }
+
+  /* «Отправить во ФГИС (N)»: два слоя — пока ничего не выбрано и активная кнопка */
+  .kh-send {
+    display: grid;
+    flex: none;
+  }
+
+  .kh-send > .kh-btn {
+    grid-area: 1 / 1;
+  }
+
+  .kh-send__off {
+    background: var(--k-blue-soft);
+    color: var(--k-blue-ink);
+  }
+
+  .kh-send__on {
+    background: var(--k-blue);
+    color: #fff;
+    opacity: 0;
+  }
+
+  /* счётчик выбранных актов: цифры стоят стопкой, видна одна */
+  .kh-n {
+    display: inline-grid;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .kh-n b {
+    grid-area: 1 / 1;
+    font-weight: inherit;
+  }
+
+  .kh-n__step {
+    opacity: 0;
+  }
+
+  /* Строки актов */
+  .kh-rows {
+    display: grid;
+    gap: 8px;
+    padding: 16px 22px 0;
+  }
+
+  .kh-row {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: 18px 118px 150px minmax(0, 1fr) auto;
+    grid-template-areas: 'check status meta w acts';
+    align-items: center;
+    column-gap: 18px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: var(--k-row);
+  }
+
+  /* подсветка выбранной строки */
+  .kh-row__tint {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: #edf4ff;
+    box-shadow: inset 0 0 0 1.5px rgb(0 107 255 / 0.28);
+    opacity: 0;
+  }
+
+  .kh-check {
+    grid-area: check;
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid #c3c8d0;
+    border-radius: 5px;
+    background: #fff;
+  }
+
+  .kh-check__on {
+    position: absolute;
+    inset: -1.5px;
+    display: grid;
+    place-items: center;
+    border-radius: inherit;
+    background: var(--k-blue);
+    color: #fff;
+    opacity: 0;
+  }
+
+  /* статус: две плашки в одной ячейке, видна одна */
+  .kh-status {
+    grid-area: status;
+    display: grid;
+    justify-items: start;
+  }
+
+  .kh-pill {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 560;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .kh-pill--off {
+    background: var(--k-chip);
+    color: #5c6066;
+    opacity: 0;
+  }
+
+  .kh-pill--on {
+    background: var(--k-ok-soft);
+    color: var(--k-ok-ink);
+  }
+
+  .kh-meta {
+    grid-area: meta;
+    display: grid;
+    justify-items: start;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .kh-date {
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* госномер — как табличка на машине */
+  .kh-plate {
+    padding: 2px 8px;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .kh-weights {
+    grid-area: w;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .kh-w {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .kh-w small {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .kh-w b {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .kh-acts {
+    grid-area: acts;
+    display: flex;
+    gap: 10px;
+    color: #a2a6ad;
+  }
+
+  /* Сообщение об успехе — между списком и нижним меню */
+  .kh-foot {
+    display: flex;
+    justify-content: center;
+    padding: 14px 22px 16px;
+  }
+
+  .kh-toast {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 16px 0 8px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(15 168 111 / 0.3),
+      0 12px 26px -14px rgb(29 29 31 / 0.4);
+    font-size: 13.5px;
+    font-weight: 560;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .kh-toast__ico {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--k-ok);
+    color: #fff;
+  }
+
+  /* Нижнее меню сервиса */
+  .kh-nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 8px 14px 10px;
+    border-top: 1px solid var(--k-line);
+  }
+
+  .kh-tab {
+    display: grid;
+    justify-items: center;
+    justify-self: center;
+    gap: 3px;
+    min-width: 104px;
+    padding: 7px 8px 6px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .kh-tab.is-on {
+    background: var(--k-blue-soft);
+    color: var(--k-blue-ink);
+  }
+
+  /* ── Движение: цикл 8 с ───────────────────────────────────
+     0,7 с — «Выбрать неотправленные»; с 1,0 с строки отмечаются по очереди и кнопка отправки
+     становится активной; 2,6 с — нажатие; с 3,0 с статусы по очереди меняются на «Отправлено»;
+     5,0 с — сообщение «Принято»; с 7,0 с всё мягко возвращается к началу.
+     Без анимации (и при «уменьшить движение») виден итог: всё отправлено, сообщение на месте. */
+  @media (prefers-reduced-motion: no-preference) {
+    .kh-row--todo .kh-check__on {
+      animation: kh-check 8s var(--ease-out) infinite both;
+      animation-delay: calc(var(--r) * 0.28s);
+    }
+
+    .kh-row--todo .kh-row__tint {
+      animation: kh-tint 8s var(--ease-out) infinite both;
+      animation-delay: calc(var(--r) * 0.28s);
+    }
+
+    .kh-row--todo .kh-pill--off {
+      animation: kh-off 8s var(--ease-out) infinite both;
+      animation-delay: calc(var(--r) * 0.28s);
+    }
+
+    .kh-row--todo .kh-pill--on {
+      animation: kh-on 8s var(--ease-out) infinite both;
+      animation-delay: calc(var(--r) * 0.28s);
+    }
+
+    .kh-btn--pick {
+      animation: kh-pick 8s ease infinite both;
+    }
+
+    .kh-send {
+      animation: kh-press 8s ease infinite both;
+    }
+
+    .kh-send__on {
+      animation: kh-send-on 8s ease infinite both;
+    }
+
+    .kh-n__step {
+      animation: kh-digit 8s linear infinite both;
+      animation-delay: calc(var(--k) * 0.28s);
+    }
+
+    .kh-n__last {
+      animation: kh-digit-last 8s linear infinite both;
+    }
+
+    .kh-toast {
+      animation: kh-toast 8s var(--ease-out) infinite both;
+    }
+
+    /* за экраном анимации стоят на первом кадре: data-idle снимает скрипт ниже, когда экран виден */
+    .kh-ui[data-idle] * {
+      animation-play-state: paused !important;
+    }
+  }
+
+  @media (scripting: none) {
+    .kh-ui[data-idle] * {
+      animation-play-state: running !important;
+    }
+  }
+
+  @keyframes kh-check {
+    0%,
+    12.5% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    15.5%,
+    37.5% {
+      opacity: 1;
+      transform: none;
+    }
+    40.5%,
+    100% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  @keyframes kh-tint {
+    0%,
+    12.5% {
+      opacity: 0;
+    }
+    15.5%,
+    37.5% {
+      opacity: 1;
+    }
+    41%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes kh-off {
+    0%,
+    37.5% {
+      opacity: 1;
+    }
+    40%,
+    90% {
+      opacity: 0;
+    }
+    95%,
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes kh-on {
+    0%,
+    38.5% {
+      opacity: 0;
+      transform: scale(0.85);
+    }
+    42%,
+    90% {
+      opacity: 1;
+      transform: none;
+    }
+    94%,
+    100% {
+      opacity: 0;
+      transform: none;
+    }
+  }
+
+  @keyframes kh-pick {
+    0%,
+    8% {
+      transform: none;
+    }
+    10% {
+      transform: scale(0.95);
+    }
+    12.5%,
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes kh-press {
+    0%,
+    32% {
+      transform: none;
+    }
+    34% {
+      transform: scale(0.95);
+    }
+    37%,
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes kh-send-on {
+    0%,
+    12.5% {
+      opacity: 0;
+    }
+    15%,
+    53% {
+      opacity: 1;
+    }
+    57%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* промежуточная цифра счётчика видна 0,28 с — пока не отмечена следующая строка */
+  @keyframes kh-digit {
+    0%,
+    12.49% {
+      opacity: 0;
+    }
+    12.5%,
+    15.99% {
+      opacity: 1;
+    }
+    16%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes kh-digit-last {
+    0%,
+    22.99% {
+      opacity: 0;
+    }
+    23%,
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes kh-toast {
+    0%,
+    57% {
+      opacity: 0;
+      transform: translateY(10px) scale(0.97);
+    }
+    62%,
+    87.5% {
+      opacity: 1;
+      transform: none;
+    }
+    92%,
+    100% {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+
+  /* ── Карточка уже 1000 px (планшет): строка в два яруса, без кнопок Excel ── */
+  @container kh (max-width: 999.98px) {
+    .kh-btn--tpl,
+    .kh-btn--load,
+    .kh-bar__sep,
+    .kh-acts {
+      display: none;
+    }
+
+    .kh-bar {
+      padding: 16px 16px 0;
+    }
+
+    .kh-rows {
+      padding: 14px 16px 0;
+    }
+
+    .kh-row {
+      grid-template-columns: 18px minmax(0, 1fr) auto;
+      grid-template-areas:
+        'check meta status'
+        'w w w';
+      gap: 10px 12px;
+      padding: 12px 14px;
+    }
+
+    .kh-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .kh-plate {
+      order: -1;
+    }
+
+    .kh-status {
+      justify-items: end;
+    }
+
+    .kh-weights {
+      padding-top: 10px;
+      border-top: 1px solid var(--k-line);
+    }
+  }
+
+  /* панель действий перестаёт помещаться: сначала «Добавить акт» остаётся значком, потом уходит фильтр */
+  @container kh (max-width: 659.98px) {
+    .kh-btn--add {
+      width: 40px;
+      padding: 0;
+    }
+
+    .kh-btn--add .kh-btn__t {
+      display: none;
+    }
+  }
+
+  @container kh (max-width: 569.98px) {
+    .kh-btn--filter {
+      display: none;
+    }
+  }
+
+  /* ── Карточка уже 520 px (телефон): подписи весов короткие, в панели — главное ── */
+  @container kh (max-width: 519.98px) {
+    .kh-bar {
+      gap: 6px;
+      padding: 12px 12px 0;
+    }
+
+    .kh-btn {
+      height: 38px;
+      padding: 0 10px;
+      font-size: 13px;
+    }
+
+    .kh-btn--add,
+    .kh-btn--pick {
+      width: 38px;
+      padding: 0;
+    }
+
+    .kh-btn--pick .kh-btn__t,
+    .kh-w__x,
+    .kh-date__d,
+    .kh-row--sent {
+      display: none;
+    }
+
+    .kh-send {
+      flex: 1;
+    }
+
+    .kh-rows {
+      gap: 6px;
+      padding: 10px 12px 0;
+    }
+
+    .kh-row {
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 12px;
+    }
+
+    .kh-meta {
+      gap: 8px;
+    }
+
+    .kh-pill {
+      padding: 0 8px;
+      font-size: 12px;
+    }
+
+    .kh-weights {
+      gap: 8px;
+      padding-top: 8px;
+    }
+
+    .kh-w b {
+      font-size: 14px;
+    }
+
+    .kh-foot {
+      padding: 10px 12px 12px;
+    }
+
+    .kh-toast {
+      height: 36px;
+      font-size: 13px;
+    }
+
+    /* вкладки по ширине своих подписей, с равными промежутками */
+    .kh-nav {
+      display: flex;
+      justify-content: space-around;
+      padding: 6px 2px 8px;
+    }
+
+    .kh-tab {
+      min-width: 0;
+      padding: 6px 6px 5px;
+    }
+  }
+
+  /* совсем узкая карточка (телефон уже 388 px): время в строке не помещается рядом со статусом */
+  @container kh (max-width: 335.98px) {
+    .kh-date {
+      display: none;
+    }
+  }
+
+  /* ── Планшет и телефон ─────────────────────────────────── */
+  @media (max-width: 1199.98px) {
+    /* заголовок и факты переносятся сами */
+    .kh__br {
+      display: none;
+    }
+
+    /* факты столбиком: значок слева, текст по левому краю, сам столбик по центру */
+    .kh__facts {
+      display: grid;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .kh__fact-text {
+      white-space: normal;
+      text-wrap: pretty;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .kh__title {
+      font-size: clamp(2.05rem, calc(var(--vw) * 9), 2.6rem);
+    }
+
+    .kh__cta {
+      display: grid;
+      width: 100%;
+    }
+
+    .kh__facts {
+      margin-top: 26px;
+    }
+
+    /* карточка — почти во всю ширину панели, с тем же отступом снизу */
+    .kh__box {
+      padding-bottom: 8px;
+    }
+
+    .kh__stage {
+      padding-inline: 8px;
+    }
+
+    .kh__gv {
+      --gv-r: 22px;
+      padding: 54px 10px 18px;
+    }
+
+    .kh__demo {
+      top: 14px;
+      left: 14px;
+    }
+
+    /* полупрозрачная рамка карточки уже, чтобы по бокам оставался градиент */
+    .kh-ui {
+      box-shadow:
+        0 0 0 6px rgb(255 255 255 / 0.4),
+        var(--shadow-card);
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Анимация экрана «Взвешивания» идёт, только пока он на экране (в разметке она стоит: data-idle).
+  // При «уменьшить движение» анимации выключены в CSS — следить не нужно.
+  const mock = document.querySelector<HTMLElement>('[data-kh-mock]');
+  if (mock && !reducedMotion()) {
+    if (!('IntersectionObserver' in window)) {
+      delete mock.dataset.idle;
+    } else {
+      new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) delete mock.dataset.idle;
+          else mock.dataset.idle = '';
+        },
+        { threshold: 0.35 },
+      ).observe(mock);
+    }
+  }
+</script>

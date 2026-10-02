@@ -1,0 +1,232 @@
+---
+// Раздел 2 страницы «Кодекс ТКО» [#pochemu-seychas]. Приём Calendly «интеграции»: четыре факта —
+// бежевые плитки с белыми плашками значков, соединённые «мостиками». Под ними вывод на графитовой
+// полосе с кнопкой заявки (как тёмная полоса в «Полигонам и сортировкам» на главной).
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = ' ';
+
+// Тексты — с лендинга продукта, дословно
+const FACTS: { icon: IconName; text: string }[] = [
+  { icon: 'scan-search', text: `Проверки и требования ФГИС${NB}УТКО уже начались` },
+  { icon: 'gavel', text: `За неотправку данных — штрафы до 150${NB}000${NB}рублей и предписания` },
+  { icon: 'hourglass', text: 'Полноценную автоматизацию внедрять долго и дорого' },
+  { icon: 'calendar-x', text: `Многие предприятия просто не успевают в сроки по постановлению${NB}1657` },
+];
+---
+
+<section class="section" id="pochemu-seychas" aria-labelledby="pochemu-seychas-title">
+  <div class="container kwy">
+    <SectionIntro eyebrow="Почему сейчас" titleId="pochemu-seychas-title">Почему это нужно прямо сейчас</SectionIntro>
+
+    <!-- Четыре факта: плитки с мостиками -->
+    <ul class="kwy__facts bridged">
+      {
+        FACTS.map((f, i) => (
+          <li class="kwy__fact" data-reveal style={`--d:${i + 1}`}>
+            <span class="kwy__chip" aria-hidden="true">
+              <Icon name={f.icon} size={24} />
+            </span>
+            <h3 class="kwy__text">{f.text}</h3>
+          </li>
+        ))
+      }
+    </ul>
+
+    <!-- Вывод и кнопка заявки -->
+    <div class="kwy__band dark" data-reveal>
+      <p class="kwy__note">
+        Большинству сейчас нужно простое и рабочее решение, чтобы данные начали уходить во&nbsp;ФГИС&nbsp;УТКО как можно
+        быстрее.
+        <span class="kwy__note-2">Именно для этого и создан наш сервис.</span>
+      </p>
+      <a href="#forma" class="btn btn--light kwy__cta" data-interest="kodeks" data-goal="pilot_click">
+        Подключиться бесплатно
+        <Icon name="arrow-right" />
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Плитки и полоса под ними — один блок: общий зазор и общее скругление */
+  .kwy {
+    --kwy-gap: clamp(14px, calc(var(--vw) * 1.8), 24px);
+    --kwy-r: clamp(20px, calc(var(--vw) * 2), 26px);
+    --kwy-pad: clamp(20px, calc(var(--vw) * 2.2), 28px);
+    --kwy-chip: 52px;
+  }
+
+  /* ── Четыре факта: бежевые плитки, соединённые мостиками ── */
+  .kwy__facts {
+    --gap: var(--kwy-gap);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--kwy-gap);
+    isolation: isolate;
+  }
+
+  /* значок сверху, текст прижат к низу плитки */
+  .kwy__fact {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 36px;
+    min-height: 248px;
+    padding: var(--kwy-pad);
+    border-radius: calc(var(--kwy-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  /* мостик к плитке слева — на высоте значка (маски — .bridged в global.css) */
+  .kwy__fact + .kwy__fact::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--kwy-pad) + var(--kwy-chip) / 2 - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  .kwy__chip {
+    display: grid;
+    place-items: center;
+    width: var(--kwy-chip);
+    height: var(--kwy-chip);
+    flex: none;
+    border-radius: calc(15px * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+    color: var(--ink);
+    box-shadow:
+      0 1px 2px rgb(29 29 31 / 0.05),
+      0 10px 18px -12px rgb(29 29 31 / 0.22);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  /* при наведении приподнимается значок, а не плитка: стык с мостиком остаётся на месте */
+  .kwy__fact:hover .kwy__chip {
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  .kwy__text {
+    font-size: 1.25rem;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  /* четыре плитки в ряд: строка не длиннее 11em — тогда текст в каждой плитке встаёт в четыре строки
+     и блоки текста одной высоты (самая длинная строка, «по постановлению 1657», шире, но в плитку входит) */
+  @media (min-width: 1200px) {
+    .kwy__text {
+      max-width: 11em;
+    }
+  }
+
+  /* ── Графитовая полоса с выводом ───────────────────────── */
+  .kwy__band {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px clamp(28px, calc(var(--vw) * 4), 64px);
+    margin-top: var(--kwy-gap);
+    padding: clamp(24px, calc(var(--vw) * 3), 40px) clamp(22px, calc(var(--vw) * 3.4), 48px);
+    border-radius: calc(var(--kwy-r) * var(--rk));
+    corner-shape: var(--corner);
+    background:
+      radial-gradient(60% 140% at 0% 0%, rgb(72 144 227 / 0.38) 0%, transparent 60%),
+      radial-gradient(45% 140% at 100% 100%, rgb(184 159 250 / 0.22) 0%, transparent 60%),
+      var(--ink);
+    overflow: hidden;
+  }
+
+  .kwy__note {
+    max-width: 780px;
+    font-size: clamp(1.15rem, calc(var(--vw) * 1.8), 1.5rem);
+    line-height: 1.32;
+    font-weight: 560;
+    letter-spacing: -0.02em;
+    text-wrap: pretty;
+  }
+
+  /* второе предложение — с новой строки и тише */
+  .kwy__note-2 {
+    display: block;
+    margin-top: 0.35em;
+    color: rgb(255 255 255 / 0.72);
+  }
+
+  /* ── Планшет: плитки 2×2, мостики — внутри каждой пары ── */
+  @media (max-width: 1199.98px) {
+    .kwy__facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .kwy__fact {
+      min-height: 200px;
+    }
+
+    .kwy__fact + .kwy__fact:nth-child(2n + 1)::before {
+      content: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .kwy__band {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .kwy__cta {
+      width: 100%;
+      white-space: normal;
+    }
+  }
+
+  /* ── Телефон: плитки столбиком, значок слева; мостики — к плитке сверху ── */
+  @media (max-width: 639.98px) {
+    .kwy {
+      --kwy-chip: 44px;
+      --kwy-pad: 18px;
+    }
+
+    .kwy__facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .kwy__fact {
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .kwy__fact + .kwy__fact::before,
+    .kwy__fact + .kwy__fact:nth-child(2n + 1)::before {
+      content: '';
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--kwy-pad) + var(--kwy-chip) / 2 - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .kwy__chip {
+      border-radius: calc(13px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .kwy__text {
+      font-size: 1.0625rem;
+    }
+  }
+</style>

@@ -2,7 +2,14 @@
 // Блок 13. Частые вопросы: слева липкий заголовок, справа список вопросов с линиями (как пункты Calendly).
 import SectionIntro from '../components/SectionIntro.astro';
 import Faq from '../components/Faq.astro';
-import { FAQ } from '../data/faq';
+import { FAQ, type FaqItem } from '../data/faq';
+
+interface Props {
+  /** Вопросы страницы; по умолчанию — вопросы главной. */
+  items?: FaqItem[];
+}
+
+const { items = FAQ } = Astro.props;
 ---
 
 <section class="section" id="voprosy" aria-labelledby="voprosy-title">
@@ -10,7 +17,7 @@ import { FAQ } from '../data/faq';
     <div class="q__head">
       <SectionIntro eyebrow="Вопросы" titleId="voprosy-title" align="left">Частые вопросы</SectionIntro>
     </div>
-    <Faq items={FAQ} />
+    <Faq items={items} />
   </div>
 </section>
 

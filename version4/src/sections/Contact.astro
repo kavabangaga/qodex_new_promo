@@ -7,6 +7,23 @@ import LeadForm from '../components/LeadForm.astro';
 import Icon from '../components/Icon.astro';
 import { CONTACTS } from '../config/site';
 
+// Тексты по умолчанию — главная страница; страница продукта передаёт свои.
+interface Props {
+  title?: string;
+  lead?: string;
+  /** Строка с зелёной точкой под подзаголовком. */
+  proof?: string;
+  /** Подпись в карточке контакта. */
+  personLabel?: string;
+}
+
+const {
+  title = 'Покажем эффект в рублях на одном районе или одной весовой',
+  lead = 'Пилот РО-БОТа — бесплатно. Напишите или позвоните — пришлём NDA и запустим пилот.',
+  proof = '73 клиента работают с продуктами QODEX',
+  personLabel = 'Ваш контакт по пилоту',
+} = Astro.props;
+
 // Высоты полос «звуковой волны» в центральной карточке
 const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
 ---
@@ -14,11 +31,11 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
 <section class="section contact" id="kontakty" data-contact aria-labelledby="forma">
   <div class="container">
     <SectionIntro eyebrow="Заявка" titleId="forma">
-      Покажем эффект в рублях на одном районе или одной весовой
-      <Fragment slot="lead">Пилот РО-БОТа — бесплатно. Напишите или позвоните — пришлём NDA и запустим пилот.</Fragment>
+      {title}
+      <Fragment slot="lead">{lead}</Fragment>
       <p slot="cta" class="contact__proof">
         <span class="contact__dot" aria-hidden="true"></span>
-        73 клиента работают с продуктами QODEX
+        {proof}
       </p>
     </SectionIntro>
 
@@ -32,7 +49,7 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
           <span class="cc__bars" aria-hidden="true">
             {BARS.map((h) => <i style={`--h:${h}%`} />)}
           </span>
-          <span class="cc__label">Ваш контакт по пилоту</span>
+          <span class="cc__label">{personLabel}</span>
           <span class="cc__chips">
             <span class="cc__chip">
               <span class="cc__avatar" aria-hidden="true">ДМ</span>

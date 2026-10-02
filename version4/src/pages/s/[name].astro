@@ -21,6 +21,20 @@ import About from '../../sections/About.astro';
 import Contact from '../../sections/Contact.astro';
 import KitDemo from '../../components/dev/KitDemo.astro';
 
+// Разделы страницы «Кодекс ТКО»: /s/k-hero, /s/k-why … Загружаются по одному, по запросу:
+// ошибка в одном разделе не ломает просмотр остальных.
+const KODEKS = import.meta.glob('../../sections/kodeks/*.astro');
+const K = {
+  'k-hero': 'KHero',
+  'k-why': 'KWhy',
+  'k-service': 'KService',
+  'k-steps': 'KSteps',
+  'k-excel': 'KExcel',
+  'k-features': 'KFeatures',
+  'k-fit': 'KFit',
+  'k-trust': 'KTrust',
+} as const;
+
 const MAP = {
   header: Header,
   hero: Hero,
@@ -61,11 +75,23 @@ export function getStaticPaths() {
     'contact',
     'footer',
     'kit',
+    // те же имена, что в K (сюда его не подставить: getStaticPaths видит только импорты)
+    'k-hero',
+    'k-why',
+    'k-service',
+    'k-steps',
+    'k-excel',
+    'k-features',
+    'k-fit',
+    'k-trust',
   ].map((name) => ({ params: { name } }));
 }
 
-const { name } = Astro.params as { name: keyof typeof MAP };
-const Section = MAP[name];
+const { name } = Astro.params as { name: keyof typeof MAP | keyof typeof K };
+const Section =
+  name in K
+    ? ((await KODEKS[`../../sections/kodeks/${K[name as keyof typeof K]}.astro`]()) as { default: typeof Header }).default
+    : MAP[name as keyof typeof MAP];
 ---
 
 <Base title={`Раздел: ${name}`}>

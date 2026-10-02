@@ -6,6 +6,23 @@
 import LeadForm from './LeadForm.astro';
 import Icon from './Icon.astro';
 import { CONTACTS } from '../config/site';
+
+// Тексты по умолчанию — главная страница; страница продукта передаёт свои.
+interface Props {
+  title?: string;
+  lead?: string;
+  /** Подпись над именем контакта. */
+  personLabel?: string;
+  /** Строка с зелёной точкой внизу панели. */
+  proof?: string;
+}
+
+const {
+  title = 'Покажем эффект в рублях на одном районе или одной весовой',
+  lead = 'Пилот РО-БОТа — бесплатно. Напишите или позвоните — пришлём NDA и запустим пилот.',
+  personLabel = 'Ваш контакт по пилоту',
+  proof = '73 клиента работают с продуктами QODEX',
+} = Astro.props;
 ---
 
 <dialog class="lm" data-lead-modal aria-labelledby="lm-title">
@@ -15,12 +32,12 @@ import { CONTACTS } from '../config/site';
     </button>
     <aside class="lm__side">
       <p class="t-eyebrow lm__eyebrow">Заявка</p>
-      <h2 class="lm__title" id="lm-title">Покажем эффект в рублях на одном районе или одной весовой</h2>
-      <p class="lm__lead">Пилот РО-БОТа — бесплатно. Напишите или позвоните — пришлём NDA и запустим пилот.</p>
+      <h2 class="lm__title" id="lm-title">{title}</h2>
+      <p class="lm__lead">{lead}</p>
       <div class="lm__person">
         <span class="lm__avatar" aria-hidden="true">ДМ</span>
         <div class="lm__person-text">
-          <span class="lm__person-label">Ваш контакт по пилоту</span>
+          <span class="lm__person-label">{personLabel}</span>
           <strong>{CONTACTS.pilotContact}</strong>
           <a href={CONTACTS.phoneHref} data-goal="phone_click">
             <Icon name="phone" size={16} />
@@ -28,7 +45,7 @@ import { CONTACTS } from '../config/site';
           </a>
         </div>
       </div>
-      <p class="lm__proof"><span aria-hidden="true"></span>73 клиента работают с продуктами QODEX</p>
+      <p class="lm__proof"><span aria-hidden="true"></span>{proof}</p>
     </aside>
     <div class="lm__main">
       <LeadForm prefix="lm" layout="stack" tone="light" />

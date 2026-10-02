@@ -1,0 +1,1229 @@
+---
+// Раздел 4 страницы «Кодекс ТКО» [#kak-eto-rabotaet] — «Как это работает — 5 простых шагов».
+// Приём Calendly «Book → Prep → Capture → Follow up»: цепочка из пяти карточек, одна раскрыта.
+// Закрытая карточка — значок, «Шаг N», заголовок шага и бледная пастельная форма внизу;
+// раскрытая — ещё текст шага и маленький экран сервиса на градиенте (демо-данные те же,
+// что на первом экране страницы). Экран «проигрывается» один раз, когда карточка раскрылась
+// и видна на экране; без анимации виден итог шага.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = ' ';
+
+// Тексты — с лендинга продукта, дословно
+const STEPS: { title: string; text: string; icon: IconName; art: 'signup' | 'key' | 'act' | 'send' | 'done' }[] = [
+  {
+    title: `Регистрация за 1${NB}минуту`,
+    text: 'Создаёте аккаунт — без договоров и долгой настройки.',
+    icon: 'user-plus',
+    art: 'signup',
+  },
+  {
+    title: `Вставляете ключ с сайта ФГИС${NB}УТКО`,
+    text: 'Используете свой действующий ключ доступа.',
+    icon: 'key-round',
+    art: 'key',
+  },
+  {
+    title: 'Заполняете данные об актах взвешивания',
+    text: 'Вводите данные в простой и понятной форме.',
+    icon: 'note-edit',
+    art: 'act',
+  },
+  {
+    title: `Нажимаете кнопку «Отправить во ФГИС${NB}УТКО»`,
+    text: `Сервис отправляет введённые вами данные во ФГИС${NB}УТКО.`,
+    icon: 'send',
+    art: 'send',
+  },
+  {
+    title: `Готово. Ваши данные во ФГИС${NB}УТКО`,
+    text: 'Передача выполнена — данные ушли в систему.',
+    icon: 'cloud-check',
+    art: 'done',
+  },
+];
+
+// Демо-акты (те же, что в демо-аккаунте сервиса): госномер и вес груза (нетто), т
+const ACTS = [
+  { plate: 'В 121 АА 777', net: '6,000' },
+  { plate: 'Е 834 УУ 777', net: '4,998' },
+  { plate: 'М 847 МА 77', net: '5,551' },
+];
+
+// Счётчик на кнопке «Отправить во ФГИС (N)»: растёт, пока отмечаются акты; итог — число актов
+const COUNT = ACTS.map((_, k) => ({
+  n: k + 1,
+  cls: k + 1 === ACTS.length ? 'a-fade' : 'a-blip',
+  style: `--t:${(0.55 + k * 0.3).toFixed(2)}s; --dur:${k + 1 === ACTS.length ? 0.01 : 0.3}s`,
+}));
+
+// Поля формы акта; t — когда поле «заполняется», dur — сколько это длится (с)
+const ACT_FIELDS = [
+  { label: 'Дата', value: '30.09.2026', t: 0.55, dur: 0.4 },
+  { label: 'Госномер', value: 'В 121 АА 777', t: 1.05, dur: 0.55 },
+  { label: 'Вес брутто', value: `24,000${NB}т`, t: 1.7, dur: 0.45 },
+  { label: 'Тара', value: `18,000${NB}т`, t: 2.25, dur: 0.45 },
+];
+---
+
+<section class="section panel kst" id="kak-eto-rabotaet" aria-labelledby="kak-eto-rabotaet-title">
+  <div class="container">
+    <SectionIntro eyebrow="Как это работает" titleId="kak-eto-rabotaet-title">
+      Как это работает — 5&nbsp;простых шагов
+      <Fragment slot="lead">Никаких внедрений. Никакого обучения. Всё максимально просто.</Fragment>
+    </SectionIntro>
+
+    <ol class="chain kst-chain" data-chain data-chain-ms="6000" data-chain-narrow="1199" data-kst data-reveal style="--d:2">
+      {
+        STEPS.map((s, i) => (
+          <li class:list={['chain__card', 'kst-card', `kst-card--${i + 1}`, { 'is-open': i === 0 }]}>
+            <div class="kst-card__in">
+              <div class="kst-card__text">
+                <p class="kst-card__head">
+                  <span class="kst-card__chip" aria-hidden="true">
+                    <Icon name={s.icon} size={22} strokeWidth={1.9} />
+                  </span>
+                  <span class="kst-card__step">{`Шаг${NB}${i + 1}`}</span>
+                </p>
+                <h3 class="kst-card__title">
+                  <button
+                    class="kst-card__btn"
+                    type="button"
+                    aria-expanded={i === 0 ? 'true' : 'false'}
+                    aria-disabled={i === 0 ? 'true' : undefined}
+                    aria-controls={`kst-d${i + 1}`}
+                  >
+                    {s.title}
+                  </button>
+                </h3>
+                <p class="kst-card__desc" id={`kst-d${i + 1}`}>
+                  {s.text}
+                </p>
+              </div>
+
+              <span class="kst-card__deco" aria-hidden="true" />
+
+              <div class="kst-card__art" aria-hidden="true">
+                {/* 1. Регистрация: два поля, кнопка, сообщение */}
+                {s.art === 'signup' && (
+                  <div class="ui kst-ui">
+                    <span class="kst-f">
+                      <small>Организация</small>
+                      <span class="kst-f__in">
+                        <span class="kst-f__v">ООО «Экополигон»</span>
+                        <i class="kst-f__type a-type" style="--t:0.55s; --dur:0.8s; --n:14" />
+                      </span>
+                    </span>
+                    <span class="kst-f">
+                      <small>Телефон</small>
+                      <span class="kst-f__in">
+                        <span class="kst-f__v">+7 ••• ••• 14 52</span>
+                        <i class="kst-f__type a-type" style="--t:1.45s; --dur:0.7s; --n:12" />
+                      </span>
+                    </span>
+                    <span class="kst-btn kst-btn--ink a-press" style="--t:2.3s">
+                      Создать аккаунт
+                    </span>
+                    <span class="kst-toast kst-toast--corner a-pop" style="--t:2.75s">
+                      <span class="kst-toast__i">
+                        <Icon name="check" size={11} strokeWidth={3.4} />
+                      </span>
+                      Аккаунт создан
+                    </span>
+                  </div>
+                )}
+
+                {/* 2. Настройки: ключи доступа ObjectID и AccessKey, статус интеграции */}
+                {s.art === 'key' && (
+                  <div class="ui kst-ui">
+                    <div class="kst-hd">
+                      <span class="kst-hd__i">
+                        <Icon name="key-round" size={17} strokeWidth={2} />
+                      </span>
+                      <span class="kst-hd__t">
+                        <b>Интеграция с ФГИС{NB}УТКО</b>
+                        <span class="kst-live a-in" style="--t:2.05s">
+                          <Icon name="circle-check" size={14} strokeWidth={2.2} />
+                          Интеграция активна
+                        </span>
+                      </span>
+                    </div>
+                    <span class="kst-f">
+                      <small>ObjectID</small>
+                      <span class="kst-f__in kst-f__in--id">
+                        <span class="kst-f__v">550e8400-e29b-41d4-a716-446655440000</span>
+                        <i class="kst-f__type a-paste" style="--t:0.6s" />
+                      </span>
+                    </span>
+                    <span class="kst-f">
+                      <small>AccessKey</small>
+                      <span class="kst-f__in">
+                        <span class="kst-f__v kst-f__v--dots">••••••••••••••••••••••••</span>
+                        <i class="kst-f__type a-paste" style="--t:1.3s" />
+                        <span class="kst-f__eye">
+                          <Icon name="eye" size={16} strokeWidth={2} />
+                        </span>
+                      </span>
+                    </span>
+                  </div>
+                )}
+
+                {/* 3. Акт взвешивания: дата, госномер, брутто и тара; нетто считается само */}
+                {s.art === 'act' && (
+                  <div class="ui kst-ui">
+                    <div class="kst-grid">
+                      {ACT_FIELDS.map((f) => (
+                        <span class="kst-f">
+                          <small>{f.label}</small>
+                          <span class="kst-f__in">
+                            <span class="kst-f__v">{f.value}</span>
+                            <i class="kst-f__type a-type" style={`--t:${f.t}s; --dur:${f.dur}s; --n:8`} />
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                    <div class="kst-net a-in" style="--t:2.9s">
+                      <span class="kst-net__i">
+                        <Icon name="calculator" size={17} strokeWidth={2} />
+                      </span>
+                      <span class="kst-net__t">
+                        <span>
+                          Нетто <b>6,000{NB}т</b>
+                        </span>
+                        <small>рассчитано автоматически</small>
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Акты выбраны, кнопка «Отправить во ФГИС (3)» нажата */}
+                {s.art === 'send' && (
+                  <div class="ui kst-ui">
+                    <ul class="kst-rows">
+                      {ACTS.map((a, k) => (
+                        <li class="kst-row" style={`--t:${(0.55 + k * 0.3).toFixed(2)}s`}>
+                          <span class="kst-row__tint a-fade" />
+                          <span class="kst-check">
+                            <span class="kst-check__on a-pop">
+                              <Icon name="check" size={12} strokeWidth={3.2} />
+                            </span>
+                          </span>
+                          <span class="kst-plate">{a.plate}</span>
+                          <b class="kst-row__w">{`${a.net}${NB}т`}</b>
+                        </li>
+                      ))}
+                    </ul>
+                    <span class="kst-send a-press" style="--t:2.25s">
+                      <span class="kst-btn kst-send__off">
+                        <Icon name="send" size={15} strokeWidth={2} />
+                        <span>Отправить во ФГИС (0)</span>
+                      </span>
+                      <span class="kst-btn kst-send__on a-fade" style="--t:0.55s">
+                        <Icon name="send" size={15} strokeWidth={2} />
+                        {/* части подписи стоят вплотную: перенос строки в разметке дал бы лишний пробел */}
+                        <span>
+                          Отправить во ФГИС (<span class="kst-n">{COUNT.map((c) => <b class={c.cls} style={c.style}>{c.n}</b>)}</span>)
+                        </span>
+                      </span>
+                      <span class="kst-send__halo a-fade" style="--t:2.45s" />
+                      <span class="kst-cur a-cur" style="--t:1.55s">
+                        <span class="a-press" style="--t:2.25s">
+                          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+                            <path
+                              d="M4.2 2.4v13.4l3.5-3 2.3 5 2.5-1.1-2.3-5h4.7z"
+                              fill="#fff"
+                              stroke="#1d1d1f"
+                              stroke-width="1.4"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                        </span>
+                      </span>
+                    </span>
+                  </div>
+                )}
+
+                {/* 5. Статусы актов меняются на «Отправлено», ФГИС УТКО приняла данные */}
+                {s.art === 'done' && (
+                  <div class="ui kst-ui">
+                    <ul class="kst-rows">
+                      {ACTS.map((a, k) => (
+                        <li class="kst-row" style={`--t:${(0.55 + k * 0.35).toFixed(2)}s`}>
+                          <span class="kst-plate">{a.plate}</span>
+                          <span class="kst-status">
+                            <span class="kst-pill kst-pill--off a-gone">Не отправлено</span>
+                            <span class="kst-pill kst-pill--on a-pop">
+                              <Icon name="check" size={11} strokeWidth={3} />
+                              Отправлено
+                            </span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div class="kst-foot">
+                      <span class="kst-toast a-in" style="--t:1.85s">
+                        <span class="kst-toast__i">
+                          <Icon name="check" size={11} strokeWidth={3.4} />
+                        </span>
+                        Принято ФГИС{NB}УТКО · 10:05
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <span class="tag tag--demo kst-card__demo">демо-данные</span>
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="kst__cta" data-reveal>
+      <a href="#forma" class="btn btn--primary" data-interest="kodeks" data-goal="pilot_click">
+        <span>Передать данные во&nbsp;ФГИС&nbsp;УТКО сегодня</span>
+        <Icon name="arrow-right" />
+      </a>
+    </p>
+  </div>
+</section>
+
+<style>
+  /* ── Цепочка из пяти шагов ────────────────────────────────
+     От 1200 px карточки стоят в ряд, одна раскрыта; уже — столбиком и все раскрыты. */
+  .kst-chain {
+    --chain-gap: 20px;
+    --bridge-y: 30px;
+    --kst-grow: 1.957;
+    --kst-pad: 20px;
+    --kst-h: 472px;
+    --kst-art-h: 300px;
+    --kst-deco-h: 206px;
+    /* ширина раскрытой карточки: её содержимое не перестраивается, пока карточка растёт */
+    --kst-open: calc((100cqi - 4 * var(--chain-gap)) * var(--kst-grow) / (4 + var(--kst-grow)));
+    container-type: inline-size;
+  }
+
+  .kst-card {
+    height: var(--kst-h);
+  }
+
+  .kst-card.is-open {
+    flex-grow: var(--kst-grow);
+  }
+
+  /* Палитра каждой карточки: d — бледная форма закрытой, a — градиент под экраном раскрытой */
+  .kst-card--1 {
+    --d1: color-mix(in oklab, var(--g-lime) 36%, white);
+    --d2: color-mix(in oklab, var(--g-sky) 18%, white);
+    --a1: var(--g-lav);
+    --a2: var(--g-pink-soft);
+    --a3: var(--g-lav-2);
+  }
+
+  .kst-card--2 {
+    --d1: color-mix(in oklab, var(--g-lime) 36%, white);
+    --d2: color-mix(in oklab, var(--g-pink-soft) 32%, white);
+    --a1: var(--g-sky);
+    --a2: var(--g-teal);
+    --a3: var(--g-teal-soft);
+  }
+
+  .kst-card--3 {
+    --d1: color-mix(in oklab, var(--g-lav-soft) 60%, white);
+    --d2: color-mix(in oklab, var(--g-pink-soft) 32%, white);
+    --a1: var(--g-pink);
+    --a2: var(--g-lav);
+    --a3: var(--g-pink-soft);
+  }
+
+  .kst-card--4 {
+    --d1: color-mix(in oklab, var(--g-teal-soft) 42%, white);
+    --d2: color-mix(in oklab, var(--g-sky) 17%, white);
+    --a1: var(--g-lav);
+    --a2: var(--g-sky);
+    --a3: var(--g-lav-2);
+  }
+
+  .kst-card--5 {
+    --d1: color-mix(in oklab, var(--g-lime) 36%, white);
+    --d2: color-mix(in oklab, var(--g-teal-soft) 40%, white);
+    --a1: var(--g-teal);
+    --a2: var(--g-lime);
+    --a3: var(--g-teal-soft);
+  }
+
+  .kst-card__in {
+    position: relative;
+    height: 100%;
+    border-radius: inherit;
+    corner-shape: inherit;
+    overflow: clip;
+  }
+
+  .kst-card__text {
+    position: relative;
+    z-index: 1;
+    padding: 24px var(--kst-pad) 0;
+  }
+
+  /* значок и «Шаг N» — на высоте мостика между карточками */
+  .kst-card__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .kst-card__chip {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: calc(13px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+    transition:
+      background-color 0.35s,
+      color 0.35s;
+  }
+
+  /* у раскрытого шага значок в цвете продукта */
+  .kst-card.is-open .kst-card__chip {
+    background: var(--c-kodeks);
+    color: #fff;
+  }
+
+  .kst-card__step {
+    font-size: 14px;
+    font-weight: 560;
+    line-height: 1.2;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* кегль подобран по закрытой карточке: самый длинный кусок без переноса — «во ФГИС УТКО»» */
+  .kst-card__title {
+    margin-top: 16px;
+    font-size: 19px;
+    line-height: 1.22;
+    letter-spacing: -0.012em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  /* заголовок — кнопка: с клавиатуры шаг раскрывается фокусом, как под курсором */
+  .kst-card__btn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    letter-spacing: inherit;
+    text-align: left;
+    cursor: inherit;
+  }
+
+  /* текст шага — только в раскрытой карточке (ширина зафиксирована, чтобы текст не прыгал) */
+  .kst-card__desc {
+    width: calc(var(--kst-open) - 2 * var(--kst-pad));
+    margin-top: 8px;
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
+    transition: opacity 0.45s var(--ease-out) 0.2s;
+  }
+
+  /* Бледная пастельная форма внизу закрытой карточки (дуга и «уголок», как у Calendly) */
+  .kst-card__deco {
+    position: absolute;
+    inset: auto 0 0;
+    height: var(--kst-deco-h);
+    background: linear-gradient(180deg, var(--d1) 0%, var(--d2) 100%);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 260' preserveAspectRatio='none'%3E%3Cpath d='M0 0A140 138 0 0 1 140 138H62V260H0Z'/%3E%3Cpath d='M160 0H190V260H82V158H160Z'/%3E%3C/svg%3E")
+      left bottom / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 260' preserveAspectRatio='none'%3E%3Cpath d='M0 0A140 138 0 0 1 140 138H62V260H0Z'/%3E%3Cpath d='M160 0H190V260H82V158H160Z'/%3E%3C/svg%3E")
+      left bottom / 100% 100% no-repeat;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  /* Градиент с экраном сервиса внизу раскрытой карточки */
+  .kst-card__art {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: var(--kst-open);
+    height: var(--kst-art-h);
+    background:
+      radial-gradient(65% 85% at 10% 100%, var(--a1) 0%, transparent 72%),
+      radial-gradient(65% 85% at 92% 100%, var(--a2) 0%, transparent 72%),
+      linear-gradient(180deg, rgb(255 255 255 / 0) 0%, var(--a3) 82%);
+    transition: opacity 0.5s var(--ease-out) 0.15s;
+  }
+
+  /* «демо-данные» — под экраном, на насыщенной части градиента */
+  .kst-card__demo {
+    position: absolute;
+    left: 16px;
+    bottom: 14px;
+    pointer-events: none;
+  }
+
+  /* ── Экраны сервиса (демо-данные). Цвета и детали — как у экрана на первом экране страницы ── */
+  .kst-ui {
+    --k-row: #f5f6f8;
+    --k-line: #dfe3e8;
+    --k-chip: #eceef2;
+    --k-blue: #006bff;
+    --k-blue-soft: #e8f1ff;
+    --k-blue-ink: #0b56c4;
+    --k-ok: #0fa86f;
+    --k-ok-soft: #e1f5ec;
+    --k-ok-ink: #087a52;
+    position: absolute;
+    left: 50%;
+    bottom: 56px;
+    display: grid;
+    gap: 8px;
+    width: min(328px, calc(100% - 40px));
+    padding: 14px;
+    border-radius: 18px;
+    font-size: 13px;
+    line-height: 1.3;
+    text-align: left;
+    translate: -50% 0;
+    -webkit-user-select: none;
+    user-select: none;
+    transition:
+      transform 0.6s var(--ease-out) 0.22s,
+      opacity 0.5s 0.22s;
+  }
+
+  /* Поле формы: подпись и значение; «набор» — белая шторка отъезжает вправо */
+  .kst-f {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .kst-f small,
+  .kst-net small {
+    font-size: 12px;
+    line-height: 1.2;
+    color: var(--muted);
+  }
+
+  .kst-f__in {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 10px;
+    overflow: hidden;
+    border: 1.5px solid var(--k-line);
+    border-radius: 10px;
+    background: #fff;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .kst-f__in--id {
+    font-size: 12px;
+  }
+
+  .kst-f__v {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .kst-f__v--dots {
+    letter-spacing: 0.08em;
+    color: var(--ink-2);
+  }
+
+  .kst-f__type {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 8px;
+    right: 2px;
+    background: #fff;
+    transform-origin: right center;
+    transform: scaleX(0);
+  }
+
+  .kst-f__eye {
+    position: relative;
+    display: grid;
+    margin-left: auto;
+    color: var(--subtle);
+  }
+
+  .kst-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  /* Кнопки сервиса */
+  .kst-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .kst-btn--ink {
+    margin-top: 2px;
+    background: var(--ink);
+    color: #fff;
+  }
+
+  /* Сообщение об успехе — как на экране «Взвешивания» */
+  .kst-toast {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 13px 0 7px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(15 168 111 / 0.3),
+      0 10px 22px -12px rgb(29 29 31 / 0.4);
+    font-weight: 560;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* на углу карточки, поверх её края */
+  .kst-toast--corner {
+    position: absolute;
+    top: -15px;
+    right: -5px;
+    z-index: 1;
+  }
+
+  .kst-toast__i {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--k-ok);
+    color: #fff;
+  }
+
+  .kst-foot {
+    display: flex;
+    justify-content: center;
+    margin-top: 4px;
+  }
+
+  /* Шапка экрана настроек */
+  .kst-hd {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    margin-bottom: 2px;
+  }
+
+  .kst-hd__i {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 10px;
+    background: var(--k-blue-soft);
+    color: var(--k-blue-ink);
+  }
+
+  .kst-hd__t {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .kst-hd__t b {
+    font-weight: 600;
+  }
+
+  .kst-live {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    font-weight: 560;
+    color: var(--k-ok-ink);
+  }
+
+  /* Нетто: считается из брутто и тары */
+  .kst-net {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: var(--k-ok-soft);
+  }
+
+  .kst-net__i {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 9px;
+    background: #fff;
+    color: var(--k-ok-ink);
+  }
+
+  .kst-net__t {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .kst-net__t b {
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .kst-net small {
+    color: var(--k-ok-ink);
+  }
+
+  /* Строки актов */
+  .kst-rows {
+    display: grid;
+    gap: 6px;
+  }
+
+  .kst-row {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 11px;
+    background: var(--k-row);
+  }
+
+  /* подсветка выбранной строки */
+  .kst-row__tint {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: #edf4ff;
+    box-shadow: inset 0 0 0 1.5px rgb(0 107 255 / 0.28);
+  }
+
+  .kst-check {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    border: 1.5px solid #c3c8d0;
+    border-radius: 5px;
+    background: #fff;
+  }
+
+  .kst-check__on {
+    position: absolute;
+    inset: -1.5px;
+    display: grid;
+    place-items: center;
+    border-radius: inherit;
+    background: var(--k-blue);
+    color: #fff;
+  }
+
+  /* госномер — как табличка на машине */
+  .kst-plate {
+    padding: 2px 7px;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 12.5px;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .kst-row__w {
+    margin-left: auto;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* статус: две плашки в одной ячейке, видна одна */
+  .kst-status {
+    display: grid;
+    justify-items: end;
+    margin-left: auto;
+  }
+
+  .kst-pill {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 560;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .kst-pill--off {
+    background: var(--k-chip);
+    color: #5c6066;
+  }
+
+  .kst-pill--on {
+    background: var(--k-ok-soft);
+    color: var(--k-ok-ink);
+  }
+
+  /* «Отправить во ФГИС (N)»: два слоя — пока ничего не выбрано и активная кнопка */
+  .kst-send {
+    position: relative;
+    display: grid;
+    margin-top: 2px;
+  }
+
+  .kst-send > .kst-btn {
+    grid-area: 1 / 1;
+  }
+
+  .kst-send__off {
+    background: var(--k-blue-soft);
+    color: var(--k-blue-ink);
+  }
+
+  .kst-send__on {
+    background: var(--k-blue);
+    color: #fff;
+  }
+
+  /* счётчик выбранных актов: цифры стоят стопкой, видна одна */
+  .kst-n {
+    display: inline-grid;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .kst-n b {
+    grid-area: 1 / 1;
+    font-weight: inherit;
+  }
+
+  /* кнопка нажата: мягкое кольцо вокруг и курсор на ней */
+  .kst-send__halo {
+    position: absolute;
+    inset: -4px;
+    border-radius: 14px;
+    box-shadow: 0 0 0 1.5px rgb(0 107 255 / 0.45);
+    background: rgb(0 107 255 / 0.1);
+    z-index: -1;
+  }
+
+  .kst-cur {
+    position: absolute;
+    right: 34px;
+    bottom: -9px;
+    display: grid;
+  }
+
+  .kst-cur > span {
+    display: grid;
+    transform-origin: 20% 10%;
+  }
+
+  /* ── Движение: один проход, когда карточка раскрыта (.is-open) и её экран виден (.is-live) ──
+     Без анимации — итог шага: «ожидание» и промежуточные цифры скрыты. */
+  .a-gone,
+  .a-blip {
+    opacity: 0;
+  }
+
+  .kst-card.is-open.is-live .a-in {
+    animation: kst-in 0.55s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kst-card.is-open.is-live .a-pop {
+    animation: kst-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kst-card.is-open.is-live .a-fade {
+    animation: kst-fade var(--dur, 0.3s) ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kst-card.is-open.is-live .a-gone {
+    animation: kst-gone 0.2s ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kst-card.is-open.is-live .a-blip {
+    animation: kst-blip var(--dur, 0.3s) linear forwards;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kst-card.is-open.is-live .a-type {
+    animation: kst-wipe var(--dur, 0.7s) steps(var(--n, 10), end) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  /* ключ вставляют, а не набирают: значение появляется сразу */
+  .kst-card.is-open.is-live .a-paste {
+    animation: kst-wipe 0.32s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kst-card.is-open.is-live .a-press {
+    animation: kst-press 0.4s ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .kst-card.is-open.is-live .a-cur {
+    animation: kst-cur 0.65s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  @keyframes kst-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  @keyframes kst-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  @keyframes kst-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* «ожидание» видно до своей задержки, потом исчезает */
+  @keyframes kst-gone {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* промежуточное значение видно только во время своей анимации */
+  @keyframes kst-blip {
+    0%,
+    99.9% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes kst-wipe {
+    from {
+      transform: scaleX(1);
+    }
+    to {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes kst-press {
+    50% {
+      transform: scale(0.955);
+    }
+  }
+
+  @keyframes kst-cur {
+    from {
+      opacity: 0;
+      transform: translate(30px, 26px);
+    }
+    30% {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kst-card * {
+      animation: none !important;
+    }
+  }
+
+  /* ── Раскрытие на широком экране ─────────────────────────── */
+  @media (min-width: 1200px) {
+    .kst-card:not(.is-open) {
+      cursor: pointer;
+    }
+
+    .kst-card:not(.is-open) .kst-card__desc {
+      opacity: 0;
+      transition-duration: 0.2s;
+      transition-delay: 0s;
+    }
+
+    .kst-card:not(.is-open) .kst-card__art {
+      opacity: 0;
+      transition-duration: 0.25s;
+      transition-delay: 0s;
+    }
+
+    .kst-card:not(.is-open) .kst-card__deco {
+      opacity: 1;
+      transition-delay: 0.2s;
+    }
+
+    .kst-card:not(.is-open) .kst-ui {
+      opacity: 0;
+      transform: translateY(16px);
+      transition-delay: 0s;
+    }
+  }
+
+  /* без скрипта автомасштаба ряд на 1200–1359 px уже: заголовки чуть мельче */
+  @media (min-width: 1200px) and (max-width: 1359px) {
+    :global(html:not(.is-autoscale)) .kst-chain {
+      --kst-pad: 16px;
+    }
+
+    :global(html:not(.is-autoscale)) .kst-card__title {
+      font-size: 17px;
+    }
+  }
+
+  /* ── Планшет: карточки столбиком, все раскрыты; текст слева, экран справа ── */
+  @media (max-width: 1199.98px) {
+    .kst-chain {
+      --chain-gap: 18px;
+      flex-direction: column;
+    }
+
+    .kst-card {
+      flex: none;
+      height: auto;
+    }
+
+    .kst-card.is-open {
+      box-shadow: none;
+    }
+
+    /* карточки друг под другом — мостик к карточке сверху, под значком */
+    .kst-card + .kst-card::before {
+      top: calc(var(--gap) * -1 - 1px);
+      left: 32px;
+      width: calc(var(--gap) + var(--bridge, 14px));
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .kst-card__in {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .kst-card__text {
+      padding: 26px 24px 28px 26px;
+    }
+
+    .kst-card__chip {
+      background: var(--c-kodeks);
+      color: #fff;
+    }
+
+    .kst-card__title {
+      font-size: 21px;
+      line-height: 1.2;
+      letter-spacing: -0.015em;
+    }
+
+    .kst-card__btn {
+      cursor: default;
+    }
+
+    .kst-card__desc {
+      width: auto;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .kst-card__deco {
+      display: none;
+    }
+
+    .kst-card__art {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: auto;
+      height: auto;
+      margin: 10px;
+      padding: 50px 16px 22px;
+      border-radius: calc(14px * var(--rk));
+      corner-shape: var(--corner);
+      background:
+        radial-gradient(70% 80% at 8% 100%, var(--a1) 0%, transparent 72%),
+        radial-gradient(70% 80% at 95% 95%, var(--a2) 0%, transparent 72%),
+        linear-gradient(180deg, color-mix(in oklab, var(--a3) 40%, white) 0%, var(--a3) 100%);
+    }
+
+    .kst-card__demo {
+      top: 12px;
+      bottom: auto;
+      left: 12px;
+    }
+
+    .kst-ui {
+      position: relative;
+      left: auto;
+      bottom: auto;
+      width: min(328px, 100%);
+      translate: none;
+    }
+  }
+
+  /* ── Узкий планшет и телефон: текст над экраном ─────────── */
+  @media (max-width: 760px) {
+    .kst-chain {
+      --chain-gap: 16px;
+    }
+
+    .kst-card__in {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .kst-card__text {
+      padding: 22px 22px 8px;
+    }
+
+    .kst-card + .kst-card::before {
+      left: 29px;
+    }
+
+    .kst-card__title {
+      font-size: 20px;
+    }
+
+    .kst-card__art {
+      margin: 8px;
+      padding: 48px 14px 20px;
+    }
+  }
+
+  /* ── Кнопка под цепочкой ─────────────────────────────────── */
+  .kst__cta {
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(28px, calc(var(--vw) * 3.4), 44px);
+  }
+
+  @media (max-width: 560px) {
+    .kst__cta .btn {
+      width: 100%;
+      min-height: 56px;
+      padding: 12px 18px;
+      line-height: 1.25;
+      white-space: normal;
+      text-align: center;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  document.querySelectorAll<HTMLElement>('[data-kst]').forEach((chain) => {
+    const cards = [...chain.querySelectorAll<HTMLElement>(':scope > .chain__card')];
+
+    // Экран шага «проигрывается», только пока он виден (у раскрытой карточки).
+    // При «уменьшить движение» анимации выключены в CSS — следить не нужно.
+    if (!reducedMotion()) {
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries)
+              entry.target.closest('.chain__card')?.classList.toggle('is-live', entry.isIntersecting);
+          },
+          { threshold: 0.4 },
+        );
+        cards.forEach((card) => {
+          const art = card.querySelector('.kst-card__art');
+          if (art) io.observe(art);
+        });
+      } else {
+        cards.forEach((card) => card.classList.add('is-live'));
+      }
+    }
+
+    // Заголовки шагов — кнопки. В ряду раскрыт один шаг: кнопка сообщает, какой (aria-expanded),
+    // раскрытый свернуть нельзя (aria-disabled). Столбиком раскрыты все шаги и переключать нечего:
+    // там заголовок — обычный текст, без кнопки.
+    const titles = cards.map((card) => card.querySelector<HTMLElement>('.kst-card__title')!);
+    const buttons = titles.map((title) => title.querySelector<HTMLButtonElement>('.kst-card__btn')!);
+    const narrow = window.matchMedia('(max-width: 1199.98px)');
+
+    const sync = () => {
+      cards.forEach((card, k) => {
+        const open = card.classList.contains('is-open');
+        buttons[k].setAttribute('aria-expanded', String(open));
+        if (open) buttons[k].setAttribute('aria-disabled', 'true');
+        else buttons[k].removeAttribute('aria-disabled');
+      });
+    };
+
+    const mode = () => {
+      titles.forEach((title, k) => {
+        const btn = buttons[k];
+        if (narrow.matches && btn.isConnected) {
+          btn.replaceWith(...btn.childNodes);
+        } else if (!narrow.matches && !btn.isConnected) {
+          btn.append(...title.childNodes);
+          title.append(btn);
+        }
+      });
+      sync();
+    };
+
+    // раскрытую карточку переключает initChains() (scripts/kit.ts) и отмечает её номер в data-active
+    new MutationObserver(sync).observe(chain, { attributes: true, attributeFilter: ['data-active'] });
+    narrow.addEventListener('change', mode);
+    mode();
+  });
+</script>

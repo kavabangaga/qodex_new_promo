@@ -1,0 +1,1038 @@
+---
+// Раздел «Импорт из Excel» страницы «Кодекс ТКО» [#excel]. Продуктовый ряд, как на главной
+// (ProductHow, Objects): слева метка, заголовок, текст, три шага с полосой прогресса и кнопка,
+// справа большая градиентная карточка — у каждого шага своя иллюстрация интерфейса:
+// лист Excel с окном загрузки → проверка файла → список актов, готовых к отправке.
+// Тексты — с лендинга fgis.qodex.tech дословно. Картинку описывают шаги рядом, поэтому для
+// скринридера она скрыта (aria-hidden ставит GradientVisual).
+import GradientVisual from '../../components/GradientVisual.astro';
+import FeatureAccordion, { type AccItem } from '../../components/FeatureAccordion.astro';
+import Icon from '../../components/Icon.astro';
+
+const NB = String.fromCharCode(160);
+
+// Шаги: короткое название пункта + текст шага с лендинга
+const steps: AccItem[] = [
+  {
+    icon: 'file-up',
+    title: 'Загрузка файла',
+    text: 'Загружаете Excel-файл с актами за нужный период',
+  },
+  {
+    icon: 'file-search',
+    title: 'Проверка',
+    text: 'Мы проверяем его на ошибки и дубли',
+  },
+  {
+    icon: 'send',
+    title: 'Готово к отправке',
+    text: `Акты автоматически попадают в систему и готовы к отправке во ФГИС${NB}УТКО`,
+  },
+];
+
+// ── Демо-данные: акты из демонстрации самого продукта ──
+const DATE = '30.09.2026';
+
+const ACTS = [
+  { plate: 'В 121 АА 777', time: '17:27', gross: '24,000', tare: '18,000', net: '6,000' },
+  { plate: 'Е 834 УУ 777', time: '16:57', gross: '11,532', tare: '6,534', net: '4,998' },
+  { plate: 'М 847 МА 77', time: '16:27', gross: '20,374', tare: '14,823', net: '5,551' },
+  { plate: 'А 124 ВВ 777', time: '15:27', gross: '15,000', tare: '10,000', net: '5,000' },
+];
+
+// Строки проверки: третья — дубль, четвёртая — с ошибкой
+const CHECK = [
+  { plate: ACTS[0].plate, time: ACTS[0].time, state: 'ok' },
+  { plate: ACTS[1].plate, time: ACTS[1].time, state: 'ok' },
+  { plate: ACTS[2].plate, time: ACTS[2].time, state: 'warn', flag: 'дубль — уже в системе' },
+  { plate: 'В 733 ОО 107', time: '15:57', state: 'bad', flag: 'ошибка — масса не указана' },
+  { plate: ACTS[3].plate, time: ACTS[3].time, state: 'ok' },
+] as const;
+---
+
+<section class="section kex" id="excel" aria-labelledby="excel-title">
+  <div class="container">
+    <div class="kex__row" data-acc-scope>
+      <div class="kex__text">
+        <p class="kex__label" data-reveal>
+          <span class="plabel plabel--lg p-kodeks">
+            <span class="plabel__ico" aria-hidden="true"><Icon name="file-spreadsheet" strokeWidth={2} /></span>
+            Импорт из Excel
+          </span>
+        </p>
+
+        <h2 class="t-serif kex__title" id="excel-title" data-reveal style="--d:1">
+          Ведёте акты взвешиваний в&nbsp;Excel? Загрузите файл&nbsp;— мы&nbsp;сделаем остальное
+        </h2>
+
+        <div class="kex__copy" data-reveal style="--d:2">
+          <p>
+            Наш сервис поддерживает несколько способов передачи данных. Один из самых удобных&nbsp;— загрузка готового
+            Excel-файла с актами о взвешиваниях.
+          </p>
+          <p>Если вы уже ведёте учёт в таблицах, не нужно ничего менять или перебивать данные вручную.</p>
+        </div>
+
+        <div class="kex__steps" data-reveal style="--d:3">
+          <FeatureAccordion id="excel-steps" items={steps} color="var(--g-teal)" />
+        </div>
+
+        <div class="kex__cta" data-reveal style="--d:4">
+          <a href="#forma" class="btn btn--primary" data-interest="kodeks" data-goal="pilot_click">
+            Подключиться бесплатно
+            <Icon name="arrow-right" />
+          </a>
+        </div>
+      </div>
+
+      <div class="kex__visual" data-reveal style="--d:1">
+        <GradientVisual preset="mint" deco="stripes">
+          <div class="xs" data-xs data-idle data-panes>
+            {/* 1. Лист Excel по шаблону сервиса и окно загрузки файла */}
+            <div class="xs__pane is-active" data-pane>
+              <div class="up">
+                <div class="ui sheet">
+                  <div class="sheet__row sheet__row--abc">
+                    <span class="sheet__c sheet__n" />
+                    {['A', 'B', 'C', 'D', 'E'].map((l) => (
+                      <span class="sheet__c">{l}</span>
+                    ))}
+                  </div>
+                  {/* Заголовки шаблона. Строки разбиты вручную: «-n» — перенос только в узкой таблице
+                      (телефон), «-w» — только в широкой. */}
+                  <div class="sheet__row sheet__row--head">
+                    <span class="sheet__c sheet__n">1</span>
+                    <span class="sheet__c">
+                      <span class="sheet__h">Дата и&nbsp;время<br /> заезда&nbsp;ТС</span>
+                    </span>
+                    <span class="sheet__c">
+                      <span class="sheet__h">Регистра<span class="sheet__hy">-</span><br class="sheet__br-n" />ционный<br /> номер&nbsp;ТС</span>
+                    </span>
+                    <span class="sheet__c">
+                      <span class="sheet__h">Код<br class="sheet__br-n" /> ФККО</span>
+                    </span>
+                    <span class="sheet__c">
+                      <span class="sheet__h">Масса<br class="sheet__br-n" /> ТС<br class="sheet__br-w" /> на<br class="sheet__br-n" /> въезде,&nbsp;т</span>
+                    </span>
+                    <span class="sheet__c">
+                      <span class="sheet__h">Масса<br class="sheet__br-n" /> ТС<br class="sheet__br-w" /> на<br class="sheet__br-n" /> выезде,&nbsp;т</span>
+                    </span>
+                  </div>
+                  {/* Код ФККО не заполнен — как в шаблоне из демонстрации сервиса */}
+                  {ACTS.map((a, k) => (
+                    <div class="sheet__row" style={`--t:${(0.3 + k * 0.16).toFixed(2)}s`}>
+                      <span class="sheet__c sheet__n">{k + 2}</span>
+                      <span class="sheet__c sheet__c--dt">
+                        <span class="a-fade">{DATE}</span>
+                        <span class="a-fade">{a.time}</span>
+                      </span>
+                      <span class="sheet__c">
+                        <span class="a-fade">{a.plate.replace(/ /g, '')}</span>
+                      </span>
+                      <span class="sheet__c" />
+                      <span class="sheet__c">
+                        <span class="a-fade">{a.gross}</span>
+                      </span>
+                      <span class="sheet__c">
+                        <span class="a-fade">{a.tare}</span>
+                      </span>
+                    </div>
+                  ))}
+                  {[6, 7, 8].map((n) => (
+                    <div class="sheet__row">
+                      <span class="sheet__c sheet__n">{n}</span>
+                      <span class="sheet__c" />
+                      <span class="sheet__c" />
+                      <span class="sheet__c" />
+                      <span class="sheet__c" />
+                      <span class="sheet__c" />
+                    </div>
+                  ))}
+                </div>
+
+                <div class="ui ui--plain dlg a-rise" style="--t:1.1s">
+                  <p class="dlg__title">Импорт актов из Excel</p>
+                  <div class="x-file">
+                    <span class="x-file__ico">
+                      <Icon name="file-spreadsheet" size={19} strokeWidth={1.8} />
+                    </span>
+                    <span class="x-file__name">
+                      <b>Акты_сентябрь.xlsx</b>
+                      <small>80 актов</small>
+                    </span>
+                  </div>
+                  <div class="dlg__btns">
+                    <span class="x-btn x-btn--ghost">Отмена</span>
+                    <span class="x-btn a-press" style="--t:2.3s">
+                      <Icon name="upload" size={15} strokeWidth={2.1} />
+                      Загрузить
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Проверка файла: ошибки и дубли */}
+            <div class="xs__pane" data-pane>
+              <div class="ui x-card">
+                <div class="x-head">
+                  <span class="x-title">Проверка файла</span>
+                  <span class="x-pill">Акты_сентябрь.xlsx</span>
+                </div>
+                <span class="x-bar">
+                  <i class="a-fill" style="--t:0.3s; --dur:1.5s" />
+                </span>
+                <ul class="chk">
+                  {CHECK.map((r, k) => (
+                    <li class:list={['chk__row', `chk__row--${r.state}`]} style={`--t:${(0.5 + k * 0.28).toFixed(2)}s`}>
+                      {r.state !== 'ok' && <i class="chk__tint a-fade" />}
+                      <b class="chk__plate">{r.plate}</b>
+                      <span class="chk__note">
+                        <span class:list={['chk__date', { 'a-gone': r.state !== 'ok' }]}>
+                          {DATE} · {r.time}
+                        </span>
+                        {r.state !== 'ok' && (
+                          <span class="chk__flag a-fade">
+                            <Icon name={r.state === 'warn' ? 'copy' : 'triangle-alert'} size={14} strokeWidth={2.1} />
+                            <span>{r.flag}</span>
+                          </span>
+                        )}
+                      </span>
+                      {r.state === 'ok' && (
+                        <span class="chk__mark a-pop">
+                          <Icon name="check" size={13} strokeWidth={3} />
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                <div class="chk__res a-in" style="--t:2.1s">
+                  <span class="chk__ok">
+                    <Icon name="check" size={20} strokeWidth={3} />
+                  </span>
+                  <span class="chk__sum">
+                    <b class="chk__big">80/80</b>
+                    <span class="chk__cap">актов заполнены верно</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Акты в списке «Взвешивания», готовы к отправке */}
+            <div class="xs__pane" data-pane>
+              <div class="ui x-card">
+                <div class="x-head">
+                  <span class="x-title">Взвешивания</span>
+                  <span class="x-pill a-fade" style="--t:1.25s">80 актов</span>
+                </div>
+                <ul class="acts">
+                  {ACTS.map((a, k) => (
+                    <li class="acts__row a-drop" style={`--t:${(0.25 + k * 0.22).toFixed(2)}s`}>
+                      <span class="acts__box">
+                        <span class="acts__tick a-pop" style={`--t:${(1.5 + k * 0.09).toFixed(2)}s`}>
+                          <Icon name="check" size={12} strokeWidth={3.2} />
+                        </span>
+                      </span>
+                      <span class="acts__plate">{a.plate}</span>
+                      <span class="acts__status">Не отправлено</span>
+                      <span class="acts__meta">
+                        {DATE} · {a.time} · нетто {a.net}{NB}т
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <span class="x-send">
+                  <span class="x-send__on">
+                    <Icon name="send" size={16} strokeWidth={2} />
+                    <span>Отправить во ФГИС (80)</span>
+                  </span>
+                  <span class="x-send__off a-gone" style="--t:2.05s">
+                    <Icon name="send" size={16} strokeWidth={2} />
+                    <span>Отправить во ФГИС (0)</span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </GradientVisual>
+        <span class="tag tag--demo kex__demo" aria-hidden="true">демо-данные</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Ряд: текст слева, картинка справа ─────────────────── */
+  .kex__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    grid-template-areas: 'text visual';
+    align-items: center;
+    column-gap: clamp(40px, calc(var(--vw) * 6), 96px);
+  }
+
+  .kex__text {
+    grid-area: text;
+    min-width: 0;
+  }
+
+  /* заголовок длинный — чуть мельче, чем у коротких заголовков продуктовых разделов */
+  .kex__title {
+    margin-top: 18px;
+    font-size: clamp(1.8rem, calc(var(--vw) * 2.6), 2.5rem);
+    line-height: 1.1;
+  }
+
+  .kex__copy {
+    display: grid;
+    gap: 12px;
+    max-width: 52ch;
+    margin-top: 20px;
+    font-size: clamp(1.03rem, calc(var(--vw) * 1.2), 1.15rem);
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .kex__steps {
+    margin-top: clamp(26px, calc(var(--vw) * 3), 40px);
+  }
+
+  /* у открытого шага место под две строки: текст третьего шага длиннее остальных, и без запаса
+     всё, что ниже, сдвигалось бы при каждом переключении */
+  .kex__steps :global(.acc__inner > p) {
+    min-height: calc(3em + 22px);
+  }
+
+  .kex__cta {
+    margin-top: 30px;
+  }
+
+  .kex__visual {
+    grid-area: visual;
+    position: relative;
+    min-width: 0;
+  }
+
+  /* поля градиентной карточки поменьше: листу Excel нужна ширина */
+  .kex__visual :global(.gv) {
+    padding: clamp(12px, calc(var(--vw) * 2.6), 44px);
+  }
+
+  /* «демо-данные» в углу градиентной карточки */
+  .kex__demo {
+    position: absolute;
+    z-index: 1;
+    top: clamp(14px, calc(var(--vw) * 1.6), 22px);
+    left: clamp(14px, calc(var(--vw) * 1.6), 22px);
+    pointer-events: none;
+  }
+
+  /* ── Иллюстрация: три панели, по одной на шаг ──────────── */
+  .xs {
+    --x-blue: #006bff;
+    --x-ok: #087a52;
+    --x-ok-bg: #0fa86f;
+    --x-ok-soft: #e1f5ec;
+    --x-warn: #8f5200;
+    --x-warn-soft: #fff0da;
+    --x-bad: #b8283a;
+    --x-bad-soft: #fde8ea;
+    --x-row: #f5f6f8;
+    --x-line: #e2e6eb;
+    width: min(100%, 480px);
+    container-type: inline-size;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink);
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .xs__pane {
+    display: grid;
+    align-content: center;
+  }
+
+  .x-card {
+    width: 100%;
+    padding: clamp(16px, 4.6cqi, 22px);
+    border-radius: 22px;
+  }
+
+  .x-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .x-title {
+    font-size: clamp(17px, 4.2cqi, 20px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .x-pill {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 12px;
+    font-weight: 560;
+    line-height: 1;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .x-bar {
+    position: relative;
+    display: block;
+    height: 8px;
+    border-radius: 999px;
+    background: #e8ecf1;
+    overflow: hidden;
+  }
+
+  .x-bar i {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--x-blue);
+    transform-origin: left center;
+  }
+
+  .x-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 10px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .x-btn--ghost {
+    background: #fff;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1.5px #dfe3e8;
+  }
+
+  /* файл Excel */
+  .x-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 12px;
+    background: var(--x-row);
+  }
+
+  .x-file__ico {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 10px;
+    background: #1d8f55;
+    color: #fff;
+  }
+
+  .x-file__name {
+    display: grid;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .x-file__name b {
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 560;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .x-file__name small {
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  /* ── 1. Лист Excel и окно загрузки ─────────────────────── */
+  .up {
+    position: relative;
+    padding-bottom: 98px;
+  }
+
+  /* Лист: карточка и есть таблица, сетка идёт до краёв. Кегль и колонки считаются от ширины
+     картинки, поэтому таблица целиком умещается на любом экране. */
+  .sheet {
+    --cols: 1.7em 1.55fr 1.07fr 0.73fr 1fr 1fr;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 16px;
+    font-size: clamp(8.2px, 2.85cqi, 10.4px);
+    line-height: 1.25;
+  }
+
+  .sheet__row {
+    display: grid;
+    grid-template-columns: var(--cols);
+  }
+
+  .sheet__c {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    column-gap: 0.35em;
+    min-width: 0;
+    min-height: 2.25em;
+    padding: 0.45em 0.3em;
+    border-right: 1px solid var(--x-line);
+    border-bottom: 1px solid var(--x-line);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .sheet__row > :last-child {
+    border-right: 0;
+  }
+
+  .sheet__row:last-child > .sheet__c {
+    border-bottom: 0;
+  }
+
+  /* буквы колонок и номера строк */
+  .sheet__row--abc .sheet__c,
+  .sheet__n {
+    background: #f2f4f6;
+    color: var(--muted);
+  }
+
+  .sheet__row--abc .sheet__c {
+    min-height: 0;
+    padding-block: 0.3em;
+  }
+
+  .sheet__n {
+    padding-inline: 0;
+  }
+
+  /* строка заголовков шаблона */
+  .sheet__row--head .sheet__c {
+    border-bottom-color: #cbd4dc;
+    font-weight: 600;
+  }
+
+  .sheet__row--head .sheet__c:not(.sheet__n) {
+    background: #eef8f3;
+  }
+
+  .sheet__br-w {
+    display: none;
+  }
+
+  /* окно загрузки поверх пустых строк листа */
+  .dlg {
+    position: absolute;
+    right: -4px;
+    bottom: 0;
+    display: grid;
+    gap: 10px;
+    width: min(296px, 88%);
+    padding: 14px;
+    border-radius: 18px;
+    box-shadow:
+      0 0 0 1px rgb(29 29 31 / 0.06),
+      0 18px 44px -16px rgb(29 29 31 / 0.42);
+  }
+
+  .dlg__title {
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+
+  .dlg__btns {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 8px;
+  }
+
+  /* ── 2. Проверка файла ─────────────────────────────────── */
+  .chk {
+    display: grid;
+    gap: 5px;
+    margin-top: 12px;
+  }
+
+  .chk__row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 36px;
+    padding: 6px 8px 6px 11px;
+    border-radius: 11px;
+    background: var(--x-row);
+    isolation: isolate;
+  }
+
+  /* подсветка строки с дублем или ошибкой */
+  .chk__tint {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+  }
+
+  .chk__row--warn .chk__tint {
+    background: var(--x-warn-soft);
+  }
+
+  .chk__row--bad .chk__tint {
+    background: var(--x-bad-soft);
+  }
+
+  .chk__plate {
+    flex: none;
+    font-size: clamp(12px, 4cqi, 13.5px);
+    font-weight: 560;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* дата акта и замечание проверки стоят в одной клетке: замечание сменяет дату */
+  .chk__note {
+    display: grid;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    font-size: clamp(10.8px, 3.55cqi, 12.5px);
+    line-height: 1.25;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chk__note > span {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  .chk__date {
+    white-space: nowrap;
+  }
+
+  .chk__flag {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 560;
+  }
+
+  .chk__flag :global(svg) {
+    flex: none;
+  }
+
+  .chk__row--warn .chk__flag {
+    color: var(--x-warn);
+  }
+
+  .chk__row--bad .chk__flag {
+    color: var(--x-bad);
+  }
+
+  .chk__mark {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--x-ok-bg);
+    color: #fff;
+  }
+
+  /* итог проверки */
+  .chk__res {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: var(--x-ok-soft);
+  }
+
+  .chk__ok {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--x-ok-bg);
+    color: #fff;
+  }
+
+  .chk__sum {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .chk__big {
+    font-size: clamp(24px, 6.4cqi, 30px);
+    font-weight: 600;
+    /* теснее нельзя: цифры табличные (см. DESIGN.md, слипшиеся буквы) */
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chk__cap {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  /* ── 3. Список актов ───────────────────────────────────── */
+  .acts {
+    display: grid;
+    gap: 6px;
+  }
+
+  .acts__row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'box plate status'
+      'box meta meta';
+    align-items: center;
+    gap: 5px 10px;
+    padding: 9px 10px 9px 12px;
+    border-radius: 12px;
+    background: var(--x-row);
+  }
+
+  .acts__box {
+    grid-area: box;
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: inset 0 0 0 1.5px #c3cad3;
+  }
+
+  .acts__tick {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background: var(--x-blue);
+    color: #fff;
+  }
+
+  /* госномер — табличкой, как в самом сервисе */
+  .acts__plate {
+    grid-area: plate;
+    justify-self: start;
+    padding: 2px 8px;
+    border: 1.5px solid #2a2f36;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  .acts__status {
+    grid-area: status;
+    padding: 4px 9px;
+    border-radius: 7px;
+    background: #e8ebef;
+    font-size: 12px;
+    font-weight: 560;
+    line-height: 1.2;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+
+  .acts__meta {
+    grid-area: meta;
+    overflow: hidden;
+    font-size: 12.5px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* кнопка отправки: сначала неактивная «(0)», затем активная «(80)» */
+  .x-send {
+    position: relative;
+    display: block;
+    height: 44px;
+    margin-top: 12px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--x-blue);
+    color: #fff;
+    font-size: 14.5px;
+    font-weight: 560;
+  }
+
+  .x-send__on,
+  .x-send__off {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .x-send__off {
+    background: #dde8fb;
+    color: #5f86cf;
+  }
+
+  /* ── Анимации: только у активной панели ──
+     Без анимации видно итоговое состояние: «ожидание» скрыто. */
+  .a-gone {
+    opacity: 0;
+  }
+
+  .xs__pane.is-active .a-in {
+    animation: kex-in 0.6s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .xs__pane.is-active .a-rise {
+    animation: kex-rise 0.7s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .xs__pane.is-active .a-drop {
+    animation: kex-drop 0.6s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .xs__pane.is-active .a-pop {
+    animation: kex-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .xs__pane.is-active .a-fade {
+    animation: kex-fade 0.5s ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .xs__pane.is-active .a-fill {
+    animation: kex-fill var(--dur, 1.2s) var(--ease-in-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .xs__pane.is-active .a-gone {
+    animation: kex-gone 0.3s ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .xs__pane.is-active .a-press {
+    animation: kex-press 0.45s ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  @keyframes kex-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  @keyframes kex-rise {
+    from {
+      opacity: 0;
+      transform: translateY(22px) scale(0.97);
+    }
+  }
+
+  @keyframes kex-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-14px);
+    }
+  }
+
+  @keyframes kex-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+  }
+
+  @keyframes kex-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes kex-fill {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  /* «ожидание» видно до своей задержки, потом исчезает */
+  @keyframes kex-gone {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes kex-press {
+    50% {
+      transform: scale(0.94);
+    }
+  }
+
+  /* за экраном анимации стоят: data-idle снимает скрипт ниже, когда картинка на экране */
+  .xs[data-idle] * {
+    animation-play-state: paused !important;
+  }
+
+  @media (scripting: none) {
+    .xs[data-idle] * {
+      animation-play-state: running !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .xs * {
+      animation: none !important;
+    }
+  }
+
+  /* ── Широкая картинка (компьютер, планшет): заголовки таблицы в две строки ── */
+  @container (min-width: 430px) {
+    .sheet {
+      --cols: 2em 1.06fr 1.18fr 0.66fr 0.84fr 0.84fr;
+      font-size: clamp(9.8px, 2.28cqi, 11px);
+    }
+
+    .sheet__br-n,
+    .sheet__hy {
+      display: none;
+    }
+
+    .sheet__br-w {
+      display: inline;
+    }
+
+    .dlg {
+      right: -14px;
+    }
+  }
+
+  /* ── Планшет и телефон: столбиком — метка, заголовок, картинка, шаги, текст, кнопка.
+     Обёртка текста «растворяется» (display: contents), чтобы картинка встала между заголовком
+     и шагами: нажал шаг — картинка над ним сразу меняется. */
+  @media (max-width: 900px) {
+    .kex__row {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .kex__text {
+      display: contents;
+    }
+
+    .kex__visual {
+      order: 1;
+      margin-top: 26px;
+    }
+
+    .kex__steps {
+      order: 2;
+      margin-top: 26px;
+    }
+
+    .kex__copy {
+      order: 3;
+      max-width: none;
+      margin-top: 24px;
+    }
+
+    .kex__cta {
+      order: 4;
+      margin-top: 26px;
+    }
+
+    /* карточка интерфейса стоит ниже плашки «демо-данные» */
+    .kex__visual :global(.gv) {
+      padding-block: 54px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .kex__visual :global(.gv) {
+      padding-block: 50px 20px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .kex__cta .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Анимации иллюстрации идут, только пока она на экране (в разметке они стоят: data-idle).
+  // При «уменьшить движение» анимации выключены в CSS — следить не нужно.
+  const shots = document.querySelectorAll<HTMLElement>('[data-xs]');
+  if (!reducedMotion()) {
+    if (!('IntersectionObserver' in window)) {
+      shots.forEach((el) => delete el.dataset.idle);
+    } else {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const el = entry.target as HTMLElement;
+            if (entry.isIntersecting) delete el.dataset.idle;
+            else el.dataset.idle = '';
+          }
+        },
+        { threshold: 0.2 },
+      );
+      shots.forEach((el) => io.observe(el));
+    }
+  }
+</script>

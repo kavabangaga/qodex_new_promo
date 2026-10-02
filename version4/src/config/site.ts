@@ -34,8 +34,10 @@ export interface Product {
   name: string;
   /** Текущий лендинг (этап 1). */
   url: string;
-  /** Будущий адрес страницы продукта (этап 2). */
+  /** Адрес страницы продукта на этом сайте (этап 2). */
   stage2Path: string;
+  /** Страница продукта на этом сайте уже есть: ссылки ведут на неё, а не на старый лендинг. */
+  onSite?: boolean;
   /** Цвет продукта (заливки); CSS-классы .p-robot и т. п. задают ещё текстовый и «светящийся» варианты. */
   color: string;
   /** Вариант для тёмного фона. */
@@ -72,6 +74,7 @@ export const PRODUCTS: Record<ProductId, Product> = {
     name: 'Кодекс ТКО',
     url: 'https://fgis.qodex.tech',
     stage2Path: '/kodeks-tko',
+    onSite: true,
     color: '#FF8A00',
     glow: '#FFB055',
   },
@@ -79,8 +82,28 @@ export const PRODUCTS: Record<ProductId, Product> = {
 
 export const PRODUCT_ORDER: ProductId[] = ['robot', 'tracker', 'tonn', 'kodeks'];
 
-/** Ссылка на лендинг продукта с UTM-метками; content — блок, из которого переход. */
+/** Ссылка на главную или её раздел с любой страницы сайта: homeHref('#pilot'). */
+export function homeHref(hash = ''): string {
+  return `${withBase('/')}${hash}`;
+}
+
+/** Продукт ведёт на свою страницу этого сайта (а не на отдельный лендинг). */
+export function isOnSite(id: ProductId): boolean {
+  return PRODUCTS[id].onSite === true;
+}
+
+/** Адрес продукта для подписи в меню: «qodex.tech/kodeks-tko» или домен лендинга. */
+export function productHost(id: ProductId): string {
+  const p = PRODUCTS[id];
+  return p.onSite ? `${new URL(SITE.url).host}${p.stage2Path}` : p.url.replace('https://', '');
+}
+
+/**
+ * Ссылка на продукт: страница на этом сайте, если она уже есть, иначе лендинг с UTM-метками;
+ * content — блок, из которого переход.
+ */
 export function productHref(id: ProductId, content: string): string {
+  if (PRODUCTS[id].onSite) return withBase(`${PRODUCTS[id].stage2Path}/`);
   const params = new URLSearchParams({
     utm_source: 'qodex.tech',
     utm_medium: 'referral',

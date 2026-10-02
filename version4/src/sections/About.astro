@@ -5,19 +5,7 @@
 import SectionIntro from '../components/SectionIntro.astro';
 import Icon from '../components/Icon.astro';
 import { TIMELINE } from '../data/timeline';
-
-const clients: { name: string; partner?: boolean }[] = [
-  { name: 'РО «Эко-Сити»' },
-  { name: 'Башкирская содовая компания' },
-  { name: 'ООО «НУР»' },
-  { name: 'ЭкоВторИндустрия' },
-  { name: 'Управление отходами Мелеуз' },
-  { name: 'ЭКОИндустрия' },
-  { name: 'Альянс групп' },
-  { name: 'Экотех Мелеуз' },
-  { name: 'Грин Сити' },
-  { name: 'Ростелеком', partner: true },
-];
+import { CLIENTS as clients } from '../data/clients';
 
 // Названия продуктов и «РО «…»» не разрываем переносом (сами тексты — без изменений)
 const nb = (t: string) =>

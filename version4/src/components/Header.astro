@@ -3,14 +3,29 @@
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 import { PRODUCT_ICON } from './ProductLabel.astro';
-import { CONTACTS, PRODUCTS, PRODUCT_ORDER, productHref, withBase } from '../config/site';
+import { CONTACTS, PRODUCTS, PRODUCT_ORDER, productHref, productHost, isOnSite, homeHref, withBase, type ProductId } from '../config/site';
 
-// Пункты идут в том же порядке, что и разделы на странице (после «Продуктов»)
+interface Props {
+  /** false — шапка внутренней страницы: пункты меню ведут на разделы главной. */
+  home?: boolean;
+  /** Надпись на кнопке справа (ведёт к форме заявки #forma — она есть на каждой странице). */
+  cta?: string;
+  /** Продукт, на странице которого стоит шапка: его пункт в меню отмечен как текущий. */
+  current?: ProductId;
+}
+
+const { home = true, cta = 'Запустить пилот', current } = Astro.props;
+
+// Раздел главной: на самой главной — якорь, на внутренней странице — ссылка на главную с якорем
+const toHome = (hash: string) => (home ? hash : homeHref(hash));
+
+// Пункты идут в том же порядке, что и разделы на главной (после «Продуктов»).
+// «Контакты» есть на каждой странице — это всегда якорь текущей.
 const links = [
-  { href: '#balans', label: 'Как это работает' },
-  { href: '#bezopasnost', label: 'Безопасность' },
-  { href: '#pilot', label: 'Пилот' },
-  { href: '#o-kompanii', label: 'О компании' },
+  { href: toHome('#balans'), label: 'Как это работает' },
+  { href: toHome('#bezopasnost'), label: 'Безопасность' },
+  { href: toHome('#pilot'), label: 'Пилот' },
+  { href: toHome('#o-kompanii'), label: 'О компании' },
   { href: '#kontakty', label: 'Контакты' },
 ];
 ---
@@ -34,6 +49,7 @@ const links = [
                     <a
                       href={productHref(id, 'menu')}
                       class:list={['dd__item', `p-${id}`]}
+                      aria-current={id === current ? 'page' : undefined}
                       data-goal="product_landing"
                       data-goal-product={id}
                     >
@@ -42,15 +58,15 @@ const links = [
                       </span>
                       <span class="dd__text">
                         <span class="dd__name">{PRODUCTS[id].name}</span>
-                        <span class="dd__host">{PRODUCTS[id].url.replace('https://', '')}</span>
+                        <span class="dd__host">{productHost(id)}</span>
                       </span>
-                      <Icon name="arrow-up-right" size={16} class="dd__arrow" />
+                      <Icon name={isOnSite(id) ? 'arrow-right' : 'arrow-up-right'} size={16} class="dd__arrow" />
                     </a>
                   </li>
                 ))
               }
             </ul>
-            <a href="#produkty" class="dd__all">
+            <a href={toHome('#produkty')} class="dd__all">
               Все продукты
               <Icon name="arrow-right" size={16} />
             </a>
@@ -74,7 +90,7 @@ const links = [
         <span class="hdr__phone-text">{CONTACTS.phone}</span>
         <span class="visually-hidden">Позвонить {CONTACTS.phone}</span>
       </a>
-      <a href="#forma" class="btn btn--primary hdr__cta" data-goal="pilot_click">Запустить пилот</a>
+      <a href="#forma" class="btn btn--primary hdr__cta" data-interest={current} data-goal="pilot_click">{cta}</a>
       <button class="hdr__burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Меню" data-burger>
         <Icon name="menu" size={22} class="i-open" />
         <Icon name="x" size={22} class="i-close" />
@@ -90,6 +106,7 @@ const links = [
             <a
               href={productHref(id, 'menu')}
               class:list={['mnav__product', `p-${id}`]}
+              aria-current={id === current ? 'page' : undefined}
               data-goal="product_landing"
               data-goal-product={id}
             >
@@ -97,14 +114,14 @@ const links = [
                 <Icon name={PRODUCT_ICON[id]} size={16} strokeWidth={2} />
               </span>
               {PRODUCTS[id].name}
-              <Icon name="arrow-up-right" size={16} class="mnav__arrow" />
+              <Icon name={isOnSite(id) ? 'arrow-right' : 'arrow-up-right'} size={16} class="mnav__arrow" />
             </a>
           </li>
         ))
       }
     </ul>
     <ul class="mnav__links">
-      <li><a href="#produkty">Все продукты</a></li>
+      <li><a href={toHome('#produkty')}>Все продукты</a></li>
       {
         links.map((l) => (
           <li>
@@ -259,7 +276,8 @@ const links = [
     transition: background-color 0.2s;
   }
 
-  .dd__item:hover {
+  .dd__item:hover,
+  .dd__item[aria-current='page'] {
     background: var(--bg);
   }
 

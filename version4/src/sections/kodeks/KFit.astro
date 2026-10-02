@@ -1,0 +1,603 @@
+---
+// Раздел страницы «Кодекс ТКО» — «Кому подходит сервис» [#komu-podhodit]. Бенто из белых плиток
+// на бежевой панели: первая плитка крупная, с рисунком весовой (машина заезжает на весы, рядом
+// карточка акта — демо-данные), четыре обычные. Ниже — графитовая плитка с оговоркой и следующий
+// шаг, QODEX TONN.
+import SectionIntro from '../../components/SectionIntro.astro';
+import ProductLabel from '../../components/ProductLabel.astro';
+import GradientVisual from '../../components/GradientVisual.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+import { productHref } from '../../config/site';
+
+const NB = ' ';
+
+// Пять утверждений с лендинга; первое — крупная плитка с рисунком
+const FITS: { text: string; icon: IconName }[] = [
+  { text: 'Вы — полигон, сортировка или оператор обращения с отходами', icon: 'factory' },
+  { text: `Нужно срочно начать передачу данных во ФГИС${NB}УТКО`, icon: 'timer' },
+  { text: 'Нет времени или желания внедрять сложную систему', icon: 'puzzle' },
+  { text: 'Нужно закрыть вопрос с проверками и штрафами', icon: 'shield-check' },
+  { text: 'Хочется быстрое и понятное решение', icon: 'zap' },
+];
+const [main, ...rest] = FITS;
+---
+
+<section class="section panel" id="komu-podhodit" aria-labelledby="komu-podhodit-title">
+  <div class="container">
+    <SectionIntro eyebrow="Кому подходит" titleId="komu-podhodit-title">Кому подходит сервис</SectionIntro>
+
+    <ul class="kfit__grid">
+      <li class="kfit__tile kfit__tile--main" data-reveal>
+        <div class="kfit__head">
+          <span class="kfit__ico" aria-hidden="true"><Icon name={main.icon} size={24} /></span>
+          <h3 class="kfit__text">{main.text}</h3>
+        </div>
+
+        <!-- Весовая объекта: машина на весах, будка оператора, карточка акта -->
+        <GradientVisual preset="teal" deco="none" class="kfit__vis" data-kfit-vis>
+          <span class="tag tag--demo kfit__demo">демо-данные</span>
+
+          <svg
+            class="kfit__scene"
+            viewBox="0 0 640 220"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <!-- земля -->
+            <rect x="-600" y="200" width="2400" height="80" fill="#fff" fill-opacity=".6" stroke="none"></rect>
+            <!-- будка оператора -->
+            <rect x="542" y="120" width="58" height="80" rx="7" fill="#fff"></rect>
+            <rect x="533" y="109" width="76" height="13" rx="5" fill="currentColor" stroke="none"></rect>
+            <rect x="552" y="134" width="38" height="24" rx="4" fill="#cfe2ff" stroke-width="2"></rect>
+            <path d="M552 168h38" stroke-opacity=".22"></path>
+            <!-- платформа весов на датчиках, с пандусами -->
+            <g fill="currentColor" stroke="none">
+              <rect x="76" y="189" width="24" height="11" rx="2"></rect>
+              <rect x="243" y="189" width="24" height="11" rx="2"></rect>
+              <rect x="410" y="189" width="24" height="11" rx="2"></rect>
+            </g>
+            <path d="M42 200H14l28-21Z" fill="#fff"></path>
+            <path d="M468 200h28l-28-21Z" fill="#fff"></path>
+            <rect x="40" y="176" width="430" height="14" rx="5" fill="#fff"></rect>
+          </svg>
+
+          <svg
+            class="kfit__truck"
+            viewBox="0 0 640 220"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <!-- рама -->
+            <rect x="124" y="143" width="268" height="9" rx="3" fill="currentColor" stroke="none"></rect>
+            <!-- кузов мусоровоза с задним бортом -->
+            <path
+              d="M144 70H288a10 10 0 0 1 10 10v64H126a12 12 0 0 1-12-12v-26a12 12 0 0 1 3.5-8.5L136 74a12 12 0 0 1 8-4Z"
+              fill="#fff"></path>
+            <path d="M155 73v68" stroke-opacity=".22"></path>
+            <rect x="174" y="99" width="104" height="13" rx="6.5" fill="#7fe5de" stroke="none"></rect>
+            <!-- кабина -->
+            <path
+              d="M310 144V94a10 10 0 0 1 10-10h40a10 10 0 0 1 8.7 5l17.6 31a10 10 0 0 1 1.3 5V144Z"
+              fill="#fff"></path>
+            <path d="M323 96h36l14 25h-50Z" fill="#cfe2ff" stroke-width="2"></path>
+            <path d="M325 131h9"></path>
+            <rect x="379" y="129" width="9" height="8" rx="2.5" fill="#eef3a6" stroke-width="1.75"></rect>
+            <!-- колёса -->
+            <g fill="currentColor" stroke="none">
+              <circle cx="166" cy="158" r="18"></circle>
+              <circle cx="208" cy="158" r="18"></circle>
+              <circle cx="360" cy="158" r="18"></circle>
+            </g>
+            <g fill="#fff" stroke="none">
+              <circle cx="166" cy="158" r="7"></circle>
+              <circle cx="208" cy="158" r="7"></circle>
+              <circle cx="360" cy="158" r="7"></circle>
+            </g>
+          </svg>
+
+          <div class="ui kfit__act">
+            <span class="kfit__plate">В 121 АА 777</span>
+            <p class="kfit__weight">
+              <small>Вес груза (Нетто)</small>
+              <b>6,000 т</b>
+            </p>
+            <p class="kfit__state">
+              <span class="kfit__pill kfit__pill--wait">Не отправлено</span>
+              <span class="kfit__pill kfit__pill--ok">
+                <span class="kfit__pill-i"><Icon name="check" size={11} strokeWidth={3} /></span>
+                Отправлено
+              </span>
+            </p>
+          </div>
+        </GradientVisual>
+      </li>
+
+      {
+        rest.map((f, i) => (
+          <li class="kfit__tile" style={`--d:${i + 1}`} data-reveal>
+            <span class="kfit__ico" aria-hidden="true">
+              <Icon name={f.icon} size={24} />
+            </span>
+            <h3 class="kfit__text">{f.text}</h3>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="kfit__row">
+      <!-- Оговорка: сервис не заменяет основную систему -->
+      <div class="kfit__note dark" role="note" data-reveal>
+        <span class="kfit__note-ico" aria-hidden="true"><Icon name="info" size={24} /></span>
+        <div class="kfit__note-body">
+          <p class="kfit__note-lead">Сервис не заменяет вашу основную систему.</p>
+          <p class="kfit__note-sub">Он помогает быстро включиться в обязательную передачу данных.</p>
+        </div>
+      </div>
+
+      <!-- Следующий шаг — QODEX TONN -->
+      <article class="kfit__next" aria-labelledby="kfit-next-title" data-reveal style="--d:1">
+        <ProductLabel id="tonn" size="lg" />
+        <h3 class="kfit__next-title" id="kfit-next-title">Следующий шаг — QODEX&nbsp;TONN</h3>
+        <p class="kfit__next-text">
+          Номер, фото и вес машины без ручного ввода, акт сразу в облаке, данные уходят во ФГИС&nbsp;УТКО.
+        </p>
+        <p class="kfit__next-more">
+          <a href={productHref('tonn', 'kodeks')} class="link-arrow" data-goal="product_landing" data-goal-product="tonn">
+            Подробнее о QODEX&nbsp;TONN
+            <Icon name="arrow-up-right" />
+          </a>
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Бенто: крупная плитка в два столбца и два ряда, рядом четыре обычные ── */
+  .kfit__grid {
+    --kf-gap: clamp(12px, calc(var(--vw) * 1.4), 20px);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--kf-gap);
+  }
+
+  .kfit__tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 28px;
+    min-width: 0;
+    min-height: clamp(196px, calc(var(--vw) * 13), 224px);
+    padding: clamp(22px, calc(var(--vw) * 2.2), 28px);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  .kfit__ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .kfit__text {
+    font-size: clamp(1.15rem, calc(var(--vw) * 1.6), 1.3125rem);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  /* Крупная плитка: текст сверху, рисунок занимает остальное */
+  .kfit__tile--main {
+    grid-column: span 2;
+    grid-row: span 2;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 0;
+  }
+
+  .kfit__head {
+    display: grid;
+    justify-items: start;
+    gap: 18px;
+    padding: clamp(22px, calc(var(--vw) * 2.2), 28px) clamp(22px, calc(var(--vw) * 2.2), 28px) 0;
+  }
+
+  .kfit__tile--main .kfit__text {
+    max-width: 19em;
+    font-size: clamp(1.4rem, calc(var(--vw) * 2.2), 1.875rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+
+  /* ── Рисунок: весовая объекта на градиенте ─────────────── */
+  .kfit__vis {
+    --gv-r: 18px;
+    display: block;
+    flex: 1;
+    min-height: 236px;
+    margin: 22px 10px 10px;
+    padding: 0;
+    color: var(--ink);
+  }
+
+  .kfit__demo {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+  }
+
+  /* сцена и машина — два рисунка одного размера друг на друге: машина едет отдельным слоем.
+     На узком экране рисунок не мельчает, а уходит правым краем за карточку */
+  .kfit__scene,
+  .kfit__truck {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    min-width: 480px;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* карточка акта: над будкой оператора */
+  .kfit__act {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    display: grid;
+    justify-items: start;
+    gap: 9px;
+    width: auto;
+    min-width: 176px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    box-shadow:
+      0 0 0 6px rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+    line-height: 1.2;
+  }
+
+  /* госномер — как в сервисе: в рамке (рамка — внутренней тенью: border при дробном масштабе экрана
+     в Safari не рисуется) */
+  .kfit__plate {
+    padding: 4.5px 9.5px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .kfit__weight {
+    display: grid;
+    gap: 2px;
+  }
+
+  .kfit__weight small {
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .kfit__weight b {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+
+  /* статус акта: «Не отправлено» сменяется на «Отправлено» */
+  .kfit__state {
+    display: grid;
+    justify-items: start;
+  }
+
+  .kfit__pill {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .kfit__pill--wait {
+    background: var(--panel-2);
+    color: var(--muted);
+    opacity: 0;
+  }
+
+  .kfit__pill--ok {
+    padding-left: 5px;
+    background: color-mix(in oklab, var(--ok) 12%, white);
+    color: #087a52;
+  }
+
+  .kfit__pill-i {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--ok);
+    color: #fff;
+  }
+
+  /* Движение — один раз, когда рисунок появился на экране: машина заезжает на весы, появляется
+     акт, статус меняется на «Отправлено». Классы is-armed и is-live ставит скрипт; без них
+     (нет скриптов, «уменьшить движение») сразу видно итоговое состояние. */
+  .kfit__vis.is-armed:not(.is-live) .kfit__truck,
+  .kfit__vis.is-armed:not(.is-live) .kfit__act {
+    opacity: 0;
+  }
+
+  .kfit__vis.is-live .kfit__truck {
+    animation: kfit-drive 1.7s var(--ease-out) 0.15s both;
+  }
+
+  .kfit__vis.is-live .kfit__act {
+    animation: kfit-in 0.6s var(--ease-out) 1.7s both;
+  }
+
+  .kfit__vis.is-live .kfit__pill--wait {
+    animation: kfit-out 0.25s ease 3s both;
+  }
+
+  .kfit__vis.is-live .kfit__pill--ok {
+    animation: kfit-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 3.05s both;
+  }
+
+  @keyframes kfit-drive {
+    from {
+      transform: translateX(-62%);
+    }
+  }
+
+  @keyframes kfit-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes kfit-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes kfit-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kfit__vis .kfit__truck,
+    .kfit__vis .kfit__act,
+    .kfit__vis .kfit__pill {
+      animation: none !important;
+    }
+  }
+
+  /* ── Ряд из двух широких плиток ────────────────────────── */
+  .kfit__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(12px, calc(var(--vw) * 1.4), 20px);
+    margin-top: clamp(12px, calc(var(--vw) * 1.4), 20px);
+  }
+
+  .kfit__note,
+  .kfit__next {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: clamp(22px, calc(var(--vw) * 2.4), 30px);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+  }
+
+  /* оговорка — графитовая плитка с мягким свечением, как тёмная полоса в «Полигонам и сортировкам» */
+  .kfit__note {
+    justify-content: space-between;
+    gap: 32px;
+    background:
+      radial-gradient(60% 140% at 0% 0%, rgb(72 144 227 / 0.38) 0%, transparent 60%),
+      radial-gradient(45% 140% at 100% 100%, rgb(93 223 215 / 0.18) 0%, transparent 60%),
+      var(--ink);
+  }
+
+  .kfit__note-ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: rgb(255 255 255 / 0.1);
+  }
+
+  .kfit__note-lead {
+    font-size: clamp(1.3rem, calc(var(--vw) * 1.9), 1.625rem);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .kfit__note-sub {
+    max-width: 40ch;
+    margin-top: 10px;
+    font-size: clamp(1rem, calc(var(--vw) * 1.25), 1.0625rem);
+    line-height: 1.5;
+    color: rgb(255 255 255 / 0.72);
+    text-wrap: pretty;
+  }
+
+  /* следующий шаг — белая плитка с меткой продукта */
+  .kfit__next {
+    align-items: flex-start;
+    background: var(--card);
+  }
+
+  .kfit__next-title {
+    margin-top: 18px;
+    font-size: clamp(1.35rem, calc(var(--vw) * 2), 1.75rem);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .kfit__next-text {
+    max-width: 50ch;
+    margin-top: 12px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* ссылка прижата к низу плитки */
+  .kfit__next-more {
+    margin-top: auto;
+    padding-top: 22px;
+  }
+
+  /* ── Планшет: два столбца, крупная плитка во всю ширину ── */
+  @media (max-width: 1199.98px) {
+    .kfit__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .kfit__tile {
+      min-height: 172px;
+    }
+
+    .kfit__tile--main {
+      grid-column: 1 / -1;
+      grid-row: auto;
+    }
+
+    .kfit__vis {
+      flex: none;
+      height: 300px;
+    }
+  }
+
+  /* ── Телефон: один столбец, обычные плитки — значок слева, текст справа ── */
+  @media (max-width: 699.98px) {
+    .kfit__grid,
+    .kfit__row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .kfit__tile {
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 14px;
+      min-height: 0;
+      padding: 16px 18px 16px 16px;
+    }
+
+    .kfit__ico {
+      width: 44px;
+      height: 44px;
+      border-radius: calc(13px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .kfit__text {
+      font-size: 1.0625rem;
+      text-wrap: pretty;
+    }
+
+    .kfit__tile--main {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      padding: 0;
+    }
+
+    .kfit__head {
+      gap: 14px;
+      padding: 20px 20px 0;
+    }
+
+    .kfit__vis {
+      height: 284px;
+      margin: 18px 8px 8px;
+    }
+
+    /* машина — по центру узкой карточки: платформа уходит за оба её края */
+    .kfit__scene,
+    .kfit__truck {
+      left: -24px;
+    }
+
+    .kfit__demo {
+      top: 12px;
+      left: 12px;
+    }
+
+    .kfit__act {
+      top: 12px;
+      right: 12px;
+      min-width: 0;
+      padding: 12px 14px;
+      border-radius: 16px;
+    }
+
+    .kfit__weight b {
+      font-size: 22px;
+    }
+
+    .kfit__note {
+      gap: 22px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Машина заезжает на весы, когда рисунок появился на экране; за экраном сцена возвращается
+  // в начало. При «уменьшить движение» классы не ставятся — видно итоговое состояние.
+  const vis = document.querySelector<HTMLElement>('[data-kfit-vis]');
+  if (vis && !reducedMotion() && 'IntersectionObserver' in window) {
+    vis.classList.add('is-armed');
+    new IntersectionObserver(
+      ([entry]) => {
+        // начинаем, когда видна заметная часть рисунка, а сбрасываем — только когда он ушёл целиком:
+        // на границе экрана сцена не дёргается
+        if (entry.intersectionRatio >= 0.45) vis.classList.add('is-live');
+        else if (!entry.isIntersecting) vis.classList.remove('is-live');
+      },
+      { threshold: [0, 0.45] },
+    ).observe(vis);
+  }
+</script>

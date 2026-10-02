@@ -1,0 +1,79 @@
+---
+// Страница продукта «Кодекс ТКО» (этап 2): сервис передачи данных о взвешиваниях во ФГИС УТКО.
+// Содержание — с прежнего лендинга fgis.qodex.tech, оформление — дизайн-система v4.
+// Контакты и форма заявки — общие для сайта (на лендинге они устарели).
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Floating from '../components/Floating.astro';
+import LeadModal from '../components/LeadModal.astro';
+import KHero from '../sections/kodeks/KHero.astro';
+import KWhy from '../sections/kodeks/KWhy.astro';
+import KService from '../sections/kodeks/KService.astro';
+import KSteps from '../sections/kodeks/KSteps.astro';
+import KExcel from '../sections/kodeks/KExcel.astro';
+import KFeatures from '../sections/kodeks/KFeatures.astro';
+import KFit from '../sections/kodeks/KFit.astro';
+import KTrust from '../sections/kodeks/KTrust.astro';
+import Questions from '../sections/Questions.astro';
+import Contact from '../sections/Contact.astro';
+import { faqJsonLd } from '../data/faq';
+import { FAQ_KODEKS } from '../data/faq-kodeks';
+import { SITE, withBase } from '../config/site';
+
+const NB = ' ';
+
+const title = `Кодекс ТКО — передача данных во ФГИС УТКО за 15${NB}минут | QODEX`;
+const description =
+  'Простой сервис, который помогает быстро включиться в передачу данных о взвешиваниях во ФГИС УТКО — без внедрения сложных систем. Первая неделя бесплатно.';
+
+// Тексты формы заявки на этой странице
+const leadTitle = `Начните работу с ФГИС${NB}УТКО уже сегодня`;
+const leadText = 'Оставьте заявку — сразу вышлем вам ссылку на сервис. Первая неделя бесплатно.';
+const leadProof = 'Работаем с десятками предприятий по всей России';
+
+const breadcrumbs = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'QODEX', item: new URL(withBase('/'), SITE.url).href },
+    { '@type': 'ListItem', position: 2, name: 'Кодекс ТКО', item: new URL(withBase('/kodeks-tko/'), SITE.url).href },
+  ],
+};
+---
+
+<Base title={title} description={description} jsonLd={[faqJsonLd(FAQ_KODEKS), breadcrumbs]}>
+  <Header home={false} cta="Подключиться" current="kodeks" />
+  <main>
+    <KHero />
+    <KWhy />
+    <KService />
+    <KSteps />
+    <KExcel />
+    <KFeatures />
+    <KFit />
+    <KTrust />
+    <Questions items={FAQ_KODEKS} />
+    <Contact title={leadTitle} lead={leadText} proof={leadProof} personLabel="Ваш контакт" />
+  </main>
+  <Footer />
+  <Floating />
+  <LeadModal title={leadTitle} lead={leadText} proof={leadProof} personLabel="Ваш контакт" />
+</Base>
+
+<script>
+  import { initReveal, initCounters } from '../scripts/motion';
+  import { initAccordions, initChains } from '../scripts/kit';
+  import { initGoals } from '../scripts/goals';
+  import { addInterest, initInterestLinks } from '../scripts/interest';
+
+  initReveal();
+  initCounters();
+  initAccordions();
+  initChains();
+  initGoals();
+  initInterestLinks();
+
+  // на странице продукта он сразу отмечен в поле «Что интересно» формы заявки
+  addInterest(['kodeks']);
+</script>
