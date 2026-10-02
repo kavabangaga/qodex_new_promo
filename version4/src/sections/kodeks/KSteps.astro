@@ -469,7 +469,7 @@ const ACT_FIELDS = [
   /* «демо-данные» — под экраном, на насыщенной части градиента */
   .kst-card__demo {
     position: absolute;
-    left: 16px;
+    left: var(--kst-pad);
     bottom: 14px;
     pointer-events: none;
   }
@@ -490,7 +490,8 @@ const ACT_FIELDS = [
     bottom: 56px;
     display: grid;
     gap: 8px;
-    width: min(328px, calc(100% - 40px));
+    /* полупрозрачная рамка карточки (8 px) встаёт по левому краю текста шага */
+    width: calc(100% - 2 * var(--kst-pad) - 16px);
     padding: 14px;
     border-radius: 18px;
     font-size: 13px;
@@ -843,17 +844,16 @@ const ACT_FIELDS = [
   /* кнопка нажата: мягкое кольцо вокруг и курсор на ней */
   .kst-send__halo {
     position: absolute;
-    inset: -4px;
-    border-radius: 14px;
-    box-shadow: 0 0 0 1.5px rgb(0 107 255 / 0.45);
-    background: rgb(0 107 255 / 0.1);
-    z-index: -1;
+    inset: 0;
+    border-radius: 10px;
+    box-shadow: 0 0 0 4px rgb(0 107 255 / 0.22);
+    pointer-events: none;
   }
 
   .kst-cur {
     position: absolute;
-    right: 34px;
-    bottom: -9px;
+    right: 40px;
+    bottom: -7px;
     display: grid;
   }
 
@@ -1063,9 +1063,10 @@ const ACT_FIELDS = [
       padding: 26px 24px 28px 26px;
     }
 
-    .kst-card__chip {
-      background: var(--c-kodeks);
-      color: #fff;
+    /* раскрыты все шаги — выделять значком нечего */
+    .kst-card.is-open .kst-card__chip {
+      background: var(--panel);
+      color: var(--ink);
     }
 
     .kst-card__title {
@@ -1145,6 +1146,11 @@ const ACT_FIELDS = [
       margin: 8px;
       padding: 48px 14px 20px;
     }
+
+    /* ключ целиком помещается в поле на телефонах от 390 px */
+    .kst-f__in--id {
+      font-size: 11.5px;
+    }
   }
 
   /* ── Кнопка под цепочкой ─────────────────────────────────── */
@@ -1162,6 +1168,7 @@ const ACT_FIELDS = [
       line-height: 1.25;
       white-space: normal;
       text-align: center;
+      text-wrap: balance;
     }
   }
 </style>

@@ -123,6 +123,8 @@ const tileStyle = (i: number) =>
     letter-spacing: -0.015em;
     color: var(--ink-2);
     text-wrap: balance;
+    /* страховка: длинное название без пробелов не вылезет из плитки */
+    overflow-wrap: anywhere;
   }
 
   /* на плитке цвета панели метка белая: серая на ней теряется */
@@ -210,7 +212,7 @@ const tileStyle = (i: number) =>
   }
 
   /* ── Телефон: две плитки в ряд ────────────────────────── */
-  @media (max-width: 699.98px) {
+  @media (max-width: 759.98px) {
     .kt-logos {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }

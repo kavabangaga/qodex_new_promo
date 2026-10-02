@@ -187,17 +187,12 @@ const SPARED = ['сложных внедрений', `доработок${NB}1С
     background: linear-gradient(rgb(255 255 255 / 0.4) 0 0) center / 100% calc(100% - 2 * var(--ksv-ring)) no-repeat;
   }
 
+  /* точка данных ждёт над перемычкой — там её скрывает обрезка (с запасом: при масштабе страницы
+     край точки иначе проступает), потом проходит вниз и уходит под перемычку */
   .ksv__pipe i {
     position: absolute;
-    inset: 0;
-    transform: translateY(-100%);
-  }
-
-  .ksv__pipe i::after {
-    content: '';
-    position: absolute;
+    top: -10px;
     left: 5px;
-    bottom: 0;
     width: 6px;
     height: 6px;
     border-radius: 50%;
@@ -289,24 +284,24 @@ const SPARED = ['сложных внедрений', `доработок${NB}1С
   @keyframes ksv-dot-1 {
     0%,
     16% {
-      transform: translateY(-100%);
+      transform: none;
       animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
     }
     25%,
     100% {
-      transform: translateY(100%);
+      transform: translateY(calc(var(--ksv-pipe) + 14px));
     }
   }
 
   @keyframes ksv-dot-2 {
     0%,
     30% {
-      transform: translateY(-100%);
+      transform: none;
       animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
     }
     39%,
     100% {
-      transform: translateY(100%);
+      transform: translateY(calc(var(--ksv-pipe) + 14px));
     }
   }
 

@@ -37,6 +37,7 @@ const [main, ...rest] = FITS;
         <GradientVisual preset="teal" deco="none" class="kfit__vis" data-kfit-vis>
           <span class="tag tag--demo kfit__demo">демо-данные</span>
 
+          <div class="kfit__stage">
           <svg
             class="kfit__scene"
             viewBox="0 0 640 220"
@@ -115,6 +116,7 @@ const [main, ...rest] = FITS;
               </span>
             </p>
           </div>
+          </div>
         </GradientVisual>
       </li>
 
@@ -173,7 +175,7 @@ const [main, ...rest] = FITS;
     justify-content: space-between;
     gap: 28px;
     min-width: 0;
-    min-height: clamp(196px, calc(var(--vw) * 13), 224px);
+    min-height: 224px;
     padding: clamp(22px, calc(var(--vw) * 2.2), 28px);
     border-radius: calc(var(--r-lg) * var(--rk));
     corner-shape: var(--corner);
@@ -240,12 +242,20 @@ const [main, ...rest] = FITS;
     left: 14px;
   }
 
+  /* сцена не шире 720px и стоит по центру карточки: на широкой карточке рисунок не разрастается */
+  .kfit__stage {
+    position: absolute;
+    inset: 0;
+    width: min(100%, 720px);
+    margin-inline: auto;
+  }
+
   /* сцена и машина — два рисунка одного размера друг на друге: машина едет отдельным слоем.
-     На узком экране рисунок не мельчает, а уходит правым краем за карточку */
+     На узком экране рисунок не мельчает: машина встаёт по центру, платформа уходит за края карточки */
   .kfit__scene,
   .kfit__truck {
     position: absolute;
-    left: 0;
+    left: min(0px, 50% - 191px);
     bottom: 0;
     width: 100%;
     min-width: 480px;
@@ -551,12 +561,6 @@ const [main, ...rest] = FITS;
     .kfit__vis {
       height: 284px;
       margin: 18px 8px 8px;
-    }
-
-    /* машина — по центру узкой карточки: платформа уходит за оба её края */
-    .kfit__scene,
-    .kfit__truck {
-      left: -24px;
     }
 
     .kfit__demo {

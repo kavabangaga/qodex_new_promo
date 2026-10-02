@@ -519,7 +519,7 @@ const TABS = [
   }
 
   .kh-date {
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -552,13 +552,13 @@ const TABS = [
   }
 
   .kh-w small {
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--muted);
     white-space: nowrap;
   }
 
   .kh-w b {
-    font-size: 15px;
+    font-size: 15.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -908,8 +908,10 @@ const TABS = [
     }
   }
 
-  @container kh (max-width: 569.98px) {
-    .kh-btn--filter {
+  /* и полные подписи весов уже не входят в три столбца — остаётся слово в скобках */
+  @container kh (max-width: 579.98px) {
+    .kh-btn--filter,
+    .kh-w__x {
       display: none;
     }
   }
@@ -959,6 +961,11 @@ const TABS = [
       gap: 8px;
     }
 
+    .kh-date,
+    .kh-w small {
+      font-size: 12px;
+    }
+
     .kh-pill {
       padding: 0 8px;
       font-size: 12px;
@@ -985,7 +992,7 @@ const TABS = [
     /* вкладки по ширине своих подписей, с равными промежутками */
     .kh-nav {
       display: flex;
-      justify-content: space-around;
+      justify-content: space-evenly;
       padding: 6px 2px 8px;
     }
 
@@ -995,10 +1002,14 @@ const TABS = [
     }
   }
 
-  /* совсем узкая карточка (телефон уже 388 px): время в строке не помещается рядом со статусом */
-  @container kh (max-width: 335.98px) {
+  /* совсем узкая карточка (телефон уже 390 px): время в строке не помещается рядом со статусом */
+  @container kh (max-width: 337.98px) {
     .kh-date {
       display: none;
+    }
+
+    .kh-tab {
+      padding-inline: 4px;
     }
   }
 
