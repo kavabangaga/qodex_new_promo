@@ -113,6 +113,8 @@ import { CONTACTS } from '../config/site';
     border-radius: calc(var(--r-lg) - 8px);
     background: linear-gradient(135deg, #c3dcf8 0%, #d6cdfa 50%, #c4e3f6 100%);
     overflow: hidden;
+    /* вращающийся слой Safari на iPhone может не обрезать по скруглению — обрезка продублирована */
+    clip-path: inset(0 round calc(var(--r-lg) - 8px));
   }
 
   /* Пятна нарисованы на прозрачном квадрате, который медленно вращается вокруг центра панели.

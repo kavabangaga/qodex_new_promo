@@ -270,6 +270,8 @@ const N = STORIES.length;
     height: clamp(760px, calc(var(--vw) * 64), 940px);
     border-radius: var(--r-2xl);
     overflow: hidden;
+    /* Safari на iPhone не обрезал размытый слой по скруглению — у полосы были острые углы */
+    clip-path: inset(0 round var(--r-2xl));
     background: var(--g-blue);
   }
 
@@ -292,6 +294,8 @@ const N = STORIES.length;
         var(--bg) 92%
       );
     filter: blur(40px);
+    /* слой обрезает и сам себя: 6.897% — его выступ за полосу (8 из 116 долей своей ширины) */
+    clip-path: inset(6.897% round var(--r-2xl));
   }
 
   .stories__band::after {

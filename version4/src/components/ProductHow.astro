@@ -205,16 +205,40 @@ const p = PRODUCTS[id];
     }
   }
 
-  /* Планшет и телефон: столбиком — текст, затем картинка, затем «Что это даёт» */
+  /* Планшет и телефон: столбиком — метка и заголовок, картинка, пункты «Как работает», ссылка,
+     «Что это даёт». Обёртка текста «растворяется» (display: contents), чтобы картинка встала
+     между заголовком и пунктами: нажал пункт — картинка над ним сразу меняется. */
   @media (max-width: 900px) {
     .how,
     .how--flip {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-areas:
-        'text'
-        'visual'
-        'gain';
-      row-gap: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .how__text {
+      display: contents;
+    }
+
+    .how__visual {
+      order: 1;
+      margin-top: 24px;
+    }
+
+    .how__steps {
+      order: 2;
+      margin-top: 28px;
+    }
+
+    .how__more {
+      order: 3;
+      align-self: flex-start;
+    }
+
+    .how__gain {
+      order: 4;
+      margin-top: 32px;
     }
   }
 

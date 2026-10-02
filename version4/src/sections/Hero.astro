@@ -392,8 +392,9 @@ const robotRows = [
   .stage {
     position: relative;
     isolation: isolate;
+    --stage-r: clamp(28px, calc(var(--vw) * 3.4), 48px);
     padding: clamp(28px, calc(var(--vw) * 3.4), 48px) clamp(12px, calc(var(--vw) * 3), 40px) clamp(28px, calc(var(--vw) * 4), 64px);
-    border-radius: clamp(28px, calc(var(--vw) * 3.4), 48px);
+    border-radius: var(--stage-r);
     scroll-margin-top: calc(var(--header-h) + 16px);
   }
 
@@ -403,6 +404,9 @@ const robotRows = [
     z-index: -1;
     border-radius: inherit;
     overflow: hidden;
+    /* внутри лента, которая сдвигается через transform: Safari на iPhone может не обрезать её
+       по скруглению, поэтому обрезка продублирована */
+    clip-path: inset(0 round var(--stage-r));
     background: #a9cff7;
   }
 
