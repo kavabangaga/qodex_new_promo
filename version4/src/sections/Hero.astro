@@ -1232,6 +1232,8 @@ const robotRows = [
   .tn__weight b {
     font-size: 28px;
     line-height: 1;
+    /* теснее нельзя: табличные «4» и «8» в «12 480» слипаются (см. DESIGN.md, слипшиеся буквы) */
+    letter-spacing: -0.025em;
   }
 
   .tn__weight b span {

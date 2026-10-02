@@ -1644,7 +1644,8 @@ const acts = [
     display: inline-grid;
     font-size: clamp(30px, calc(var(--vw) * 3), 40px);
     font-weight: 600;
-    letter-spacing: -0.04em;
+    /* теснее нельзя: табличные «44» и «48» в «12 440», «12 480» слипаются (см. DESIGN.md, слипшиеся буквы) */
+    letter-spacing: -0.025em;
     line-height: 1;
   }
 
