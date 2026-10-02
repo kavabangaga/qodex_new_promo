@@ -171,7 +171,8 @@ const tools: { name: string; qodex?: boolean; values: string[] }[] = [
 
   .cmp__dd {
     display: flex;
-    align-items: flex-start;
+    /* галочка — по центру текста, даже когда он в две строки */
+    align-items: center;
     gap: 10px;
     font-size: 15px;
     line-height: 1.4;

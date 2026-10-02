@@ -114,7 +114,12 @@ const robotRows = [
                       <Icon name={PRODUCT_ICON[pl.id]} size={22} strokeWidth={1.9} />
                     </span>
                     <span class="stab__label">
-                      <span>{pl.label}</span>
+                      <span>
+                        {
+                          /* подпись из двух слов на узком телефоне встаёт в две строки (см. .stab__br) */
+                          pl.label.split(' ').map((word, k) => (k ? [' ', <br class="stab__br" />, word] : word))
+                        }
+                      </span>
                     </span>
                   </button>
                 ))
@@ -570,7 +575,18 @@ const robotRows = [
   .stab__label > span {
     min-width: 0;
     overflow: hidden;
-    padding-right: 18px;
+  }
+
+  /* Поле справа от подписи лежит внутри неё: у свёрнутой вкладки его нет,
+     плитка квадратная и значок стоит ровно по центру */
+  .stab__label > span::after {
+    content: '';
+    display: inline-block;
+    width: 18px;
+  }
+
+  .stab__br {
+    display: none;
   }
 
   .stab[aria-selected='true'] {
@@ -1221,6 +1237,8 @@ const robotRows = [
   .tn__weight b span {
     font-size: 15px;
     font-weight: 500;
+    /* трекинг числа наследуется в пикселях — для мелкой подписи он вдвое теснее, «кг» слипается */
+    letter-spacing: 0;
     color: var(--muted);
   }
 
@@ -1481,11 +1499,11 @@ const robotRows = [
     }
 
     .stab__label {
-      font-size: 14px;
+      font-size: 13.5px;
     }
 
-    .stab__label > span {
-      padding-right: 12px;
+    .stab__label > span::after {
+      width: 12px;
     }
 
     .spane__visual {
@@ -1525,6 +1543,47 @@ const robotRows = [
       100% {
         transform: translateX(-64px);
       }
+    }
+  }
+
+  /* Узкий телефон: «База начислений» в одну строку рядом с тремя плитками не помещается —
+     подпись встаёт в две строки */
+  @media (max-width: 389.98px) {
+    .stab__br {
+      display: inline;
+    }
+
+    .stab__label {
+      font-size: 13px;
+      line-height: 1.15;
+      text-align: left;
+    }
+
+    .stab__label > span::after {
+      width: 10px;
+    }
+  }
+
+  @media (max-width: 359.98px) {
+    .stage__tabs {
+      gap: 5px;
+    }
+
+    .stab {
+      height: 46px;
+    }
+
+    .stab__ico {
+      width: 42px;
+      height: 42px;
+    }
+
+    .stab__label {
+      font-size: 12px;
+    }
+
+    .stab__label > span::after {
+      width: 8px;
     }
   }
 </style>

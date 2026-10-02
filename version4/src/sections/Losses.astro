@@ -94,11 +94,24 @@ const rows: Row[] = [
                   <dl class="lc__facts">
                     <div>
                       <dt class="lc__dt">Сколько вы теряете</dt>
-                      <dd class:list={['lc__loss', { 'is-forecast': r.forecast }]}>
-                        <span class="lc__sum">{r.sum}</span>
-                        {r.rest}
-                        {r.forecast && <span class="tag tag--forecast lc__fc">прогноз</span>}
-                      </dd>
+                      {
+                        r.forecast ? (
+                          /* три части в ряд, переносятся целиком: сумма (с «/»), подпись, метка */
+                          <dd class="lc__loss is-forecast">
+                            <span class="lc__amount">
+                              <span class="lc__sum">{r.sum}</span>
+                              {r.rest.startsWith('/') ? '/' : ''}
+                            </span>
+                            <span class="lc__rest">{r.rest.replace(/^\//, '')}</span>{' '}
+                            <span class="tag tag--forecast lc__fc">прогноз</span>
+                          </dd>
+                        ) : (
+                          <dd class="lc__loss">
+                            <span class="lc__sum">{r.sum}</span>
+                            {r.rest}
+                          </dd>
+                        )
+                      }
                     </div>
                     <div class="lc__sol-row">
                       <dt class="lc__dt">Решение</dt>
@@ -445,7 +458,16 @@ const rows: Row[] = [
     font-variant-numeric: tabular-nums;
   }
 
-  /* Прогноз оформлен иначе, чем фактические потери */
+  /* Прогноз оформлен иначе, чем фактические потери: приглушённая сумма с пунктиром и метка.
+     Сумма, подпись и метка стоят в ряд по базовой линии и переносятся целиком, с зазором между
+     рядами — ни метка, ни вторая строка подписи не наезжают на пунктир под суммой */
+  .lc__loss.is-forecast {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    row-gap: 12px;
+  }
+
   .lc__loss.is-forecast .lc__sum {
     font-weight: 500;
     color: var(--muted);
@@ -454,9 +476,8 @@ const rows: Row[] = [
     text-underline-offset: 7px;
   }
 
-  .lc__fc {
-    margin-left: 6px;
-    vertical-align: 2px;
+  .lc__rest {
+    margin-right: 8px;
   }
 
   .lc__sol-row {

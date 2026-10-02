@@ -5,10 +5,11 @@ import Icon from './Icon.astro';
 import { PRODUCT_ICON } from './ProductLabel.astro';
 import { CONTACTS, PRODUCTS, PRODUCT_ORDER, productHref, withBase } from '../config/site';
 
+// Пункты идут в том же порядке, что и разделы на странице (после «Продуктов»)
 const links = [
   { href: '#balans', label: 'Как это работает' },
-  { href: '#pilot', label: 'Пилот' },
   { href: '#bezopasnost', label: 'Безопасность' },
+  { href: '#pilot', label: 'Пилот' },
   { href: '#o-kompanii', label: 'О компании' },
   { href: '#kontakty', label: 'Контакты' },
 ];
