@@ -110,7 +110,8 @@ const docs = [
     overflow: hidden;
     isolation: isolate;
     padding: clamp(56px, calc(var(--vw) * 7), 104px) 0 clamp(24px, calc(var(--vw) * 3), 40px);
-    border-radius: var(--r-2xl);
+    border-radius: calc(var(--r-2xl) * var(--rk));
+    corner-shape: var(--corner);
     background: #1f1f22;
     color: #fff;
   }
@@ -186,7 +187,8 @@ const docs = [
     width: 20px;
     height: 20px;
     flex: none;
-    border-radius: 6px;
+    border-radius: calc(6px * var(--rk));
+    corner-shape: var(--corner);
     background: var(--pc);
     color: #fff;
   }

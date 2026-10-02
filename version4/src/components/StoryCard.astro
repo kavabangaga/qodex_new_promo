@@ -81,7 +81,8 @@ const nb = (t: string) =>
   .story {
     container-type: inline-size;
     padding: clamp(12px, calc(var(--vw) * 1.2), 16px);
-    border-radius: clamp(28px, calc(var(--vw) * 2.8), 40px);
+    border-radius: calc(clamp(28px, calc(var(--vw) * 2.8), 40px) * var(--rk));
+    corner-shape: var(--corner);
     background: #fff;
     box-shadow: var(--shadow-card);
   }
@@ -164,7 +165,8 @@ const nb = (t: string) =>
 
   .story__client {
     padding: 5px 10px;
-    border-radius: 8px;
+    border-radius: calc(8px * var(--rk));
+    corner-shape: var(--corner);
     background: var(--panel-2);
     font-size: 14px;
     font-weight: 500;

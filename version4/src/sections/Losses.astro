@@ -383,6 +383,7 @@ const rows: Row[] = [
     position: relative;
     height: 100%;
     border-radius: inherit;
+    corner-shape: inherit;
     overflow: clip;
   }
 
@@ -471,7 +472,8 @@ const rows: Row[] = [
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    border-radius: 8px;
+    border-radius: calc(8px * var(--rk));
+    corner-shape: var(--corner);
   }
 
   .lc__sol-arrow {
@@ -498,7 +500,8 @@ const rows: Row[] = [
     margin-top: 12px;
     padding: 6px 10px 6px 16px;
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
     background: var(--bg);
     font-size: 15px;
     font-weight: 560;
@@ -938,7 +941,8 @@ const rows: Row[] = [
       height: auto;
       min-height: 230px;
       margin: 10px;
-      border-radius: 14px;
+      border-radius: calc(14px * var(--rk));
+      corner-shape: var(--corner);
       background:
         radial-gradient(70% 80% at 8% 100%, var(--a1) 0%, transparent 72%),
         radial-gradient(70% 80% at 95% 95%, var(--a2) 0%, transparent 72%),
@@ -1037,7 +1041,8 @@ const rows: Row[] = [
     gap: 20px 32px;
     margin: 24px 0 30px;
     padding: 20px 22px 20px 28px;
-    border-radius: var(--r);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--card);
     box-shadow: var(--shadow-soft);
     opacity: 0;

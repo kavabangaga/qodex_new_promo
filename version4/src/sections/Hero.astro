@@ -315,7 +315,8 @@ const robotRows = [
   /* Большая тёплая панель первого экрана, как у Calendly */
   .hero__box {
     position: relative;
-    border-radius: var(--r-2xl);
+    border-radius: calc(var(--r-2xl) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--panel);
     padding-top: clamp(48px, calc(var(--vw) * 7), 104px);
     padding-bottom: clamp(16px, calc(var(--vw) * 2), 24px);
@@ -394,7 +395,8 @@ const robotRows = [
     isolation: isolate;
     --stage-r: clamp(28px, calc(var(--vw) * 3.4), 48px);
     padding: clamp(28px, calc(var(--vw) * 3.4), 48px) clamp(12px, calc(var(--vw) * 3), 40px) clamp(28px, calc(var(--vw) * 4), 64px);
-    border-radius: var(--stage-r);
+    border-radius: calc(var(--stage-r) * var(--rk));
+    corner-shape: var(--corner);
     scroll-margin-top: calc(var(--header-h) + 16px);
   }
 
@@ -403,10 +405,11 @@ const robotRows = [
     inset: 0;
     z-index: -1;
     border-radius: inherit;
+    corner-shape: inherit;
     overflow: hidden;
     /* внутри лента, которая сдвигается через transform: Safari на iPhone может не обрезать её
-       по скруглению, поэтому обрезка продублирована */
-    clip-path: inset(0 round var(--stage-r));
+       по скруглению, поэтому обрезка продублирована (--rclip — см. :root в global.css) */
+    clip-path: inset(0 round calc(var(--stage-r) * var(--rclip)));
     background: #a9cff7;
   }
 
@@ -496,7 +499,8 @@ const robotRows = [
     height: 58px;
     padding: 0;
     border: 3px solid var(--card-warm);
-    border-radius: 18px;
+    border-radius: calc(18px * var(--rk));
+    corner-shape: var(--corner);
     background: rgb(255 255 255 / 0.6);
     color: var(--ink);
     box-shadow: 0 6px 18px -10px rgb(29 29 31 / 0.35);
@@ -582,7 +586,8 @@ const robotRows = [
   .stage__card {
     display: grid;
     width: min(100%, 1040px);
-    border-radius: clamp(24px, calc(var(--vw) * 2.6), 34px);
+    border-radius: calc(clamp(24px, calc(var(--vw) * 2.6), 34px) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--card-warm);
     box-shadow:
       0 4px 5px rgb(96 96 102 / 0.04),
@@ -687,7 +692,8 @@ const robotRows = [
     place-items: center;
     min-height: 360px;
     padding: 28px 20px;
-    border-radius: 24px;
+    border-radius: calc(24px * var(--rk));
+    corner-shape: var(--corner);
     overflow: hidden;
     isolation: isolate;
     background: #dbe9ff;
@@ -1465,7 +1471,8 @@ const robotRows = [
     .stab {
       height: 50px;
       border-width: 2px;
-      border-radius: 15px;
+      border-radius: calc(15px * var(--rk));
+      corner-shape: var(--corner);
     }
 
     .stab__ico {

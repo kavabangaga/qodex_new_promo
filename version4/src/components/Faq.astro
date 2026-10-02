@@ -84,7 +84,8 @@ const nb = (t: string) =>
     display: grid;
     width: 32px;
     height: 32px;
-    border-radius: 8px;
+    border-radius: calc(8px * var(--rk));
+    corner-shape: var(--corner);
     background: var(--panel-2);
     color: var(--ink);
     transition:

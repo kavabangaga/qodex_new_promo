@@ -159,7 +159,8 @@ const nb = (t: string) =>
 
   .tl__list:focus-visible {
     outline-offset: -4px;
-    border-radius: var(--r);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
   }
 
   .tl__item {
@@ -170,7 +171,8 @@ const nb = (t: string) =>
     flex: 0 0 clamp(240px, calc(var(--vw) * 19), 272px);
     min-height: 240px;
     padding: 24px;
-    border-radius: var(--r);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--card);
     scroll-snap-align: start;
   }
@@ -209,7 +211,8 @@ const nb = (t: string) =>
   .tl__when {
     align-self: flex-start;
     padding: 4px 9px;
-    border-radius: 7px;
+    border-radius: calc(7px * var(--rk));
+    corner-shape: var(--corner);
     background: var(--panel-2);
     font-size: 13px;
     font-weight: 500;
@@ -272,7 +275,8 @@ const nb = (t: string) =>
     gap: 6px;
     min-height: clamp(96px, calc(var(--vw) * 9), 120px);
     padding: 14px 12px;
-    border-radius: clamp(18px, calc(var(--vw) * 1.8), 24px);
+    border-radius: calc(clamp(18px, calc(var(--vw) * 1.8), 24px) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--card);
     transition: transform 0.4s var(--ease-out);
   }

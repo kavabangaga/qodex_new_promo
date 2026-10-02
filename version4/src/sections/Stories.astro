@@ -268,10 +268,12 @@ const N = STORIES.length;
     left: var(--page-pad);
     right: var(--page-pad);
     height: clamp(760px, calc(var(--vw) * 64), 940px);
-    border-radius: var(--r-2xl);
+    border-radius: calc(var(--r-2xl) * var(--rk));
+    corner-shape: var(--corner);
     overflow: hidden;
-    /* Safari на iPhone не обрезал размытый слой по скруглению — у полосы были острые углы */
-    clip-path: inset(0 round var(--r-2xl));
+    /* Safari на iPhone не обрезал размытый слой по скруглению — у полосы были острые углы
+       (--rclip — см. :root в global.css) */
+    clip-path: inset(0 round calc(var(--r-2xl) * var(--rclip)));
     background: var(--g-blue);
   }
 
@@ -295,7 +297,7 @@ const N = STORIES.length;
       );
     filter: blur(40px);
     /* слой обрезает и сам себя: 6.897% — его выступ за полосу (8 из 116 долей своей ширины) */
-    clip-path: inset(6.897% round var(--r-2xl));
+    clip-path: inset(6.897% round calc(var(--r-2xl) * var(--rclip)));
   }
 
   .stories__band::after {
@@ -366,7 +368,8 @@ const N = STORIES.length;
     height: clamp(200px, calc(var(--vw) * 15.5), 236px);
     padding: 10px;
     border: 0;
-    border-radius: 30px;
+    border-radius: calc(30px * var(--rk));
+    corner-shape: var(--corner);
     background: #fff;
     cursor: pointer;
     container-type: inline-size;
@@ -432,7 +435,8 @@ const N = STORIES.length;
     gap: 6px;
     min-width: min(100%, 196px);
     padding: 14px 20px 16px;
-    border-radius: 18px;
+    border-radius: calc(18px * var(--rk));
+    corner-shape: var(--corner);
     background: #fff;
     box-shadow:
       0 0 0 6px rgb(255 255 255 / 0.4),
@@ -453,7 +457,8 @@ const N = STORIES.length;
   .sc__mini-prod .plabel__ico {
     width: 22px;
     height: 22px;
-    border-radius: 7px;
+    border-radius: calc(7px * var(--rk));
+    corner-shape: var(--corner);
   }
 
   .sc__mini-prod .plabel__ico :global(svg) {

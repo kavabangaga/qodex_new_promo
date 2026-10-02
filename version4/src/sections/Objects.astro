@@ -692,7 +692,8 @@ const ACTS = [
     gap: 28px clamp(28px, calc(var(--vw) * 4), 56px);
     margin-top: clamp(72px, calc(var(--vw) * 9), 120px);
     padding: clamp(26px, calc(var(--vw) * 3), 40px) clamp(24px, calc(var(--vw) * 3.6), 48px);
-    border-radius: var(--r-xl);
+    border-radius: calc(var(--r-xl) * var(--rk));
+    corner-shape: var(--corner);
     background:
       radial-gradient(60% 140% at 0% 0%, rgb(72 144 227 / 0.38) 0%, transparent 60%),
       radial-gradient(45% 140% at 100% 100%, rgb(93 223 215 / 0.18) 0%, transparent 60%),
@@ -844,7 +845,8 @@ const ACTS = [
     .ob__band {
       grid-template-columns: minmax(0, 1fr);
       gap: 22px;
-      border-radius: var(--r-lg);
+      border-radius: calc(var(--r-lg) * var(--rk));
+      corner-shape: var(--corner);
     }
 
     .ob__cta {

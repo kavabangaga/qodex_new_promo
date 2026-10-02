@@ -147,7 +147,8 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     position: relative;
     margin-inline: var(--page-pad);
     padding: clamp(16px, calc(var(--vw) * 5), 80px) 0;
-    border-radius: var(--r-2xl);
+    border-radius: calc(var(--r-2xl) * var(--rk));
+    corner-shape: var(--corner);
     overflow: hidden;
     isolation: isolate;
   }
@@ -175,7 +176,8 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     align-items: center;
     gap: clamp(28px, calc(var(--vw) * 4), 56px);
     padding: clamp(22px, calc(var(--vw) * 3.4), 48px);
-    border-radius: clamp(24px, calc(var(--vw) * 2.6), 36px);
+    border-radius: calc(clamp(24px, calc(var(--vw) * 2.6), 36px) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--card-warm);
     box-shadow: var(--shadow-card);
   }
@@ -244,7 +246,8 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     gap: 16px;
     margin-top: 26px;
     padding: clamp(18px, calc(var(--vw) * 2), 24px);
-    border-radius: var(--r);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--panel);
   }
 
@@ -285,7 +288,8 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     width: 28px;
     height: 28px;
     flex: none;
-    border-radius: 8px;
+    border-radius: calc(8px * var(--rk));
+    corner-shape: var(--corner);
     background: #fff;
     color: var(--blue);
     box-shadow: 0 1px 2px rgb(29 29 31 / 0.08);
@@ -307,7 +311,8 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     display: grid;
     place-items: center;
     padding: clamp(36px, calc(var(--vw) * 4), 52px) clamp(12px, calc(var(--vw) * 2.4), 28px) clamp(16px, calc(var(--vw) * 2.4), 28px);
-    border-radius: clamp(20px, calc(var(--vw) * 2), 28px);
+    border-radius: calc(clamp(20px, calc(var(--vw) * 2), 28px) * var(--rk));
+    corner-shape: var(--corner);
     background: linear-gradient(160deg, #dcebff 0%, #e6f1fb 55%, #e9e4fb 100%);
   }
 
@@ -379,7 +384,8 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
 
   .pilot__mini {
     padding: clamp(22px, calc(var(--vw) * 2.6), 32px);
-    border-radius: clamp(22px, calc(var(--vw) * 2.2), 30px);
+    border-radius: calc(clamp(22px, calc(var(--vw) * 2.2), 30px) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--card-warm);
     box-shadow: var(--shadow-card);
   }

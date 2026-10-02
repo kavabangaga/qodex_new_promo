@@ -122,7 +122,8 @@ const RIGHT = [52, 80, 46, 96, 64, 88];
     flex-direction: column;
     min-width: 0;
     padding: clamp(22px, calc(var(--vw) * 2.4), 32px);
-    border-radius: var(--r-lg);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--card);
     transition: box-shadow 0.45s var(--ease-out);
   }
@@ -203,7 +204,13 @@ const RIGHT = [52, 80, 46, 96, 64, 88];
     padding: clamp(24px, calc(var(--vw) * 3.4), 52px) clamp(18px, calc(var(--vw) * 3), 44px);
   }
 
+  /* Белая карточка главной цифры берёт оформление у .ui, но это плашка с настоящим показателем,
+     а не макет: возвращаем ей форму угла, которую .ui сбрасывает для визуализаций. */
   .stat--feature .stat__body {
+    --rk: inherit;
+    --corner: inherit;
+    border-radius: calc(24px * var(--rk));
+    corner-shape: var(--corner);
     width: min(100%, 440px);
     flex: none;
     gap: 10px;
@@ -236,7 +243,8 @@ const RIGHT = [52, 80, 46, 96, 64, 88];
 
   .stat__chip {
     padding: 7px 13px 7px 7px;
-    border-radius: 13px;
+    border-radius: calc(13px * var(--rk));
+    corner-shape: var(--corner);
     background: #fff;
     box-shadow: var(--shadow-soft);
   }

@@ -67,6 +67,18 @@
   --radius: var(--r-sm);
   --radius-lg: var(--r);
 
+  /* Форма углов плашек и форм. Где браузер умеет суперэллипс (corner-shape), угол рисуется как
+     у иконок на iPhone: сторона переходит в скругление плавно, а радиус в полтора раза больше,
+     чтобы угол не стал «квадратнее». Где не умеет — обычное скругление. У плашки пишите пару:
+       border-radius: calc(<радиус> * var(--rk));
+       corner-shape: var(--corner);
+     Круги и «пилюли» (50%, 999px) и всё внутри визуализаций — без этой пары. */
+  --rk: 1;
+  --corner: round;
+  /* Множитель радиуса для clip-path … round. Обрезка умеет только дугу окружности, и она не должна
+     задевать суперэллипс: дуга радиусом до 0.98 исходного целиком лежит снаружи него, берём 0.9. */
+  --rclip: 1;
+
   --shadow-card: 0 4px 5px rgb(96 96 102 / 0.04), 0 10px 15px rgb(96 96 102 / 0.04),
     0 40px 50px rgb(96 96 102 / 0.1);
   --shadow-soft: 0 1px 2px rgb(29 29 31 / 0.04), 0 12px 32px -14px rgb(29 29 31 / 0.18);
@@ -101,6 +113,16 @@
    без масштаба. */
 html {
   zoom: var(--z);
+}
+
+/* показатель 1.7 и множитель 1.5 подобраны в паре: вершина угла остаётся там же, где у дуги
+   исходного радиуса, меняется только плавность перехода */
+@supports (corner-shape: superellipse(1.7)) {
+  :root {
+    --rk: 1.5;
+    --corner: superellipse(1.7);
+    --rclip: 0.9;
+  }
 }
 
 /* Значки продуктов: --pc — цвет продукта */
@@ -386,7 +408,8 @@ button {
 .panel {
   position: relative;
   margin-inline: var(--page-pad);
-  border-radius: var(--r-2xl);
+  border-radius: calc(var(--r-2xl) * var(--rk));
+  corner-shape: var(--corner);
   background: var(--panel);
 }
 
@@ -449,7 +472,8 @@ button {
   min-height: 50px;
   padding: 0 22px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: calc(12px * var(--rk));
+  corner-shape: var(--corner);
   font-size: 16px;
   font-weight: 560;
   line-height: 1;
@@ -532,7 +556,8 @@ button {
   min-height: 40px;
   padding: 0 16px;
   font-size: 15px;
-  border-radius: 10px;
+  border-radius: calc(10px * var(--rk));
+  corner-shape: var(--corner);
 }
 
 /* Ссылка «Подробнее →» с линией снизу, как у Calendly */
@@ -568,7 +593,8 @@ button {
   width: 32px;
   height: 32px;
   flex: none;
-  border-radius: 8px;
+  border-radius: calc(8px * var(--rk));
+  corner-shape: var(--corner);
   background: var(--panel-2);
   color: var(--ink);
   transition:
@@ -612,6 +638,8 @@ button {
   width: 34px;
   height: 34px;
   border-radius: 50%;
+  /* круг остаётся кругом */
+  corner-shape: round;
 }
 
 .plabel--lg .plabel__ico svg {
@@ -625,7 +653,8 @@ button {
   width: 26px;
   height: 26px;
   flex: none;
-  border-radius: 8px;
+  border-radius: calc(8px * var(--rk));
+  corner-shape: var(--corner);
   background: var(--pc, var(--ink));
   color: #fff;
 }
@@ -641,7 +670,8 @@ button {
   align-items: center;
   gap: 6px;
   padding: 4px 9px;
-  border-radius: 7px;
+  border-radius: calc(7px * var(--rk));
+  corner-shape: var(--corner);
   background: var(--panel-2);
   font-size: 13px;
   font-weight: 500;
@@ -683,7 +713,8 @@ button {
   place-items: center;
   min-height: clamp(360px, calc(var(--vw) * 40), 580px);
   padding: clamp(20px, calc(var(--vw) * 3), 48px);
-  border-radius: var(--gv-r);
+  border-radius: calc(var(--gv-r) * var(--rk));
+  corner-shape: var(--corner);
   overflow: hidden;
   isolation: isolate;
   background: var(--g-sky);
@@ -699,8 +730,9 @@ button {
   filter: blur(36px);
   /* Safari на iPhone не всегда обрезает размытый слой по скруглению родителя — углы выходят острыми.
      Поэтому слой обрезает себя сам: 9.677% — его выступ за карточку (12 из 124 долей своей ширины).
+     Радиус обрезки умножен на --rclip, чтобы дуга не задела суперэллипс карточки (см. :root).
      Если карточке меняете скругление, меняйте --gv-r, а не border-radius. */
-  clip-path: inset(9.677% round var(--gv-r));
+  clip-path: inset(9.677% round calc(var(--gv-r) * var(--rclip)));
 }
 
 /* Пресеты палитры Calendly */
@@ -790,8 +822,11 @@ button {
   pointer-events: none;
 }
 
-/* Белая карточка интерфейса на градиенте: тень + полупрозрачная рамка */
+/* Белая карточка интерфейса на градиенте: тень + полупрозрачная рамка.
+   Внутри визуализаций углы обычные: общие плашки (метка, кнопка), попав сюда, суперэллипсом не станут. */
 .ui {
+  --rk: 1;
+  --corner: round;
   position: relative;
   width: min(100%, 420px);
   padding: clamp(18px, calc(var(--vw) * 2), 28px);
@@ -853,7 +888,8 @@ button {
   position: relative;
   flex: 1 1 0;
   min-width: 0;
-  border-radius: var(--r);
+  border-radius: calc(var(--r) * var(--rk));
+  corner-shape: var(--corner);
   background: var(--card);
   transition: flex-grow 0.6s var(--ease-out);
 }
@@ -1068,7 +1104,8 @@ html.js [data-reveal].is-in {
 /* ── Таблицы (сравнение, документы) ─────────────────────── */
 .table-wrap {
   overflow-x: auto;
-  border-radius: var(--r);
+  border-radius: calc(var(--r) * var(--rk));
+  corner-shape: var(--corner);
   background: var(--card);
 }
 

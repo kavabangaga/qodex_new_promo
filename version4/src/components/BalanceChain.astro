@@ -190,7 +190,8 @@ const { links, result, highlight } = Astro.props;
 
   /* фокус с клавиатуры раскрывает карточку; скругление рамки фокуса — как у карточки */
   .bl:focus-visible {
-    border-radius: var(--r);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
   }
 
   .bl.is-open {
@@ -233,6 +234,7 @@ const { links, result, highlight } = Astro.props;
     position: relative;
     height: 100%;
     border-radius: inherit;
+    corner-shape: inherit;
     overflow: clip;
   }
 
@@ -578,7 +580,8 @@ const { links, result, highlight } = Astro.props;
       height: auto;
       min-height: 200px;
       margin: 10px;
-      border-radius: 14px;
+      border-radius: calc(14px * var(--rk));
+      corner-shape: var(--corner);
       background:
         radial-gradient(70% 80% at 8% 100%, var(--a1) 0%, transparent 72%),
         radial-gradient(70% 80% at 95% 95%, var(--a2) 0%, transparent 72%),
@@ -657,7 +660,8 @@ const { links, result, highlight } = Astro.props;
     gap: 18px;
     margin-top: 28px;
     padding: 20px 26px;
-    border-radius: var(--r);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--ink);
     color: #fff;
   }
@@ -668,7 +672,8 @@ const { links, result, highlight } = Astro.props;
     width: 46px;
     height: 46px;
     flex: none;
-    border-radius: 14px;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
     background: rgb(255 255 255 / 0.1);
   }
 
@@ -683,7 +688,8 @@ const { links, result, highlight } = Astro.props;
     display: inline-block;
     margin-right: 10px;
     padding: 3px 10px;
-    border-radius: 7px;
+    border-radius: calc(7px * var(--rk));
+    corner-shape: var(--corner);
     background: #fff;
     font-size: 14px;
     font-weight: 600;

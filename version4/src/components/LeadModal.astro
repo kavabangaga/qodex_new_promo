@@ -95,7 +95,8 @@ import { CONTACTS } from '../config/site';
     display: grid;
     grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
     max-height: calc(var(--dvh) * 100 - 32px);
-    border-radius: var(--r-lg);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--card);
     overflow: hidden;
     box-shadow: 0 40px 120px -30px rgb(29 29 31 / 0.45);
@@ -110,11 +111,13 @@ import { CONTACTS } from '../config/site';
     gap: 16px;
     margin: 10px 0 10px 10px;
     padding: clamp(24px, calc(var(--vw) * 3), 40px);
-    border-radius: calc(var(--r-lg) - 8px);
+    border-radius: calc((var(--r-lg) - 8px) * var(--rk));
+    corner-shape: var(--corner);
     background: linear-gradient(135deg, #c3dcf8 0%, #d6cdfa 50%, #c4e3f6 100%);
     overflow: hidden;
-    /* вращающийся слой Safari на iPhone может не обрезать по скруглению — обрезка продублирована */
-    clip-path: inset(0 round calc(var(--r-lg) - 8px));
+    /* вращающийся слой Safari на iPhone может не обрезать по скруглению — обрезка продублирована
+       (--rclip — см. :root в global.css) */
+    clip-path: inset(0 round calc((var(--r-lg) - 8px) * var(--rclip)));
   }
 
   /* Пятна нарисованы на прозрачном квадрате, который медленно вращается вокруг центра панели.
@@ -197,7 +200,8 @@ import { CONTACTS } from '../config/site';
     gap: 14px;
     margin-top: auto;
     padding: 16px;
-    border-radius: var(--r);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
     background: #fff;
     box-shadow:
       0 1px 2px rgb(29 29 31 / 0.05),
@@ -313,7 +317,8 @@ import { CONTACTS } from '../config/site';
     .lm__panel {
       grid-template-columns: 1fr;
       max-height: 94dvh;
-      border-radius: 24px 24px 0 0;
+      border-radius: calc(24px * var(--rk)) calc(24px * var(--rk)) 0 0;
+      corner-shape: var(--corner);
       overflow-y: auto;
     }
 

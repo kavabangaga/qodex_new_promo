@@ -160,7 +160,8 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
     justify-content: space-between;
     gap: 24px;
     padding: clamp(22px, calc(var(--vw) * 2.6), 32px);
-    border-radius: var(--r-lg);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--card);
   }
 
@@ -193,7 +194,8 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
     column-gap: 6px;
     row-gap: 12px;
     padding: 18px 22px 14px;
-    border-radius: var(--r);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--bg);
   }
 
@@ -262,7 +264,8 @@ const BINS = Array.from({ length: 10 }, (_, i) => i);
   /* Баланс у РЭО: одно звено не сходится */
   .bal-check {
     padding: 14px;
-    border-radius: var(--r);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
     background: var(--bg);
   }
 
