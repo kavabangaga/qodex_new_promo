@@ -2,12 +2,15 @@
 // тире не переносится в начало строки, число не отрывается от слова,
 // «РО-БОТ» и «IT-компания» не рвутся по дефису.
 // Меняется только текст между тегами; скрипты, стили, <title> и атрибуты не трогаются.
+// Вторым проходом раздвигаются буквы, которые слипаются в заголовках (lib/tight-pairs.ts).
 import { defineMiddleware } from 'astro:middleware';
+import { spaceTightPairs } from './lib/tight-pairs';
 
 const NB = ' ';
 const NB_HYPHEN = '‑';
 
-const SKIP = /(<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<title[\s\S]*?<\/title>|<textarea[\s\S]*?<\/textarea>|<[^>]+>)/g;
+// Тег начинается с «<» и буквы (или «/», «!», «?») — как в самом HTML: «< 5 минут» в тексте остаётся текстом.
+const SKIP = /(<!--[\s\S]*?-->|<script\b[\s\S]*?<\/script>|<style\b[\s\S]*?<\/style>|<title\b[\s\S]*?<\/title>|<textarea\b[\s\S]*?<\/textarea>|<[a-z/!?](?:[^>"']|"[^"]*"|'[^']*')*>)/gi;
 
 function typograph(text: string): string {
   if (!text.trim()) return text;
@@ -28,9 +31,7 @@ export const onRequest = defineMiddleware(async (_ctx, next) => {
   const res = await next();
   if (!res.headers.get('content-type')?.includes('text/html')) return res;
   const html = await res.text();
-  const out = html
-    .split(SKIP)
-    .map((part, i) => (i % 2 === 1 ? part : typograph(part)))
-    .join('');
+  const parts = html.split(SKIP).map((part, i) => (i % 2 === 1 ? part : typograph(part)));
+  const out = spaceTightPairs(parts).join('');
   return new Response(out, { status: res.status, headers: res.headers });
 });

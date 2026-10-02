@@ -34,7 +34,8 @@ export function initCounters(): void {
   if (reducedMotion() || !('IntersectionObserver' in window)) return;
 
   const run = (el: HTMLElement) => {
-    const final = el.textContent ?? '';
+    // внутри могут быть обёртки раздвинутых цифр (lib/tight-pairs.ts) — в конце возвращаем разметку как была
+    const final = el.innerHTML;
     const target = Number(el.dataset.count);
     const decimals = Number(el.dataset.decimals ?? 0);
     const duration = 1400;
@@ -45,7 +46,7 @@ export function initCounters(): void {
       const eased = 1 - Math.pow(1 - t, 4);
       el.textContent = fmt(target * eased, decimals);
       if (t < 1) requestAnimationFrame(tick);
-      else el.textContent = final;
+      else el.innerHTML = final;
     };
     el.textContent = fmt(0, decimals);
     requestAnimationFrame(tick);
