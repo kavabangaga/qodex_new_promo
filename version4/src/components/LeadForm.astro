@@ -70,9 +70,9 @@ const id = (s: string) => `${prefix}-${s}`;
         <span>Соглашаюсь на обработку персональных данных</span>
       </label>
       <p class="lf__docs">
-        <a href={DOC_LINKS.consent} target="_blank" rel="noopener">Согласие на обработку персональных данных</a>
-        <span aria-hidden="true">·</span>
-        <a href={DOC_LINKS.policy} target="_blank" rel="noopener">Политика конфиденциальности</a>
+        <a href={DOC_LINKS.policy} target="_blank" rel="noopener"
+          >Политика конфиденциальности<span class="visually-hidden"> (PDF, откроется в новой вкладке)</span></a
+        >
       </p>
       <p class="lf__err" id={id('consent-err')} data-err>Отметьте согласие на обработку персональных данных</p>
     </div>

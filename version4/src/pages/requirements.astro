@@ -1,0 +1,7 @@
+---
+// Старый адрес из текста документа (requirements.pdf) — ведёт на сам документ (см. layouts/Redirect.astro)
+import Redirect from '../layouts/Redirect.astro';
+import { withBase } from '../config/site';
+---
+
+<Redirect to={withBase('/files/requirements.pdf')} title="Технические требования" />

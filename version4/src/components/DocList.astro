@@ -27,8 +27,12 @@ function size(file: string): string {
   return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')}${NB}МБ`;
 }
 
+// Название продукта в заголовке документа не рвётся по строкам: «QODEX TONN», «QODEX Tracker»
+const nb = (t: string) => t.replace(/QODEX /g, `QODEX${NB}`);
+
 const items = docs.map((d) => ({
   ...d,
+  title: nb(d.title),
   href: withBase(`/files/${d.file}`),
   meta: [d.kind, d.file.split('.').pop()!.toUpperCase(), size(d.file)].filter(Boolean).join(' · '),
 }));
@@ -45,8 +49,7 @@ const items = docs.map((d) => ({
           <span class="dlist__text">
             <span class="dlist__title">{d.title}</span>
             <span class="dlist__meta">
-              {d.meta}
-              <span class="visually-hidden">, откроется в новой вкладке</span>
+              {d.meta}<span class="visually-hidden"> (откроется в новой вкладке)</span>
             </span>
           </span>
           <span class="dlist__go" aria-hidden="true">
@@ -73,13 +76,13 @@ const items = docs.map((d) => ({
     padding: 14px 18px 14px 14px;
     border-radius: calc(16px * var(--rk));
     corner-shape: var(--corner);
-    background: var(--card);
+    background: var(--dlist-bg, var(--card));
     color: var(--ink);
-    transition: background-color 0.2s;
+    transition: box-shadow 0.2s;
   }
 
   .dlist__row:hover {
-    background: var(--bg);
+    box-shadow: var(--shadow-soft);
   }
 
   .dlist__ico {
@@ -89,7 +92,7 @@ const items = docs.map((d) => ({
     height: 44px;
     border-radius: calc(12px * var(--rk));
     corner-shape: var(--corner);
-    background: var(--panel);
+    background: var(--dlist-ico-bg, var(--panel));
     color: var(--ink);
   }
 
@@ -125,16 +128,19 @@ const items = docs.map((d) => ({
       transform 0.3s var(--ease-out);
   }
 
+  /* ↗ — открывается вне страницы (в новой вкладке): при наведении стрелка сдвигается по диагонали */
   .dlist__row:hover .dlist__go {
     background: var(--ink);
     color: #fff;
-    transform: rotate(45deg);
+    transform: translate(2px, -2px);
   }
 
+  /* Телефон: стрелку убираем — место нужнее названию, а строка и так ссылка на файл */
   @media (max-width: 599px) {
     .dlist__row {
+      grid-template-columns: auto minmax(0, 1fr);
       gap: 12px;
-      padding: 12px 12px 12px 10px;
+      padding: 12px 14px 12px 10px;
     }
 
     .dlist__ico {
@@ -147,8 +153,7 @@ const items = docs.map((d) => ({
     }
 
     .dlist__go {
-      width: 32px;
-      height: 32px;
+      display: none;
     }
   }
 </style>

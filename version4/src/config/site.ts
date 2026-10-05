@@ -29,6 +29,12 @@ export const COMPANY = {
   kpp: '027801001',
   ogrn: '1200200055791',
   address: `г.${NB}Уфа, 450009, ул.${NB}Братьев Кадомцевых, д.${NB}12/2, подъезд${NB}1, кв.${NB}1, комн.${NB}7`,
+  /** Тот же адрес по частям — для микроразметки schema.org. */
+  addressParts: {
+    postalCode: '450009',
+    locality: 'Уфа',
+    street: 'ул. Братьев Кадомцевых, д. 12/2, подъезд 1, кв. 1, комн. 7',
+  },
   okved: '62.01',
   okvedName: 'Разработка компьютерного программного обеспечения',
   itCode: '2.01',
@@ -143,11 +149,11 @@ export const SKOLKOVO_URL = 'https://navigator.sk.ru/orn/1125740';
 /**
  * Ссылки на документы для подвала, формы заявки и плашки cookie. Файлы — в public/files/, имена те же,
  * что на прежнем сайте qodex.tech/files/…. Отдельного документа «Согласие на обработку персональных данных»
- * на прежнем сайте не было: его форма вела на политику обработки персональных данных — так и здесь.
+ * у компании пока нет (на прежнем сайте его тоже не было) — ссылки с таким названием не ставим, пока
+ * не появится свой файл.
  */
 export const DOC_LINKS = {
   policy: withBase('/files/policy.pdf'),
-  consent: withBase('/files/policy.pdf'),
   agreement: withBase('/files/user_agreement.pdf'),
   page: withBase('/documents/'),
 };

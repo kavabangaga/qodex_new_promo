@@ -1,0 +1,50 @@
+---
+// Страница «Не найдено». После переезда домена qodex.tech на этот сайт старые адреса (/project, /contacts,
+// /demo-gravity, /demo-signall) перестанут существовать — отсюда можно попасть на главную и к документам.
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Floating from '../components/Floating.astro';
+import LeadModal from '../components/LeadModal.astro';
+import Icon from '../components/Icon.astro';
+import { DOC_LINKS, homeHref } from '../config/site';
+---
+
+<Base title="Страница не найдена | QODEX">
+  <Header home={false} />
+  <main id="main">
+    <section class="section nf" aria-labelledby="nf-title">
+      <div class="container intro">
+        <p class="t-eyebrow">Ошибка 404</p>
+        <h1 class="t-display" id="nf-title">Такой страницы нет</h1>
+        <p class="t-lead">Возможно, адрес изменился. Документы компании собраны на странице «Документы».</p>
+        <div class="nf__actions">
+          <a class="btn btn--primary" href={homeHref()}>На главную <Icon name="arrow-right" /></a>
+          <a class="btn btn--outline" href={DOC_LINKS.page}>Документы</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+  <Floating />
+  <LeadModal />
+</Base>
+
+<style>
+  .nf {
+    padding-block: clamp(96px, calc(var(--vw) * 12), 180px);
+  }
+
+  .nf__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+  }
+</style>
+
+<script>
+  import { initGoals } from '../scripts/goals';
+  initGoals();
+</script>

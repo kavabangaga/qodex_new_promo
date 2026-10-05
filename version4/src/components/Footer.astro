@@ -8,7 +8,6 @@ import { COMPANY, CONTACTS, DOC_LINKS, PRODUCTS, PRODUCT_ORDER, homeHref, produc
 // Файлы открываются в новой вкладке; «Документы» — страница сайта
 const docs = [
   { href: DOC_LINKS.policy, label: 'Политика конфиденциальности', file: true },
-  { href: DOC_LINKS.consent, label: 'Согласие на обработку персональных данных', file: true },
   { href: DOC_LINKS.agreement, label: 'Пользовательское соглашение', file: true },
   { href: DOC_LINKS.page, label: 'Документы', file: false },
 ];
@@ -64,6 +63,7 @@ const docs = [
                 <a href={SKOLKOVO_URL} target="_blank" rel="noopener" class="ftr__sk">
                   Резидент Сколково
                   <Icon name="arrow-up-right" size={14} />
+                  <span class="visually-hidden"> (откроется в новой вкладке)</span>
                 </a>
               </li>
             </ul>
@@ -75,8 +75,14 @@ const docs = [
               {
                 docs.map((d) => (
                   <li>
-                    <a href={d.href} target={d.file ? '_blank' : undefined} rel={d.file ? 'noopener' : undefined}>
+                    <a
+                      href={d.href}
+                      target={d.file ? '_blank' : undefined}
+                      rel={d.file ? 'noopener' : undefined}
+                      aria-current={!d.file && d.href === Astro.url.pathname ? 'page' : undefined}
+                    >
                       {d.label}
+                      {d.file && <span class="visually-hidden"> (PDF, откроется в новой вкладке)</span>}
                     </a>
                   </li>
                 ))
@@ -89,8 +95,9 @@ const docs = [
       <a href={homeHref()} class="ftr__logo" aria-label="QODEX — на главную"><Logo height={60} /></a>
 
       <div class="ftr__bottom">
-        <!-- полное наименование и реквизиты обязательны на сайте (приказ Минцифры № 511) -->
-        <p class="ftr__req">
+        <!-- полное наименование и реквизиты обязательны на сайте (приказ Минцифры № 511); data-verbatim —
+             дефисы остаются обычными, чтобы реквизиты находились поиском по странице -->
+        <p class="ftr__req" data-verbatim>
           {
             [
               COMPANY.fullName,
@@ -100,7 +107,11 @@ const docs = [
               `Основной ОКВЭД ${COMPANY.okved}`,
               `Код вида ИТ-деятельности ${COMPANY.itCode} (${COMPANY.itCodeOrder.replace('Приказ', 'приказ')})`,
               `${COMPANY.address}.`,
-            ].join(' · ')
+            ]
+              .join(' · ')
+              // слово с дефисом не рвётся по строкам (дефис здесь обычный — data-verbatim)
+              .split(/(\S+-\S+)/)
+              .map((p, k) => (k % 2 ? <span class="nobr">{p}</span> : p))
           }
         </p>
         <p class="ftr__copy">© 2020–2026 QODEX</p>

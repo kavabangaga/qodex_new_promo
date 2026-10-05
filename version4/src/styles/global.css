@@ -250,6 +250,32 @@ button {
   border: 0;
 }
 
+/* Слово не переносится по строкам (например, «ИТ-деятельности» с обычным дефисом в текстах data-verbatim) */
+.nobr {
+  white-space: nowrap;
+}
+
+/* «Перейти к содержимому» — первая ссылка страницы, видна только при переходе с клавиатуры */
+.skip {
+  position: fixed;
+  z-index: 100;
+  top: 12px;
+  left: 12px;
+  padding: 12px 18px;
+  border-radius: calc(12px * var(--rk));
+  corner-shape: var(--corner);
+  background: var(--ink);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 560;
+  transform: translateY(-160%);
+  transition: transform 0.2s var(--ease-out);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
 /* Полоса прокрутки в цветах сайта: тёплая дорожка, бегунок — сплошной лавандовый из палитры
    (тот же цвет, что у Firefox ниже); при наведении — гуще */
 ::-webkit-scrollbar {
@@ -1158,4 +1184,45 @@ html.js [data-reveal].is-in {
 
 .product-link:hover {
   border-bottom-color: var(--ink);
+}
+
+/* ── Печать и «Сохранить как PDF» ──────────────────────────
+   Страницу «Документы» сохраняют и печатают (её проверяет Минцифры): в печать не идут плавающие
+   и служебные элементы, появляющиеся при прокрутке блоки видны сразу, подвал — тёмным по белому. */
+@media print {
+  .cookie,
+  .hdr,
+  .lm,
+  .skip {
+    display: none !important;
+  }
+
+  html.js [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  html {
+    zoom: 1;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .ftr__panel {
+    background: none !important;
+    color: var(--ink) !important;
+  }
+
+  .ftr__panel::before,
+  .ftr__lead,
+  .ftr__logo {
+    display: none !important;
+  }
+
+  .ftr__panel *,
+  .ftr__bottom {
+    color: var(--ink) !important;
+  }
 }

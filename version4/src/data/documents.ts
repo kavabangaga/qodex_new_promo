@@ -21,9 +21,12 @@ export interface ProductDocs {
   docs: Doc[];
 }
 
-/** Общие документы компании (на прежнем сайте — «иные документы» и презентация из подвала). */
+/**
+ * Общие документы компании (на прежнем сайте — «иные документы» и презентация из подвала).
+ * «Пользовательское соглашение» — соглашение системы QODEX ECO (Gravity и Signall, то есть QODEX TONN),
+ * поэтому оно в документах QODEX TONN; ссылка «Пользовательское соглашение» в подвале ведёт на тот же файл.
+ */
 export const GENERAL_DOCS: Doc[] = [
-  { title: 'Пользовательское соглашение', file: 'user_agreement.pdf' },
   { title: 'Политика конфиденциальности', file: 'policy.pdf' },
   { title: 'Карта партнёра', file: 'partners_map.pdf' },
   { title: 'Для представителей власти', file: 'gov.pdf', kind: 'Презентация' },
@@ -42,6 +45,7 @@ export const PRODUCT_DOCS: ProductDocs[] = [
       { title: 'Технические требования', file: 'requirements.pdf' },
       { title: 'Инструкция Gravity', file: 'gravity_manual.pdf' },
       { title: 'Информационно-техническое сопровождение', file: 'support.pdf' },
+      { title: 'Пользовательское соглашение', file: 'user_agreement.pdf' },
       { title: 'О системе', file: 'system.pdf', kind: 'Презентация' },
     ],
   },

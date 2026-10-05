@@ -16,6 +16,8 @@ interface Props {
   proof?: string;
   /** Подпись в карточке контакта. */
   personLabel?: string;
+  /** Заголовок меньше обычного (размер заголовка продуктового раздела) — для страниц, где заявка не главное. */
+  compact?: boolean;
 }
 
 const {
@@ -23,6 +25,7 @@ const {
   lead = 'Пилот РО-БОТа — бесплатно. Напишите или позвоните — пришлём NDA и запустим пилот.',
   proof = '73 клиента работают с продуктами QODEX',
   personLabel = 'Ваш контакт по пилоту',
+  compact = false,
 } = Astro.props;
 
 // Высоты полос «звуковой волны» в центральной карточке
@@ -31,14 +34,27 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
 
 <section class="section contact" id="kontakty" data-contact aria-labelledby="forma">
   <div class="container">
-    <SectionIntro eyebrow="Заявка" titleId="forma">
-      {title}
-      {lead && <Fragment slot="lead">{lead}</Fragment>}
-      <p slot="cta" class="contact__proof">
-        <span class="contact__dot" aria-hidden="true"></span>
-        {proof}
-      </p>
-    </SectionIntro>
+    {
+      /* слот, переданный даже пустым, SectionIntro выводит пустым абзацем — поэтому две ветки */
+      lead ? (
+        <SectionIntro eyebrow="Заявка" titleId="forma" serif={compact}>
+          {title}
+          <Fragment slot="lead">{lead}</Fragment>
+          <p slot="cta" class="contact__proof">
+            <span class="contact__dot" aria-hidden="true" />
+            {proof}
+          </p>
+        </SectionIntro>
+      ) : (
+        <SectionIntro eyebrow="Заявка" titleId="forma" serif={compact}>
+          {title}
+          <p slot="cta" class="contact__proof">
+            <span class="contact__dot" aria-hidden="true" />
+            {proof}
+          </p>
+        </SectionIntro>
+      )
+    }
 
     <div class="contact__form" data-reveal>
       <LeadForm prefix="ft" layout="row" tone="light" />

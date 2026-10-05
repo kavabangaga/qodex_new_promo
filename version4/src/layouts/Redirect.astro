@@ -1,0 +1,53 @@
+---
+// Переадресация со старого адреса документа. Такие адреса напечатаны внутри самих PDF: например,
+// «Актуальная версия Политики … расположена … по адресу https://qodex.tech/privacy» в policy.pdf,
+// «qodex.tech/documents/user_agreement» в пользовательском соглашении. На прежнем сайте они открывали
+// главную, здесь — сам документ. Статичный хостинг не умеет 301, поэтому meta refresh и видимая ссылка.
+import '../styles/global.css';
+import { SITE } from '../config/site';
+
+interface Props {
+  /** Куда ведём (путь с учётом подпапки сайта — через withBase). */
+  to: string;
+  /** Название документа. */
+  title: string;
+}
+
+const { to, title } = Astro.props;
+const canonical = new URL(to, SITE.url).href;
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} | QODEX</title>
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content={`0; url=${to}`} />
+    <link rel="canonical" href={canonical} />
+  </head>
+  <body>
+    <main class="redirect">
+      <p>
+        {title}: <a href={to}>открыть</a>
+      </p>
+    </main>
+  </body>
+</html>
+
+<style>
+  .redirect {
+    display: grid;
+    place-items: center;
+    min-height: calc(var(--vh) * 100);
+    padding: 24px;
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .redirect a {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+</style>

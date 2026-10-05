@@ -1,0 +1,7 @@
+---
+// Старый адрес из текста документа (support.pdf, user_agreement.pdf) — ведёт на сам документ (см. layouts/Redirect.astro)
+import Redirect from '../../layouts/Redirect.astro';
+import { withBase } from '../../config/site';
+---
+
+<Redirect to={withBase('/files/support.pdf')} title="Информационно-техническое сопровождение" />

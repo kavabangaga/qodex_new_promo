@@ -10,7 +10,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Floating from '../components/Floating.astro';
 import LeadModal from '../components/LeadModal.astro';
-import ProductLabel from '../components/ProductLabel.astro';
+import { PRODUCT_ICON } from '../components/ProductLabel.astro';
 import DocList from '../components/DocList.astro';
 import Icon from '../components/Icon.astro';
 import Contact from '../sections/Contact.astro';
@@ -21,12 +21,19 @@ const NB = ' ';
 
 const title = 'Документы | QODEX';
 const description =
-  'Сведения об ООО «КОДЕКС ТЕХНОЛОГИИ», информация для ИТ-аккредитации и документы по продуктам QODEX: описание функциональных характеристик, руководства, стоимость.';
+  'Сведения об ООО «КОДЕКС ТЕХНОЛОГИИ», информация для IT-аккредитации и документы по продуктам QODEX: описание функциональных характеристик, руководства, стоимость.';
+
+// Слово с обычным дефисом («ИТ-деятельности», «СИМ-картой») не рвётся по строкам: нечётные куски —
+// такие слова, их оборачивает .nobr (в data-verbatim дефис не заменяется неразрывным, см. middleware.ts)
+const hyph = (t: string) => t.split(/(\S+-\S+)/);
+
+// Название компании в кавычках не рвётся по строкам (только при выводе — в COMPANY и микроразметке обычный пробел)
+const nbName = (t: string) => t.replace('КОДЕКС ТЕХНОЛОГИИ', `КОДЕКС${NB}ТЕХНОЛОГИИ`);
 
 // Реквизиты: подписи — как в подвале прежнего сайта
 const REQUISITES: { label: string; value: string; href?: string }[] = [
-  { label: 'Полное наименование', value: COMPANY.fullName },
-  { label: 'Сокращённое наименование', value: COMPANY.shortName },
+  { label: 'Полное наименование', value: nbName(COMPANY.fullName) },
+  { label: 'Сокращённое наименование', value: nbName(COMPANY.shortName) },
   { label: 'ИНН', value: COMPANY.inn },
   { label: 'КПП', value: COMPANY.kpp },
   { label: 'ОГРН', value: COMPANY.ogrn },
@@ -69,11 +76,13 @@ const PRICES: { title: string; items: string[] }[] = [
 
 // Число не разрывается по разрядам и не отрывается от «₽»
 const money = (s: string) => s.replace(/(\d) (\d{3})/g, `$1${NB}$2`).replace(/ ₽/g, `${NB}₽`);
+// Скобка в названии («(3–5 весовых)») выводится отдельным неразрывным куском
 const priceRows = PRICES.map((g) => ({
   title: g.title,
   rows: g.items.map((it) => {
     const [name, value] = it.split(' — ');
-    return { name, value: money(value) };
+    const m = /^(.*?) (\([^)]*\))$/.exec(name);
+    return { pre: m ? `${m[1]} ` : name, paren: m ? m[2] : '', value: money(value) };
   }),
 }));
 
@@ -83,13 +92,24 @@ const MORE_GRAVITY = withBase('/files/gravity_manual.pdf');
 const MORE_SIGNALL = withBase('/files/system.pdf');
 
 // Оглавление: сначала общее, затем продукты (порядок — как на странице)
-const TOC = [
+type TocItem = { href: string; label: string; sub?: TocItem[] };
+const TOC: TocItem[] = [
   {
     href: '#kompaniya',
     label: 'Общие документы и информация о компании',
     sub: [
       { href: '#svedeniya', label: 'Сведения об организации' },
-      { href: '#it-akkreditaciya', label: 'IT-аккредитация' },
+      {
+        href: '#it-akkreditaciya',
+        label: 'IT-аккредитация',
+        // подразделы по приказу № 511 — на них можно дать прямую ссылку
+        sub: [
+          { href: '#opisanie-deyatelnosti', label: 'Описание деятельности' },
+          { href: '#tehnologii', label: 'Используемые технологии' },
+          { href: '#informaciya-o-po', label: 'Информация о программном обеспечении' },
+          { href: '#stoimost', label: 'Стоимость продуктов и услуг' },
+        ],
+      },
       { href: '#obshchie-dokumenty', label: 'Общие документы' },
     ],
   },
@@ -110,11 +130,12 @@ const jsonLd = [
     email: CONTACTS.email,
     telephone: CONTACTS.phoneHref.replace('tel:', ''),
     taxID: COMPANY.inn,
+    identifier: { '@type': 'PropertyValue', propertyID: 'ОГРН', value: COMPANY.ogrn },
     address: {
       '@type': 'PostalAddress',
-      streetAddress: `ул. Братьев Кадомцевых, д. 12/2, подъезд 1, кв. 1, комн. 7`,
-      addressLocality: 'Уфа',
-      postalCode: '450009',
+      streetAddress: COMPANY.addressParts.street,
+      addressLocality: COMPANY.addressParts.locality,
+      postalCode: COMPANY.addressParts.postalCode,
       addressCountry: 'RU',
     },
   },
@@ -131,13 +152,15 @@ const jsonLd = [
 
 <Base title={title} description={description} jsonLd={jsonLd}>
   <Header home={false} />
-  <main>
-    <section class="section dhero" id="dokumenty" aria-labelledby="dokumenty-title">
-      <div class="container">
+  <main id="main">
+    <!-- data-verbatim: дефисы остаются обычными (тексты сверяют дословно и ищут поиском по странице) -->
+    <section class="section dhero" id="dokumenty" aria-labelledby="dokumenty-title" data-verbatim>
+      <div class="container dgrid">
         <header class="intro dhero__intro">
           <h1 class="t-display dhero__title" id="dokumenty-title" data-reveal>Документы</h1>
           <p class="t-lead" data-reveal style="--d:1">
-            Сведения об организации, информация для IT-аккредитации и документы по продуктам QODEX.
+            Сведения об организации, информация для <span class="nobr">IT-аккредитации</span> и документы по продуктам
+            QODEX.
           </p>
         </header>
 
@@ -145,7 +168,7 @@ const jsonLd = [
         <nav class="djump" aria-label="Разделы страницы" data-reveal style="--d:2">
           <ul>
             {
-              TOC.flatMap((g) => g.sub).map((s) => (
+              TOC.flatMap((g) => g.sub ?? []).map((s) => (
                 <li>
                   <a href={s.href}>{s.label}</a>
                 </li>
@@ -156,7 +179,7 @@ const jsonLd = [
       </div>
     </section>
 
-    <div class="container docs">
+    <div class="container dgrid docs" data-verbatim>
       <!-- Оглавление сбоку (компьютер) -->
       <nav class="dtoc" aria-label="Оглавление" data-dtoc>
         <ul class="dtoc__list">
@@ -167,11 +190,22 @@ const jsonLd = [
                   {g.label}
                 </a>
                 <ul>
-                  {g.sub.map((s) => (
+                  {(g.sub ?? []).map((s) => (
                     <li>
                       <a class="dtoc__link" href={s.href}>
                         {s.label}
                       </a>
+                      {s.sub && (
+                        <ul>
+                          {s.sub.map((t) => (
+                            <li>
+                              <a class="dtoc__link dtoc__link--sub" href={t.href}>
+                                {t.label}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -196,7 +230,7 @@ const jsonLd = [
               {
                 REQUISITES.map((r) => (
                   <div class="req__row">
-                    <dt>{r.label}</dt>
+                    <dt>{hyph(r.label).map((p, k) => (k % 2 ? <span class="nobr">{p}</span> : p))}</dt>
                     <dd>{r.href ? <a href={r.href}>{r.value}</a> : r.value}</dd>
                   </div>
                 ))
@@ -207,14 +241,14 @@ const jsonLd = [
                 <a class="badge" href={SKOLKOVO_URL} target="_blank" rel="noopener">
                   <span class="badge__ico" aria-hidden="true"><Icon name="rocket" size={17} strokeWidth={2} /></span>
                   Резидент Сколково
-                  <Icon name="arrow-up-right" size={15} />
+                  <span class="badge__go" aria-hidden="true"><Icon name="arrow-up-right" size={15} /></span>
                   <span class="visually-hidden">(откроется в новой вкладке)</span>
                 </a>
               </li>
               <li>
-                <span class="badge">
+                <span class="badge badge--static">
                   <span class="badge__ico" aria-hidden="true"><Icon name="badge-check" size={17} strokeWidth={2} /></span>
-                  Аккредитованная IT-компания
+                  <span>Аккредитованная <span class="nobr">IT-компания</span></span>
                 </span>
               </li>
             </ul>
@@ -233,7 +267,7 @@ const jsonLd = [
               </span>
             </p>
 
-            <div class="dcard prose">
+            <div class="dcard prose" id="opisanie-deyatelnosti">
               <h4>Описание деятельности</h4>
               <p>
                 ООО «КОДЕКС ТЕХНОЛОГИИ» разрабатывает программное обеспечение для автоматизации весового контроля и учёта
@@ -244,7 +278,7 @@ const jsonLd = [
                 <li>
                   Gravity — программный модуль, устанавливаемый на рабочее место оператора весовой и работающий с весовым
                   оборудованием. <a class="more" href={MORE_GRAVITY} target="_blank" rel="noopener"
-                    >Подробнее<span class="visually-hidden"> о Gravity: инструкция Gravity, PDF, откроется в новой вкладке</span
+                    >Подробнее<Icon name="arrow-up-right" size={14} strokeWidth={2} /><span class="visually-hidden"> о Gravity: инструкция Gravity, PDF, откроется в новой вкладке</span
                     ></a
                   >
                 </li>
@@ -254,7 +288,7 @@ const jsonLd = [
                     href={MORE_SIGNALL}
                     target="_blank"
                     rel="noopener"
-                    >Подробнее<span class="visually-hidden"> о Signall: презентация «О системе», PDF, откроется в новой вкладке</span
+                    >Подробнее<Icon name="arrow-up-right" size={14} strokeWidth={2} /><span class="visually-hidden"> о Signall: презентация «О системе», PDF, откроется в новой вкладке</span
                     ></a
                   >
                 </li>
@@ -269,7 +303,7 @@ const jsonLd = [
               </p>
             </div>
 
-            <div class="dcard prose">
+            <div class="dcard prose" id="tehnologii">
               <h4>Используемые технологии</h4>
               <p>При разработке программного обеспечения используются:</p>
               <ul class="tech">
@@ -278,12 +312,12 @@ const jsonLd = [
                 <li><b>Базы данных:</b> PostgreSQL</li>
                 <li>
                   <b>Инфраструктура и инструменты:</b> Docker, Nginx, системы непрерывной интеграции (CI/CD); интеграции с учётными
-                  системами (1С) и государственными информационными системами по REST-API
+                  системами (1С) и государственными информационными системами по <span class="nobr">REST-API</span>
                 </li>
               </ul>
             </div>
 
-            <div class="dcard prose">
+            <div class="dcard prose" id="informaciya-o-po">
               <h4>Информация о программном обеспечении</h4>
               <p>
                 ООО «КОДЕКС ТЕХНОЛОГИИ» является правообладателем исключительных прав на программное обеспечение QODEX&nbsp;TONN
@@ -303,7 +337,7 @@ const jsonLd = [
               </p>
             </div>
 
-            <div class="dcard prose">
+            <div class="dcard prose" id="stoimost">
               <h4>Стоимость продуктов и услуг</h4>
               <p>Стоимость зависит от конфигурации, количества весовых площадок и масштаба внедрения. Базовые цены:</p>
               <div class="prices">
@@ -314,7 +348,10 @@ const jsonLd = [
                       <ul class="prices__list">
                         {g.rows.map((r) => (
                           <li>
-                            <span class="prices__name">{r.name}</span>
+                            <span class="prices__name">
+                              {hyph(r.pre).map((p, k) => (k % 2 ? <span class="nobr">{p}</span> : p))}
+                              {r.paren && <span class="prices__paren">{r.paren}</span>}
+                            </span>
                             <span class="visually-hidden"> — </span>
                             <span class="prices__value">{r.value}</span>
                           </li>
@@ -350,8 +387,11 @@ const jsonLd = [
           {
             PRODUCT_DOCS.map((g) => (
               <article class="dsec" id={g.id} aria-labelledby={`${g.id}-title`} data-dsec>
-                <h3 class="dsec__title dsec__title--product" id={`${g.id}-title`}>
-                  <ProductLabel id={g.product} size="lg" />
+                <h3 class="dsec__title" id={`${g.id}-title`}>
+                  <span class={`dsec__ico dsec__ico--product p-${g.product}`} aria-hidden="true">
+                    <Icon name={PRODUCT_ICON[g.product]} size={20} strokeWidth={2} />
+                  </span>
+                  {PRODUCTS[g.product].name}
                 </h3>
                 <DocList docs={g.docs} />
               </article>
@@ -361,7 +401,7 @@ const jsonLd = [
       </div>
     </div>
 
-    <Contact title="Задайте вопрос или оставьте заявку" lead="" personLabel="Ваш контакт" />
+    <Contact title="Задайте вопрос или оставьте заявку" lead="" personLabel="Ваш контакт" compact />
   </main>
   <Footer />
   <Floating />
@@ -398,8 +438,8 @@ const jsonLd = [
   .djump a {
     display: inline-flex;
     align-items: center;
-    min-height: 40px;
-    padding: 8px 14px;
+    min-height: 44px;
+    padding: 8px 16px;
     border-radius: 999px;
     background: var(--panel);
     font-size: 14.5px;
@@ -413,12 +453,19 @@ const jsonLd = [
   }
 
   /* ── Оглавление сбоку + содержимое ──────────────────── */
-  .docs {
+  /* одна сетка у вступления и у содержимого: заголовок страницы стоит над колонкой текста */
+  .dgrid {
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr);
     align-items: start;
     gap: clamp(40px, calc(var(--vw) * 5), 80px);
-    padding-bottom: var(--section-y);
+  }
+
+  .dhero .intro {
+    grid-column: 2;
+    justify-items: start;
+    margin-inline: 0;
+    text-align: left;
   }
 
   .dtoc {
@@ -435,6 +482,20 @@ const jsonLd = [
     display: grid;
     gap: 2px;
     margin-top: 8px;
+  }
+
+  /* Подпункты «IT-аккредитации» раскрыты, пока читаешь этот раздел, и при переходе по оглавлению
+     с клавиатуры: так оглавление невысокое и у конца страницы не уезжает под шапку. От фокуса мышью
+     не раскрываются — иначе оглавление сдвигается прямо во время клика и клик теряется */
+  .dtoc__list ul ul {
+    display: none;
+    margin: 2px 0 4px 14px;
+  }
+
+  .dtoc__list li:has(> .dtoc__link[aria-current]) > ul,
+  .dtoc__list li:has(ul .dtoc__link[aria-current]) > ul,
+  .dtoc:has(:focus-visible) .dtoc__list ul ul {
+    display: grid;
   }
 
   .dtoc__group {
@@ -458,20 +519,27 @@ const jsonLd = [
       color 0.2s;
   }
 
+  .dtoc__link--sub {
+    padding-block: 5px;
+    font-size: 14px;
+  }
+
   .dtoc__link:hover {
     color: var(--ink);
   }
 
-  .dtoc__link[aria-current='true'] {
+  .dtoc__link[aria-current='location'] {
     background: var(--panel);
     color: var(--ink);
     font-weight: 560;
   }
 
+  /* нижний отступ — внутри колонки: иначе в конце страницы липкое оглавление уезжает под шапку */
   .docs__body {
     display: grid;
     gap: clamp(64px, calc(var(--vw) * 7), 104px);
     min-width: 0;
+    padding-bottom: var(--section-y);
   }
 
   /* ── Группы и разделы ───────────────────────────────── */
@@ -480,12 +548,13 @@ const jsonLd = [
     gap: 20px;
   }
 
+  /* размер заголовка продуктового раздела (.t-serif), как у заголовка заявки на этой странице */
   .dgroup__title {
     margin-bottom: 8px;
-    font-size: clamp(1.9rem, calc(var(--vw) * 2.8), 2.6rem);
+    font-size: clamp(1.9rem, calc(var(--vw) * 3.2), 2.75rem);
     font-weight: 600;
-    line-height: 1.1;
-    letter-spacing: -0.035em;
+    line-height: 1.08;
+    letter-spacing: -0.04em;
     text-wrap: balance;
   }
 
@@ -522,8 +591,10 @@ const jsonLd = [
     color: var(--ink);
   }
 
-  .dsec__title--product {
-    margin-bottom: 6px;
+  /* у продукта значок в цвете продукта (цвета продуктов — только в значках и метках) */
+  .dsec__ico--product {
+    background: var(--pc);
+    color: #fff;
   }
 
   /* ── Реквизиты ──────────────────────────────────────── */
@@ -561,7 +632,11 @@ const jsonLd = [
     overflow-wrap: anywhere;
   }
 
+  /* у почты и телефона палец попадает и чуть выше-ниже строки */
   .req dd a {
+    display: inline-block;
+    margin-block: -10px;
+    padding-block: 10px;
     text-decoration: underline;
     text-decoration-color: var(--line-2);
     text-underline-offset: 4px;
@@ -583,13 +658,14 @@ const jsonLd = [
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    min-height: 40px;
-    padding: 6px 14px 6px 6px;
+    min-height: 44px;
+    padding: 6px 16px 6px 8px;
     border-radius: 999px;
     background: var(--card);
     font-size: 14.5px;
     font-weight: 560;
     color: var(--ink);
+    transition: background-color 0.2s;
   }
 
   .badge__ico {
@@ -601,8 +677,27 @@ const jsonLd = [
     background: var(--panel);
   }
 
+  .badge__go {
+    display: inline-flex;
+    transition: transform 0.3s var(--ease-out);
+  }
+
   a.badge:hover {
-    background: var(--bg);
+    background: var(--panel-2);
+  }
+
+  a.badge:hover .badge__go {
+    transform: translate(2px, -2px);
+  }
+
+  /* не ссылка — без заливки, с тонкой рамкой, чтобы не выглядела кнопкой */
+  .badge--static {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--line-2);
+  }
+
+  .badge--static .badge__ico {
+    background: var(--card);
   }
 
   /* ── IT-аккредитация ────────────────────────────────── */
@@ -683,7 +778,11 @@ const jsonLd = [
     color: var(--ink);
   }
 
+  /* «Подробнее» открывает PDF в новой вкладке — стрелка ↗ это показывает */
   .more {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
     font-weight: 560;
     color: var(--ink);
     text-decoration: underline;
@@ -750,6 +849,11 @@ const jsonLd = [
     color: var(--ink-2);
   }
 
+  /* «(3–5 весовых)» не разрывается */
+  .prices__paren {
+    white-space: nowrap;
+  }
+
   .prices__value {
     flex: none;
     margin-left: auto;
@@ -759,16 +863,33 @@ const jsonLd = [
     white-space: nowrap;
   }
 
+  /* В печать и «Сохранить как PDF» не идут навигация по странице и форма заявки */
+  @media print {
+    .djump,
+    .dtoc,
+    :global(#kontakty) {
+      display: none !important;
+    }
+  }
+
   /* ── Планшет и телефон: без оглавления сбоку ────────── */
   @media (max-width: 1199.98px) {
     .djump {
       display: block;
     }
 
-    .docs {
+    .dgrid {
       grid-template-columns: minmax(0, 1fr);
     }
 
+    .dhero .intro {
+      grid-column: 1;
+      justify-items: center;
+      margin-inline: auto;
+      text-align: center;
+    }
+
+    .dhero__toc-gap,
     .dtoc {
       display: none;
     }
@@ -794,6 +915,65 @@ const jsonLd = [
       height: 36px;
     }
   }
+
+  /* Телефон: бежевая панель раздела убирается — у текста на одно поле больше места;
+     карточки сами становятся бежевыми, чтобы не было белого на белом */
+  @media (max-width: 599px) {
+    .dsec {
+      gap: 12px;
+      padding: 0;
+      background: none;
+    }
+
+    .req,
+    .dcard,
+    .dnote {
+      background: var(--panel);
+    }
+
+    .dcard {
+      padding: 18px 16px;
+    }
+
+    .dsec__ico:not(.dsec__ico--product),
+    .badge__ico {
+      background: var(--panel);
+    }
+
+    .badge {
+      background: var(--panel);
+    }
+
+    .badge--static {
+      background: transparent;
+    }
+
+    .prices__group {
+      padding: 12px 14px 4px;
+      background: var(--card);
+    }
+
+    /* на телефоне цена всегда под названием: одинаково во всех строках */
+    .prose .prices__list li {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+
+    .prices__name {
+      flex: none;
+    }
+
+    .prices__value {
+      margin-left: 0;
+      text-align: left;
+    }
+
+    .dsec :global(.dlist) {
+      --dlist-bg: var(--panel);
+      --dlist-ico-bg: var(--card);
+    }
+  }
 </style>
 
 <script>
@@ -806,27 +986,54 @@ const jsonLd = [
   initGoals();
   initInterestLinks();
 
-  // Оглавление сбоку: отмечает раздел, который сейчас на экране
+  // Оглавление сбоку: отмечен раздел, верх которого уже прошёл линию на трети окна (последний такой);
+  // в самом конце страницы — последний раздел. После клика по пункту отмечается сразу он.
   const toc = document.querySelector<HTMLElement>('[data-dtoc]');
-  if (toc && 'IntersectionObserver' in window) {
-    const links = new Map(
-      [...toc.querySelectorAll<HTMLAnchorElement>('.dtoc__link')].map((a) => [a.hash.slice(1), a] as const),
-    );
-    const visible = new Set<string>();
-    const mark = () => {
-      const first = [...links.keys()].find((id) => visible.has(id));
-      links.forEach((a, id) => {
-        if (id === first) a.setAttribute('aria-current', 'true');
+  if (toc) {
+    const links = [...toc.querySelectorAll<HTMLAnchorElement>('.dtoc__link')];
+    const targets = links
+      .map((a) => document.getElementById(a.hash.slice(1)))
+      .filter((el): el is HTMLElement => el !== null);
+    const setCurrent = (id: string) =>
+      links.forEach((a) => {
+        if (a.hash.slice(1) === id) a.setAttribute('aria-current', 'location');
         else a.removeAttribute('aria-current');
       });
+
+    let locked = '';
+    let unlock = 0;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (locked) return;
+      const line = innerHeight * 0.35;
+      let cur = '';
+      for (const el of targets) if (el.getBoundingClientRect().top <= line) cur = el.id;
+      const atEnd = innerHeight + scrollY >= document.documentElement.scrollHeight - 4;
+      if (atEnd) {
+        // в самом низу верх последних коротких разделов линию не проходит — берём последний видимый
+        const shown = targets.filter((el) => el.getBoundingClientRect().top < innerHeight);
+        if (shown.length) cur = shown[shown.length - 1].id;
+      }
+      setCurrent(cur);
     };
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => (e.isIntersecting ? visible.add(e.target.id) : visible.delete(e.target.id)));
-        mark();
-      },
-      { rootMargin: '-30% 0px -55% 0px' },
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    links.forEach((a) =>
+      a.addEventListener('click', () => {
+        locked = a.hash.slice(1);
+        setCurrent(locked);
+        clearTimeout(unlock);
+        // пока идёт плавная прокрутка к разделу, отметка не прыгает по промежуточным разделам
+        unlock = window.setTimeout(() => {
+          locked = '';
+        }, 900);
+      }),
     );
-    document.querySelectorAll<HTMLElement>('[data-dsec]').forEach((s) => io.observe(s));
+    addEventListener('scroll', schedule, { passive: true });
+    addEventListener('resize', schedule);
+    update();
   }
 </script>
