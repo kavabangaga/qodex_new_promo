@@ -1,9 +1,10 @@
 ---
-// Раздел страницы «Кодекс ТКО» — клиенты [#klienty]. Заголовок по центру, плитки клиентов,
-// соединённые перемычками (как «Нам доверяют» на главной; пока вместо логотипов — названия),
+// Раздел страницы «Кодекс ТКО» — клиенты [#klienty]. Заголовок по центру, плитки с логотипами клиентов,
+// соединённые перемычками (как «Нам доверяют» на главной),
 // и два факта о компании. Раздел стоит на фоне страницы, поэтому плитки цвета панели, а не белые.
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon from '../../components/Icon.astro';
+import ClientLogo from '../../components/ClientLogo.astro';
 import { CLIENTS } from '../../data/clients';
 import { SKOLKOVO_URL } from '../../config/site';
 
@@ -39,7 +40,7 @@ const tileStyle = (i: number) =>
       {
         CLIENTS.map((c, i) => (
           <li class="kt-logo" style={tileStyle(i)} data-reveal>
-            <span class="kt-logo__name">{nb(c.name)}</span>
+            {c.logo ? <ClientLogo file={c.logo} name={c.name} /> : <span class="kt-logo__name">{nb(c.name)}</span>}
             {c.partner && <span class="tag kt-logo__tag">партнёр</span>}
           </li>
         ))

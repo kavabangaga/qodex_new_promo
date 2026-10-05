@@ -1,0 +1,58 @@
+---
+// Логотип клиента для плиток «Нам доверяют» (главная, страницы продуктов). Файлы — public/clients/,
+// их готовит tools/client-logos.py. Размер считается по площади: широкий логотип ниже, высокий — уже,
+// и все выглядят одинаково крупными. Нет файла — сборка останавливается.
+import fs from 'node:fs';
+import path from 'node:path';
+import { withBase } from '../config/site';
+
+interface Props {
+  /** Файл в public/clients/ (PNG). */
+  file: string;
+  /** Название клиента — текст для программ чтения с экрана и на случай, если картинка не загрузится. */
+  name: string;
+}
+
+const { file, name } = Astro.props;
+
+/** Площадь логотипа на компьютере, px² (на планшете и телефоне меньше — см. стили). */
+const AREA = 6200;
+/** Предел высоты, px: почти квадратные знаки иначе выглядят крупнее остальных. */
+const MAX_H = 64;
+
+// Сборка и сервер разработки запускаются из папки version4
+const p = path.join(process.cwd(), 'public', 'clients', file);
+if (!fs.existsSync(p)) throw new Error(`Нет логотипа public/clients/${file} — проверьте src/data/clients.ts`);
+const head = fs.readFileSync(p).subarray(0, 24);
+if (head.toString('ascii', 12, 16) !== 'IHDR') throw new Error(`public/clients/${file}: логотип должен быть в PNG`);
+const w = head.readUInt32BE(16);
+const h = head.readUInt32BE(20);
+const ratio = w / h;
+const width = Math.round(Math.min(MAX_H, Math.sqrt(AREA / ratio)) * ratio);
+---
+
+<img
+  class="clogo"
+  src={withBase(`/clients/${file}`)}
+  alt={name}
+  width={w}
+  height={h}
+  style={`--lw:${width}px`}
+  loading="lazy"
+  decoding="async"
+/>
+
+<style>
+  .clogo {
+    display: block;
+    width: calc(var(--lw) * var(--ls, 1));
+    max-width: 100%;
+    height: auto;
+  }
+
+  @media (max-width: 999.98px) {
+    .clogo {
+      --ls: 0.8;
+    }
+  }
+</style>

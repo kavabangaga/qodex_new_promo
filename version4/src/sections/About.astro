@@ -1,9 +1,10 @@
 ---
 // Блок 14. О компании: заголовок и текст по центру, хронология — цепочка карточек со «звеньями»
-// в горизонтальной ленте со scroll-snap (без закрепления экрана), ниже — плитки клиентов,
-// соединённые перемычками, как плитки интеграций у Calendly (пока вместо логотипов — названия).
+// в горизонтальной ленте со scroll-snap (без закрепления экрана), ниже — плитки с логотипами клиентов,
+// соединённые перемычками, как плитки интеграций у Calendly.
 import SectionIntro from '../components/SectionIntro.astro';
 import Icon from '../components/Icon.astro';
+import ClientLogo from '../components/ClientLogo.astro';
 import { TIMELINE } from '../data/timeline';
 import { CLIENTS as clients } from '../data/clients';
 
@@ -63,7 +64,7 @@ const nb = (t: string) =>
         {
           clients.map((c, i) => (
             <li class="logo" style={`--d:${i % 5}`} data-reveal>
-              <span class="logo__name">{nb(c.name)}</span>
+              {c.logo ? <ClientLogo file={c.logo} name={c.name} /> : <span class="logo__name">{nb(c.name)}</span>}
               {c.partner && <span class="tag logo__tag">партнёр</span>}
             </li>
           ))
