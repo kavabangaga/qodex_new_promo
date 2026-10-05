@@ -199,6 +199,17 @@ import { CONSENT_EDITION, DOC_LINKS, METRIKA_ID } from '../config/site';
       dropMetrika();
     });
 
+    // выбор сделали в другой вкладке сайта: «Отклонить» останавливает Метрику и здесь, «Принять» — запускает
+    addEventListener('storage', (e) => {
+      if (e.key !== KEY) return;
+      const now = read();
+      current = now?.choice ?? null;
+      if (!now) return;
+      show(false);
+      if (now.choice === 'accepted') metrika(now.at);
+      else dropMetrika();
+    });
+
     // «Настройки cookie» в подвале: открыть плашку снова и показать, что выбрано сейчас
     document.addEventListener('click', (e) => {
       if (!(e.target as Element | null)?.closest('[data-cookie-settings]')) return;

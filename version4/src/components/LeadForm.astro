@@ -715,7 +715,8 @@ const id = (s: string) => `${prefix}-${s}`;
           if (new URLSearchParams(location.search).get('form') === 'error') throw new Error('demo');
           console.info('[QODEX] Заявка (адрес отправки не задан):', payload);
         }
-        goal('form_submit', { products: payload.interest });
+        // без значений полей формы: данные заявки в Метрику не передаются (согласия, раздел 2 /cookies/)
+        goal('form_submit');
         fields.hidden = true;
         done.hidden = false;
       } catch {
