@@ -16,11 +16,13 @@ import {
 } from '../config/site';
 
 // Файлы открываются в новой вкладке; согласия и «Документы» — страницы сайта.
-// Согласие на cookie и «Настройки cookie» — только когда включена Яндекс Метрика (см. Floating.astro).
+// Согласие на cookie и сразу под ним «Настройки cookie» — только когда включена Яндекс Метрика (см. Floating.astro).
 const docs = [
   { href: DOC_LINKS.policy, label: 'Политика конфиденциальности', file: true },
   { href: DOC_LINKS.consent, label: 'Согласие на обработку персональных данных', file: false },
-  ...(METRIKA_ID ? [{ href: DOC_LINKS.cookies, label: 'Согласие на использование cookie', file: false }] : []),
+  ...(METRIKA_ID
+    ? [{ href: DOC_LINKS.cookies, label: 'Согласие на cookie и Яндекс Метрику', file: false, settings: true }]
+    : []),
   { href: DOC_LINKS.agreement, label: 'Пользовательское соглашение', file: true },
   { href: DOC_LINKS.page, label: 'Документы', file: false },
 ];
@@ -87,27 +89,27 @@ const docs = [
             <ul>
               {
                 docs.map((d) => (
-                  <li>
-                    <a
-                      href={d.href}
-                      target={d.file ? '_blank' : undefined}
-                      rel={d.file ? 'noopener' : undefined}
-                      aria-current={!d.file && d.href === Astro.url.pathname ? 'page' : undefined}
-                    >
-                      {d.label}
-                      {d.file && <span class="visually-hidden"> (PDF, откроется в новой вкладке)</span>}
-                    </a>
-                  </li>
+                  <>
+                    <li>
+                      <a
+                        href={d.href}
+                        target={d.file ? '_blank' : undefined}
+                        rel={d.file ? 'noopener' : undefined}
+                        aria-current={!d.file && d.href === Astro.url.pathname ? 'page' : undefined}
+                      >
+                        {d.label}
+                        {d.file && <span class="visually-hidden"> (PDF, откроется в новой вкладке)</span>}
+                      </a>
+                    </li>
+                    {'settings' in d && (
+                      <li>
+                        <button type="button" class="ftr__btn" data-cookie-settings>
+                          Настройки cookie
+                        </button>
+                      </li>
+                    )}
+                  </>
                 ))
-              }
-              {
-                METRIKA_ID && (
-                  <li>
-                    <button type="button" class="ftr__btn" data-cookie-settings>
-                      Настройки cookie
-                    </button>
-                  </li>
-                )
               }
             </ul>
           </nav>
@@ -221,8 +223,10 @@ const docs = [
     transition: color 0.2s;
   }
 
+  /* область нажатия около 44 px по высоте, вёрстка подвала не сдвигается */
   .ftr__btn {
-    padding: 0;
+    margin: -11px 0;
+    padding: 11px 0;
     border: 0;
     background: none;
     font: inherit;

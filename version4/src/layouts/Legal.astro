@@ -1,7 +1,8 @@
 ---
 // Страница юридического документа сайта (согласия): шапка и подвал сайта, заголовок, строка редакции
 // и текст документа в слоте. data-verbatim — дефисы в тексте обычные, документ находится поиском
-// по странице и копируется без подмены символов (см. middleware.ts).
+// по странице и копируется без подмены символов (см. middleware.ts). Чтобы «№ 152-ФЗ», «2-26-060104»
+// и другие слова с дефисом не рвались по строкам, они оборачиваются в .nobr — как реквизиты в подвале.
 import Base from './Base.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -20,6 +21,15 @@ interface Props {
 
 const { title, subtitle, description, path } = Astro.props;
 
+// слова с дефисом — только в тексте, теги и адреса ссылок не трогаем
+const body = (await Astro.slots.render('default'))
+  .split(/(<[^>]*>)/)
+  .map((part, i) => (i % 2 ? part : part.replace(/[^\s<>]+-[^\s<>]+/g, (w) => `<span class="nobr">${w}</span>`)))
+  .join('');
+
+// в заголовке «Яндекс Метрика» не разрывается по строкам (неразрывный пробел)
+const heading = title.replace('Яндекс ', `Яндекс${String.fromCharCode(160)}`);
+
 const breadcrumbs = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -32,21 +42,19 @@ const breadcrumbs = {
 ---
 
 <Base title={`${title} | QODEX`} description={description} jsonLd={[breadcrumbs]}>
+  <Floating />
   <Header home={false} />
   <main id="main">
     <article class="section legal" aria-labelledby="legal-title" data-verbatim>
       <div class="container legal__in">
         <a class="legal__back" href={DOC_LINKS.page}>← Документы</a>
-        <h1 class="legal__title" id="legal-title">{title}</h1>
+        <h1 class="legal__title" id="legal-title">{heading}</h1>
         <p class="legal__sub">{subtitle}</p>
-        <div class="legal__body">
-          <slot />
-        </div>
+        <div class="legal__body" set:html={body} />
       </div>
     </article>
   </main>
   <Footer />
-  <Floating />
   <LeadModal />
 </Base>
 
@@ -150,10 +158,11 @@ const breadcrumbs = {
     background: var(--g-lav);
   }
 
+  /* подчёркивание заметное (около 3,6:1 к фону): ссылку в тексте документа видно сразу */
   .legal__body :global(a) {
     color: var(--ink);
     text-decoration: underline;
-    text-decoration-color: var(--line-2);
+    text-decoration-color: color-mix(in oklab, currentColor 55%, transparent);
     text-underline-offset: 4px;
     transition: text-decoration-color 0.2s;
   }

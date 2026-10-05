@@ -1,0 +1,16 @@
+---
+// Раздел «Оператор персональных данных» — один и тот же в обоих согласиях (pages/consent.astro,
+// pages/[cookies].astro). Реквизиты — из COMPANY (выписка из ЕГРЮЛ), номер — из реестра операторов Роскомнадзора.
+import { COMPANY, CONTACTS } from '../config/site';
+
+const NB = ' ';
+// «КОДЕКС ТЕХНОЛОГИИ» не разрывается по строкам
+const name = (s: string) => s.replace('КОДЕКС ТЕХНОЛОГИИ', `КОДЕКС${NB}ТЕХНОЛОГИИ`);
+---
+
+<p>
+  {name(COMPANY.fullName)} ({name(COMPANY.shortName)}, далее — Оператор), ОГРН{NB}{COMPANY.ogrn}, ИНН{NB}{COMPANY.inn},
+  КПП{NB}{COMPANY.kpp}, адрес:{' '}{COMPANY.address}; электронная почта: <a href={CONTACTS.emailHref}>{CONTACTS.email}</a>;
+  телефон:{' '}<a href={CONTACTS.phoneHref}>{CONTACTS.phone}</a>. Оператор внесён в реестр операторов, осуществляющих
+  обработку персональных данных, под регистрационным номером{NB}{COMPANY.pdRegistry}.
+</p>

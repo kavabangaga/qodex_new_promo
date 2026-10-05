@@ -1,9 +1,11 @@
 ---
-// Плашка о файлах cookie и Яндекс Метрике — согласие посетителя (pages/cookies.astro). Есть только тогда,
+// Плашка о файлах cookie и Яндекс Метрике — согласие посетителя (pages/[cookies].astro). Есть только тогда,
 // когда Метрика включена (METRIKA_ID в config/site.ts): без Метрики сайт не ставит cookie и не собирает
 // персональные данные, спрашивать не о чем. Метрика запускается только после «Принять» (layouts/Base.astro);
 // «Отклонить» — сайт работает как обычно. Выбор хранится в браузере год, с датой редакции согласия:
-// поменялся текст согласия — плашка спросит снова. «Настройки cookie» в подвале открывают плашку заново.
+// поменялся текст согласия — плашка спросит снова. «Настройки cookie» в подвале открывают плашку заново
+// и показывают, что выбрано сейчас. Стоит первой в странице — до шапки: в порядке фокуса и для экранного
+// диктора плашка идёт первой, на экране она закреплена внизу.
 // Плавающих кнопок связи в v4 нет, как у Calendly: телефон и «Запустить пилот» — в шапке.
 import { CONSENT_EDITION, DOC_LINKS, METRIKA_ID } from '../config/site';
 ---
@@ -12,10 +14,14 @@ import { CONSENT_EDITION, DOC_LINKS, METRIKA_ID } from '../config/site';
   METRIKA_ID && (
     <section class="cookie" data-cookie data-edition={CONSENT_EDITION.cookies} aria-label="Файлы cookie" hidden>
       <p>
-        Мы используем файлы cookie и Яндекс Метрику, чтобы понимать, как посетители пользуются сайтом. Нажмите
-        «Принять», если согласны, — подробнее в&nbsp;<a href={DOC_LINKS.cookies}>согласии на использование cookie</a>.
-        Без согласия сайт тоже работает.
+        Мы используем файлы cookie и Яндекс&nbsp;Метрику, чтобы понимать, как посетители пользуются сайтом. Если
+        согласны, нажмите «Принять». Сайт работает и без этого. Подробнее — в&nbsp;<a href={DOC_LINKS.cookies}
+          >тексте согласия</a
+        > и&nbsp;<a href={DOC_LINKS.policy} target="_blank" rel="noopener"
+          >Политике конфиденциальности<span class="visually-hidden"> (PDF, откроется в новой вкладке)</span></a
+        >.
       </p>
+      <p class="cookie__state" data-cookie-state hidden></p>
       <div class="cookie__actions">
         <button type="button" class="btn btn--primary btn--sm" data-cookie-accept>
           Принять
@@ -63,25 +69,35 @@ import { CONSENT_EDITION, DOC_LINKS, METRIKA_ID } from '../config/site';
     color: var(--ink);
   }
 
+  .cookie__state {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
   .cookie__actions {
     display: flex;
     gap: 8px;
   }
 
-  .cookie[hidden] {
+  .cookie[hidden],
+  .cookie__state[hidden] {
     display: none;
   }
 
+  /* Телефон: плашка на всю ширину, плотнее; кнопки не ниже 44 px */
   @media (max-width: 760px) {
     .cookie {
       left: 12px;
       right: 12px;
       bottom: calc(12px + env(safe-area-inset-bottom));
+      gap: 10px;
       max-width: none;
+      padding: 14px 14px 12px;
     }
 
     .cookie__actions .btn {
       flex: 1;
+      min-height: 44px;
     }
   }
 </style>
@@ -91,13 +107,21 @@ import { CONSENT_EDITION, DOC_LINKS, METRIKA_ID } from '../config/site';
   const KEY = 'qodex:cookie-consent';
   const YEAR = 365 * 24 * 60 * 60 * 1000;
 
-  type Saved = { choice: 'accepted' | 'declined'; at: number; edition: string };
+  type Choice = 'accepted' | 'declined';
+  type Saved = { choice: Choice; at: number; edition: string };
+  type Win = { qodexMetrika?: (params?: object) => void; qodexMetrikaOn?: boolean };
 
   const box = document.querySelector<HTMLElement>('[data-cookie]');
 
   if (box) {
     const edition = box.dataset.edition ?? '';
-    const metrika = () => (window as unknown as { qodexMetrika?: () => void }).qodexMetrika?.();
+    const state = box.querySelector<HTMLElement>('[data-cookie-state]')!;
+    const accept = box.querySelector<HTMLButtonElement>('[data-cookie-accept]')!;
+    const decline = box.querySelector<HTMLButtonElement>('[data-cookie-decline]')!;
+
+    // согласие отмечается и в самой Метрике — параметром визита (дата и редакция согласия)
+    const metrika = (at: number) =>
+      (window as unknown as Win).qodexMetrika?.({ cookie_consent: { edition, at: new Date(at).toISOString() } });
 
     const read = (): Saved | null => {
       try {
@@ -110,50 +134,84 @@ import { CONSENT_EDITION, DOC_LINKS, METRIKA_ID } from '../config/site';
       return null;
     };
 
-    const save = (choice: Saved['choice']) => {
+    const save = (choice: Choice, at: number) => {
       try {
-        localStorage.setItem(KEY, JSON.stringify({ choice, at: Date.now(), edition }));
+        localStorage.setItem(KEY, JSON.stringify({ choice, at, edition }));
       } catch {
         /* хранилище недоступно: выбор действует до закрытия страницы */
       }
     };
 
-    // отказ после согласия: убираем cookie Метрики (_ym…) и перезагружаем страницу, чтобы счётчик остановился
+    // Отказ после согласия: убираем то, что Метрика записала в браузер, — cookie (_ym…, mdd) и записи
+    // в хранилище (_ym…), — и перезагружаем страницу, чтобы счётчик остановился
     const dropMetrika = () => {
       const host = location.hostname;
       const domains = ['', host, `.${host}`, `.${host.split('.').slice(-2).join('.')}`];
       document.cookie.split(';').forEach((c) => {
         const name = c.split('=')[0].trim();
-        if (!name.startsWith('_ym')) return;
+        if (!name.startsWith('_ym') && name !== 'mdd') return;
         domains.forEach((d) => {
           document.cookie = `${name}=; Max-Age=0; path=/${d ? `; domain=${d}` : ''}`;
         });
       });
-      if ((window as unknown as { qodexMetrikaOn?: boolean }).qodexMetrikaOn) location.reload();
+      [localStorage, sessionStorage].forEach((store) => {
+        try {
+          Object.keys(store)
+            .filter((k) => k.startsWith('_ym'))
+            .forEach((k) => store.removeItem(k));
+        } catch {
+          /* хранилище недоступно */
+        }
+      });
+      if ((window as unknown as Win).qodexMetrikaOn) location.reload();
+    };
+
+    // Пока плашка видна, внизу страницы есть место на её высоту: подвал можно прокрутить выше плашки
+    const pad = () => {
+      document.body.style.paddingBottom = box.hidden ? '' : `${box.offsetHeight + 24}px`;
+    };
+
+    const show = (open: boolean) => {
+      box.hidden = !open;
+      pad();
     };
 
     const saved = read();
-    if (saved?.choice === 'accepted') metrika();
-    box.hidden = saved !== null;
-
-    box.querySelector('[data-cookie-accept]')!.addEventListener('click', () => {
-      save('accepted');
-      box.hidden = true;
-      metrika();
+    let current: Choice | null = saved?.choice ?? null;
+    if (saved?.choice === 'accepted') metrika(saved.at);
+    show(saved === null);
+    addEventListener('resize', () => {
+      if (!box.hidden) pad();
     });
 
-    box.querySelector('[data-cookie-decline]')!.addEventListener('click', () => {
-      save('declined');
-      box.hidden = true;
+    accept.addEventListener('click', () => {
+      const at = Date.now();
+      save('accepted', at);
+      current = 'accepted';
+      show(false);
+      metrika(at);
+    });
+
+    decline.addEventListener('click', () => {
+      save('declined', Date.now());
+      current = 'declined';
+      show(false);
       dropMetrika();
     });
 
-    // «Настройки cookie» в подвале: открыть плашку снова
+    // «Настройки cookie» в подвале: открыть плашку снова и показать, что выбрано сейчас
     document.addEventListener('click', (e) => {
       if (!(e.target as Element | null)?.closest('[data-cookie-settings]')) return;
+      state.textContent =
+        current === 'accepted'
+          ? 'Сейчас Яндекс Метрика включена. Чтобы отозвать согласие, нажмите «Отклонить».'
+          : current === 'declined'
+            ? 'Сейчас Яндекс Метрика отключена.'
+            : '';
+      state.hidden = !current;
       box.style.animation = 'none';
-      box.hidden = false;
-      box.querySelector<HTMLButtonElement>('[data-cookie-accept]')!.focus();
+      show(true);
+      (current === 'accepted' ? decline : accept).focus();
     });
   }
 </script>

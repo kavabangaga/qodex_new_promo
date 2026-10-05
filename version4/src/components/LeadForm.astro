@@ -14,13 +14,11 @@ interface Props {
 
 const { prefix = 'lf', layout = 'stack', tone = 'light' } = Astro.props;
 const id = (s: string) => `${prefix}-${s}`;
-
-// Подпись галочки: «Даю» + ссылка на текст согласия. Вместе — дословно CONSENT_LABEL, как в самом согласии.
-const CONSENT_LINK = 'согласие на обработку персональных данных';
-if (`Даю ${CONSENT_LINK}` !== CONSENT_LABEL) throw new Error('Подпись галочки согласия разошлась с CONSENT_LABEL (config/site.ts)');
 ---
 
-<form class:list={['lf', `lf--${layout}`, `lf--${tone}`]} data-lead-form data-endpoint={FORM_ENDPOINT} novalidate>
+<!-- method="post" и проверка браузером, пока скрипт не загрузился: без JS форма не уйдёт без галочки согласия
+     и не запишет имя и телефон в адрес страницы. Скрипт выключает проверку браузера (noValidate) и проверяет сам. -->
+<form class:list={['lf', `lf--${layout}`, `lf--${tone}`]} method="post" data-lead-form data-endpoint={FORM_ENDPOINT}>
   <div class="lf__fields" data-lf-fields>
     <div class="lf__field lf__name" data-field="name">
       <label for={id('name')}>Имя<span class="lf__req" aria-hidden="true">*</span></label>
@@ -75,19 +73,21 @@ if (`Даю ${CONSENT_LINK}` !== CONSENT_LABEL) throw new Error('Подпись 
       </div>
     </fieldset>
 
+    <!-- Подпись галочки — обычный текст, дословно CONSENT_LABEL, как в самом согласии: тап по подписи ставит
+         галочку. Ссылки на текст согласия и на политику — строкой ниже. -->
     <div class="lf__field lf__consent-field" data-field="consent">
       <label class="lf__consent">
         <input type="checkbox" name="consent" required aria-describedby={id('consent-err')} />
         <span class="chip__box" aria-hidden="true">
           <Icon name="check" size={13} strokeWidth={3} />
         </span>
-        <span
-          >Даю <a href={DOC_LINKS.consent} target="_blank" rel="noopener"
-            >{CONSENT_LINK}<span class="visually-hidden"> (текст согласия откроется в новой вкладке)</span></a
-          ></span
-        >
+        <span class="lf__consent-text">{CONSENT_LABEL}</span>
       </label>
       <p class="lf__docs">
+        <a href={DOC_LINKS.consent} target="_blank" rel="noopener"
+          >Текст согласия<span class="visually-hidden"> (откроется в новой вкладке)</span></a
+        >
+        <span aria-hidden="true">·</span>
         <a href={DOC_LINKS.policy} target="_blank" rel="noopener"
           >Политика конфиденциальности<span class="visually-hidden"> (PDF, откроется в новой вкладке)</span></a
         >
@@ -356,14 +356,9 @@ if (`Даю ${CONSENT_LINK}` !== CONSENT_LABEL) throw new Error('Подпись 
     margin-top: 1px;
   }
 
-  .lf__consent a {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
-  }
-
-  .lf__consent a:hover {
-    text-decoration-color: currentColor;
+  /* две ровные строки, без одинокого «данных» во второй */
+  .lf__consent-text {
+    text-wrap: balance;
   }
 
   .lf__docs {
@@ -616,6 +611,8 @@ if (`Даю ${CONSENT_LINK}` !== CONSENT_LABEL) throw new Error('Подпись 
   };
 
   function setup(form: HTMLFormElement) {
+    // дальше проверяет скрипт: ошибки — под полями, а не всплывающие подсказки браузера
+    form.noValidate = true;
     const boxes = [...form.querySelectorAll<HTMLInputElement>('[data-interest-box]')];
     const all = form.querySelector<HTMLInputElement>('[data-interest-all]')!;
     const fields = form.querySelector<HTMLElement>('[data-lf-fields]')!;
