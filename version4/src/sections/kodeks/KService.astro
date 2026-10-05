@@ -27,7 +27,7 @@ const SPARED = ['сложных внедрений', `доработок${NB}1С
       <!-- Что делает сервис: три шага на градиенте -->
       <article class="ksv__card ksv__ours gv gv--aqua" aria-labelledby="ksv-ours" data-ksv-live data-reveal>
         <h3 class="ksv__title" id="ksv-ours">Наш сервис:</h3>
-        <ol class="ksv__flow">
+        <ol class="ksv__flow bridged">
           {
             STEPS.map((s, i) => (
               <li class="ui ksv__step">
@@ -111,13 +111,18 @@ const SPARED = ['сложных внедрений', `доработок${NB}1С
     font-weight: 560;
   }
 
-  /* ── Три шага: белые строки в полупрозрачной рамке, между ними — перемычка того же «стекла»,
-        по ней сверху вниз идёт точка данных ── */
+  /* ── Три шага: белые строки в полупрозрачной рамке, между ними — «мостик» того же «стекла»,
+        по нему сверху вниз идёт точка данных ── */
   .ksv__flow {
     --ksv-pipe: clamp(26px, calc(var(--vw) * 2.4), 34px);
     --ksv-ring: 6px;
     --ksv-chip: 44px;
     --ksv-row: 14px;
+    /* зазор между рамками строк и самое узкое место мостика */
+    --ksv-gap: calc(var(--ksv-pipe) - 2 * var(--ksv-ring));
+    --ksv-neck: 14px;
+    /* для масок мостика (.bridged в global.css): вырезы радиусом в половину зазора */
+    --gap: var(--ksv-gap);
     display: grid;
     gap: var(--ksv-pipe);
     margin-top: clamp(20px, calc(var(--vw) * 2.6), 30px);
@@ -176,23 +181,26 @@ const SPARED = ['сложных внедрений', `доработок${NB}1С
     color: #fff;
   }
 
-  /* перемычка к строке выше — под значком; закрашена только между рамками строк */
+  /* Мостик к строке выше — под значком, как мостики между карточками по всему сайту: края вогнутые
+     и плавно переходят в рамки строк (--bridge-mask-col). Занимает ровно зазор между рамками: стекло
+     полупрозрачное, и там, где оно легло бы на рамку второй раз, проступала бы светлая полоса. */
   .ksv__pipe {
     position: absolute;
-    left: calc(var(--ksv-row) + var(--ksv-chip) / 2 - 8px);
-    bottom: 100%;
-    width: 16px;
-    height: var(--ksv-pipe);
+    left: calc(var(--ksv-row) + var(--ksv-chip) / 2 - (var(--ksv-gap) + var(--ksv-neck)) / 2);
+    bottom: calc(100% + var(--ksv-ring));
+    width: calc(var(--ksv-gap) + var(--ksv-neck));
+    height: var(--ksv-gap);
     overflow: hidden;
-    background: linear-gradient(rgb(255 255 255 / 0.4) 0 0) center / 100% calc(100% - 2 * var(--ksv-ring)) no-repeat;
+    background: rgb(255 255 255 / 0.4);
+    -webkit-mask: var(--bridge-mask-col);
+    mask: var(--bridge-mask-col);
   }
 
-  /* точка данных ждёт над перемычкой — там её скрывает обрезка (с запасом: при масштабе страницы
-     край точки иначе проступает), потом проходит вниз и уходит под перемычку */
+  /* точка данных ждёт над мостиком — там её скрывает обрезка, потом проходит вниз и уходит в строку */
   .ksv__pipe i {
     position: absolute;
-    top: -10px;
-    left: 5px;
+    top: -7px;
+    left: calc(50% - 3px);
     width: 6px;
     height: 6px;
     border-radius: 50%;
@@ -289,7 +297,7 @@ const SPARED = ['сложных внедрений', `доработок${NB}1С
     }
     25%,
     100% {
-      transform: translateY(calc(var(--ksv-pipe) + 14px));
+      transform: translateY(calc(var(--ksv-gap) + 8px));
     }
   }
 
@@ -301,7 +309,7 @@ const SPARED = ['сложных внедрений', `доработок${NB}1С
     }
     39%,
     100% {
-      transform: translateY(calc(var(--ksv-pipe) + 14px));
+      transform: translateY(calc(var(--ksv-gap) + 8px));
     }
   }
 
