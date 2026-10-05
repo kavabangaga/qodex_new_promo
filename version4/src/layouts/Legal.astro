@@ -1,0 +1,210 @@
+---
+// Страница юридического документа сайта (согласия): шапка и подвал сайта, заголовок, строка редакции
+// и текст документа в слоте. data-verbatim — дефисы в тексте обычные, документ находится поиском
+// по странице и копируется без подмены символов (см. middleware.ts). Чтобы «№ 152-ФЗ», «2-26-060104»
+// и другие слова с дефисом не рвались по строкам, они оборачиваются в .nobr — как реквизиты в подвале.
+import Base from './Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Floating from '../components/Floating.astro';
+import LeadModal from '../components/LeadModal.astro';
+import { DOC_LINKS, SITE, withBase } from '../config/site';
+
+interface Props {
+  title: string;
+  /** Строка под заголовком: когда даётся документ и дата редакции. */
+  subtitle: string;
+  description: string;
+  /** Адрес страницы — для навигационной цепочки в микроразметке. */
+  path: string;
+}
+
+const { title, subtitle, description, path } = Astro.props;
+
+// слова с дефисом — только в тексте, теги и адреса ссылок не трогаем
+const body = (await Astro.slots.render('default'))
+  .split(/(<[^>]*>)/)
+  .map((part, i) => (i % 2 ? part : part.replace(/[^\s<>]+-[^\s<>]+/g, (w) => `<span class="nobr">${w}</span>`)))
+  .join('');
+
+// в заголовке «Яндекс Метрика» не разрывается по строкам (неразрывный пробел)
+const heading = title.replace('Яндекс ', `Яндекс${String.fromCharCode(160)}`);
+
+const breadcrumbs = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'QODEX', item: new URL(withBase('/'), SITE.url).href },
+    { '@type': 'ListItem', position: 2, name: 'Документы', item: new URL(DOC_LINKS.page, SITE.url).href },
+    { '@type': 'ListItem', position: 3, name: title, item: new URL(withBase(path), SITE.url).href },
+  ],
+};
+---
+
+<Base title={`${title} | QODEX`} description={description} jsonLd={[breadcrumbs]}>
+  <Floating />
+  <Header home={false} />
+  <main id="main">
+    <article class="section legal" aria-labelledby="legal-title" data-verbatim>
+      <div class="container legal__in">
+        <a class="legal__back" href={DOC_LINKS.page}>← Документы</a>
+        <h1 class="legal__title" id="legal-title">{heading}</h1>
+        <p class="legal__sub">{subtitle}</p>
+        <div class="legal__body" set:html={body} />
+      </div>
+    </article>
+  </main>
+  <Footer />
+  <LeadModal />
+</Base>
+
+<style>
+  .legal {
+    padding-top: clamp(40px, calc(var(--vw) * 5), 72px);
+  }
+
+  .legal__in {
+    max-width: calc(800px + var(--gutter) * 2);
+  }
+
+  .legal__back {
+    display: inline-flex;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+
+  .legal__back:hover {
+    color: var(--ink);
+  }
+
+  .legal__title {
+    margin-top: 20px;
+    font-size: clamp(2rem, calc(var(--vw) * 3.4), 2.9rem);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  .legal__sub {
+    margin-top: 14px;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  /* Текст документа — на бежевой панели, разделы — белые карточки, как на странице «Документы» */
+  .legal__body {
+    display: grid;
+    gap: 10px;
+    margin-top: clamp(28px, calc(var(--vw) * 3), 40px);
+    padding: clamp(10px, calc(var(--vw) * 1.2), 14px);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .legal__body :global(section),
+  .legal__body :global(.legal__intro) {
+    padding: clamp(18px, calc(var(--vw) * 2.2), 28px);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  .legal__body :global(h2) {
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+
+  .legal__body :global(p),
+  .legal__body :global(li) {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  .legal__body :global(p + p),
+  .legal__body :global(p + ul),
+  .legal__body :global(ul + p) {
+    margin-top: 10px;
+  }
+
+  .legal__body :global(ul) {
+    display: grid;
+    gap: 6px;
+  }
+
+  .legal__body :global(ul li) {
+    position: relative;
+    padding-left: 22px;
+  }
+
+  .legal__body :global(ul li::before) {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0.68em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--g-lav);
+  }
+
+  /* подчёркивание заметное (около 3,6:1 к фону): ссылку в тексте документа видно сразу */
+  .legal__body :global(a) {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, currentColor 55%, transparent);
+    text-underline-offset: 4px;
+    transition: text-decoration-color 0.2s;
+  }
+
+  .legal__body :global(a:hover) {
+    text-decoration-color: currentColor;
+  }
+
+  .legal__body :global(.legal__intro p) {
+    color: var(--ink);
+  }
+
+  /* Телефон: без бежевой подложки — у текста больше места */
+  @media (max-width: 599px) {
+    .legal__body {
+      padding: 0;
+      background: none;
+    }
+
+    .legal__body :global(section),
+    .legal__body :global(.legal__intro) {
+      padding: 18px 16px;
+      background: var(--panel);
+    }
+  }
+
+  @media print {
+    .legal__back {
+      display: none;
+    }
+
+    .legal__body {
+      padding: 0;
+      background: none;
+    }
+  }
+</style>
+
+<script>
+  import { initGoals } from '../scripts/goals';
+  import { initInterestLinks } from '../scripts/interest';
+
+  initGoals();
+  initInterestLinks();
+</script>

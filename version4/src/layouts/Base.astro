@@ -91,21 +91,30 @@ const ICON_V = 2;
     {jsonLd.map((data) => <script type="application/ld+json" set:html={JSON.stringify(data)} />)}
 
     {
+      /* Яндекс Метрика запускается только после согласия посетителя: кнопка «Принять» в плашке о cookie
+         (components/Floating.astro) вызывает window.qodexMetrika() — с параметрами визита (дата и редакция
+         согласия). Без согласия счётчик не загружается. Вебвизора нет: согласие на cookie его не называет,
+         счётчик работает в «Ограниченном режиме» (config/site.ts, METRIKA_ID). */
       METRIKA_ID && (
         <script is:inline define:vars={{ id: METRIKA_ID }}>
-          (function (m, e, t, r, i, k, a) {
-            m[i] =
-              m[i] ||
-              function () {
-                (m[i].a = m[i].a || []).push(arguments);
-              };
-            m[i].l = 1 * new Date();
-            (k = e.createElement(t)), (a = e.getElementsByTagName(t)[0]);
-            k.async = 1;
-            k.src = r;
-            a.parentNode.insertBefore(k, a);
-          })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
-          ym(id, 'init', { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true });
+          window.qodexMetrika = function (params) {
+            if (window.qodexMetrikaOn) return;
+            window.qodexMetrikaOn = true;
+            (function (m, e, t, r, i, k, a) {
+              m[i] =
+                m[i] ||
+                function () {
+                  (m[i].a = m[i].a || []).push(arguments);
+                };
+              m[i].l = 1 * new Date();
+              (k = e.createElement(t)), (a = e.getElementsByTagName(t)[0]);
+              k.async = 1;
+              k.src = r;
+              a.parentNode.insertBefore(k, a);
+            })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
+            ym(id, 'init', { clickmap: true, trackLinks: true, accurateTrackBounce: true });
+            if (params) ym(id, 'params', params);
+          };
         </script>
       )
     }

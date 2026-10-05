@@ -43,6 +43,7 @@ const breadcrumbs = {
 ---
 
 <Base title={title} description={description} jsonLd={[faqJsonLd(FAQ_KODEKS), breadcrumbs]}>
+  <Floating />
   <Header home={false} cta="Подключиться" current="kodeks" />
   <main id="main">
     <KHero />
@@ -57,7 +58,6 @@ const breadcrumbs = {
     <Contact title={leadTitle} lead={leadText} proof={leadProof} personLabel="Ваш контакт" />
   </main>
   <Footer />
-  <Floating />
   <LeadModal title={leadTitle} lead={leadText} proof={leadProof} personLabel="Ваш контакт" />
 </Base>
 
