@@ -15,15 +15,15 @@ import {
   SKOLKOVO_URL,
 } from '../config/site';
 
-// Файлы открываются в новой вкладке; согласия и «Документы» — страницы сайта.
+// Все документы в подвале — страницы сайта (file: true — PDF, откроется в новой вкладке).
 // Согласие на cookie и сразу под ним «Настройки cookie» — только когда включена Яндекс Метрика (см. Floating.astro).
 const docs = [
-  { href: DOC_LINKS.policy, label: 'Политика конфиденциальности', file: true },
+  { href: DOC_LINKS.policy, label: 'Политика конфиденциальности', file: false },
   { href: DOC_LINKS.consent, label: 'Согласие на обработку персональных данных', file: false },
   ...(METRIKA_ID
     ? [{ href: DOC_LINKS.cookies, label: 'Согласие на cookie и Яндекс Метрику', file: false, settings: true }]
     : []),
-  { href: DOC_LINKS.agreement, label: 'Пользовательское соглашение', file: true },
+  { href: DOC_LINKS.agreement, label: 'Пользовательское соглашение', file: false },
   { href: DOC_LINKS.page, label: 'Документы', file: false },
 ];
 ---
