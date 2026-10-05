@@ -140,8 +140,12 @@ export function productHref(id: ProductId, content: string): string {
   return `${PRODUCTS[id].url}/?${params}`;
 }
 
-/** Номер счётчика Яндекс Метрики. Пока не задан — цели не отправляются. */
-export const METRIKA_ID: number | null = null;
+/**
+ * Номер счётчика Яндекс Метрики. Пока не задан — счётчика нет, плашки о cookie нет, цели не отправляются.
+ * Задаётся здесь (число вместо null) или при сборке переменной PUBLIC_METRIKA_ID — так проверяют плашку.
+ * Счётчик запускается только после согласия посетителя (components/Floating.astro, pages/cookies.astro).
+ */
+export const METRIKA_ID: number | null = Number(import.meta.env.PUBLIC_METRIKA_ID) || null;
 
 /** Адрес, куда форма отправляет заявку (POST, JSON). Пока пустой — отправка имитируется. */
 export const FORM_ENDPOINT = '';
@@ -150,12 +154,26 @@ export const SKOLKOVO_URL = 'https://navigator.sk.ru/orn/1125740';
 
 /**
  * Ссылки на документы для подвала, формы заявки и плашки cookie. Файлы — в public/files/, имена те же,
- * что на прежнем сайте qodex.tech/files/…. Отдельного документа «Согласие на обработку персональных данных»
- * у компании пока нет (на прежнем сайте его тоже не было) — ссылки с таким названием не ставим, пока
- * не появится свой файл.
+ * что на прежнем сайте qodex.tech/files/…; согласия — страницы сайта (pages/consent.astro, pages/cookies.astro).
  */
 export const DOC_LINKS = {
   policy: withBase('/files/policy.pdf'),
   agreement: withBase('/files/user_agreement.pdf'),
+  /** Согласие на обработку персональных данных — для формы заявки. */
+  consent: withBase('/consent/'),
+  /** Согласие на использование файлов cookie и Яндекс Метрики — для плашки cookie (когда Метрика включена). */
+  cookies: withBase('/cookies/'),
   page: withBase('/documents/'),
 };
+
+/**
+ * Редакции текстов согласий (дата). Поменялся текст согласия — поменяйте и дату: она показана на странице
+ * согласия и уходит вместе с заявкой (форма) или хранится в браузере вместе с выбором (cookie).
+ */
+export const CONSENT_EDITION = {
+  form: '05.10.2026',
+  cookies: '05.10.2026',
+};
+
+/** Подпись у галочки согласия в форме — дословно так же она названа в тексте согласия. */
+export const CONSENT_LABEL = 'Даю согласие на обработку персональных данных';

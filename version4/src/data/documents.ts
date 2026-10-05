@@ -3,13 +3,15 @@
 // Порядок групп: сначала общие документы компании, затем документы по продуктам. Когда страница продукта
 // переезжает с лендинга на сайт, документы с лендинга добавляются в группу этого продукта — и файлы,
 // и названия переносятся без изменений.
-import type { ProductId } from '../config/site';
+import { METRIKA_ID, type ProductId } from '../config/site';
 
 export interface Doc {
   /** Название — как на прежнем сайте. */
   title: string;
-  /** Имя файла в public/files/. */
-  file: string;
+  /** Имя файла в public/files/ — или page, если документ — страница сайта. */
+  file?: string;
+  /** Адрес страницы сайта (без подпапки), например '/consent/'. */
+  page?: string;
   /** Вид материала, если это не документ. */
   kind?: 'Презентация';
 }
@@ -28,6 +30,9 @@ export interface ProductDocs {
  */
 export const GENERAL_DOCS: Doc[] = [
   { title: 'Политика конфиденциальности', file: 'policy.pdf' },
+  { title: 'Согласие на обработку персональных данных', page: '/consent/' },
+  // согласие на cookie — только когда включена Яндекс Метрика (без неё сайт cookie не ставит)
+  ...(METRIKA_ID ? [{ title: 'Согласие на использование файлов cookie и Яндекс Метрики', page: '/cookies/' }] : []),
   { title: 'Карта партнёра', file: 'partners_map.pdf' },
   { title: 'Для представителей власти', file: 'gov.pdf', kind: 'Презентация' },
 ];

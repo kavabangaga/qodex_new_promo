@@ -3,11 +3,24 @@
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 import { PRODUCT_ICON } from './ProductLabel.astro';
-import { COMPANY, CONTACTS, DOC_LINKS, PRODUCTS, PRODUCT_ORDER, homeHref, productHref, SKOLKOVO_URL } from '../config/site';
+import {
+  COMPANY,
+  CONTACTS,
+  DOC_LINKS,
+  METRIKA_ID,
+  PRODUCTS,
+  PRODUCT_ORDER,
+  homeHref,
+  productHref,
+  SKOLKOVO_URL,
+} from '../config/site';
 
-// Файлы открываются в новой вкладке; «Документы» — страница сайта
+// Файлы открываются в новой вкладке; согласия и «Документы» — страницы сайта.
+// Согласие на cookie и «Настройки cookie» — только когда включена Яндекс Метрика (см. Floating.astro).
 const docs = [
   { href: DOC_LINKS.policy, label: 'Политика конфиденциальности', file: true },
+  { href: DOC_LINKS.consent, label: 'Согласие на обработку персональных данных', file: false },
+  ...(METRIKA_ID ? [{ href: DOC_LINKS.cookies, label: 'Согласие на использование cookie', file: false }] : []),
   { href: DOC_LINKS.agreement, label: 'Пользовательское соглашение', file: true },
   { href: DOC_LINKS.page, label: 'Документы', file: false },
 ];
@@ -86,6 +99,15 @@ const docs = [
                     </a>
                   </li>
                 ))
+              }
+              {
+                METRIKA_ID && (
+                  <li>
+                    <button type="button" class="ftr__btn" data-cookie-settings>
+                      Настройки cookie
+                    </button>
+                  </li>
+                )
               }
             </ul>
           </nav>
@@ -188,7 +210,8 @@ const docs = [
     gap: 12px;
   }
 
-  .ftr__col a {
+  .ftr__col a,
+  .ftr__btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -198,6 +221,17 @@ const docs = [
     transition: color 0.2s;
   }
 
+  .ftr__btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 15px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .ftr__btn:hover,
   .ftr__col a:hover {
     color: #fff;
   }

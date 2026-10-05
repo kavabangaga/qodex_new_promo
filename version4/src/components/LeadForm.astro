@@ -4,7 +4,7 @@
 // tone: light — белые поверхности, фокус синий (v4); dark — на тёмно-синей панели.
 // Нужна и на страницах продуктов (этап 2).
 import Icon from './Icon.astro';
-import { PRODUCTS, PRODUCT_ORDER, CONTACTS, DOC_LINKS, FORM_ENDPOINT } from '../config/site';
+import { PRODUCTS, PRODUCT_ORDER, CONTACTS, CONSENT_LABEL, DOC_LINKS, FORM_ENDPOINT } from '../config/site';
 
 interface Props {
   prefix?: string;
@@ -14,19 +14,33 @@ interface Props {
 
 const { prefix = 'lf', layout = 'stack', tone = 'light' } = Astro.props;
 const id = (s: string) => `${prefix}-${s}`;
+
+// Подпись галочки: «Даю» + ссылка на текст согласия. Вместе — дословно CONSENT_LABEL, как в самом согласии.
+const CONSENT_LINK = 'согласие на обработку персональных данных';
+if (`Даю ${CONSENT_LINK}` !== CONSENT_LABEL) throw new Error('Подпись галочки согласия разошлась с CONSENT_LABEL (config/site.ts)');
 ---
 
 <form class:list={['lf', `lf--${layout}`, `lf--${tone}`]} data-lead-form data-endpoint={FORM_ENDPOINT} novalidate>
   <div class="lf__fields" data-lf-fields>
     <div class="lf__field lf__name" data-field="name">
       <label for={id('name')}>Имя<span class="lf__req" aria-hidden="true">*</span></label>
-      <input id={id('name')} name="name" type="text" autocomplete="name" required aria-describedby={id('name-err')} />
+      <!-- ym-disable-keys: Вебвизор Яндекс Метрики не записывает, что вводят в поле (имя и телефон) -->
+      <input
+        id={id('name')}
+        class="ym-disable-keys"
+        name="name"
+        type="text"
+        autocomplete="name"
+        required
+        aria-describedby={id('name-err')}
+      />
       <p class="lf__err" id={id('name-err')} data-err>Укажите имя</p>
     </div>
     <div class="lf__field lf__phone" data-field="phone">
       <label for={id('phone')}>Телефон<span class="lf__req" aria-hidden="true">*</span></label>
       <input
         id={id('phone')}
+        class="ym-disable-keys"
         name="phone"
         type="tel"
         inputmode="tel"
@@ -67,7 +81,11 @@ const id = (s: string) => `${prefix}-${s}`;
         <span class="chip__box" aria-hidden="true">
           <Icon name="check" size={13} strokeWidth={3} />
         </span>
-        <span>Соглашаюсь на обработку персональных данных</span>
+        <span
+          >Даю <a href={DOC_LINKS.consent} target="_blank" rel="noopener"
+            >{CONSENT_LINK}<span class="visually-hidden"> (текст согласия откроется в новой вкладке)</span></a
+          ></span
+        >
       </label>
       <p class="lf__docs">
         <a href={DOC_LINKS.policy} target="_blank" rel="noopener"
@@ -338,6 +356,16 @@ const id = (s: string) => `${prefix}-${s}`;
     margin-top: 1px;
   }
 
+  .lf__consent a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+  }
+
+  .lf__consent a:hover {
+    text-decoration-color: currentColor;
+  }
+
   .lf__docs {
     display: flex;
     flex-wrap: wrap;
@@ -566,7 +594,7 @@ const id = (s: string) => `${prefix}-${s}`;
 </style>
 
 <script>
-  import { PRODUCT_ORDER, type ProductId } from '../config/site';
+  import { CONSENT_EDITION, DOC_LINKS, PRODUCT_ORDER, type ProductId } from '../config/site';
   import { getInterest, setInterest, INTEREST_EVENT } from '../scripts/interest';
   import { goal } from '../scripts/goals';
 
@@ -664,6 +692,14 @@ const id = (s: string) => `${prefix}-${s}`;
         trackerDemo: interest.includes('tracker'),
         utm,
         page: location.href,
+        sentAt: new Date().toISOString(),
+        // доказательство согласия (ч. 3 ст. 9 152-ФЗ): галочка отмечена, какая редакция текста и где он лежит;
+        // на стороне приёма заявки к этому добавляется время получения по часам сервера
+        consent: {
+          given: true,
+          edition: CONSENT_EDITION.form,
+          text: new URL(DOC_LINKS.consent, location.origin).href,
+        },
       };
 
       form.classList.add('is-sending');

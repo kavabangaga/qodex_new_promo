@@ -91,21 +91,27 @@ const ICON_V = 2;
     {jsonLd.map((data) => <script type="application/ld+json" set:html={JSON.stringify(data)} />)}
 
     {
+      /* Яндекс Метрика запускается только после согласия посетителя: кнопка «Принять» в плашке о cookie
+         (components/Floating.astro) вызывает window.qodexMetrika(). Без согласия счётчик не загружается. */
       METRIKA_ID && (
         <script is:inline define:vars={{ id: METRIKA_ID }}>
-          (function (m, e, t, r, i, k, a) {
-            m[i] =
-              m[i] ||
-              function () {
-                (m[i].a = m[i].a || []).push(arguments);
-              };
-            m[i].l = 1 * new Date();
-            (k = e.createElement(t)), (a = e.getElementsByTagName(t)[0]);
-            k.async = 1;
-            k.src = r;
-            a.parentNode.insertBefore(k, a);
-          })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
-          ym(id, 'init', { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true });
+          window.qodexMetrika = function () {
+            if (window.qodexMetrikaOn) return;
+            window.qodexMetrikaOn = true;
+            (function (m, e, t, r, i, k, a) {
+              m[i] =
+                m[i] ||
+                function () {
+                  (m[i].a = m[i].a || []).push(arguments);
+                };
+              m[i].l = 1 * new Date();
+              (k = e.createElement(t)), (a = e.getElementsByTagName(t)[0]);
+              k.async = 1;
+              k.src = r;
+              a.parentNode.insertBefore(k, a);
+            })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
+            ym(id, 'init', { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true });
+          };
         </script>
       )
     }
