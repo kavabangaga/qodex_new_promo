@@ -1,0 +1,154 @@
+---
+// Список документов: строка — ссылка на файл, он открывается в новой вкладке. Нужен на странице
+// «Документы», пригодится и на страницах продуктов. Вид и размер файла считаются при сборке
+// из public/files/; если файла нет, сборка останавливается — битая ссылка на документ на сайт не попадёт.
+import fs from 'node:fs';
+import path from 'node:path';
+import Icon from './Icon.astro';
+import { withBase } from '../config/site';
+import type { Doc } from '../data/documents';
+
+interface Props {
+  docs: Doc[];
+  class?: string;
+}
+
+const { docs, class: className } = Astro.props;
+const NB = ' ';
+
+// Сборка и сервер разработки запускаются из папки version4
+const FILES = path.join(process.cwd(), 'public', 'files');
+
+function size(file: string): string {
+  const p = path.join(FILES, file);
+  if (!fs.existsSync(p)) throw new Error(`Нет файла документа public/files/${file} — проверьте src/data/documents.ts`);
+  const bytes = fs.statSync(p).size;
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))}${NB}КБ`;
+  return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')}${NB}МБ`;
+}
+
+const items = docs.map((d) => ({
+  ...d,
+  href: withBase(`/files/${d.file}`),
+  meta: [d.kind, d.file.split('.').pop()!.toUpperCase(), size(d.file)].filter(Boolean).join(' · '),
+}));
+---
+
+<ul class:list={['dlist', className]}>
+  {
+    items.map((d) => (
+      <li>
+        <a class="dlist__row" href={d.href} target="_blank" rel="noopener">
+          <span class="dlist__ico" aria-hidden="true">
+            <Icon name={d.kind ? 'presentation' : 'file-pdf'} size={20} />
+          </span>
+          <span class="dlist__text">
+            <span class="dlist__title">{d.title}</span>
+            <span class="dlist__meta">
+              {d.meta}
+              <span class="visually-hidden">, откроется в новой вкладке</span>
+            </span>
+          </span>
+          <span class="dlist__go" aria-hidden="true">
+            <Icon name="arrow-up-right" size={18} />
+          </span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .dlist {
+    display: grid;
+    gap: 8px;
+  }
+
+  .dlist__row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    min-height: 72px;
+    padding: 14px 18px 14px 14px;
+    border-radius: calc(16px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    color: var(--ink);
+    transition: background-color 0.2s;
+  }
+
+  .dlist__row:hover {
+    background: var(--bg);
+  }
+
+  .dlist__ico {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: calc(12px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .dlist__text {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .dlist__title {
+    font-size: 16.5px;
+    font-weight: 560;
+    line-height: 1.35;
+    text-wrap: pretty;
+  }
+
+  .dlist__meta {
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .dlist__go {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: var(--muted);
+    transition:
+      color 0.2s,
+      background-color 0.2s,
+      transform 0.3s var(--ease-out);
+  }
+
+  .dlist__row:hover .dlist__go {
+    background: var(--ink);
+    color: #fff;
+    transform: rotate(45deg);
+  }
+
+  @media (max-width: 599px) {
+    .dlist__row {
+      gap: 12px;
+      padding: 12px 12px 12px 10px;
+    }
+
+    .dlist__ico {
+      width: 40px;
+      height: 40px;
+    }
+
+    .dlist__title {
+      font-size: 15.5px;
+    }
+
+    .dlist__go {
+      width: 32px;
+      height: 32px;
+    }
+  }
+</style>

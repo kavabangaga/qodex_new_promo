@@ -1,0 +1,832 @@
+---
+// Страница «Документы» (/documents/): сведения об организации, информация для ИТ-аккредитации
+// (приказ Минцифры России от 02.06.2025 № 511) и документы — сначала общие, затем по продуктам.
+// Тексты и файлы перенесены с прежнего сайта qodex.tech/documents без изменений; файлы лежат
+// в public/files/ под прежними именами. Страницу проверяет Минцифры: тексты раздела «IT-аккредитация»
+// не сокращать и не переписывать, реквизиты брать только из COMPANY (config/site.ts),
+// документы — только из data/documents.ts.
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Floating from '../components/Floating.astro';
+import LeadModal from '../components/LeadModal.astro';
+import ProductLabel from '../components/ProductLabel.astro';
+import DocList from '../components/DocList.astro';
+import Icon from '../components/Icon.astro';
+import Contact from '../sections/Contact.astro';
+import { COMPANY, CONTACTS, PRODUCTS, SITE, SKOLKOVO_URL, withBase } from '../config/site';
+import { GENERAL_DOCS, PRODUCT_DOCS } from '../data/documents';
+
+const NB = ' ';
+
+const title = 'Документы | QODEX';
+const description =
+  'Сведения об ООО «КОДЕКС ТЕХНОЛОГИИ», информация для ИТ-аккредитации и документы по продуктам QODEX: описание функциональных характеристик, руководства, стоимость.';
+
+// Реквизиты: подписи — как в подвале прежнего сайта
+const REQUISITES: { label: string; value: string; href?: string }[] = [
+  { label: 'Полное наименование', value: COMPANY.fullName },
+  { label: 'Сокращённое наименование', value: COMPANY.shortName },
+  { label: 'ИНН', value: COMPANY.inn },
+  { label: 'КПП', value: COMPANY.kpp },
+  { label: 'ОГРН', value: COMPANY.ogrn },
+  { label: 'Юридический адрес', value: COMPANY.address },
+  { label: 'Основной ОКВЭД', value: `${COMPANY.okved} — ${COMPANY.okvedName}` },
+  { label: `Код вида ИТ-деятельности (${COMPANY.itCodeOrder})`, value: COMPANY.itCode },
+  { label: 'Электронная почта', value: CONTACTS.email, href: CONTACTS.emailHref },
+  { label: 'Телефон', value: CONTACTS.phone, href: CONTACTS.phoneHref },
+];
+
+// «Стоимость продуктов и услуг» — строки дословно с прежнего сайта
+const PRICES: { title: string; items: string[] }[] = [
+  {
+    title: 'Пакеты Gravity:',
+    items: ['Базовый — от 150 000 ₽', 'Стандарт — от 490 000 ₽', 'Расширенный — от 890 000 ₽'],
+  },
+  {
+    title: 'Дополнительное оборудование:',
+    items: [
+      'Дополнительная камера — от 35 000 ₽',
+      'Шлагбаум с фотоэлементами — от 120 000 ₽',
+      'Комплект радиометок — от 120 000 ₽',
+      'Моноблок — от 65 000 ₽',
+      'Маршрутизатор с СИМ-картой — от 75 000 ₽',
+    ],
+  },
+  {
+    title: 'Подписка Signall (облачный личный кабинет):',
+    items: [
+      'Старт (1–2 весовых) — от 8 000 ₽ в месяц',
+      'Бизнес (3–5 весовых) — от 20 000 ₽ в месяц',
+      'Корпоративный (от 6 весовых) — от 50 000 ₽ в месяц',
+    ],
+  },
+  {
+    title: 'Информационно-техническое сопровождение (ИТС):',
+    items: ['Базовый — бесплатно', 'Стандарт — от 48 000 ₽ в год', 'Расширенный — от 120 000 ₽ в год'],
+  },
+];
+
+// Число не разрывается по разрядам и не отрывается от «₽»
+const money = (s: string) => s.replace(/(\d) (\d{3})/g, `$1${NB}$2`).replace(/ ₽/g, `${NB}₽`);
+const priceRows = PRICES.map((g) => ({
+  title: g.title,
+  rows: g.items.map((it) => {
+    const [name, value] = it.split(' — ');
+    return { name, value: money(value) };
+  }),
+}));
+
+// «Подробнее» о модулях: на прежнем сайте — страницы /demo-gravity и /demo-signall, которых на этом сайте нет;
+// ведут на документы о модулях (инструкция Gravity и презентация Signall «О системе»)
+const MORE_GRAVITY = withBase('/files/gravity_manual.pdf');
+const MORE_SIGNALL = withBase('/files/system.pdf');
+
+// Оглавление: сначала общее, затем продукты (порядок — как на странице)
+const TOC = [
+  {
+    href: '#kompaniya',
+    label: 'Общие документы и информация о компании',
+    sub: [
+      { href: '#svedeniya', label: 'Сведения об организации' },
+      { href: '#it-akkreditaciya', label: 'IT-аккредитация' },
+      { href: '#obshchie-dokumenty', label: 'Общие документы' },
+    ],
+  },
+  {
+    href: '#po-produktam',
+    label: 'Документы по продуктам',
+    sub: PRODUCT_DOCS.map((g) => ({ href: `#${g.id}`, label: PRODUCTS[g.product].name })),
+  },
+];
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'QODEX',
+    legalName: COMPANY.fullName,
+    url: SITE.url,
+    email: CONTACTS.email,
+    telephone: CONTACTS.phoneHref.replace('tel:', ''),
+    taxID: COMPANY.inn,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: `ул. Братьев Кадомцевых, д. 12/2, подъезд 1, кв. 1, комн. 7`,
+      addressLocality: 'Уфа',
+      postalCode: '450009',
+      addressCountry: 'RU',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'QODEX', item: new URL(withBase('/'), SITE.url).href },
+      { '@type': 'ListItem', position: 2, name: 'Документы', item: new URL(withBase('/documents/'), SITE.url).href },
+    ],
+  },
+];
+---
+
+<Base title={title} description={description} jsonLd={jsonLd}>
+  <Header home={false} />
+  <main>
+    <section class="section dhero" id="dokumenty" aria-labelledby="dokumenty-title">
+      <div class="container">
+        <header class="intro dhero__intro">
+          <h1 class="t-display dhero__title" id="dokumenty-title" data-reveal>Документы</h1>
+          <p class="t-lead" data-reveal style="--d:1">
+            Сведения об организации, информация для IT-аккредитации и документы по продуктам QODEX.
+          </p>
+        </header>
+
+        <!-- Быстрый переход: на телефоне и планшете вместо оглавления сбоку -->
+        <nav class="djump" aria-label="Разделы страницы" data-reveal style="--d:2">
+          <ul>
+            {
+              TOC.flatMap((g) => g.sub).map((s) => (
+                <li>
+                  <a href={s.href}>{s.label}</a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </div>
+    </section>
+
+    <div class="container docs">
+      <!-- Оглавление сбоку (компьютер) -->
+      <nav class="dtoc" aria-label="Оглавление" data-dtoc>
+        <ul class="dtoc__list">
+          {
+            TOC.map((g) => (
+              <li>
+                <a class="dtoc__group" href={g.href}>
+                  {g.label}
+                </a>
+                <ul>
+                  {g.sub.map((s) => (
+                    <li>
+                      <a class="dtoc__link" href={s.href}>
+                        {s.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <div class="docs__body">
+        <!-- ═════ Общие документы и информация о компании ═════ -->
+        <section class="dgroup" id="kompaniya" aria-labelledby="kompaniya-title">
+          <h2 class="dgroup__title" id="kompaniya-title">Общие документы и&nbsp;информация о&nbsp;компании</h2>
+
+          <!-- Сведения об организации -->
+          <article class="dsec" id="svedeniya" aria-labelledby="svedeniya-title" data-dsec>
+            <h3 class="dsec__title" id="svedeniya-title">
+              <span class="dsec__ico" aria-hidden="true"><Icon name="building-2" size={20} /></span>
+              Сведения об организации
+            </h3>
+            <dl class="req">
+              {
+                REQUISITES.map((r) => (
+                  <div class="req__row">
+                    <dt>{r.label}</dt>
+                    <dd>{r.href ? <a href={r.href}>{r.value}</a> : r.value}</dd>
+                  </div>
+                ))
+              }
+            </dl>
+            <ul class="badges">
+              <li>
+                <a class="badge" href={SKOLKOVO_URL} target="_blank" rel="noopener">
+                  <span class="badge__ico" aria-hidden="true"><Icon name="rocket" size={17} strokeWidth={2} /></span>
+                  Резидент Сколково
+                  <Icon name="arrow-up-right" size={15} />
+                  <span class="visually-hidden">(откроется в новой вкладке)</span>
+                </a>
+              </li>
+              <li>
+                <span class="badge">
+                  <span class="badge__ico" aria-hidden="true"><Icon name="badge-check" size={17} strokeWidth={2} /></span>
+                  Аккредитованная IT-компания
+                </span>
+              </li>
+            </ul>
+          </article>
+
+          <!-- IT-аккредитация: тексты дословно с прежнего сайта -->
+          <article class="dsec" id="it-akkreditaciya" aria-labelledby="it-akkreditaciya-title" data-dsec>
+            <h3 class="dsec__title" id="it-akkreditaciya-title">
+              <span class="dsec__ico" aria-hidden="true"><Icon name="certificate" size={20} /></span>
+              IT-аккредитация
+            </h3>
+            <p class="dnote">
+              <Icon name="info" size={18} />
+              <span>
+                Информация размещена в соответствии с требованиями Приказа Минцифры России от 02.06.2025 №&nbsp;511.
+              </span>
+            </p>
+
+            <div class="dcard prose">
+              <h4>Описание деятельности</h4>
+              <p>
+                ООО «КОДЕКС ТЕХНОЛОГИИ» разрабатывает программное обеспечение для автоматизации весового контроля и учёта
+                грузопотока.
+              </p>
+              <p>Основные продукты компании — единая информационная система QODEX&nbsp;TONN, состоящая из двух модулей:</p>
+              <ul>
+                <li>
+                  Gravity — программный модуль, устанавливаемый на рабочее место оператора весовой и работающий с весовым
+                  оборудованием. <a class="more" href={MORE_GRAVITY} target="_blank" rel="noopener"
+                    >Подробнее<span class="visually-hidden"> о Gravity: инструкция Gravity, PDF, откроется в новой вкладке</span
+                    ></a
+                  >
+                </li>
+                <li>
+                  Signall — облачный личный кабинет для агрегации данных со всех весовых клиента. <a
+                    class="more"
+                    href={MORE_SIGNALL}
+                    target="_blank"
+                    rel="noopener"
+                    >Подробнее<span class="visually-hidden"> о Signall: презентация «О системе», PDF, откроется в новой вкладке</span
+                    ></a
+                  >
+                </li>
+              </ul>
+              <p>
+                Программное обеспечение защищено свидетельствами о государственной регистрации программ для ЭВМ
+                №&nbsp;2020663561 от 29.10.2020 (QODEX&nbsp;GRAVITY) и №&nbsp;2022660160 от 31.05.2022 (QODEX&nbsp;TONN).
+              </p>
+              <p>
+                Компания является резидентом Инновационного центра «Сколково» в кластере энергоэффективных технологий с 2023
+                года.
+              </p>
+            </div>
+
+            <div class="dcard prose">
+              <h4>Используемые технологии</h4>
+              <p>При разработке программного обеспечения используются:</p>
+              <ul class="tech">
+                <li><b>Backend:</b> Python, Go</li>
+                <li><b>Frontend:</b> HTML, CSS, JavaScript, TypeScript, Vue.js</li>
+                <li><b>Базы данных:</b> PostgreSQL</li>
+                <li>
+                  <b>Инфраструктура и инструменты:</b> Docker, Nginx, системы непрерывной интеграции (CI/CD); интеграции с учётными
+                  системами (1С) и государственными информационными системами по REST-API
+                </li>
+              </ul>
+            </div>
+
+            <div class="dcard prose">
+              <h4>Информация о программном обеспечении</h4>
+              <p>
+                ООО «КОДЕКС ТЕХНОЛОГИИ» является правообладателем исключительных прав на программное обеспечение QODEX&nbsp;TONN
+                (включая модули Gravity и Signall), разработанное собственными силами организации. Исключительные права подтверждены
+                свидетельствами о государственной регистрации программ для ЭВМ №&nbsp;2020663561 от 29.10.2020 (QODEX&nbsp;GRAVITY) и
+                №&nbsp;2022660160 от 31.05.2022 (QODEX&nbsp;TONN).
+              </p>
+              <p>Способы предоставления права использования программного обеспечения:</p>
+              <ul>
+                <li>Заключение лицензионного договора</li>
+                <li>Предоставление доступа по модели SaaS (программное обеспечение как услуга)</li>
+                <li>Поставка программного обеспечения с сопутствующим оборудованием</li>
+              </ul>
+              <p>
+                Для получения доступа к продуктам, демонстрации возможностей или согласования условий лицензирования обращайтесь по
+                контактам, указанным в футере сайта.
+              </p>
+            </div>
+
+            <div class="dcard prose">
+              <h4>Стоимость продуктов и услуг</h4>
+              <p>Стоимость зависит от конфигурации, количества весовых площадок и масштаба внедрения. Базовые цены:</p>
+              <div class="prices">
+                {
+                  priceRows.map((g) => (
+                    <div class="prices__group">
+                      <p class="prices__title">{g.title}</p>
+                      <ul class="prices__list">
+                        {g.rows.map((r) => (
+                          <li>
+                            <span class="prices__name">{r.name}</span>
+                            <span class="visually-hidden"> — </span>
+                            <span class="prices__value">{r.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))
+                }
+              </div>
+              <p>
+                Интеграция с 1С — от 15&nbsp;000&nbsp;₽. Индивидуальные доработки — от 3&nbsp;000&nbsp;₽ в час.
+              </p>
+              <p>
+                Итоговая стоимость рассчитывается индивидуально по запросу. Для получения коммерческого предложения свяжитесь с нами
+                через контакты в футере.
+              </p>
+            </div>
+          </article>
+
+          <!-- Общие документы -->
+          <article class="dsec" id="obshchie-dokumenty" aria-labelledby="obshchie-dokumenty-title" data-dsec>
+            <h3 class="dsec__title" id="obshchie-dokumenty-title">
+              <span class="dsec__ico" aria-hidden="true"><Icon name="file-text" size={20} /></span>
+              Общие документы
+            </h3>
+            <DocList docs={GENERAL_DOCS} />
+          </article>
+        </section>
+
+        <!-- ═════ Документы по продуктам ═════ -->
+        <section class="dgroup" id="po-produktam" aria-labelledby="po-produktam-title">
+          <h2 class="dgroup__title" id="po-produktam-title">Документы по&nbsp;продуктам</h2>
+          {
+            PRODUCT_DOCS.map((g) => (
+              <article class="dsec" id={g.id} aria-labelledby={`${g.id}-title`} data-dsec>
+                <h3 class="dsec__title dsec__title--product" id={`${g.id}-title`}>
+                  <ProductLabel id={g.product} size="lg" />
+                </h3>
+                <DocList docs={g.docs} />
+              </article>
+            ))
+          }
+        </section>
+      </div>
+    </div>
+
+    <Contact title="Задайте вопрос или оставьте заявку" lead="" personLabel="Ваш контакт" />
+  </main>
+  <Footer />
+  <Floating />
+  <LeadModal />
+</Base>
+
+<style>
+  /* ── Вступление ─────────────────────────────────────── */
+  .dhero {
+    padding-bottom: clamp(32px, calc(var(--vw) * 4), 56px);
+  }
+
+  .dhero__intro {
+    margin-bottom: 0;
+  }
+
+  .dhero__title {
+    font-size: clamp(2.6rem, calc(var(--vw) * 5), 4.25rem);
+  }
+
+  /* Быстрый переход — только там, где нет оглавления сбоку */
+  .djump {
+    display: none;
+    margin-top: 28px;
+  }
+
+  .djump ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .djump a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink);
+    transition: background-color 0.2s;
+  }
+
+  .djump a:hover {
+    background: var(--panel-2);
+  }
+
+  /* ── Оглавление сбоку + содержимое ──────────────────── */
+  .docs {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(40px, calc(var(--vw) * 5), 80px);
+    padding-bottom: var(--section-y);
+  }
+
+  .dtoc {
+    position: sticky;
+    top: calc(var(--header-h) + 32px);
+  }
+
+  .dtoc__list {
+    display: grid;
+    gap: 22px;
+  }
+
+  .dtoc__list ul {
+    display: grid;
+    gap: 2px;
+    margin-top: 8px;
+  }
+
+  .dtoc__group {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .dtoc__link {
+    display: block;
+    padding: 7px 12px;
+    border-radius: calc(10px * var(--rk));
+    corner-shape: var(--corner);
+    font-size: 15px;
+    line-height: 1.35;
+    color: var(--muted);
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+
+  .dtoc__link:hover {
+    color: var(--ink);
+  }
+
+  .dtoc__link[aria-current='true'] {
+    background: var(--panel);
+    color: var(--ink);
+    font-weight: 560;
+  }
+
+  .docs__body {
+    display: grid;
+    gap: clamp(64px, calc(var(--vw) * 7), 104px);
+    min-width: 0;
+  }
+
+  /* ── Группы и разделы ───────────────────────────────── */
+  .dgroup {
+    display: grid;
+    gap: 20px;
+  }
+
+  .dgroup__title {
+    margin-bottom: 8px;
+    font-size: clamp(1.9rem, calc(var(--vw) * 2.8), 2.6rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  /* раздел — бежевая панель, внутри белые карточки */
+  .dsec {
+    display: grid;
+    gap: 14px;
+    padding: clamp(18px, calc(var(--vw) * 2.2), 28px);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .dsec__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+    font-size: clamp(1.3rem, calc(var(--vw) * 1.6), 1.5rem);
+    font-weight: 560;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .dsec__ico {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: calc(12px * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .dsec__title--product {
+    margin-bottom: 6px;
+  }
+
+  /* ── Реквизиты ──────────────────────────────────────── */
+  .req {
+    display: grid;
+    padding: 6px 22px;
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  .req__row {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
+    gap: 6px 24px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .req__row:last-child {
+    border-bottom: 0;
+  }
+
+  .req dt {
+    font-size: 14.5px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
+  .req dd {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  .req dd a {
+    text-decoration: underline;
+    text-decoration-color: var(--line-2);
+    text-underline-offset: 4px;
+    transition: text-decoration-color 0.2s;
+  }
+
+  .req dd a:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 40px;
+    padding: 6px 14px 6px 6px;
+    border-radius: 999px;
+    background: var(--card);
+    font-size: 14.5px;
+    font-weight: 560;
+    color: var(--ink);
+  }
+
+  .badge__ico {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--panel);
+  }
+
+  a.badge:hover {
+    background: var(--bg);
+  }
+
+  /* ── IT-аккредитация ────────────────────────────────── */
+  .dnote {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 18px;
+    border-radius: calc(16px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    font-size: 15.5px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  .dnote :global(svg) {
+    flex: none;
+    margin-top: 2px;
+    color: var(--blue);
+  }
+
+  .dcard {
+    padding: clamp(18px, calc(var(--vw) * 2.2), 28px);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  .prose {
+    display: grid;
+    gap: 12px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+
+  .prose h4 {
+    margin-bottom: 2px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+
+  .prose p {
+    max-width: 72ch;
+    text-wrap: pretty;
+  }
+
+  .prose ul {
+    display: grid;
+    gap: 8px;
+  }
+
+  .prose ul li {
+    position: relative;
+    max-width: 72ch;
+    padding-left: 22px;
+    text-wrap: pretty;
+  }
+
+  .prose ul li::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0.68em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--g-lav);
+  }
+
+  .prose b {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .more {
+    font-weight: 560;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-2);
+    text-underline-offset: 4px;
+    white-space: nowrap;
+    transition: text-decoration-color 0.2s;
+  }
+
+  .more:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* цены — карточки по группам: название слева, цена справа */
+  .prices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-block: 4px;
+  }
+
+  .prices__group {
+    padding: 16px 18px 8px;
+    border-radius: calc(16px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--bg);
+  }
+
+  .prices__title {
+    margin-bottom: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .prose .prices__list {
+    gap: 0;
+  }
+
+  /* название переносится по словам; если места под цену не остаётся, цена уходит на свою строку
+     и прижимается вправо */
+  .prose .prices__list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 16px;
+    max-width: none;
+    padding: 9px 0;
+    border-top: 1px solid var(--line);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .prose .prices__list li::before {
+    content: none;
+  }
+
+  /* основа — самое длинное слово названия: короткое название встаёт с ценой в строку, длинное
+     переносится; браузеры без min-content в flex-basis берут 8em */
+  .prices__name {
+    flex: 1 1 8em;
+    flex-basis: min-content;
+    color: var(--ink-2);
+  }
+
+  .prices__value {
+    flex: none;
+    margin-left: auto;
+    font-weight: 600;
+    text-align: right;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  /* ── Планшет и телефон: без оглавления сбоку ────────── */
+  @media (max-width: 1199.98px) {
+    .djump {
+      display: block;
+    }
+
+    .docs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dtoc {
+      display: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .prices {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .req {
+      padding: 4px 16px;
+    }
+
+    .req__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+      padding: 12px 0;
+    }
+
+    .dsec__ico {
+      width: 36px;
+      height: 36px;
+    }
+  }
+</style>
+
+<script>
+  import { initReveal, initCounters } from '../scripts/motion';
+  import { initGoals } from '../scripts/goals';
+  import { initInterestLinks } from '../scripts/interest';
+
+  initReveal();
+  initCounters();
+  initGoals();
+  initInterestLinks();
+
+  // Оглавление сбоку: отмечает раздел, который сейчас на экране
+  const toc = document.querySelector<HTMLElement>('[data-dtoc]');
+  if (toc && 'IntersectionObserver' in window) {
+    const links = new Map(
+      [...toc.querySelectorAll<HTMLAnchorElement>('.dtoc__link')].map((a) => [a.hash.slice(1), a] as const),
+    );
+    const visible = new Set<string>();
+    const mark = () => {
+      const first = [...links.keys()].find((id) => visible.has(id));
+      links.forEach((a, id) => {
+        if (id === first) a.setAttribute('aria-current', 'true');
+        else a.removeAttribute('aria-current');
+      });
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => (e.isIntersecting ? visible.add(e.target.id) : visible.delete(e.target.id)));
+        mark();
+      },
+      { rootMargin: '-30% 0px -55% 0px' },
+    );
+    document.querySelectorAll<HTMLElement>('[data-dsec]').forEach((s) => io.observe(s));
+  }
+</script>

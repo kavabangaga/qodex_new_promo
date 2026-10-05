@@ -10,6 +10,7 @@ import { CONTACTS } from '../config/site';
 // Тексты по умолчанию — главная страница; страница продукта передаёт свои.
 interface Props {
   title?: string;
+  /** Пустая строка — без подзаголовка. */
   lead?: string;
   /** Строка с зелёной точкой под подзаголовком. */
   proof?: string;
@@ -32,7 +33,7 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
   <div class="container">
     <SectionIntro eyebrow="Заявка" titleId="forma">
       {title}
-      <Fragment slot="lead">{lead}</Fragment>
+      {lead && <Fragment slot="lead">{lead}</Fragment>}
       <p slot="cta" class="contact__proof">
         <span class="contact__dot" aria-hidden="true"></span>
         {proof}

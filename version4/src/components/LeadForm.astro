@@ -4,7 +4,7 @@
 // tone: light — белые поверхности, фокус синий (v4); dark — на тёмно-синей панели.
 // Нужна и на страницах продуктов (этап 2).
 import Icon from './Icon.astro';
-import { PRODUCTS, PRODUCT_ORDER, CONTACTS, FORM_ENDPOINT, withBase } from '../config/site';
+import { PRODUCTS, PRODUCT_ORDER, CONTACTS, DOC_LINKS, FORM_ENDPOINT } from '../config/site';
 
 interface Props {
   prefix?: string;
@@ -70,9 +70,9 @@ const id = (s: string) => `${prefix}-${s}`;
         <span>Соглашаюсь на обработку персональных данных</span>
       </label>
       <p class="lf__docs">
-        <a href={withBase('/soglasie')}>Согласие на обработку персональных данных</a>
+        <a href={DOC_LINKS.consent} target="_blank" rel="noopener">Согласие на обработку персональных данных</a>
         <span aria-hidden="true">·</span>
-        <a href={withBase('/politika')}>Политика конфиденциальности</a>
+        <a href={DOC_LINKS.policy} target="_blank" rel="noopener">Политика конфиденциальности</a>
       </p>
       <p class="lf__err" id={id('consent-err')} data-err>Отметьте согласие на обработку персональных данных</p>
     </div>

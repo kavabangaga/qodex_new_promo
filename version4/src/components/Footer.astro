@@ -3,15 +3,14 @@
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 import { PRODUCT_ICON } from './ProductLabel.astro';
-import { CONTACTS, PRODUCTS, PRODUCT_ORDER, productHref, SKOLKOVO_URL, withBase } from '../config/site';
+import { COMPANY, CONTACTS, DOC_LINKS, PRODUCTS, PRODUCT_ORDER, homeHref, productHref, SKOLKOVO_URL } from '../config/site';
 
-const NB = ' ';
-
+// Файлы открываются в новой вкладке; «Документы» — страница сайта
 const docs = [
-  { href: withBase('/politika'), label: 'Политика конфиденциальности' },
-  { href: withBase('/soglasie'), label: 'Согласие на обработку персональных данных' },
-  { href: withBase('/soglashenie'), label: 'Пользовательское соглашение' },
-  { href: withBase('/documents'), label: 'Документы' },
+  { href: DOC_LINKS.policy, label: 'Политика конфиденциальности', file: true },
+  { href: DOC_LINKS.consent, label: 'Согласие на обработку персональных данных', file: true },
+  { href: DOC_LINKS.agreement, label: 'Пользовательское соглашение', file: true },
+  { href: DOC_LINKS.page, label: 'Документы', file: false },
 ];
 ---
 
@@ -76,7 +75,9 @@ const docs = [
               {
                 docs.map((d) => (
                   <li>
-                    <a href={d.href}>{d.label}</a>
+                    <a href={d.href} target={d.file ? '_blank' : undefined} rel={d.file ? 'noopener' : undefined}>
+                      {d.label}
+                    </a>
                   </li>
                 ))
               }
@@ -85,13 +86,22 @@ const docs = [
         </div>
       </div>
 
-      <a href={withBase('/')} class="ftr__logo" aria-label="QODEX — на главную"><Logo height={60} /></a>
+      <a href={homeHref()} class="ftr__logo" aria-label="QODEX — на главную"><Logo height={60} /></a>
 
       <div class="ftr__bottom">
+        <!-- полное наименование и реквизиты обязательны на сайте (приказ Минцифры № 511) -->
         <p class="ftr__req">
-          ООО «КОДЕКС ТЕХНОЛОГИИ» · ИНН 0278962265 · КПП 027801001 · ОГРН 1200200055791 · ОКВЭД 62.01 · Код вида
-          ИТ-деятельности 2.01 (приказ Минцифры №{NB}449 от 11.05.2023) · 450009, г.{NB}Уфа, ул.{NB}Братьев
-          Кадомцевых, д.{NB}12/2, подъезд 1, кв.{NB}1, комн.{NB}7.
+          {
+            [
+              COMPANY.fullName,
+              `ИНН ${COMPANY.inn}`,
+              `КПП ${COMPANY.kpp}`,
+              `ОГРН ${COMPANY.ogrn}`,
+              `Основной ОКВЭД ${COMPANY.okved}`,
+              `Код вида ИТ-деятельности ${COMPANY.itCode} (${COMPANY.itCodeOrder.replace('Приказ', 'приказ')})`,
+              `${COMPANY.address}.`,
+            ].join(' · ')
+          }
         </p>
         <p class="ftr__copy">© 2020–2026 QODEX</p>
       </div>

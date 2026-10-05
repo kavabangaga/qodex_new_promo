@@ -3,7 +3,7 @@
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 import { PRODUCT_ICON } from './ProductLabel.astro';
-import { CONTACTS, PRODUCTS, PRODUCT_ORDER, productHref, productHost, isOnSite, homeHref, withBase, type ProductId } from '../config/site';
+import { CONTACTS, DOC_LINKS, PRODUCTS, PRODUCT_ORDER, productHref, productHost, isOnSite, homeHref, withBase, type ProductId } from '../config/site';
 
 interface Props {
   /** false — шапка внутренней страницы: пункты меню ведут на разделы главной. */
@@ -19,15 +19,18 @@ const { home = true, cta = 'Запустить пилот', current } = Astro.pr
 // Раздел главной: на самой главной — якорь, на внутренней странице — ссылка на главную с якорем
 const toHome = (hash: string) => (home ? hash : homeHref(hash));
 
-// Пункты идут в том же порядке, что и разделы на главной (после «Продуктов»).
-// «Контакты» есть на каждой странице — это всегда якорь текущей.
+// Пункты идут в том же порядке, что и разделы на главной (после «Продуктов»), последний —
+// страница «Документы». Контакты — в подвале и в разделе заявки внизу каждой страницы.
 const links = [
   { href: toHome('#balans'), label: 'Как это работает' },
   { href: toHome('#bezopasnost'), label: 'Безопасность' },
   { href: toHome('#pilot'), label: 'Пилот' },
   { href: toHome('#o-kompanii'), label: 'О компании' },
-  { href: '#kontakty', label: 'Контакты' },
+  { href: DOC_LINKS.page, label: 'Документы' },
 ];
+
+// Пункт текущей страницы отмечается (сейчас это бывает только у «Документов»)
+const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined);
 ---
 
 <header class="hdr" data-hdr>
@@ -75,7 +78,7 @@ const links = [
         {
           links.map((l) => (
             <li>
-              <a href={l.href} class="hdr__link">
+              <a href={l.href} class="hdr__link" aria-current={here(l.href)}>
                 {l.label}
               </a>
             </li>
@@ -125,7 +128,9 @@ const links = [
       {
         links.map((l) => (
           <li>
-            <a href={l.href}>{l.label}</a>
+            <a href={l.href} aria-current={here(l.href)}>
+              {l.label}
+            </a>
           </li>
         ))
       }
@@ -215,6 +220,7 @@ const links = [
   }
 
   .hdr__link:hover,
+  .hdr__link[aria-current='page'],
   .dd.is-open .dd__toggle {
     background: rgb(29 29 31 / 0.05);
   }
@@ -440,6 +446,10 @@ const links = [
     border-bottom: 1px solid var(--line);
     font-size: 17px;
     font-weight: 500;
+  }
+
+  .mnav__links a[aria-current='page'] {
+    font-weight: 600;
   }
 
   .mnav__phone {

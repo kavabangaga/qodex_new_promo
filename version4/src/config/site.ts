@@ -17,6 +17,25 @@ export const SITE = {
   ogImage: '/og-image.png',
 };
 
+/**
+ * Сведения об организации — для подвала и страницы «Документы». По приказу Минцифры № 511
+ * (ИТ-аккредитация) полное наименование, адрес, ИНН, основной ОКВЭД и код ИТ-деятельности
+ * обязаны быть на сайте; источник — подвал и «Карта партнёра» прежнего сайта qodex.tech.
+ */
+export const COMPANY = {
+  fullName: 'Общество с ограниченной ответственностью «КОДЕКС ТЕХНОЛОГИИ»',
+  shortName: 'ООО «КОДЕКС ТЕХНОЛОГИИ»',
+  inn: '0278962265',
+  kpp: '027801001',
+  ogrn: '1200200055791',
+  address: `г.${NB}Уфа, 450009, ул.${NB}Братьев Кадомцевых, д.${NB}12/2, подъезд${NB}1, кв.${NB}1, комн.${NB}7`,
+  okved: '62.01',
+  okvedName: 'Разработка компьютерного программного обеспечения',
+  itCode: '2.01',
+  /** Документ, по которому присвоен код вида ИТ-деятельности. */
+  itCodeOrder: `Приказ Минцифры №${NB}449 от 11.05.2023`,
+};
+
 export const CONTACTS = {
   phone: `+7${NB}996${NB}293${NB}03${NB}80`,
   phoneHref: 'tel:+79962930380',
@@ -120,3 +139,15 @@ export const METRIKA_ID: number | null = null;
 export const FORM_ENDPOINT = '';
 
 export const SKOLKOVO_URL = 'https://navigator.sk.ru/orn/1125740';
+
+/**
+ * Ссылки на документы для подвала, формы заявки и плашки cookie. Файлы — в public/files/, имена те же,
+ * что на прежнем сайте qodex.tech/files/…. Отдельного документа «Согласие на обработку персональных данных»
+ * на прежнем сайте не было: его форма вела на политику обработки персональных данных — так и здесь.
+ */
+export const DOC_LINKS = {
+  policy: withBase('/files/policy.pdf'),
+  consent: withBase('/files/policy.pdf'),
+  agreement: withBase('/files/user_agreement.pdf'),
+  page: withBase('/documents/'),
+};

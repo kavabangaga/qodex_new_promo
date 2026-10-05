@@ -1,12 +1,14 @@
 ---
 // Баннер cookies. Плавающих кнопок связи в v4 нет, как у Calendly: телефон и «Запустить пилот» — в шапке.
-import { withBase } from '../config/site';
+import { DOC_LINKS } from '../config/site';
 ---
 
 <div class="cookie" data-cookie hidden>
   <p>
-    Мы используем файлы cookie, чтобы сайт работал корректно. Подробнее — в&nbsp;<a href={withBase('/politika')}
-      >политике конфиденциальности</a
+    Мы используем файлы cookie, чтобы сайт работал корректно. Подробнее — в&nbsp;<a
+      href={DOC_LINKS.policy}
+      target="_blank"
+      rel="noopener">политике конфиденциальности</a
     >.
   </p>
   <button type="button" class="btn btn--primary btn--sm" data-cookie-ok>Понятно</button>
