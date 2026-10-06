@@ -33,24 +33,27 @@ const STATUS: Record<Status, string> = {
 // thumb — кадр камеры этой погрузки (thumb-*.webp, 320×180), x — какая часть кадра по ширине видна
 // в плитке (на телефоне она квадратная, а контейнеры не везде посередине). У новой погрузки — кадр
 // «после погрузки» из подробностей, у «Погружено меньше плана» — площадка, где контейнеры остались полными.
+// Бак с коробками (lift-*) — площадка на ул. Школьной, как в «Эффекте»: у других адресов его нет.
+// У ул. Полевой — левая часть кадра cam-b (дом и забор); пятая строка видна только в начале цикла —
+// у неё другой кадр, чтобы один снимок не стоял в списке дважды.
 const LOADS: { time: string; plate: string; id: string; addr: string; st: Status; thumb: string; x: number }[] = [
   { time: '08:42', plate: 'В 214 ОК 102', id: '3298', addr: 'ул. Садовая, 21', st: 'ok', thumb: 'cam-a-after', x: 50 },
-  { time: '08:36', plate: 'Н 375 РТ 02', id: '3307', addr: 'ул. Полевая, 12', st: 'more', thumb: 'lift-full', x: 50 },
+  { time: '08:36', plate: 'Н 375 РТ 02', id: '3307', addr: 'ул. Полевая, 12', st: 'more', thumb: 'cam-b-after', x: 15 },
   { time: '08:31', plate: 'С 548 ЕМ 102', id: '124', addr: 'ул. Лесная, 3', st: 'less', thumb: 'cam-b-before', x: 87 },
   { time: '08:24', plate: 'М 091 ТВ 702', id: '9345', addr: 'ул. Школьная, 8', st: 'ok', thumb: 'lift-tip', x: 50 },
-  { time: '08:12', plate: 'В 214 ОК 102', id: '3266', addr: 'пер. Мирный, 5', st: 'ok', thumb: 'cam-b-after', x: 80 },
+  { time: '08:12', plate: 'В 214 ОК 102', id: '3266', addr: 'пер. Мирный, 5', st: 'ok', thumb: 'cam-right', x: 50 },
 ];
 
 // Кадры выбранной погрузки — задняя камера над подъёмником: тот же контейнер до и после опорожнения,
 // снято с одной точки, поэтому рамка ИИ в обоих кадрах на одном месте (оно задано в стилях .trh-box).
 // На площадке три контейнера, камера видит их в подъёмнике по одному: ИИ считает опорожнения 1 → 2 → 3.
-// Ширина снимка: на компьютере 215 px, на планшете — 310–510 px; на телефоне подробностей нет
-// (скрытые снимки с loading="lazy" не грузятся).
+// Ширина снимка: на компьютере 215 px, на планшете — 310–510 px, на телефоне — 135–255 px
+// (телефону хватает снимка 720w).
 const shot = (name: string) => ({
   src: withBase(`/media/tracker/${name}-720.webp`),
   srcset: `${withBase(`/media/tracker/${name}-720.webp`)} 720w, ${withBase(`/media/tracker/${name}-1200.webp`)} 1200w`,
 });
-const FRAME_SIZES = '(max-width: 1199.98px) 500px, 215px';
+const FRAME_SIZES = '(max-width: 599.98px) 170px, (max-width: 1199.98px) 500px, 215px';
 const BEFORE = shot('cam-a-before');
 const AFTER = shot('cam-a-after');
 
@@ -281,7 +284,9 @@ const MAP =
                     </span>
                   </span>
                   <span class="trh-res__plan">план 3</span>
-                  <Icon name="arrow-right" size={15} strokeWidth={2} />
+                  <span class="trh-res__to">
+                    <Icon name="arrow-right" size={15} strokeWidth={2} />
+                  </span>
                   <span class="trh-flip trh-res__st">
                     <span class="trh-flip__wait trh-pill trh-pill--wait">
                       <span class="trh-spin">
@@ -297,12 +302,13 @@ const MAP =
               </div>
             </div>
 
-            <!-- видео погрузок уходят в облако -->
+            <!-- видео погрузок уходят в облако: по видео на каждое опорожнение, все машины —
+                 95 погрузок (89 + 6), около трёх контейнеров в каждой. 47 — у одной машины («О системе») -->
             <div class="trh-foot">
               <span class="trh-foot__ico">
                 <Icon name="cloud-done" size={17} strokeWidth={2} />
               </span>
-              <span>Видео погрузок за смену: <b>47</b></span>
+              <span>Видео погрузок за смену: <b>285</b></span>
             </div>
           </div>
 
@@ -892,9 +898,10 @@ const MAP =
     white-space: nowrap;
   }
 
+  /* подпись — внизу: сверху слева в маленьком кадре она закрывала угол рамки ИИ и номер на ней */
   .trh-frame__tag {
     left: 6px;
-    top: 6px;
+    bottom: 6px;
   }
 
   .trh-frame__time {
@@ -917,7 +924,7 @@ const MAP =
     object-fit: cover;
   }
 
-  /* мягкое затемнение по краям: под метками кадра — размытые служебные надписи камеры */
+  /* мягкое затемнение сверху и снизу: там размытые служебные надписи камеры (часть закрыта метками кадра) */
   .trh-frame__photo::after {
     content: '';
     position: absolute;
@@ -1049,6 +1056,10 @@ const MAP =
     font-size: 13px;
     color: var(--muted);
     white-space: nowrap;
+  }
+
+  .trh-res__to {
+    display: grid;
   }
 
   .trh-res__st {
@@ -1183,9 +1194,15 @@ const MAP =
      (красная рамка) и видит, что он опорожнён (зелёная); три контейнера площадки проходят через подъёмник
      по одному — номер на рамке и «Погружено» считают 1 → 2 → 3, рамка на каждом счёте отсвечивает;
      3,6 с — «Корректно»; 3,9 с — в итогах дня 88 → 89 и 83 % → 84 %; 4,6–7,5 с — уведомление
-     о несанкционированной погрузке; с 7,7 с всё мягко возвращается к началу.
+     о несанкционированной погрузке; 7,65–7,9 с — итоги, список и кадры гаснут, всё разом встаёт
+     к началу (в 7,97 с, пока их не видно), с 8,1 до 8,55 с они проявляются: обратного хода не видно.
      Без анимации (и при «уменьшить движение») виден итог: погрузка посчитана, уведомление на месте. */
   @media (prefers-reduced-motion: no-preference) {
+    .trh-stats,
+    .trh-main {
+      animation: trh-reset 9s ease infinite both;
+    }
+
     .trh-row {
       animation: trh-shift 9s var(--ease-in-out) infinite both;
     }
@@ -1295,17 +1312,34 @@ const MAP =
     }
   }
 
-  /* строки сдвигаются на одну вниз, когда приходит новая погрузка, и обратно в конце цикла */
+  /* конец цикла: итоги и список с подробностями гаснут, пока их не видно (87,5–90 %), всё в них
+     встаёт к началу одним скачком на 88,5 % — и они проявляются снова */
+  @keyframes trh-reset {
+    0%,
+    85% {
+      opacity: 1;
+    }
+    87.5%,
+    90% {
+      opacity: 0;
+    }
+    95%,
+    100% {
+      opacity: 1;
+    }
+  }
+
+  /* строки сдвигаются на одну вниз, когда приходит новая погрузка; назад — скачком, пока список погас */
   @keyframes trh-shift {
     0%,
     4% {
       transform: translateY(calc(-100% - var(--row-gap)));
     }
     12%,
-    86% {
+    88.49% {
       transform: none;
     }
-    95%,
+    88.5%,
     100% {
       transform: translateY(calc(-100% - var(--row-gap)));
     }
@@ -1317,10 +1351,10 @@ const MAP =
       opacity: 0;
     }
     11%,
-    86% {
+    88.49% {
       opacity: 1;
     }
-    90%,
+    88.5%,
     100% {
       opacity: 0;
     }
@@ -1332,10 +1366,10 @@ const MAP =
       opacity: 1;
     }
     10%,
-    88% {
+    88.49% {
       opacity: 0;
     }
-    95%,
+    88.5%,
     100% {
       opacity: 1;
     }
@@ -1347,10 +1381,10 @@ const MAP =
       opacity: 1;
     }
     41.5%,
-    89% {
+    88.49% {
       opacity: 0;
     }
-    91%,
+    88.5%,
     100% {
       opacity: 1;
     }
@@ -1363,13 +1397,14 @@ const MAP =
       transform: translateY(5px);
     }
     42.5%,
-    88% {
+    88.49% {
       opacity: 1;
       transform: none;
     }
-    90%,
+    88.5%,
     100% {
       opacity: 0;
+      transform: translateY(5px);
     }
   }
 
@@ -1386,10 +1421,10 @@ const MAP =
       opacity: 0.5;
     }
     11%,
-    87% {
+    88.49% {
       opacity: 1;
     }
-    93%,
+    88.5%,
     100% {
       opacity: 0.5;
     }
@@ -1401,10 +1436,10 @@ const MAP =
       opacity: 1;
     }
     16.5%,
-    86% {
+    88.49% {
       opacity: 0;
     }
-    91%,
+    88.5%,
     100% {
       opacity: 1;
     }
@@ -1449,10 +1484,10 @@ const MAP =
       opacity: 0;
     }
     24.5%,
-    85% {
+    88.49% {
       opacity: 1;
     }
-    88%,
+    88.5%,
     100% {
       opacity: 0;
     }
@@ -1489,10 +1524,10 @@ const MAP =
       opacity: 1;
     }
     24%,
-    89.99% {
+    88.49% {
       opacity: 0;
     }
-    90%,
+    88.5%,
     100% {
       opacity: 1;
     }
@@ -1534,16 +1569,16 @@ const MAP =
       opacity: 0;
     }
     36%,
-    89.99% {
+    88.49% {
       opacity: 1;
     }
-    90%,
+    88.5%,
     100% {
       opacity: 0;
     }
   }
 
-  /* итоги дня: прежнее число уходит вверх, новое приходит снизу */
+  /* итоги дня: прежнее число уходит вверх, новое приходит снизу; назад — скачком, пока итоги погасли */
   @keyframes trh-old {
     0%,
     43% {
@@ -1551,11 +1586,11 @@ const MAP =
       transform: none;
     }
     45%,
-    88% {
+    88.49% {
       opacity: 0;
       transform: translateY(-6px);
     }
-    91%,
+    88.5%,
     100% {
       opacity: 1;
       transform: none;
@@ -1569,14 +1604,14 @@ const MAP =
       transform: translateY(6px);
     }
     45.5%,
-    88% {
+    88.49% {
       opacity: 1;
       transform: none;
     }
-    91%,
+    88.5%,
     100% {
       opacity: 0;
-      transform: none;
+      transform: translateY(6px);
     }
   }
 
@@ -1587,10 +1622,10 @@ const MAP =
       transform: scaleX(0.988);
     }
     48%,
-    88% {
+    88.49% {
       transform: none;
     }
-    93%,
+    88.5%,
     100% {
       transform: scaleX(0.988);
     }
@@ -1644,6 +1679,12 @@ const MAP =
       gap: 12px;
     }
 
+    /* кадры здесь крупные, рамка ИИ ниже подписи — подпись снова сверху и закрывает размытую надпись камеры */
+    .trh-frame__tag {
+      top: 6px;
+      bottom: auto;
+    }
+
     .trh-foot {
       padding-bottom: 44px;
     }
@@ -1666,18 +1707,21 @@ const MAP =
     }
   }
 
-  /* ── Карточка уже 600 px (телефон): итоги, три погрузки в две строки и уведомление ── */
+  /* ── Карточка уже 600 px (телефон): итоги, две погрузки (строка в два яруса), кадры ИИ и уведомление ── */
   @container trhw (max-width: 599.98px) {
     .trh-head {
       gap: 10px;
       padding: 14px 14px 0;
     }
 
+    /* заголовок рядом со значком не уже 160 px (две строки), иначе метки встают строкой ниже:
+       при flex: 1 он сжимался до 47–80 px в четыре строки, и метка наезжала на текст */
     .trh-head__title {
-      flex: 1;
+      flex: 1 1 160px;
       min-width: 0;
       font-size: 15.5px;
       line-height: 1.25;
+      text-wrap: balance;
     }
 
     .trh-chips {
@@ -1738,12 +1782,69 @@ const MAP =
       padding: 12px 14px 0;
     }
 
-    .trh-det,
+    /* в списке две погрузки, а не три (красная строка недовывоза остаётся): под списком — кадры ИИ */
+    .trh-row--2,
+    .trh-row--5,
+    .trh-det__head,
     .trh-maptile,
     .trh-kp small,
-    .trh-st small,
-    .trh-row--5 {
+    .trh-st small {
       display: none;
+    }
+
+    /* выбранная погрузка — кадры до и после с рамками ИИ и итог, без своей рамки:
+       адрес и время уже в первой строке списка */
+    .trh-det {
+      gap: 10px;
+      padding: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+    }
+
+    .trh-frames {
+      gap: 8px;
+    }
+
+    /* время есть в строке списка; подпись мельче — так она помещается под рамкой ИИ */
+    .trh-frame__time {
+      display: none;
+    }
+
+    .trh-frame__tag {
+      top: auto;
+      left: 4px;
+      bottom: 3px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      line-height: 1.25;
+    }
+
+    /* итог в одну строку и на телефоне 360 px: без стрелки, мельче */
+    .trh-res {
+      gap: 6px;
+    }
+
+    .trh-res__to {
+      display: none;
+    }
+
+    .trh-count {
+      gap: 6px;
+      height: 30px;
+      padding: 0 10px 0 8px;
+      font-size: 12.5px;
+    }
+
+    .trh-res__plan {
+      font-size: 12px;
+    }
+
+    .trh-pill {
+      height: 28px;
+      padding: 0 10px 0 8px;
+      font-size: 12.5px;
     }
 
     .trh-rows {
@@ -1812,12 +1913,12 @@ const MAP =
       font-size: 12.5px;
     }
 
-    /* уведомление во всю ширину выезжает поверх подписи внизу карточки:
+    /* уведомление выезжает поверх подписи внизу карточки, края — по строкам списка;
        заголовок, место, кнопка — столбиком */
     .trh-alert {
       width: auto;
       max-width: none;
-      margin: -50px 8px 0;
+      margin: -50px 14px 0;
       grid-template-columns: auto minmax(0, 1fr);
       align-items: start;
       gap: 6px 10px;

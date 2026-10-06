@@ -100,12 +100,13 @@ const binBody = (x: number, y: number, color: string) =>
   `<circle cx="${x + 15}" cy="${y + 54}" r="4.6" fill="#26313a"/><circle cx="${x + 43}" cy="${y + 54}" r="4.6" fill="#26313a"/>`;
 
 // ── Кадры с камер «до» и «после» — снимки с прежнего лендинга (служебные надписи размыты, людей нет),
-//    по номерам камер. Спереди и по бокам после погрузки вид тот же, а камера над подъёмником показывает
-//    опустевший контейнер. Миниатюры 320×180: кадр на странице не шире 100 px ──
+//    по номерам камер. Спереди и слева после погрузки вид тот же. Справа — площадка (машина стоит к ней
+//    правым бортом; этот кадр — «Кам. 3 · 08:42» и в «О системе»), над подъёмником — контейнер: «после»
+//    они пустые. Миниатюры 320×180: кадр на странице не шире 100 px ──
 const SHOTS = [
   { before: 'thumb-cam-front', after: 'thumb-cam-front' },
   { before: 'thumb-cam-left', after: 'thumb-cam-left' },
-  { before: 'thumb-cam-right', after: 'thumb-cam-right' },
+  { before: 'thumb-cam-b-before', after: 'thumb-cam-b-after' },
   { before: 'thumb-cam-a-before', after: 'thumb-cam-a-after' },
 ];
 const photo = (name: string) => withBase(`/media/tracker/${name}.webp`);
@@ -241,8 +242,8 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
                           stroke="#0fa86f"
                           stroke-width="2.5"
                         />
-                        <rect x={b.x - 7} y={BIN_Y - 12} width="20" height="19" rx="5" fill="#087a52" />
-                        <text x={b.x + 3} y={BIN_Y + 2.4} text-anchor="middle" font-size="12.5" font-weight="650" fill="#fff">
+                        <rect class="sc-det__tag" x={b.x - 7} y={BIN_Y - 12} width="22" height="21" rx="5" fill="#087a52" />
+                        <text x={b.x + 4} y={BIN_Y + 3.5} text-anchor="middle" font-size="14" font-weight="650" fill="#fff">
                           {k + 1}
                         </text>
                       </g>
@@ -294,12 +295,17 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
                           />
                           <span class="tst-tag tst-tag--state">после</span>
                         </span>
-                        <span class="tst-tag tst-tag--cam">{`Кам.${NB}${k + 1}`}</span>
+                        <span class="tst-tag tst-tag--cam"><span class="tst-tag__k">{`Кам.${NB}`}</span>{k + 1}</span>
                         <span class="tst-shot__flash" />
                       </span>
                     </span>
                   ))
                 }
+                {/* на телефоне «до» и «после» не помещаются на кадрах — одна подпись под ними */}
+                <span class="tst-cap">
+                  <span>до погрузки</span>
+                  <span class="tst-cap__after">после погрузки</span>
+                </span>
               </div>
 
               {/* Шаг 5: видео погрузок летят от камеры над подъёмником в облако, счётчик растёт */}
@@ -333,7 +339,8 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
                 </div>
               </div>
 
-              {/* Шаг 6: итог видеоаналитики — сколько погружено против плана и аномалия за день */}
+              {/* Шаг 6: итог видеоаналитики по площадке — сколько погружено против плана; под карточкой —
+                  отдельное уведомление об аномалии за день: погрузка в другом месте, не на этой площадке */}
               <div class="tst-ai">
                 <div class="tst-ai__in">
                   <p class="tst-ai__head">
@@ -359,11 +366,11 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
                       Корректно
                     </span>
                   </p>
-                  <p class="tst-ai__row tst-ai__row--bad a-in" style="--t:2.9s">
-                    <i class="tst-ai__dot" />
-                    <span>СНТ «Рассвет» — погрузка вне плана</span>
-                  </p>
                 </div>
+                <p class="tst-ai__alert a-in" style="--t:2.9s">
+                  <i class="tst-ai__dot" />
+                  <span>СНТ «Рассвет» — погрузка вне плана</span>
+                </p>
               </div>
             </div>
           </div>
@@ -475,7 +482,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     font-weight: 560;
     line-height: 1.3;
     letter-spacing: -0.012em;
-    text-wrap: pretty;
+    text-wrap: balance;
   }
 
   .tst-step__d {
@@ -495,10 +502,11 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     pointer-events: none;
   }
 
+  /* цвет Tracker, как у полосы пунктов «О системе» и на главной */
   .tst-step__bar i {
     display: block;
     height: 100%;
-    background: var(--blue);
+    background: var(--g-teal);
     transform: scaleX(0);
     transform-origin: left center;
   }
@@ -704,7 +712,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     gap: 6px;
     height: 28px;
     border-radius: 999px;
-    font-size: clamp(11px, 2.05cqw, 13px);
+    font-size: clamp(12px, 2.05cqw, 13px);
     font-weight: 560;
     white-space: nowrap;
   }
@@ -790,7 +798,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     border-radius: 4px;
     background: rgb(29 29 31 / 0.62);
     color: #fff;
-    font-size: clamp(8.5px, 1.6cqw, 10.5px);
+    font-size: clamp(11px, 1.8cqw, 12px);
     font-weight: 500;
     line-height: 1.35;
     white-space: nowrap;
@@ -802,6 +810,11 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
 
   .tst-tag--state {
     bottom: 4px;
+  }
+
+  /* подпись «до/после погрузки» под кадрами — только на телефоне */
+  .tst-cap {
+    display: none;
   }
 
   .tst-shot__flash {
@@ -924,13 +937,16 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     opacity: 0;
   }
 
-  /* Итог видеоаналитики */
+  /* Итог видеоаналитики: карточка площадки и под ней уведомление */
   .tst-ai {
     position: absolute;
     z-index: 3;
     left: var(--pad);
     top: var(--pad);
+    display: grid;
+    gap: 8px;
     width: min(340px, 58cqw);
+    font-size: clamp(12px, 2.1cqw, 13px);
   }
 
   .tst-ai__in {
@@ -942,7 +958,6 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     box-shadow:
       0 0 0 1px rgb(29 29 31 / 0.04),
       0 16px 32px -16px rgb(29 29 31 / 0.45);
-    font-size: clamp(11.5px, 2.1cqw, 13px);
   }
 
   .tst-ai__head {
@@ -970,7 +985,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
 
   .tst-ai__by {
     margin-left: auto;
-    font-size: 0.92em;
+    font-size: 12px;
     color: var(--muted);
     white-space: nowrap;
   }
@@ -1006,15 +1021,25 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     border-radius: 999px;
     background: #e1f5ec;
     color: #087a52;
-    font-size: 0.92em;
+    font-size: 12px;
     font-weight: 600;
     line-height: 1;
     white-space: nowrap;
   }
 
-  .tst-ai__row--bad {
+  /* уведомление в духе оповещения на первом экране: белая плашка с красной обводкой */
+  .tst-ai__alert {
+    justify-self: start;
+    display: flex;
+    align-items: center;
     gap: 9px;
-    background: #fde8ea;
+    min-height: 36px;
+    padding: 7px 13px 7px 12px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(229 72 77 / 0.26),
+      0 14px 28px -14px rgb(29 29 31 / 0.45);
     color: #9e1f30;
     font-weight: 560;
   }
@@ -1429,14 +1454,60 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
       padding: 5px 7px 5px 9px;
     }
 
+    .tst-ai__alert {
+      min-height: 32px;
+      padding: 6px 11px 6px 10px;
+    }
+
     .tst-ai__ico {
       width: 24px;
       height: 24px;
     }
 
-    /* на телефоне цифры в рамках ИИ мельче текста — оставляем одни рамки */
-    .sc-det text {
+    /* на телефоне цифры в рамках ИИ мельче текста — оставляем одни рамки, без плашек номеров */
+    .sc-det text,
+    .sc-det__tag {
       display: none;
+    }
+
+    /* кадр с камеры не шире 105 px: на нём только номер камеры, «до» и «после» — подписью под кадрами */
+    .tst-tag {
+      font-size: 12px;
+    }
+
+    .tst-tag__k,
+    .tst-tag--state {
+      display: none;
+    }
+
+    .tst-cap {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 6px);
+      display: grid;
+    }
+
+    .tst-cap > span {
+      grid-area: 1 / 1;
+      justify-self: start;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgb(29 29 31 / 0.62);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.35;
+      white-space: nowrap;
+      transition: opacity 0.3s;
+    }
+
+    .tst-cap__after,
+    .tst-stage:is([data-s='4'], [data-s='5'], [data-s='6']) .tst-cap > :first-child {
+      opacity: 0;
+    }
+
+    .tst-stage:is([data-s='4'], [data-s='5'], [data-s='6']) .tst-cap__after {
+      opacity: 1;
     }
   }
 
@@ -1572,7 +1643,24 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
       }
     };
 
-    buttons.forEach((btn, k) => btn.addEventListener('click', () => show(k)));
+    // уже 1200 px сцена стоит над списком: шаг, нажатый внизу списка, показывается в сцене под шапкой или
+    // за верхом окна — подтягиваем карточку в окно (отступ под шапку даёт scroll-padding-top у html,
+    // плавность — scroll-behavior: при «уменьшить движение» сразу). Шире сцена рядом со списком.
+    const stacked = window.matchMedia('(max-width: 1199.98px)');
+    const visual = root.querySelector<HTMLElement>('.tst__visual')!;
+    const header = document.querySelector<HTMLElement>('[data-hdr]');
+    const reveal = () => {
+      if (!stacked.matches) return;
+      const top = header ? header.getBoundingClientRect().bottom : 0;
+      if (stage.getBoundingClientRect().top < top) visual.scrollIntoView({ block: 'nearest' });
+    };
+
+    buttons.forEach((btn, k) =>
+      btn.addEventListener('click', () => {
+        show(k);
+        reveal();
+      }),
+    );
     bars.forEach((bar) =>
       bar.addEventListener('animationend', (e) => {
         if (e.target === bar && !reducedMotion()) show(index + 1);

@@ -32,7 +32,7 @@ const RESULTS: Result[] = [
     count: 17,
     value: '17',
     caption: 'Расхождение между плановым и фактическим вывозом контейнеров',
-    note: `Мусоровоз в среднем убирает на 10${NB}контейнеров больше, чем было в плане`,
+    note: `Мусоровоз в среднем убирает на 10${NB}контейнеров больше, чем${NB}было в плане`,
   },
   {
     count: 96.4,
@@ -52,7 +52,7 @@ const RESULTS: Result[] = [
     count: 100,
     value: '100',
     caption: 'Автоматизация фотоотчётов до и после загрузки контейнеров',
-    note: 'Контейнеры фиксируются автоматически, без участия водителя',
+    note: `Контейнеры фиксируются автоматически, без${NB}участия${NB}водителя`,
   },
 ];
 ---
@@ -89,7 +89,7 @@ const RESULTS: Result[] = [
         {
           RESULTS.map((r, i) => (
             <li class:list={['rs__item', { 'rs__item--lead': i === 0 }]} style={`--d:${i + 1}`} data-reveal>
-              <p class="rs__num">{r.prefix}<span data-count={r.count} data-decimals={r.decimals ?? 0}>{r.value}</span>%</p>
+              <p class="rs__num"><span class="rs__num-fix" aria-hidden="true">{r.prefix}<span>{r.value}</span>%</span><span class="rs__num-live">{r.prefix}<span data-count={r.count} data-decimals={r.decimals ?? 0}>{r.value}</span>%</span></p>
               <div class="rs__text">
                 <p class="rs__cap">{r.caption}</p>
                 <p class="rs__note">{r.note}</p>
@@ -215,12 +215,25 @@ const RESULTS: Result[] = [
 
   /* Цифра: Geist 600 с плотной разрядкой, как в «Цифрах» на главной */
   .rs__num {
+    position: relative;
     font-size: var(--rs-num);
     font-weight: 600;
     line-height: 1;
     letter-spacing: -0.05em;
     white-space: nowrap;
     color: var(--ink);
+  }
+
+  /* Ширину числа задаёт невидимое итоговое значение, досчёт идёт поверх него: промежуточные значения
+     то уже, то шире итогового, и без этого текст справа от главной цифры ездил бы по строке */
+  .rs__num-fix {
+    visibility: hidden;
+  }
+
+  .rs__num-live {
+    position: absolute;
+    top: 0;
+    left: 0;
   }
 
   .rs__text {

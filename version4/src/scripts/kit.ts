@@ -66,6 +66,7 @@ export function initAccordions(): void {
     let index = Math.max(0, items.findIndex((it) => it.classList.contains('is-open')));
     let inView = false;
     let hover = false;
+    let hoverPanes = false;
     let focus = false;
     const timer = pausableTimer(() => open(index + 1));
 
@@ -79,7 +80,7 @@ export function initAccordions(): void {
 
     const sync = () => {
       if (!auto) return;
-      if (inView && !hover && !focus) {
+      if (inView && !hover && !hoverPanes && !focus) {
         delete acc.dataset.paused;
         timer.resume();
       } else {
@@ -117,6 +118,17 @@ export function initAccordions(): void {
     });
     acc.addEventListener('pointerleave', () => {
       hover = false;
+      sync();
+    });
+    // наведение на картинку рядом (панели) — тоже пауза: иначе кадр сменится прямо под курсором
+    const panesBox = scope?.querySelector<HTMLElement>('[data-panes]');
+    panesBox?.addEventListener('pointerenter', (e) => {
+      if ((e as PointerEvent).pointerType !== 'mouse') return;
+      hoverPanes = true;
+      sync();
+    });
+    panesBox?.addEventListener('pointerleave', () => {
+      hoverPanes = false;
       sync();
     });
     // пока фокус клавиатуры внутри — тоже пауза, иначе пункт закроется сам

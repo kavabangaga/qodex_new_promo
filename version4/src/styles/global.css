@@ -1026,14 +1026,20 @@ button {
   color: var(--ink);
 }
 
+/* свёрнутый пункт скрыт и от экранного диктора и клавиши Tab — после анимации сворачивания, как у [data-pane] */
 .acc__body {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.5s var(--ease-out);
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.5s var(--ease-out),
+    visibility 0s linear 0.5s;
 }
 
 .acc__item.is-open .acc__body {
   grid-template-rows: 1fr;
+  visibility: visible;
+  transition-delay: 0s;
 }
 
 .acc__inner {

@@ -63,7 +63,7 @@ const docs = [
                       <span class="ftr__ico" aria-hidden="true">
                         <Icon name={PRODUCT_ICON[id]} size={13} strokeWidth={2.2} />
                       </span>
-                      {PRODUCTS[id].name}
+                      <span class="ftr__pname">{PRODUCTS[id].name}</span>
                     </a>
                   </li>
                 ))
@@ -153,6 +153,11 @@ const docs = [
 </footer>
 
 <style>
+  /* название продукта в одну строку: «QODEX Tracker» не рвётся на узких окнах */
+  .ftr__pname {
+    white-space: nowrap;
+  }
+
   .ftr {
     padding: 0 var(--page-pad) var(--page-pad);
   }

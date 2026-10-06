@@ -72,6 +72,7 @@ const POINTS: { icon: IconName; text: string }[] = [
             step="1"
             value="50"
             aria-label="Сравнить кадры до и после погрузки"
+            aria-valuetext="до погрузки 50%, после погрузки 50%"
             data-tph-range
           />
 
@@ -279,6 +280,8 @@ const POINTS: { icon: IconName; text: string }[] = [
      движущиеся слои по скруглению; дуга чуть меньше и суперэллипс не задевает (--rclip). */
   .tph__cmp {
     --p: 50;
+    /* размах подсказки, %: на узком кадре скрипт его уменьшает, чтобы линия не заходила на подписи */
+    --tph-hint: 20;
     --tph-pr: calc(var(--tph-card-r) - var(--tph-card-pad));
     position: relative;
     aspect-ratio: 16 / 9;
@@ -432,6 +435,14 @@ const POINTS: { icon: IconName; text: string }[] = [
       0 6px 18px -6px rgb(29 29 31 / 0.45);
   }
 
+  /* режим высокой контрастности Windows не рисует тени — там фокус показывает обводка */
+  @media (forced-colors: active) {
+    .tph__range:focus-visible ~ .tph__line .tph__knob {
+      outline: 3px solid Highlight;
+      outline-offset: 2px;
+    }
+  }
+
   /* ── Подписи «до» и «после» в верхних углах; гаснут, когда шторка подходит к ним ── */
   .tph__pill {
     position: absolute;
@@ -474,7 +485,8 @@ const POINTS: { icon: IconName; text: string }[] = [
     transition: opacity 0.3s var(--ease-out);
   }
 
-  /* Подсказка при первом появлении: шторка проходит 50 → 30 → 70 → 50 %, — видно, что её можно двигать */
+  /* Подсказка при первом появлении: шторка проходит 50 → 30 → 70 → 50 % (на узком кадре — ближе
+     к середине, не заходя на подписи), — видно, что её можно двигать */
   .tph__cmp.is-hint .tph__after,
   .tph__cmp.is-hint .tph__line {
     animation: tph-hint 1.6s var(--ease-in-out) both;
@@ -489,10 +501,10 @@ const POINTS: { icon: IconName; text: string }[] = [
       transform: translateX(50%);
     }
     30% {
-      transform: translateX(30%);
+      transform: translateX(calc((50 - var(--tph-hint)) * 1%));
     }
     70% {
-      transform: translateX(70%);
+      transform: translateX(calc((50 + var(--tph-hint)) * 1%));
     }
     100% {
       transform: translateX(50%);
@@ -504,10 +516,10 @@ const POINTS: { icon: IconName; text: string }[] = [
       transform: translateX(-50%);
     }
     30% {
-      transform: translateX(-30%);
+      transform: translateX(calc((var(--tph-hint) - 50) * 1%));
     }
     70% {
-      transform: translateX(-70%);
+      transform: translateX(calc((50 + var(--tph-hint)) * -1%));
     }
     100% {
       transform: translateX(-50%);
@@ -619,7 +631,7 @@ const POINTS: { icon: IconName; text: string }[] = [
     }
   }
 
-  /* Телефон: панель шире — до краёв экрана с небольшим полем, кадр во всю её ширину */
+  /* Телефон: панель и плитки под ней шире — до краёв экрана с небольшим полем, кадр во всю ширину панели */
   @media (max-width: 639.98px) {
     .tph {
       --tph-knob: 44px;
@@ -656,6 +668,7 @@ const POINTS: { icon: IconName; text: string }[] = [
     .tph__points {
       --tph-chip: 44px;
       grid-template-columns: minmax(0, 1fr);
+      margin-inline: calc(var(--page-pad) - var(--gutter));
     }
 
     .tph__point {
@@ -704,6 +717,9 @@ const POINTS: { icon: IconName; text: string }[] = [
     // страницы), в них же живёт и всё внутри окна кадра.
     const geo = { w: 1, before: 0, after: 0 };
     const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+    // крайние положения шторки (%), при которых линия не ближе 8 px к подписям
+    const lo = () => ((geo.before + 8) / geo.w) * 100;
+    const hi = () => ((geo.after - 8) / geo.w) * 100;
     const fade = () => {
       const x = (pos / 100) * geo.w;
       pillBefore.style.opacity = String(clamp01((x - geo.before + 16) / 20));
@@ -713,6 +729,9 @@ const POINTS: { icon: IconName; text: string }[] = [
       geo.w = cmp.offsetWidth || 1;
       geo.before = pillBefore.offsetLeft + pillBefore.offsetWidth;
       geo.after = pillAfter.offsetLeft;
+      // подсказка ходит ±20 % от середины; на узком кадре меньше — подписи занимают заметную часть ширины,
+      // а во время подсказки они не гаснут
+      cmp.style.setProperty('--tph-hint', Math.max(0, Math.min(20, 50 - lo(), hi() - 50)).toFixed(2));
       fade();
     };
 
@@ -721,7 +740,10 @@ const POINTS: { icon: IconName; text: string }[] = [
       pos = Math.min(100, Math.max(0, p));
       cmp.classList.toggle('is-glide', glide);
       cmp.style.setProperty('--p', pos.toFixed(2));
-      range.value = String(Math.round(pos));
+      const v = Math.round(pos);
+      range.value = String(v);
+      // диктор читает доли кадров, а не голое «50»
+      range.setAttribute('aria-valuetext', `до погрузки ${v}%, после погрузки ${100 - v}%`);
       fade();
     };
 
@@ -806,9 +828,7 @@ const POINTS: { icon: IconName; text: string }[] = [
     // лучшая точка камеры, но не под подписью: на узком кадре подписи занимают заметную часть ширины
     const startFor = (i: number) => {
       const start = Number(pairs[i]?.dataset.start ?? 50);
-      const min = ((geo.before + 8) / geo.w) * 100;
-      const max = ((geo.after - 8) / geo.w) * 100;
-      return Math.min(max, Math.max(min, start));
+      return Math.min(hi(), Math.max(lo(), start));
     };
 
     // ── Смена камеры: кадры плавно сменяются. Шторку, которую поставил пользователь, не трогаем;
@@ -833,7 +853,8 @@ const POINTS: { icon: IconName; text: string }[] = [
     }
     measure();
 
-    // ── Подсказка: когда окно кадра впервые на экране, шторка один раз проходит 50 → 30 → 70 → 50 % ──
+    // ── Подсказка: когда окно кадра впервые на экране, шторка один раз проходит 50 → 30 → 70 → 50 %
+    // (размах — --tph-hint из measure()) ──
     if (reducedMotion() || !('IntersectionObserver' in window)) return;
     let timer = 0;
     let seen = false;

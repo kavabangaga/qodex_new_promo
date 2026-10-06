@@ -24,8 +24,11 @@ const items: AccItem[] = [
 ];
 
 // ── Демо-данные (общие для страницы и главной: Мусоровоз 07, Маршрут 14, ул. Садовая, 21 — 08:42) ──
+// Кадр, адрес и время погрузки — как в списке на первом экране (THero): Садовая, 21 — 08:42,
+// Лесная, 3 — 08:31 (площадка с полными контейнерами, «Погружено меньше плана»), Школьная, 8 — 08:24.
 const SADOVAYA = `ул.${NB}Садовая,${NB}21`;
 const LESNAYA = `ул.${NB}Лесная,${NB}3`;
+const SHKOLNAYA = `ул.${NB}Школьная,${NB}8`;
 const SNT = `СНТ${NB}«Рассвет»`;
 
 // настоящие кадры камер лежат в public/media/tracker/
@@ -118,10 +121,10 @@ const truckTop =
   `<rect x="213" y="145" width="34" height="8" rx="3" fill="#9fb3c6"/>` +
   `<rect x="202" y="149" width="7" height="4" rx="1.5" fill="#6f7c88"/><rect x="251" y="149" width="7" height="4" rx="1.5" fill="#6f7c88"/>`;
 
-// ── ИИ: крупный кадр боковой камеры — площадка с полными контейнерами (снимок 1200×675) ──
+// ── ИИ: крупный кадр боковой камеры — площадка с полными контейнерами, ул. Лесная, 3 в 08:31 (снимок 1200×675) ──
 // В окне 320×190 виден участок снимка: VIEW — левый край, верх и высота участка в % снимка, ширина —
 // по пропорциям окна. Три ближних контейнера в окне целиком, от дальнего, четвёртого, у верхнего края
-// остаётся полоска — его ИИ не считает. Размытая служебная надпись внизу слева — за нижним краем.
+// остаётся полоска — его ИИ не считает (план 4, факт 3). Размытая служебная надпись внизу слева — за нижним краем.
 const SHOT = { file: 'cam-b-before-1200.webp', w: 1200, h: 675 };
 const VIEW = { x: 31.5, y: 38, h: 54.5 };
 const VIEW_W = (VIEW.h * (SHOT.h / SHOT.w) * 320) / 190;
@@ -182,12 +185,12 @@ const SIG = [5, 9.5, 14].map((r) => {
   return `M${(63 - +d).toFixed(2)} ${(19 - +d).toFixed(2)}A${r} ${r} 0 0 1 ${(63 + +d).toFixed(2)} ${(19 - +d).toFixed(2)}`;
 });
 
-// видео погрузок за смену: первое уже в облаке, два догружаются; превью — кадры камеры над подъёмником
-// (на Садовой — тот же контейнер, что у камеры 4 в первой панели)
+// видео погрузок за смену: первое уже в облаке, два догружаются. Погрузки, время и превью — те же,
+// что в списке на первом экране (на Садовой — контейнер камеры 4 из первой панели после погрузки)
 const UPLOADS = [
-  { place: SADOVAYA, time: '08:42', thumb: 'thumb-cam-a-before.webp' },
-  { place: LESNAYA, time: '08:57', thumb: 'thumb-lift-full.webp', t0: 0.35, t1: 1.6 },
-  { place: SNT, time: '09:14', thumb: 'thumb-lift-tip.webp', t0: 1.0, t1: 2.7 },
+  { place: SHKOLNAYA, time: '08:24', thumb: 'thumb-lift-tip.webp' },
+  { place: LESNAYA, time: '08:31', thumb: 'thumb-cam-b-before.webp', t0: 0.35, t1: 1.6 },
+  { place: SADOVAYA, time: '08:42', thumb: 'thumb-cam-a-after.webp', t0: 1.0, t1: 2.7 },
 ];
 ---
 
@@ -207,7 +210,7 @@ const UPLOADS = [
         </h2>
 
         <p class="tsys__lead" data-reveal style="--d:2">
-          QODEX&nbsp;Tracker — это система, которая использует 4&nbsp;камеры, установленные на мусоровозе, для фиксации
+          QODEX&nbsp;Tracker — это система, которая использует 4&nbsp;камеры, установленные на мусоровозе, для&nbsp;фиксации
           выгрузок.
         </p>
 
@@ -293,7 +296,7 @@ const UPLOADS = [
                           />
                         )}
                         <span class="cf__tag">
-                          Кам.{NB}{c.n} · {c.side}
+                          Кам.{NB}{c.n}<span class="cf__side">{` · ${c.side}`}</span>
                         </span>
                         {c.n === 4 && (
                           <span class="cf__rec">
@@ -320,7 +323,8 @@ const UPLOADS = [
               </div>
             </div>
 
-            {/* 2. ИИ: рамки вокруг контейнеров по одной, счётчик «Погружено», сверка с планом */}
+            {/* 2. ИИ: рамки вокруг контейнеров по одной, счётчик «Погружено», сверка с планом.
+                Кадр — площадка ул. Лесная, 3 (08:31), как в строке первого экрана */}
             <div class="tsp" data-pane>
               <div class="ui tc">
                 <div class="th">
@@ -349,11 +353,11 @@ const UPLOADS = [
                       </span>
                     ))
                   }
-                  <span class="fr__tag">Кам.{NB}3 · 08:42</span>
+                  <span class="fr__tag">Кам.{NB}3 · 08:31</span>
                   <span class="fr__count">
                     <span class="td td--ok"></span>
                     Погружено:
-                    <span class="num">
+                    <span class="tsys__num">
                       <b class="a-blip" style="--t:0s; --dur:0.67s">0</b>
                       <b class="a-blip" style="--t:0.67s; --dur:0.24s">1</b>
                       <b class="a-blip" style="--t:0.91s; --dur:0.24s">2</b>
@@ -363,23 +367,23 @@ const UPLOADS = [
                 </div>
                 <ul class="trs">
                   <li class="tr a-in" style="--t:1.45s">
-                    <span class="td td--ok"></span>
-                    <span class="tr__main">
-                      <b>{SADOVAYA}</b>
-                      <small>план 3 · факт 3 · посчитал ИИ</small>
-                    </span>
-                    <span class="tp tp--ok a-pop" style="--t:1.75s">
-                      <Icon name="check" size={12} strokeWidth={3} />
-                      Корректно
-                    </span>
-                  </li>
-                  <li class="tr a-in" style="--t:1.65s">
                     <span class="td td--bad"></span>
                     <span class="tr__main">
                       <b>{LESNAYA}</b>
-                      <small>план 4 · факт 2</small>
+                      <small>план 4 · факт 3 · посчитал ИИ</small>
                     </span>
-                    <span class="tp tp--bad a-pop" style="--t:1.95s">Погружено меньше плана</span>
+                    <span class="tp tp--bad a-pop" style="--t:1.75s">Погружено меньше плана</span>
+                  </li>
+                  <li class="tr a-in" style="--t:1.65s">
+                    <span class="td td--ok"></span>
+                    <span class="tr__main">
+                      <b>{SADOVAYA}</b>
+                      <small>план 3 · факт 3</small>
+                    </span>
+                    <span class="tp tp--ok a-pop" style="--t:1.95s">
+                      <Icon name="check" size={12} strokeWidth={3} />
+                      Корректно
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -447,7 +451,7 @@ const UPLOADS = [
                   </div>
                   <div class="alert-pos">
                     <div class="ui ui--plain alert">
-                      <b class="alert__title">Несанкционированная погрузка!</b>
+                      <b class="alert__title">Несанкциониро&shy;ванная погрузка!</b>
                       <span class="alert__coords">
                         <small>Координаты</small>
                         <span>54.7432, 55.9671</span>
@@ -505,7 +509,7 @@ const UPLOADS = [
                       <Icon name="cloud-upload" size={20} strokeWidth={1.9} />
                     </span>
                     <span class="cl__txt">
-                      Видео погрузок за смену:{NB}<span class="num">
+                      Видео погрузок за смену:{NB}<span class="tsys__num">
                         <b class="a-blip" style="--t:0s; --dur:1.6s">45</b>
                         <b class="a-blip" style="--t:1.6s; --dur:1.1s">46</b>
                         <b class="a-pop" style="--t:2.7s">47</b>
@@ -791,12 +795,12 @@ const UPLOADS = [
     white-space: nowrap;
   }
 
-  /* числа, которые сменяют друг друга в одной клетке */
-  .num {
+  /* числа, которые сменяют друг друга в одной клетке (не .num: тот в global.css со своим весом и трекингом) */
+  .tsys__num {
     display: inline-grid;
   }
 
-  .num > b {
+  .tsys__num > b {
     grid-area: 1 / 1;
     font-weight: inherit;
     font-variant-numeric: tabular-nums;
@@ -882,7 +886,7 @@ const UPLOADS = [
     border-radius: 4px;
     background: rgb(29 29 31 / 0.62);
     color: #fff;
-    font-size: clamp(9.5px, 2.5cqi, 11px);
+    font-size: 11px;
     font-weight: 500;
     line-height: 1.45;
     white-space: nowrap;
@@ -1217,8 +1221,10 @@ const UPLOADS = [
     right: 2.5%;
   }
 
+  /* колонка не шире карточки: длинное слово заголовка не раздвигает её (перенос — мягким дефисом в разметке) */
   .alert {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(7px, 2cqi, 9px);
     width: 100%;
     padding: clamp(9px, 2.6cqi, 12px);
@@ -1525,40 +1531,41 @@ const UPLOADS = [
   }
 
   /* 1. Камеры по очереди: поле обзора ярче, вспышка, «до»; после погрузки — так же, «после».
-     Круг 10 с, у каждой камеры сдвиг 0,5 с. */
+     Круг 8 с, у каждой камеры сдвиг 0,3 с: камера 4 снимает «после» на 4,4 с, и итог виден
+     ещё 2 с до смены пункта (FeatureAccordion — 6,5 с). */
   .tsp.is-active .cone__hi {
-    animation: ts-cone 10s linear infinite both;
-    animation-delay: calc(var(--k) * 0.5s);
+    animation: ts-cone 8s linear infinite both;
+    animation-delay: calc(var(--k) * 0.3s);
   }
 
   .tsp.is-active .cdot__ring {
-    animation: ts-shot-ring 10s linear infinite both;
-    animation-delay: calc(var(--k) * 0.5s);
+    animation: ts-shot-ring 8s linear infinite both;
+    animation-delay: calc(var(--k) * 0.3s);
   }
 
   .tsp.is-active .cf__flash {
-    animation: ts-flash 10s linear infinite both;
-    animation-delay: calc(var(--k) * 0.5s);
+    animation: ts-flash 8s linear infinite both;
+    animation-delay: calc(var(--k) * 0.3s);
   }
 
   .tsp.is-active .cf__img--before {
-    animation: ts-before 10s linear infinite both;
-    animation-delay: calc(var(--k) * 0.5s);
+    animation: ts-before 8s linear infinite both;
+    animation-delay: calc(var(--k) * 0.3s);
   }
 
   .tsp.is-active .cf__chip--do {
-    animation: ts-do 10s linear infinite both;
-    animation-delay: calc(var(--k) * 0.5s);
+    animation: ts-do 8s linear infinite both;
+    animation-delay: calc(var(--k) * 0.3s);
   }
 
   .tsp.is-active .cf__chip--after {
-    animation: ts-after 10s linear infinite both;
-    animation-delay: calc(var(--k) * 0.5s);
+    animation: ts-after 8s linear infinite both;
+    animation-delay: calc(var(--k) * 0.3s);
   }
 
   .tsp.is-active .cf__rec {
-    animation: ts-rec 10s linear infinite both;
-    animation-delay: calc(var(--k) * 0.5s);
+    animation: ts-rec 8s linear infinite both;
+    animation-delay: calc(var(--k) * 0.3s);
   }
 
   .tsp.is-active .cf__rec i {
@@ -1682,7 +1689,7 @@ const UPLOADS = [
     }
   }
 
-  /* снимки на 0,6 с («до») и 4,4 с («после») от начала круга камеры */
+  /* снимки на 6 % («до», 0,5 с) и 44 % («после», 3,5 с) круга камеры */
   @keyframes ts-cone {
     0%,
     4% {
@@ -1945,9 +1952,32 @@ const UPLOADS = [
     }
   }
 
+  /* ── Картинка уже 450 px: «Погружено меньше плана» рядом с адресом не помещается — плашки статуса
+     во всех строках стоят под текстом ── */
+  @container (max-width: 450px) {
+    .tr {
+      flex-wrap: wrap;
+      gap: 4px 8px;
+    }
+
+    .tr__main {
+      flex-basis: calc(100% - 20px);
+    }
+
+    /* под текстом, а не под точкой: точка 10 px + зазор 8 px */
+    .tr > .tp {
+      margin-left: 18px;
+    }
+  }
+
   /* ── Узкая картинка (телефон): поменьше подписи и отступы ── */
   @container (max-width: 360px) {
     .th__sub {
+      display: none;
+    }
+
+    /* в кадре только номер камеры: сторону показывает схема */
+    .cf__side {
       display: none;
     }
 
@@ -1965,13 +1995,12 @@ const UPLOADS = [
     }
 
     .det i {
-      width: 17px;
-      height: 17px;
-      font-size: 10px;
+      width: 18px;
+      height: 18px;
+      font-size: 11px;
     }
 
     .tr {
-      gap: 8px;
       padding: 8px 9px 8px 10px;
     }
 

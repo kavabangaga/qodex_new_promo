@@ -1,7 +1,7 @@
 ---
 // Раздел страницы «QODEX Tracker» — «Эффект от внедрения» [#effekt]. Бенто на бежевой панели: лавандовая
-// плитка с настоящим кадром задней камеры над подъёмником (контейнеры по одному проходят через подъёмник,
-// ИИ обводит каждый рамкой и считает: «Погружено: 3» — демо-данные) и пять белых плиток с эффектами.
+// плитка с настоящим кадром задней камеры над подъёмником (ИИ обводит поднятый контейнер рамкой и считает
+// погрузку: «Погружено: 3» — демо-данные) и пять белых плиток с эффектами.
 // Ниже — широкая плитка о связке с QODEX TONN (тексты — из «Единого баланса» на главной) с рисунком «100 → 60».
 import SectionIntro from '../../components/SectionIntro.astro';
 import ProductLabel from '../../components/ProductLabel.astro';
@@ -19,8 +19,9 @@ const EFFECTS: { text: string; icon: IconName }[] = [
 ];
 
 // ── Кадры задней камеры над подъёмником: настоящие, служебные надписи размыты, людей нет ──
-// Контейнер с коробками поднят на подъёмнике — и он же опрокинут в бункер. Три контейнера площадки
-// ул. Садовая, 21 (план 3) проходят по одному: между ними на миг виден второй кадр.
+// Контейнер с коробками поднят на подъёмнике — и он же опрокинут в бункер. Площадка — ул. Школьная, 8
+// с первого экрана (тот же бак в строке 08:24): план 3, два контейнера уже погружены, в кадре третий.
+// Бак на кадрах один — и погрузка одна: к полному контейнеру сцена не возвращается.
 // Ширина кадра на странице — до 532 px, на телефоне около 300.
 const photo = (name: string, w: number) => withBase(`/media/tracker/${name}-${w}.webp`);
 const srcset = (name: string) => `${photo(name, 720)} 720w, ${photo(name, 1200)} 1200w`;
@@ -58,24 +59,18 @@ const SHOTS = [
               ))
             }
             {/* рамка распознавания с номером погрузки — вокруг контейнера на подъёмнике */}
-            {
-              [1, 2, 3].map((k) => (
-                <span class:list={['ef-cam__det', `ef-cam__det--${k}`]}>
-                  <i>{k}</i>
-                </span>
-              ))
-            }
-            <span class="ef-cam__tag">Кам. 4 · 08:43</span>
+            <span class="ef-cam__det"><i>3</i></span>
+            <span class="ef-cam__tag">Кам. 4 · 08:24</span>
             <span class="ef-cam__count">
               <span class="ef-cam__dot" />
               Погружено:
-              <span class="ef-cam__num"><b>0</b><b>1</b><b>2</b><b>3</b></span>
+              <span class="ef-cam__num"><b>2</b><b>3</b></span>
             </span>
           </div>
           <div class="ef-cam__row">
             <span class="ef-cam__place">
-              <b>ул. Садовая, 21</b>
-              <small>ID КП 3298 · план 3</small>
+              <b>ул. Школьная, 8</b>
+              <small>ID КП 9345 · план 3</small>
             </span>
             <span class="ef-cam__ok">
               <Icon name="check" size={12} strokeWidth={3} />
@@ -183,14 +178,13 @@ const SHOTS = [
   }
 
   /* ── Кадр камеры на лавандовой подложке ─────────────────── */
-  /* сверху место под метку «демо-данные» */
+  /* сверху место под метку «демо-данные», снизу поле такое же: карточка стоит посередине плитки */
   .ef__vis {
     --gv-r: var(--r-lg);
     grid-column: span 2;
     grid-row: span 2;
     min-height: 0;
-    padding: clamp(46px, calc(var(--vw) * 3.4), 52px) clamp(16px, calc(var(--vw) * 3), 48px)
-      clamp(18px, calc(var(--vw) * 1.8), 28px);
+    padding: clamp(46px, calc(var(--vw) * 3.4), 52px) clamp(16px, calc(var(--vw) * 3), 48px);
   }
 
   .ef__demo {
@@ -230,13 +224,14 @@ const SHOTS = [
     object-fit: cover;
   }
 
-  /* контейнер опрокинут в бункер — виден только между погрузками */
+  /* контейнер опрокинут в бункер — проявляется в конце сцены */
   .ef-cam__photo--tip {
     opacity: 0;
   }
 
-  /* рамка распознавания: место контейнера измерено по кадру 1200 × 675 (x 421–797, y 140–446); обводка —
-     внутренней тенью: рамку border при дробном масштабе экрана Safari не рисует */
+  /* рамка распознавания: место контейнера измерено по кадру 1200 × 675 (x 421–797, y 140–446); цвета —
+     как у рамок ИИ в «О системе». Обводка — внутренней тенью: рамку border при дробном масштабе экрана
+     Safari не рисует */
   .ef-cam__det {
     position: absolute;
     z-index: 1;
@@ -244,9 +239,9 @@ const SHOTS = [
     top: 20.74%;
     width: 31.33%;
     height: 45.33%;
-    border-radius: 10px;
-    background: rgb(107 177 255 / 0.12);
-    box-shadow: inset 0 0 0 2px #6bb1ff;
+    border-radius: 8px;
+    background: rgb(79 155 255 / 0.12);
+    box-shadow: inset 0 0 0 2px #4f9bff;
   }
 
   .ef-cam__det i {
@@ -257,9 +252,9 @@ const SHOTS = [
     place-items: center;
     width: 22px;
     height: 22px;
-    border-radius: 8px 0 8px 0;
-    background: #6bb1ff;
-    color: var(--ink);
+    border-radius: 6px 0 6px 0;
+    background: #1d6ae0;
+    color: #fff;
     font-size: 12px;
     font-style: normal;
     font-weight: 600;
@@ -365,17 +360,12 @@ const SHOTS = [
     white-space: nowrap;
   }
 
-  /* Движение — когда кадр на экране: контейнер на подъёмнике, ИИ обводит его рамкой, счётчик растёт;
-     контейнер опрокидывается в бункер (второй кадр), на подъёмнике следующий — и так три погрузки
-     (1 → 2 → 3), затем статус «Корректно» (план 3, факт 3). За экраном кадр возвращается в начало.
-     Классы is-armed и is-live ставит скрипт; без них (нет скриптов, «уменьшить движение») сразу видно
-     итоговое состояние. */
-  .ef-cam__det--1,
-  .ef-cam__det--2 {
-    opacity: 0;
-  }
-
-  .ef__vis.is-armed:not(.is-live) .ef-cam__det--3,
+  /* Движение — когда кадр на экране: на подъёмнике третий контейнер площадки (погружено уже 2), ИИ обводит
+     его рамкой, счёт 2 → 3; контейнер опрокидывается в бункер, сцена остаётся на этом кадре, затем статус
+     «Корректно» (план 3, факт 3). За экраном кадр возвращается в начало. Классы is-armed и is-live ставит
+     скрипт; без них (нет скриптов, «уменьшить движение») сразу видно итоговое состояние: контейнер в рамке,
+     «Погружено: 3», «Корректно». */
+  .ef__vis.is-armed:not(.is-live) .ef-cam__det,
   .ef__vis.is-armed:not(.is-live) .ef-cam__num > b:last-child,
   .ef__vis.is-armed:not(.is-live) .ef-cam__ok {
     opacity: 0;
@@ -385,64 +375,41 @@ const SHOTS = [
     opacity: 1;
   }
 
-  /* Расписание (с), погрузка — каждые 1,9: рамки — в 0,95, 2,85 и 4,75, счёт — на 0,1 позже;
-     контейнер опрокидывается 1,75–2,8 и 3,65–4,7; «Корректно» — в 5,3 */
-  .ef__vis.is-live .ef-cam__det--1 {
-    animation: ef-det-pass 1.05s var(--ease-out) 0.95s both;
-  }
-
-  .ef__vis.is-live .ef-cam__det--2 {
-    animation: ef-det-pass 1.05s var(--ease-out) 2.85s both;
-  }
-
-  .ef__vis.is-live .ef-cam__det--3 {
-    animation: ef-det 0.35s var(--ease-out) 4.75s both;
+  /* Расписание (с): рамка — в 0,95, счёт — в 1,05; контейнер опрокидывается 2,2–2,55, рамка гаснет вместе
+     с ним; «Корректно» — в 2,85 */
+  .ef__vis.is-live .ef-cam__det {
+    animation: ef-det-pass 1.6s var(--ease-out) 0.95s both;
   }
 
   .ef__vis.is-live .ef-cam__photo--tip {
-    animation: ef-tip 1.9s var(--ease-in-out) 1.75s 2 both;
+    animation: ef-tip 0.35s var(--ease-in-out) 2.2s both;
   }
 
-  .ef__vis.is-live .ef-cam__num > b:nth-child(1) {
+  .ef__vis.is-live .ef-cam__num > b:first-child {
     animation: ef-hold 1.05s linear both;
   }
 
-  .ef__vis.is-live .ef-cam__num > b:nth-child(2) {
-    animation: ef-tick 1.9s linear 1.05s both;
+  .ef__vis.is-live .ef-cam__num > b:last-child {
+    animation: ef-in 0.3s var(--ease-out) 1.05s both;
   }
 
-  .ef__vis.is-live .ef-cam__num > b:nth-child(3) {
-    animation: ef-tick 1.9s linear 2.95s both;
-  }
-
-  .ef__vis.is-live .ef-cam__num > b:nth-child(4) {
-    animation: ef-in 0.3s var(--ease-out) 4.85s both;
-  }
-
-  /* счётчик чуть вздрагивает на каждой погрузке */
+  /* счётчик чуть вздрагивает, когда растёт */
   .ef__vis.is-live .ef-cam__count {
-    animation: ef-bump 5.2s linear both;
+    animation: ef-bump 0.32s linear 0.89s both;
   }
 
   .ef__vis.is-live .ef-cam__ok {
-    animation: ef-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 5.3s both;
+    animation: ef-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 2.85s both;
   }
 
-  @keyframes ef-det {
-    from {
-      opacity: 0;
-      transform: scale(1.1);
-    }
-  }
-
-  /* рамка ложится на контейнер, держится, пока ИИ его считает, и гаснет, когда контейнер опрокидывают */
+  /* рамка ложится на контейнер (0,35 с), держится, пока ИИ его считает, и гаснет, когда контейнер опрокидывают */
   @keyframes ef-det-pass {
     0% {
       opacity: 0;
       transform: scale(1.1);
     }
-    33%,
-    76% {
+    22%,
+    78% {
       opacity: 1;
       transform: none;
     }
@@ -452,15 +419,9 @@ const SHOTS = [
     }
   }
 
-  /* кадр «контейнер опрокинут» проявляется поверх и уходит (0,3 + 0,45 + 0,3 с), дальше — следующий контейнер */
+  /* кадр «контейнер опрокинут» проявляется поверх и остаётся */
   @keyframes ef-tip {
-    0%,
-    55.3%,
-    100% {
-      opacity: 0;
-    }
-    15.8%,
-    39.5% {
+    to {
       opacity: 1;
     }
   }
@@ -475,21 +436,6 @@ const SHOTS = [
     }
   }
 
-  @keyframes ef-tick {
-    0% {
-      opacity: 0;
-      transform: translateY(45%);
-    }
-    12%,
-    96% {
-      opacity: 1;
-      transform: none;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
-
   @keyframes ef-in {
     from {
       opacity: 0;
@@ -497,21 +443,8 @@ const SHOTS = [
     }
   }
 
-  /* толчки — вместе со счётом: 1,05, 2,95 и 4,85 с из 5,2 */
   @keyframes ef-bump {
-    0%,
-    17%,
-    23%,
-    54%,
-    60%,
-    90%,
-    96%,
-    100% {
-      transform: none;
-    }
-    20%,
-    57%,
-    93% {
+    50% {
       transform: scale(1.08);
     }
   }
@@ -703,24 +636,27 @@ const SHOTS = [
     transition: opacity 0.5s ease 1.1s;
   }
 
-  /* ── Планшет: два столбца, кадр во всю ширину ────────────── */
+  /* ── Планшет: кадр во всю ширину, под ним плитки рядами 3 + 2 ── */
   @media (max-width: 1199.98px) {
     .ef {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       grid-auto-rows: auto;
     }
 
+    /* поле сверху: метка «демо-данные» и зазор до белого ореола карточки */
     .ef__vis {
       grid-column: 1 / -1;
       grid-row: auto;
+      padding-top: 60px;
     }
 
     .ef__tile {
+      grid-column: span 2;
       min-height: 172px;
     }
 
-    .ef__tile:last-child {
-      grid-column: 1 / -1;
+    .ef__tile:nth-last-child(-n + 2) {
+      grid-column: span 3;
     }
   }
 
@@ -738,6 +674,15 @@ const SHOTS = [
   @media (max-width: 699.98px) {
     .ef {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ef__vis {
+      padding-bottom: 18px;
+    }
+
+    .ef__tile,
+    .ef__tile:nth-last-child(-n + 2) {
+      grid-column: auto;
     }
 
     .ef__tile {
@@ -768,8 +713,7 @@ const SHOTS = [
 
     .ef-cam__tag {
       right: 8px;
-      bottom: 11px;
-      font-size: 11px;
+      bottom: 10px;
     }
 
     .ef-cam__count {
@@ -780,9 +724,8 @@ const SHOTS = [
     }
 
     .ef-cam__det i {
-      width: 18px;
-      height: 18px;
-      font-size: 11px;
+      width: 20px;
+      height: 20px;
     }
 
     .ef__next {
@@ -822,7 +765,7 @@ const SHOTS = [
 <script>
   import { reducedMotion } from '../../scripts/motion';
 
-  // Кадр камеры: три погрузки подряд, когда кадр на экране; за экраном сцена возвращается в начало.
+  // Кадр камеры: погрузка третьего контейнера, когда кадр на экране; за экраном сцена возвращается в начало.
   // Начинается, только когда оба кадра загружены и готовы к показу: иначе второй кадр проявится с задержкой.
   // Рисунок «100 → 60»: полосы вырастают один раз. При «уменьшить движение» классы не ставятся —
   // видно итоговое состояние.
