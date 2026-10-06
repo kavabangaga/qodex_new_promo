@@ -1,10 +1,9 @@
 ---
 // Раздел 2 страницы «QODEX Tracker» [#video] — видео о продукте (3:01), как продуктовое видео у Calendly:
-// плеер — скруглённая карточка с белой полупрозрачной рамкой на градиенте dusk.
+// плеер — скруглённая карточка с мягкой тенью прямо на фоне страницы (градиентную подложку заказчик убрал).
 // Сначала только обложка и кнопка воспроизведения: файл видео (21 МБ) не грузится, пока его не включили.
 // По нажатию обложка сменяется плеером <video> того же размера (без скачка раскладки), фокус — на нём.
 import SectionIntro from '../../components/SectionIntro.astro';
-import GradientVisual from '../../components/GradientVisual.astro';
 import Icon from '../../components/Icon.astro';
 import { withBase } from '../../config/site';
 
@@ -20,10 +19,6 @@ const POSTER_SM = withBase('/media/tracker/poster-800.webp');
     </SectionIntro>
 
     <div class="tvd" data-reveal style="--d:2">
-      <!-- подложка — отдельным слоем под плеером: GradientVisual скрыт от скринридера целиком,
-           а кнопка воспроизведения должна оставаться доступной -->
-      <GradientVisual preset="dusk" deco="none" class="tvd__bg" />
-
       <div class="tvd__player" data-tvd>
         <button class="tvd__facade" type="button" aria-label="Смотреть видео о QODEX Tracker, 3 минуты" data-tvd-play>
           <picture>
@@ -44,15 +39,26 @@ const POSTER_SM = withBase('/media/tracker/poster-800.webp');
             />
           </picture>
           <span class="tvd__scrim" aria-hidden="true"></span>
+          <!-- плашка в левом нижнем углу: там на обложке пустой асфальт, выноски с камерами и мусоровоз открыты -->
           <span class="tvd__play" aria-hidden="true">
-            <Icon name="play" size={40} strokeWidth={1.5} />
+            <span class="tvd__play-ico"><Icon name="play" size={40} strokeWidth={1.5} /></span>
+            <span class="tvd__play-text">Смотреть видео</span>
+            <span class="tvd__time">3:01</span>
           </span>
-          <span class="tvd__time" aria-hidden="true">3:01</span>
         </button>
 
         <!-- плеер вставляется по нажатию; содержимое <template> браузер не загружает -->
         <template data-tvd-tpl>
-          <video class="tvd__video" src={VIDEO} poster={POSTER} controls playsinline preload="metadata" autoplay></video>
+          <video
+            class="tvd__video"
+            src={VIDEO}
+            poster={POSTER}
+            aria-label="Видео о QODEX Tracker"
+            controls
+            playsinline
+            preload="metadata"
+            autoplay
+          ></video>
         </template>
 
         <p class="tvd__error" data-tvd-error hidden>
@@ -65,30 +71,17 @@ const POSTER_SM = withBase('/media/tracker/poster-800.webp');
 </section>
 
 <style>
-  /* рамка обрезает тень плеера по своему скруглению: на узком экране поля тонкие, и тень вылезала бы на фон */
+  /* плеер прямо на фоне страницы, без подложки; ширина — как была внутри прежней рамки */
   .tvd {
-    --tvd-pad: clamp(12px, calc(var(--vw) * 4.4), 76px);
-    --tvd-frame-r: clamp(28px, calc(var(--vw) * 3.4), 48px);
-    --tvd-r: clamp(12px, calc(var(--vw) * 1.5), 24px);
-    --tvd-play: clamp(72px, calc(var(--vw) * 6), 104px);
+    --tvd-r: clamp(16px, calc(var(--vw) * 2.2), 34px);
+    --tvd-inset: clamp(10px, calc(var(--vw) * 1.4), 24px);
+    --tvd-ico: clamp(30px, calc(var(--vw) * 4), 46px);
     position: relative;
-    padding: var(--tvd-pad);
-    overflow: hidden;
-    isolation: isolate;
-    border-radius: calc(var(--tvd-frame-r) * var(--rk));
-    corner-shape: var(--corner);
+    max-width: 1080px;
+    margin-inline: auto;
   }
 
-  /* градиент — во всю рамку, под плеером; скругление то же, что у рамки */
-  .tvd__bg {
-    --gv-r: var(--tvd-frame-r);
-    position: absolute;
-    inset: 0;
-    min-height: 0;
-    padding: 0;
-  }
-
-  /* ── Плеер: 16:9, скруглённая карточка с белой полупрозрачной рамкой (как .ui) ── */
+  /* ── Плеер: 16:9, скруглённая карточка с мягкой тенью ── */
   .tvd__player {
     position: relative;
     aspect-ratio: 16 / 9;
@@ -98,8 +91,8 @@ const POSTER_SM = withBase('/media/tracker/poster-800.webp');
     corner-shape: var(--corner);
     background: #16171a;
     box-shadow:
-      0 0 0 8px rgb(255 255 255 / 0.4),
-      var(--shadow-card);
+      0 1px 2px rgb(29 29 31 / 0.06),
+      0 28px 60px -30px rgb(29 29 31 / 0.45);
   }
 
   /* обложка и плеер занимают одну и ту же рамку */
@@ -132,6 +125,17 @@ const POSTER_SM = withBase('/media/tracker/poster-800.webp');
     object-fit: contain;
   }
 
+  /* видео в фокусе — кольцо вокруг плеера: у самого видео его обрезает скругление рамки,
+     а внутри кадра низ кольца закрыла бы панель управления */
+  .tvd__video:focus-visible {
+    outline: none;
+  }
+
+  .tvd__player:has(.tvd__video:focus-visible) {
+    outline: 3px solid var(--blue);
+    outline-offset: 2px;
+  }
+
   /* при наведении обложка мягко темнеет */
   .tvd__scrim {
     position: absolute;
@@ -141,44 +145,53 @@ const POSTER_SM = withBase('/media/tracker/poster-800.webp');
     transition: opacity 0.35s ease;
   }
 
-  /* круглая белая кнопка по центру; белое кольцо — как рамка у карточек интерфейса */
+  /* белая плашка «▶ Смотреть видео | 3:01», как кнопка видео на первом экране;
+     белое кольцо — как рамка у карточек интерфейса */
   .tvd__play {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    display: grid;
-    place-items: center;
-    width: var(--tvd-play);
-    height: var(--tvd-play);
-    margin: calc(var(--tvd-play) / -2) 0 0 calc(var(--tvd-play) / -2);
-    border-radius: 50%;
+    left: var(--tvd-inset);
+    bottom: var(--tvd-inset);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 20px 5px 5px;
+    border-radius: 999px;
     background: #fff;
     color: var(--ink);
+    font-size: 16px;
+    font-weight: 560;
+    line-height: 1;
+    white-space: nowrap;
     box-shadow:
-      0 0 0 10px rgb(255 255 255 / 0.32),
-      0 18px 44px -14px rgb(29 29 31 / 0.55);
+      0 0 0 6px rgb(255 255 255 / 0.32),
+      0 14px 32px -12px rgb(29 29 31 / 0.55);
+    transform-origin: 0 100%;
     transition: transform 0.45s var(--ease-out);
   }
 
+  .tvd__play-ico {
+    display: grid;
+    place-items: center;
+    width: var(--tvd-ico);
+    height: var(--tvd-ico);
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+  }
+
   /* значок Icon — контур; здесь он залит, треугольник чуть сдвинут вправо: так он выглядит по центру */
-  .tvd__play :global(svg) {
-    width: 38%;
-    height: 38%;
+  .tvd__play-ico :global(svg) {
+    width: 40%;
+    height: 40%;
     fill: currentColor;
     translate: 7% 0;
   }
 
   .tvd__time {
-    position: absolute;
-    right: clamp(10px, calc(var(--vw) * 1.1), 18px);
-    bottom: clamp(10px, calc(var(--vw) * 1.1), 18px);
-    padding: 6px 11px;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.92);
-    color: var(--ink);
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1;
+    padding-left: 12px;
+    border-left: 1px solid var(--line-2);
+    color: var(--muted);
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
   }
 
@@ -189,10 +202,10 @@ const POSTER_SM = withBase('/media/tracker/poster-800.webp');
 
   .tvd__facade:hover .tvd__play,
   .tvd__facade:focus-visible .tvd__play {
-    transform: scale(1.07);
+    transform: scale(1.04);
   }
 
-  /* фокус с клавиатуры — кольцо вокруг кнопки (рамку плеера обрезает скругление) */
+  /* фокус с клавиатуры — кольцо вокруг плашки (рамку плеера обрезает скругление) */
   .tvd__facade:focus-visible {
     outline: none;
   }
@@ -238,23 +251,31 @@ const POSTER_SM = withBase('/media/tracker/poster-800.webp');
     }
   }
 
-  /* ── Телефон: рамка тоньше, кольца меньше ─────────────── */
+  /* ── Телефон: кольцо у плашки меньше, на ней только значок и время —
+     с надписью она заходила бы на мусоровоз ── */
   @media (max-width: 639.98px) {
-    .tvd__player {
-      box-shadow:
-        0 0 0 5px rgb(255 255 255 / 0.4),
-        var(--shadow-card);
+    .tvd {
+      --tvd-ico: 28px;
     }
 
     .tvd__play {
+      gap: 7px;
+      padding: 3px 11px 3px 3px;
+      font-size: 13px;
       box-shadow:
-        0 0 0 7px rgb(255 255 255 / 0.32),
-        0 14px 32px -12px rgb(29 29 31 / 0.55);
+        0 0 0 3px rgb(255 255 255 / 0.32),
+        0 12px 26px -12px rgb(29 29 31 / 0.55);
+    }
+
+    .tvd__play-text {
+      display: none;
     }
 
     .tvd__time {
-      padding: 5px 9px;
-      font-size: 12.5px;
+      padding-left: 0;
+      border-left: 0;
+      color: var(--ink);
+      font-weight: 600;
     }
   }
 </style>
