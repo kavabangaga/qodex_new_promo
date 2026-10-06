@@ -162,40 +162,58 @@ const nb = (t: string) =>
   const qText = (d: HTMLDetailsElement) =>
     d.querySelector('.faq__qt')?.textContent?.replace(/\u00a0/g, ' ').trim();
 
-  items.forEach((d) => {
-    const summary = d.querySelector('summary')!;
-    const body = d.querySelector<HTMLElement>('.faq__a')!;
-    let anim: Animation | null = null;
+  // Открыт только один вопрос: при открытии следующего предыдущий сворачивается
+  const anims = new Map<HTMLDetailsElement, Animation>();
+  const bodyOf = (d: HTMLDetailsElement) => d.querySelector<HTMLElement>('.faq__a')!;
 
-    summary.addEventListener('click', (e) => {
-      if (reducedMotion()) {
-        if (!d.open) goal('faq_open', { question: qText(d) });
-        return;
-      }
+  const open = (d: HTMLDetailsElement) => {
+    anims.get(d)?.cancel();
+    d.open = true;
+    goal('faq_open', { question: qText(d) });
+    if (reducedMotion()) return;
+    const body = bodyOf(d);
+    anims.set(
+      d,
+      body.animate(
+        [
+          { height: '0px', opacity: 0 },
+          { height: `${body.scrollHeight}px`, opacity: 1 },
+        ],
+        { duration: 420, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+      ),
+    );
+  };
+
+  const close = (d: HTMLDetailsElement) => {
+    anims.get(d)?.cancel();
+    if (reducedMotion()) {
+      d.open = false;
+      return;
+    }
+    const body = bodyOf(d);
+    const anim = body.animate(
+      [
+        { height: `${body.scrollHeight}px`, opacity: 1 },
+        { height: '0px', opacity: 0 },
+      ],
+      { duration: 280, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' },
+    );
+    anim.onfinish = () => (d.open = false);
+    anims.set(d, anim);
+  };
+
+  const openOnly = (d: HTMLDetailsElement) => {
+    items.forEach((other) => {
+      if (other !== d && other.open) close(other);
+    });
+    if (!d.open) open(d);
+  };
+
+  items.forEach((d) => {
+    d.querySelector('summary')!.addEventListener('click', (e) => {
       e.preventDefault();
-      anim?.cancel();
-      if (!d.open) {
-        d.open = true;
-        goal('faq_open', { question: qText(d) });
-        const h = body.scrollHeight;
-        anim = body.animate(
-          [
-            { height: '0px', opacity: 0 },
-            { height: `${h}px`, opacity: 1 },
-          ],
-          { duration: 420, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
-        );
-      } else {
-        const h = body.scrollHeight;
-        anim = body.animate(
-          [
-            { height: `${h}px`, opacity: 1 },
-            { height: '0px', opacity: 0 },
-          ],
-          { duration: 280, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' },
-        );
-        anim.onfinish = () => (d.open = false);
-      }
+      if (d.open) close(d);
+      else openOnly(d);
     });
   });
 
@@ -203,8 +221,7 @@ const nb = (t: string) =>
   const openById = (id: string) => {
     const d = document.getElementById(id);
     if (!(d instanceof HTMLDetailsElement) || !items.includes(d) || d.open) return;
-    d.open = true;
-    goal('faq_open', { question: qText(d) });
+    openOnly(d);
   };
 
   document.addEventListener('click', (e) => {
