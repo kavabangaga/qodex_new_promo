@@ -4,11 +4,14 @@
 // с полосой прогресса, сноска и кнопка; справа большая градиентная карточка — у каждого пункта своя
 // иллюстрация: мусоровоз сверху с четырьмя камерами → ИИ считает контейнеры → оповещение о погрузке
 // вне маршрута → видео погрузок уходят в облако.
+// В кадрах камер — настоящие снимки с прежнего лендинга (людей нет, служебные надписи размыты), данные
+// вокруг них — демо. Мусоровоз сверху, карта и машина сбоку нарисованы.
 // Тексты — с лендинга tracker.qodex.tech дословно. Картинку описывают пункты рядом, поэтому для
 // скринридера она скрыта (aria-hidden ставит GradientVisual).
 import GradientVisual from '../../components/GradientVisual.astro';
 import FeatureAccordion, { type AccItem } from '../../components/FeatureAccordion.astro';
 import Icon from '../../components/Icon.astro';
+import { withBase } from '../../config/site';
 
 const NB = String.fromCharCode(160);
 
@@ -25,61 +28,8 @@ const SADOVAYA = `ул.${NB}Садовая,${NB}21`;
 const LESNAYA = `ул.${NB}Лесная,${NB}3`;
 const SNT = `СНТ${NB}«Рассвет»`;
 
-// Мусорный контейнер (как в Shot.astro): x, y — левый верх, w — ширина
-function bin(x: number, y: number, w: number, color: string, full = false): string {
-  const s = w / 40;
-  const bags = full
-    ? '<ellipse cx="13" cy="7" rx="9" ry="6" fill="#4d5a66"/><ellipse cx="26" cy="6" rx="10" ry="7" fill="#6b7884"/><ellipse cx="20" cy="4" rx="6" ry="4" fill="#3e4954"/>'
-    : '';
-  const lid = full
-    ? '<rect x="2" y="2" width="36" height="5" rx="2" fill="#2b3a33" transform="rotate(-24 2 7)"/>'
-    : '<rect x="1" y="5" width="38" height="6" rx="2" fill="#2b3a33" fill-opacity=".55"/>';
-  return `<g transform="translate(${x} ${y}) scale(${s})">${bags}<path d="M3.5 10h33l-3 28a3 3 0 0 1-3 2.7H9.5a3 3 0 0 1-3-2.7Z" fill="${color}"/>${lid}<path d="M13 16v17M20 16v17M27 16v17" stroke="#000" stroke-opacity=".14" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="43" r="3.2" fill="#26313a"/><circle cx="29" cy="43" r="3.2" fill="#26313a"/></g>`;
-}
-
-// ── Кадры четырёх камер (рисунки 160×100, не фото): full — контейнеры полные, «до» погрузки ──
-// спереди: дорога, площадка у обочины справа, внизу капот
-const front = (full: boolean) =>
-  `<rect width="160" height="100" fill="#dbe5eb"/>` +
-  `<circle cx="22" cy="36" r="9" fill="#b9cbc0"/><path d="M34 42V32l10-8 10 8v10Z" fill="#c4ced6"/>` +
-  `<rect y="42" width="160" height="58" fill="#c6d1cc"/><path d="M66 42h28l50 58H16Z" fill="#b3bfc7"/>` +
-  `<path d="M80 47v5M80 58v7M80 72v9" stroke="#d6dde2" stroke-width="2.2" stroke-linecap="round"/>` +
-  `<rect x="102" y="46" width="52" height="11" rx="2" fill="#c5cdd3"/>` +
-  bin(106, 32, 20, '#3f8a6c', full) +
-  bin(130, 32, 20, '#4a76ad', full) +
-  `<path d="M0 89c38-6 122-6 160 0v11H0Z" fill="#57636e"/>`;
-
-// слева: другая сторона улицы — дом, деревья, забор (до и после погрузки одинаково)
-const left =
-  `<rect width="160" height="100" fill="#dbe5eb"/>` +
-  `<circle cx="30" cy="38" r="11" fill="#c3d3c8"/>` +
-  `<path d="M64 56V33l22-16 22 16v23Z" fill="#c4ced6"/>` +
-  `<path d="M60 35 86 16l26 19" fill="none" stroke="#9eacb8" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>` +
-  `<rect x="78" y="35" width="15" height="11" rx="1.5" fill="#a9bccb"/>` +
-  `<circle cx="132" cy="33" r="14" fill="#b9cbc0"/><rect x="130" y="44" width="4" height="12" fill="#8d9aa3"/>` +
-  `<rect y="50" width="160" height="8" fill="#c8d3da"/>` +
-  `<path d="M0 50h160M14 50v8M34 50v8M54 50v8M74 50v8M94 50v8M114 50v8M134 50v8M154 50v8" stroke="#b5c1c9" stroke-width="1.5"/>` +
-  `<rect y="58" width="160" height="42" fill="#b3bfc7"/>` +
-  `<path d="M8 80h16M40 80h16M72 80h16M104 80h16M136 80h16" stroke="#d3dade" stroke-width="2.4" stroke-linecap="round"/>`;
-
-// справа: контейнерная площадка под навесом
-const site = (full: boolean) =>
-  `<rect width="160" height="100" fill="#dbe5eb"/>` +
-  `<rect x="14" y="26" width="132" height="34" fill="#cdd8d2"/><path d="M8 27h144l-7-9H15Z" fill="#9fb0a6"/>` +
-  `<path d="M16 27v33M144 27v33" stroke="#8d9aa3" stroke-width="3"/>` +
-  `<rect y="58" width="160" height="42" fill="#b3bfc7"/><rect x="16" y="62" width="128" height="22" rx="3" fill="#c5cdd3"/>` +
-  bin(30, 38, 28, '#3f8a6c', full) +
-  bin(66, 38, 28, '#3f8a6c', full) +
-  bin(102, 38, 28, '#4a76ad', full);
-
-// сзади: камера над подъёмником — контейнер у бункера, по краям борта мусоровоза
-const rear = (full: boolean) =>
-  `<rect width="160" height="100" fill="#b3bfc7"/><rect width="160" height="30" fill="#c8d3da"/>` +
-  `<path d="M0 30h160M22 0v30M62 0v30M102 0v30M142 0v30" stroke="#b5c1c9" stroke-width="1.5"/>` +
-  bin(122, 12, 22, '#4a76ad', full) +
-  bin(58, 34, 44, '#3f8a6c', full) +
-  `<path d="M0 100V56l22 12v32Z" fill="#7d8a95"/><path d="M160 100V56l-22 12v32Z" fill="#7d8a95"/>` +
-  `<rect x="22" y="88" width="116" height="12" fill="#57636e"/>`;
+// настоящие кадры камер лежат в public/media/tracker/
+const media = (file: string) => withBase(`/media/tracker/${file}`);
 
 // ── Схема 460×420: мусоровоз сверху, четыре камеры, их поля обзора и кадры ──
 const SW = 460;
@@ -88,11 +38,71 @@ const FW = 150;
 const FH = 94;
 const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
 
-const CAMS = [
-  { n: 1, side: 'спереди', x: 155, y: 8, dot: [230, 140], cone: 'M230 140 162 102H298Z', scene: front },
-  { n: 2, side: 'слева', x: 10, y: 163, dot: [206, 210], cone: 'M206 210 160 170V250Z', scene: null },
-  { n: 3, side: 'справа', x: 300, y: 163, dot: [254, 210], cone: 'M254 210 300 170V250Z', scene: site },
-  { n: 4, side: 'сзади', x: 155, y: 318, dot: [230, 279], cone: 'M230 279 162 318H298Z', scene: rear },
+// Кадры камер: спереди — улица по ходу машины, слева и справа — обочины (справа контейнер у забора),
+// сзади — камера над подъёмником. Задняя снимает контейнер до и после погрузки: кадр «до» лежит сверху
+// и гаснет во вспышке. У остальных кадр один — меняются только вспышка и плашка «до/после».
+// Кадры маленькие (до 150 px), поэтому хватает файлов шириной около 320 px. pos — какая часть широкого кадра видна.
+interface Cam {
+  n: number;
+  side: string;
+  x: number;
+  y: number;
+  dot: [number, number];
+  cone: string;
+  img: string;
+  w: number;
+  h: number;
+  pos?: string;
+  before?: string;
+}
+
+const CAMS: Cam[] = [
+  {
+    n: 1,
+    side: 'спереди',
+    x: 155,
+    y: 8,
+    dot: [230, 140],
+    cone: 'M230 140 162 102H298Z',
+    img: 'cam-front.webp',
+    w: 418,
+    h: 176,
+    pos: '28% 50%',
+  },
+  {
+    n: 2,
+    side: 'слева',
+    x: 10,
+    y: 163,
+    dot: [206, 210],
+    cone: 'M206 210 160 170V250Z',
+    img: 'cam-left.webp',
+    w: 316,
+    h: 177,
+  },
+  {
+    n: 3,
+    side: 'справа',
+    x: 300,
+    y: 163,
+    dot: [254, 210],
+    cone: 'M254 210 300 170V250Z',
+    img: 'cam-right.webp',
+    w: 313,
+    h: 177,
+  },
+  {
+    n: 4,
+    side: 'сзади',
+    x: 155,
+    y: 318,
+    dot: [230, 279],
+    cone: 'M230 279 162 318H298Z',
+    img: 'thumb-cam-a-after.webp',
+    w: 320,
+    h: 180,
+    before: 'thumb-cam-a-before.webp',
+  },
 ];
 
 // мусоровоз сверху: кабина спереди (вверху), кузов, задний борт с подъёмником
@@ -108,18 +118,32 @@ const truckTop =
   `<rect x="213" y="145" width="34" height="8" rx="3" fill="#9fb3c6"/>` +
   `<rect x="202" y="149" width="7" height="4" rx="1.5" fill="#6f7c88"/><rect x="251" y="149" width="7" height="4" rx="1.5" fill="#6f7c88"/>`;
 
-// ── ИИ: крупный кадр камеры справа — три контейнера под навесом (320×190) ──
-const yard =
-  `<rect width="320" height="190" fill="#dde7ed"/>` +
-  `<rect x="36" y="44" width="248" height="78" fill="#cdd8d2"/><path d="M22 46h276l-13-17H35Z" fill="#9fb0a6"/>` +
-  `<path d="M40 46v86M280 46v86" stroke="#8d9aa3" stroke-width="5"/>` +
-  `<rect y="120" width="320" height="70" fill="#b6c2ca"/><rect x="44" y="126" width="232" height="20" rx="3" fill="#c6ced4"/>` +
-  bin(66, 80, 50, '#3f8a6c', true) +
-  bin(135, 80, 50, '#3f8a6c', true) +
-  bin(204, 80, 50, '#4a76ad', true);
+// ── ИИ: крупный кадр боковой камеры — площадка с полными контейнерами (снимок 1200×675) ──
+// В окне 320×190 виден участок снимка: VIEW — левый край, верх и высота участка в % снимка, ширина —
+// по пропорциям окна. Три ближних контейнера в окне целиком, от дальнего, четвёртого, у верхнего края
+// остаётся полоска — его ИИ не считает. Размытая служебная надпись внизу слева — за нижним краем.
+const SHOT = { file: 'cam-b-before-1200.webp', w: 1200, h: 675 };
+const VIEW = { x: 31.5, y: 38, h: 54.5 };
+const VIEW_W = (VIEW.h * (SHOT.h / SHOT.w) * 320) / 190;
+const fx = (v: number) => `${v.toFixed(3)}%`;
+const SHOT_STYLE =
+  `width:${fx(10000 / VIEW_W)}; height:${fx(10000 / VIEW.h)}; ` +
+  `left:${fx((-VIEW.x * 100) / VIEW_W)}; top:${fx((-VIEW.y * 100) / VIEW.h)}`;
 
-// рамки распознавания: левый край каждой — в долях кадра
-const DETS = [62, 131, 200].map((x) => pct(x, 320));
+// рамки распознавания от ближнего контейнера к дальнему: x1, y1, x2, y2 в % снимка (замерены по кадру);
+// ближний уходит за нижний край окна — рамка кончается у края, отступив на 0,6 %, и её линия видна целиком
+const DETS = [
+  [48, 65.5, 75, 100],
+  [60, 50, 79, 70],
+  [66.5, 40.8, 81, 53],
+].map(([x1, y1, x2, y2]) => {
+  const top = Math.max(y1, VIEW.y + 0.6);
+  const bottom = Math.min(y2, VIEW.y + VIEW.h - 0.6);
+  return (
+    `left:${fx(((x1 - VIEW.x) / VIEW_W) * 100)}; top:${fx(((top - VIEW.y) / VIEW.h) * 100)}; ` +
+    `width:${fx(((x2 - x1) / VIEW_W) * 100)}; height:${fx(((bottom - top) / VIEW.h) * 100)}`
+  );
+});
 
 // ── Оповещение: карта 440×280 — маршрут идёт по верхней улице, машина сворачивает в СНТ ──
 const MW = 440;
@@ -158,11 +182,12 @@ const SIG = [5, 9.5, 14].map((r) => {
   return `M${(63 - +d).toFixed(2)} ${(19 - +d).toFixed(2)}A${r} ${r} 0 0 1 ${(63 + +d).toFixed(2)} ${(19 - +d).toFixed(2)}`;
 });
 
-// видео погрузок за смену: первое уже в облаке, два догружаются
+// видео погрузок за смену: первое уже в облаке, два догружаются; превью — кадры камеры над подъёмником
+// (на Садовой — тот же контейнер, что у камеры 4 в первой панели)
 const UPLOADS = [
-  { place: SADOVAYA, time: '08:42', full: false },
-  { place: LESNAYA, time: '08:57', full: false, t0: 0.35, t1: 1.6 },
-  { place: SNT, time: '09:14', full: true, t0: 1.0, t1: 2.7 },
+  { place: SADOVAYA, time: '08:42', thumb: 'thumb-cam-a-before.webp' },
+  { place: LESNAYA, time: '08:57', thumb: 'thumb-lift-full.webp', t0: 0.35, t1: 1.6 },
+  { place: SNT, time: '09:14', thumb: 'thumb-lift-tip.webp', t0: 1.0, t1: 2.7 },
 ];
 ---
 
@@ -244,18 +269,27 @@ const UPLOADS = [
                         class="cf"
                         style={`--k:${k}; left:${pct(c.x, SW)}; top:${pct(c.y, SH)}; width:${pct(FW, SW)}; height:${pct(FH, SH)}`}
                       >
-                        <svg
+                        <img
                           class="cf__img"
-                          viewBox="0 0 160 100"
-                          preserveAspectRatio="xMidYMid slice"
-                          set:html={c.scene ? c.scene(false) : left}
+                          src={media(c.img)}
+                          width={c.w}
+                          height={c.h}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          draggable="false"
+                          style={c.pos ? `object-position:${c.pos}` : undefined}
                         />
-                        {c.scene && (
-                          <svg
+                        {c.before && (
+                          <img
                             class="cf__img cf__img--before"
-                            viewBox="0 0 160 100"
-                            preserveAspectRatio="xMidYMid slice"
-                            set:html={c.scene(true)}
+                            src={media(c.before)}
+                            width={c.w}
+                            height={c.h}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            draggable="false"
                           />
                         )}
                         <span class="cf__tag">
@@ -293,14 +327,24 @@ const UPLOADS = [
                   <span class="th__title th__title--sm">Контроль качества погрузки мусора</span>
                 </div>
                 <div class="fr">
-                  <svg class="fr__img" viewBox="0 0 320 190" preserveAspectRatio="xMidYMid slice" set:html={yard} />
+                  <img
+                    class="fr__img"
+                    src={media(SHOT.file)}
+                    width={SHOT.w}
+                    height={SHOT.h}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                    style={SHOT_STYLE}
+                  />
                   <span class="scan">
                     <b></b>
                     <i></i>
                   </span>
                   {
-                    DETS.map((x, k) => (
-                      <span class="det a-pop" style={`left:${x}; --t:${(0.67 + k * 0.24).toFixed(2)}s`}>
+                    DETS.map((box, k) => (
+                      <span class="det a-pop" style={`${box}; --t:${(0.67 + k * 0.24).toFixed(2)}s`}>
                         <i>{k + 1}</i>
                       </span>
                     ))
@@ -473,7 +517,15 @@ const UPLOADS = [
                       UPLOADS.map((u) => (
                         <li class="up">
                           <span class="up__thumb">
-                            <svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" set:html={site(u.full)} />
+                            <img
+                              src={media(u.thumb)}
+                              width="320"
+                              height="180"
+                              alt=""
+                              loading="lazy"
+                              decoding="async"
+                              draggable="false"
+                            />
                           </span>
                           <span class="up__main">
                             <b>{u.place}</b>
@@ -815,6 +867,7 @@ const UPLOADS = [
     inset: 0;
     width: 100%;
     height: 100%;
+    object-fit: cover;
   }
 
   /* без анимации видно итоговое состояние: кадры «после» */
@@ -925,16 +978,19 @@ const UPLOADS = [
     isolation: isolate;
   }
 
+  /* снимок крупнее окна: виден его участок с контейнерами (размер и сдвиг — в разметке) */
   .fr__img {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    max-width: none;
+    object-fit: cover;
   }
 
+  /* левая треть кадра свободна от рамок: сверху счётчик, внизу подпись камеры */
   .fr__tag {
     position: absolute;
     z-index: 3;
     left: 8px;
-    top: 8px;
+    bottom: 8px;
   }
 
   /* проход ИИ по кадру: линия с мягким следом */
@@ -964,22 +1020,20 @@ const UPLOADS = [
     background: rgb(79 155 255 / 0.16);
   }
 
-  /* рамки распознавания вокруг контейнеров */
+  /* рамки распознавания вокруг контейнеров (место и размер — в разметке). Линия — внутренней тенью:
+     border и outline WebKit при дробном масштабе экрана (Windows 145 %) у этих рамок не рисует */
   .det {
     position: absolute;
     z-index: 2;
-    top: 32.6%;
-    width: 18.1%;
-    height: 41%;
-    border: 2px solid #4f9bff;
     border-radius: 8px;
     background: rgb(79 155 255 / 0.12);
+    box-shadow: inset 0 0 0 2px #4f9bff;
   }
 
   .det i {
     position: absolute;
-    top: -2px;
-    left: -2px;
+    top: 0;
+    left: 0;
     display: grid;
     place-items: center;
     width: 20px;
@@ -996,7 +1050,7 @@ const UPLOADS = [
     position: absolute;
     z-index: 3;
     left: 10px;
-    bottom: 10px;
+    top: 10px;
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -1341,17 +1395,19 @@ const UPLOADS = [
     background: var(--u-row);
   }
 
+  /* превью — кадр из видео: крупнее значка, чтобы контейнер было видно; строка от этого не выше */
   .up__thumb {
-    width: clamp(40px, 11cqi, 50px);
-    aspect-ratio: 16 / 10;
+    width: clamp(48px, 14cqi, 64px);
+    aspect-ratio: 16 / 9;
     overflow: hidden;
     border-radius: 6px;
     background: #dbe5eb;
   }
 
-  .up__thumb svg {
+  .up__thumb img {
     width: 100%;
     height: 100%;
+    object-fit: cover;
   }
 
   .up__main {
@@ -1897,12 +1953,12 @@ const UPLOADS = [
 
     .fr__tag {
       left: 6px;
-      top: 6px;
+      bottom: 6px;
     }
 
     .fr__count {
       left: 6px;
-      bottom: 6px;
+      top: 6px;
       gap: 5px;
       padding: 4px 9px 4px 7px;
       font-size: 12.5px;

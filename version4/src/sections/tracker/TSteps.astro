@@ -6,9 +6,11 @@
 // аномалию. Слева шесть шагов с полосой прогресса: шаги идут сами, пока сцена на экране; нажатый шаг
 // сразу показывается в сцене. Сцену скринридер не читает (aria-hidden ставит GradientVisual) — смысл
 // несёт список. Без анимации («уменьшить движение») сцена показывает итог выбранного шага.
+// Кадры «до» и «после», что всплывают над машиной, — настоящие снимки камер с прежнего лендинга.
 import SectionIntro from '../../components/SectionIntro.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
 import Icon from '../../components/Icon.astro';
+import { withBase } from '../../config/site';
 
 const NB = String.fromCharCode(160); // неразрывный пробел
 
@@ -72,12 +74,13 @@ const TRUCK =
 
 const WHEELS = [94, 146, 306];
 
-// Четыре камеры слева направо: над подъёмником, на крыше кузова, на крыше кабины, над лобовым стеклом
+// Четыре камеры слева направо: над подъёмником, на крыше кузова, на крыше кабины, над лобовым стеклом.
+// n — номер камеры, как на всей странице: 1 спереди, 2 слева, 3 справа, 4 сзади (над подъёмником)
 const CAMS = [
-  { x: 10, y: 6 },
-  { x: 150, y: 0 },
-  { x: 268, y: 26 },
-  { x: 334, y: 38 },
+  { x: 10, y: 6, n: 4 },
+  { x: 150, y: 0, n: 3 },
+  { x: 268, y: 26, n: 2 },
+  { x: 334, y: 38, n: 1 },
 ];
 
 // Контейнеры на площадке: два зелёных и синий — его поднимает подъёмник. x — левый край, BIN_Y — верх
@@ -96,31 +99,19 @@ const binBody = (x: number, y: number, color: string) =>
   `<path d="M${x + 20} ${y + 15}v27M${x + 29} ${y + 15}v27M${x + 38} ${y + 15}v27" stroke="#000" stroke-opacity=".14" stroke-width="2.4" stroke-linecap="round"/>` +
   `<circle cx="${x + 15}" cy="${y + 54}" r="4.6" fill="#26313a"/><circle cx="${x + 43}" cy="${y + 54}" r="4.6" fill="#26313a"/>`;
 
-// ── Кадры с камер «до» и «после» — те же рисунки площадки, что в макете Tracker на главной
-//    (в маленьком кадре обрезаны по контейнерам: viewBox 22 30 116 72.5) ──
-function camBin(x: number, y: number, w: number, color: string, full: boolean): string {
-  const s = w / 40;
-  const bags = full
-    ? '<ellipse cx="13" cy="7" rx="9" ry="6" fill="#4d5a66"/><ellipse cx="26" cy="6" rx="10" ry="7" fill="#6b7884"/><ellipse cx="20" cy="4" rx="6" ry="4" fill="#3e4954"/>'
-    : '';
-  const lid = full
-    ? '<rect x="2" y="2" width="36" height="5" rx="2" fill="#2b3a33" transform="rotate(-24 2 7)"/>'
-    : '<rect x="1" y="5" width="38" height="6" rx="2" fill="#2b3a33" fill-opacity=".55"/>';
-  return `<g transform="translate(${x} ${y}) scale(${s})">${bags}<path d="M3.5 10h33l-3 28a3 3 0 0 1-3 2.7H9.5a3 3 0 0 1-3-2.7Z" fill="${color}"/>${lid}<path d="M13 16v17M20 16v17M27 16v17" stroke="#000" stroke-opacity=".14" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="43" r="3.2" fill="#26313a"/><circle cx="29" cy="43" r="3.2" fill="#26313a"/></g>`;
-}
+// ── Кадры с камер «до» и «после» — снимки с прежнего лендинга (служебные надписи размыты, людей нет),
+//    по номерам камер. Спереди и по бокам после погрузки вид тот же, а камера над подъёмником показывает
+//    опустевший контейнер. Миниатюры 320×180: кадр на странице не шире 100 px ──
+const SHOTS = [
+  { before: 'thumb-cam-front', after: 'thumb-cam-front' },
+  { before: 'thumb-cam-left', after: 'thumb-cam-left' },
+  { before: 'thumb-cam-right', after: 'thumb-cam-right' },
+  { before: 'thumb-cam-a-before', after: 'thumb-cam-a-after' },
+];
+const photo = (name: string) => withBase(`/media/tracker/${name}.webp`);
 
-const camSite = (full: boolean) =>
-  `<rect width="160" height="100" fill="#dbe5eb"/><rect y="30" width="160" height="26" fill="#c8d3da"/>` +
-  `<path d="M0 36h160M8 30v26M40 30v26M72 30v26M104 30v26M136 30v26" stroke="#b5c1c9" stroke-width="1.5"/>` +
-  `<rect y="56" width="160" height="44" fill="#b3bfc7"/><rect x="16" y="62" width="128" height="24" rx="3" fill="#c5cdd3"/>` +
-  camBin(28, 38, 30, '#3f8a6c', full) +
-  camBin(65, 38, 30, '#3f8a6c', full) +
-  camBin(102, 38, 30, '#4a76ad', full);
-
-const SITE_FULL = camSite(true);
-const SITE_EMPTY = camSite(false);
-
-// Вспышки камер и кадры: вспышка — снимок сделан, следом всплывает кадр
+// Вспышки камер и кадры: вспышка — снимок сделан, следом всплывает кадр этой камеры.
+// Кадры идут по номерам, поэтому вспышки бегут от кабины к подъёмнику
 const flashAt = (k: number) => (0.35 + k * 0.45).toFixed(2);
 const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
 ---
@@ -188,9 +179,9 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
                       ))
                     }
                     {
-                      CAMS.map((c, k) => (
+                      CAMS.map((c) => (
                         <g transform={`translate(${c.x} ${c.y})`}>
-                          <circle class="sc-flash" r="24" style={`--t:${flashAt(k)}s`} />
+                          <circle class="sc-flash" r="24" style={`--t:${flashAt(c.n - 1)}s`} />
                           <circle r="6.5" fill="#fff" stroke="#8d9aa5" stroke-width="1.5" />
                           <circle r="3.4" fill="#006bff" />
                         </g>
@@ -275,25 +266,31 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
                 </span>
               </div>
 
-              {/* Шаги 2–4: кадры с четырёх камер — «до», затем «после» */}
+              {/* Шаги 2–4: кадры с четырёх камер — «до», затем «после» (сцена скрыта от скринридера, alt пустой) */}
               <div class="tst-shots">
                 {
-                  [0, 1, 2, 3].map((k) => (
+                  SHOTS.map((s, k) => (
                     <span class="tst-shot" style={`--t:${shotAt(k)}s`}>
                       <span class="tst-shot__pop">
-                        <svg
-                          viewBox="22 30 116 72.5"
-                          preserveAspectRatio="xMidYMid slice"
-                          class:list={{ 'is-flip': k > 1 }}
-                          set:html={SITE_FULL}
+                        <img
+                          src={photo(s.before)}
+                          width="320"
+                          height="180"
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          draggable="false"
                         />
                         <span class="tst-tag tst-tag--state">до</span>
                         <span class="tst-shot__after">
-                          <svg
-                            viewBox="22 30 116 72.5"
-                            preserveAspectRatio="xMidYMid slice"
-                            class:list={{ 'is-flip': k > 1 }}
-                            set:html={SITE_EMPTY}
+                          <img
+                            src={photo(s.after)}
+                            width="320"
+                            height="180"
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            draggable="false"
                           />
                           <span class="tst-tag tst-tag--state">после</span>
                         </span>
@@ -759,24 +756,26 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   }
 
   .tst-shot__pop {
+    --r: 8px;
     position: relative;
     display: block;
     height: 100%;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: var(--r);
     background: #dbe5eb;
     box-shadow:
       0 0 0 2px #fff,
       0 10px 20px -12px rgb(29 29 31 / 0.5);
   }
 
-  .tst-shot svg {
+  /* снимок камеры заполняет кадр без растяжения: края 16:9 чуть обрезаны до 16:10.
+     Свой радиус у снимка и вспышки — на случай, если слой с анимацией прозрачности выйдет из-под обрезки */
+  .tst-shot img {
+    display: block;
     width: 100%;
     height: 100%;
-  }
-
-  .tst-shot svg.is-flip {
-    transform: scaleX(-1);
+    object-fit: cover;
+    border-radius: var(--r);
   }
 
   .tst-shot__after {
@@ -808,6 +807,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   .tst-shot__flash {
     position: absolute;
     inset: 0;
+    border-radius: var(--r);
     background: #fff;
     opacity: 0;
   }
@@ -1063,8 +1063,9 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     animation-delay: var(--t);
   }
 
+  /* белеет только в момент снимка: до своей очереди кадр «до» виден целиком */
   .is-run:is([data-s='2'], [data-s='4']) .tst-shot__flash {
-    animation: algo-shot-flash 0.5s ease-out both;
+    animation: algo-shot-flash 0.5s ease-out;
     animation-delay: var(--t);
   }
 

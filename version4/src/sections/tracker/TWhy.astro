@@ -4,8 +4,10 @@
 // каждой — маленький рисунок в стиле иллюстраций главной (демо-данные): обращение приходит на телефон,
 // неплановый рейс уходит с маршрута, сколько контейнеров на площадке — неизвестно. Рисунок
 // «проигрывается» один раз, когда карточка на экране. Ниже — вывод на графитовой полосе и кнопка заявки.
+// На экране телефона — настоящий кадр площадки с прежнего лендинга; два других рисунка нарисованы.
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon from '../../components/Icon.astro';
+import { withBase } from '../../config/site';
 
 const NB = ' ';
 
@@ -16,29 +18,20 @@ const PROBLEMS = [
   'Контейнеров не хватает или наоборот слишком много — никто точно не знает',
 ] as const;
 
-// Мусорный контейнер — тот же рисунок, что в иллюстрациях главной (Shot.astro): x, y — левый верх, w — ширина
-function bin(x: number, y: number, w: number, color: string, full = false): string {
+// Пустой мусорный контейнер — тот же рисунок, что в иллюстрациях главной (Shot.astro): x, y — левый верх, w — ширина
+function bin(x: number, y: number, w: number, color: string): string {
   const s = w / 40;
-  const bags = full
-    ? '<ellipse cx="13" cy="7" rx="9" ry="6" fill="#4d5a66"/><ellipse cx="26" cy="6" rx="10" ry="7" fill="#6b7884"/><ellipse cx="20" cy="4" rx="6" ry="4" fill="#3e4954"/>'
-    : '';
-  const lid = full
-    ? '<rect x="2" y="2" width="36" height="5" rx="2" fill="#2b3a33" transform="rotate(-24 2 7)"/>'
-    : '<rect x="1" y="5" width="38" height="6" rx="2" fill="#2b3a33" fill-opacity=".55"/>';
-  return `<g transform="translate(${x} ${y}) scale(${s})">${bags}<path d="M3.5 10h33l-3 28a3 3 0 0 1-3 2.7H9.5a3 3 0 0 1-3-2.7Z" fill="${color}"/>${lid}<path d="M13 16v17M20 16v17M27 16v17" stroke="#000" stroke-opacity=".14" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="43" r="3.2" fill="#26313a"/><circle cx="29" cy="43" r="3.2" fill="#26313a"/></g>`;
+  return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M3.5 10h33l-3 28a3 3 0 0 1-3 2.7H9.5a3 3 0 0 1-3-2.7Z" fill="${color}"/><rect x="1" y="5" width="38" height="6" rx="2" fill="#2b3a33" fill-opacity=".55"/><path d="M13 16v17M20 16v17M27 16v17" stroke="#000" stroke-opacity=".14" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="43" r="3.2" fill="#26313a"/><circle cx="29" cy="43" r="3.2" fill="#26313a"/></g>`;
 }
 
-// 1. Снимок площадки на экране телефона: контейнеры переполнены, мешки рядом; кадр блёклый, как с телефона
-const phonePhoto =
-  `<rect width="120" height="224" fill="#dde6ec"/><rect y="66" width="120" height="46" fill="#c9d4db"/>` +
-  `<path d="M0 72h120M12 66v46M36 66v46M60 66v46M84 66v46M108 66v46" stroke="#b8c4cc" stroke-width="1.5"/>` +
-  `<rect y="112" width="120" height="112" fill="#b6c2ca"/><rect x="6" y="128" width="108" height="42" rx="4" fill="#c3cbd1"/>` +
-  bin(10, 100, 46, '#3f8a6c', true) +
-  bin(62, 100, 46, '#4a76ad', true) +
-  `<ellipse cx="104" cy="164" rx="10" ry="7" fill="#5b6873"/><ellipse cx="93" cy="170" rx="8" ry="6" fill="#6b7884"/>` +
-  `<ellipse cx="15" cy="167" rx="9" ry="6" fill="#4d5a66"/>` +
-  `<rect width="120" height="224" fill="#fff" fill-opacity=".16"/>` +
-  `<path d="M8 92v-9h9M112 92v-9h-9M8 172v9h9M112 172v9h-9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+// 1. Снимок на экране телефона — кадр боковой камеры мусоровоза: площадка, контейнеры полны мешков
+//    (служебные надписи на кадре размыты). На экран помещается около трети кадра по ширине, поэтому sizes —
+//    ширина всего кадра на странице (~400 px), а не экрана (120 px). Поверх — уголки видоискателя, как
+//    в камере телефона: между обращением и краем рисунка (на телефоне экран виден до y = 180)
+const SHOT = withBase('/media/tracker/cam-b-before-720.webp');
+const SHOT_SET = `${SHOT} 720w, ${withBase('/media/tracker/cam-b-before-1200.webp')} 1200w`;
+const finder =
+  `<path d="M8 92v-9h9M112 92v-9h-9M8 163v9h9M112 163v9h-9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
 
 // 2. Карта: дороги через 114 по горизонтали (x = 56 + 114k) и на y = 58 и 150, между ними кварталы.
 //    Рисуется и далеко за краями сцены — до краёв карточки любой ширины. Возле маршрута кварталы
@@ -94,7 +87,19 @@ const yard =
           <span class="tw__stage">
             <span class="tw__phone">
               <span class="tw__screen">
-                <svg viewBox="0 0 120 224" set:html={phonePhoto} />
+                <img
+                  class="tw__shot"
+                  src={SHOT}
+                  srcset={SHOT_SET}
+                  sizes="400px"
+                  width="720"
+                  height="405"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  draggable="false"
+                />
+                <svg class="tw__finder" viewBox="0 0 120 224" set:html={finder} />
                 <span class="tw__flash"></span>
               </span>
               <span class="tw__island"></span>
@@ -285,9 +290,24 @@ const yard =
     background: #dde6ec;
   }
 
-  .tw__screen svg {
+  /* кадр 16:9 закрывает экран по высоте и поднят на 30 px (низ экрана всё равно за краем рисунка):
+     так мешки в переднем контейнере видны целиком; по ширине контейнер посередине экрана */
+  .tw__shot {
+    position: absolute;
+    left: 0;
+    top: -30px;
     width: 100%;
     height: 100%;
+    object-fit: cover;
+    object-position: 66% 0;
+  }
+
+  .tw__finder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 1.5px rgb(0 0 0 / 0.4));
   }
 
   .tw__island {

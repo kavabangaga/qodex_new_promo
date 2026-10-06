@@ -1,13 +1,13 @@
 ---
 // Раздел страницы «QODEX Tracker» — «Эффект от внедрения» [#effekt]. Бенто на бежевой панели: лавандовая
-// плитка с кадром камеры над подъёмником (контейнеры по одному проходят через подъёмник, ИИ обводит каждый
-// рамкой и считает: «Погружено: 3» — демо-данные) и пять белых плиток с эффектами. Ниже — широкая плитка
-// о связке с QODEX TONN (тексты — из «Единого баланса» на главной) с рисунком «100 → 60».
+// плитка с настоящим кадром задней камеры над подъёмником (контейнеры по одному проходят через подъёмник,
+// ИИ обводит каждый рамкой и считает: «Погружено: 3» — демо-данные) и пять белых плиток с эффектами.
+// Ниже — широкая плитка о связке с QODEX TONN (тексты — из «Единого баланса» на главной) с рисунком «100 → 60».
 import SectionIntro from '../../components/SectionIntro.astro';
 import ProductLabel from '../../components/ProductLabel.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
-import { productHref } from '../../config/site';
+import { productHref, withBase } from '../../config/site';
 
 // Пять эффектов — с лендинга, дословно
 const EFFECTS: { text: string; icon: IconName }[] = [
@@ -18,40 +18,16 @@ const EFFECTS: { text: string; icon: IconName }[] = [
   { text: 'Цифровая доказательная база для тарифного комитета', icon: 'file-check' },
 ];
 
-// ── Кадр камеры над подъёмником (рисунок, не фото; цвета — как у кадров на главной) ──
-// Фон: грунт за машиной, газон, боковые рычаги подъёмника с цепями
-const back =
-  `<rect width="320" height="180" fill="#dbe3e8"/>` +
-  `<path d="M0 0h116c-10 46-22 104-36 180H0Z" fill="#ccd8d1"/>` +
-  `<path d="M210 0h110v180h-72c-12-76-24-134-38-180Z" fill="#ccd8d1"/>` +
-  `<path d="M140 0h40l18 180h-76Z" fill="#e2e8ec"/>` +
-  `<path d="M0 22l36 9 18 149H0Z" fill="#8995a0"/><path d="M36 31l12 3 18 146H54Z" fill="#aab5be"/>` +
-  `<path d="M320 22l-36 9-18 149h54Z" fill="#8995a0"/><path d="M284 31l-12 3-18 146h12Z" fill="#aab5be"/>` +
-  `<path d="M15 38l9 116M305 38l-9 116" stroke="#5f6b76" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 7"/>`;
-
-// Передний план: край приёмного бункера и гребёнка захвата — погруженный контейнер уходит под них
-const front =
-  `<path d="M0 148h320v32H0Z" fill="#7a8792"/><path d="M0 148h320v5H0Z" fill="#9aa6b0"/>` +
-  `<rect x="98" y="139" width="124" height="16" rx="4" fill="#64717c"/>` +
-  `<path d="M110 143v8M124 143v8M138 143v8M152 143v8M166 143v8M180 143v8M194 143v8M208 143v8" stroke="#4e5a64" stroke-width="2.5" stroke-linecap="round"/>`;
-
-// Контейнер сверху: откинутая крышка у дальнего края, в проёме — мешки, у ближнего края — захват
-const binTop = (body: string, inner: string) =>
-  `<rect x="4" y="0" width="132" height="15" rx="5" fill="#2b3a33"/>` +
-  `<rect x="8" y="10" width="124" height="104" rx="10" fill="${body}"/>` +
-  `<rect x="17" y="19" width="106" height="84" rx="6" fill="${inner}"/>` +
-  `<ellipse cx="46" cy="50" rx="21" ry="15" fill="#6b7884"/>` +
-  `<ellipse cx="86" cy="44" rx="19" ry="14" fill="#d6c48c"/>` +
-  `<ellipse cx="62" cy="76" rx="24" ry="16" fill="#4d5a66"/>` +
-  `<ellipse cx="101" cy="78" rx="15" ry="12" fill="#e9eef2"/>` +
-  `<ellipse cx="32" cy="84" rx="11" ry="9" fill="#3e4954"/>` +
-  `<rect x="34" y="106" width="72" height="12" rx="4" fill="#26313a"/>`;
-
-// Три контейнера площадки ул. Садовая, 21 (план 3): проходят через подъёмник по одному
-const BINS = [
-  { k: 1, svg: binTop('#3f8a6c', '#2f6b53') },
-  { k: 2, svg: binTop('#4a76ad', '#375c8c') },
-  { k: 3, svg: binTop('#3f8a6c', '#2f6b53') },
+// ── Кадры задней камеры над подъёмником: настоящие, служебные надписи размыты, людей нет ──
+// Контейнер с коробками поднят на подъёмнике — и он же опрокинут в бункер. Три контейнера площадки
+// ул. Садовая, 21 (план 3) проходят по одному: между ними на миг виден второй кадр.
+// Ширина кадра на странице — до 532 px, на телефоне около 300.
+const photo = (name: string, w: number) => withBase(`/media/tracker/${name}-${w}.webp`);
+const srcset = (name: string) => `${photo(name, 720)} 720w, ${photo(name, 1200)} 1200w`;
+const SIZES = '(max-width: 699.98px) 320px, 540px';
+const SHOTS = [
+  { name: 'lift-full', cls: '' },
+  { name: 'lift-tip', cls: 'ef-cam__photo--tip' },
 ];
 ---
 
@@ -65,23 +41,30 @@ const BINS = [
         <span class="tag tag--demo ef__demo">демо-данные</span>
         <div class="ui ef-cam">
           <div class="ef-cam__frame">
-            <svg class="ef-cam__scene" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" set:html={back} />
             {
-              BINS.map((b) => (
-                <span class:list={['ef-cam__bin', `ef-cam__bin--${b.k}`]}>
-                  <svg viewBox="0 0 140 124" set:html={b.svg} />
-                  <span class="ef-cam__det">
-                    <i>{b.k}</i>
-                  </span>
+              SHOTS.map((s) => (
+                <img
+                  class:list={['ef-cam__photo', s.cls]}
+                  src={photo(s.name, 1200)}
+                  srcset={srcset(s.name)}
+                  sizes={SIZES}
+                  width="1200"
+                  height="675"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  draggable="false"
+                />
+              ))
+            }
+            {/* рамка распознавания с номером погрузки — вокруг контейнера на подъёмнике */}
+            {
+              [1, 2, 3].map((k) => (
+                <span class:list={['ef-cam__det', `ef-cam__det--${k}`]}>
+                  <i>{k}</i>
                 </span>
               ))
             }
-            <svg
-              class="ef-cam__scene ef-cam__front"
-              viewBox="0 0 320 180"
-              preserveAspectRatio="xMidYMid slice"
-              set:html={front}
-            />
             <span class="ef-cam__tag">Кам. 4 · 08:43</span>
             <span class="ef-cam__count">
               <span class="ef-cam__dot" />
@@ -226,58 +209,41 @@ const BINS = [
     user-select: none;
   }
 
-  /* внутри движутся контейнеры: Safari на iPhone может не обрезать их по скруглению — обрезка продублирована */
+  /* кадры сменяют друг друга прозрачностью: Safari на iPhone может не обрезать такой слой по скруглению —
+     обрезка продублирована; фон — средний цвет кадра, пока он грузится */
   .ef-cam__frame {
     position: relative;
     aspect-ratio: 16 / 9;
     overflow: hidden;
     border-radius: 12px;
-    background: #dbe3e8;
+    background: #6f6d60;
     isolation: isolate;
     clip-path: inset(0 round 12px);
   }
 
-  .ef-cam__scene {
+  /* кадр 16 : 9, как и рамка, — ничего не обрезается, и рамка распознавания стоит по процентам кадра */
+  .ef-cam__photo {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
+    object-fit: cover;
   }
 
-  .ef-cam__front {
-    z-index: 2;
+  /* контейнер опрокинут в бункер — виден только между погрузками */
+  .ef-cam__photo--tip {
+    opacity: 0;
   }
 
-  /* лёгкая «камера»: виньетка, как у кадров на главной */
-  .ef-cam__frame::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgb(29 29 31 / 0.22));
-    pointer-events: none;
-  }
-
-  .ef-cam__bin {
-    position: absolute;
-    z-index: 1;
-    left: 50%;
-    top: 43%;
-    width: 40%;
-    aspect-ratio: 140 / 124;
-    transform: translate(-50%, -50%);
-  }
-
-  .ef-cam__bin svg {
-    width: 100%;
-    height: 100%;
-  }
-
-  /* рамка распознавания с номером контейнера (обводка — внутренней тенью: рамку border при дробном
-     масштабе экрана Safari не рисует) */
+  /* рамка распознавания: место контейнера измерено по кадру 1200 × 675 (x 421–797, y 140–446); обводка —
+     внутренней тенью: рамку border при дробном масштабе экрана Safari не рисует */
   .ef-cam__det {
     position: absolute;
-    inset: -6% -5%;
+    z-index: 1;
+    left: 35.08%;
+    top: 20.74%;
+    width: 31.33%;
+    height: 45.33%;
     border-radius: 10px;
     background: rgb(107 177 255 / 0.12);
     box-shadow: inset 0 0 0 2px #6bb1ff;
@@ -399,16 +365,17 @@ const BINS = [
     white-space: nowrap;
   }
 
-  /* Движение — когда кадр на экране: контейнеры по одному проходят через подъёмник, ИИ обводит
-     каждый рамкой, счётчик растёт 1 → 2 → 3, затем статус «Корректно» (план 3, факт 3). За экраном кадр
-     возвращается в начало. Классы is-armed и is-live ставит скрипт; без них (нет скриптов,
-     «уменьшить движение») сразу видно итоговое состояние. */
-  .ef-cam__bin--1,
-  .ef-cam__bin--2 {
+  /* Движение — когда кадр на экране: контейнер на подъёмнике, ИИ обводит его рамкой, счётчик растёт;
+     контейнер опрокидывается в бункер (второй кадр), на подъёмнике следующий — и так три погрузки
+     (1 → 2 → 3), затем статус «Корректно» (план 3, факт 3). За экраном кадр возвращается в начало.
+     Классы is-armed и is-live ставит скрипт; без них (нет скриптов, «уменьшить движение») сразу видно
+     итоговое состояние. */
+  .ef-cam__det--1,
+  .ef-cam__det--2 {
     opacity: 0;
   }
 
-  .ef__vis.is-armed:not(.is-live) .ef-cam__bin--3,
+  .ef__vis.is-armed:not(.is-live) .ef-cam__det--3,
   .ef__vis.is-armed:not(.is-live) .ef-cam__num > b:last-child,
   .ef__vis.is-armed:not(.is-live) .ef-cam__ok {
     opacity: 0;
@@ -418,30 +385,22 @@ const BINS = [
     opacity: 1;
   }
 
-  /* Расписание (с): контейнер 1 — 0,3–2,2, счёт «1» в 1,05; контейнер 2 — 2,15–4,05, «2» в 2,95;
-     контейнер 3 подъезжает в 4,0 и остаётся, «3» в 4,75; «Корректно» — в 5,2 */
-  .ef__vis.is-live .ef-cam__bin--1 {
-    animation: ef-pass 1.9s var(--ease-in-out) 0.3s both;
+  /* Расписание (с), погрузка — каждые 1,9: рамки — в 0,95, 2,85 и 4,75, счёт — на 0,1 позже;
+     контейнер опрокидывается 1,75–2,8 и 3,65–4,7; «Корректно» — в 5,3 */
+  .ef__vis.is-live .ef-cam__det--1 {
+    animation: ef-det-pass 1.05s var(--ease-out) 0.95s both;
   }
 
-  .ef__vis.is-live .ef-cam__bin--2 {
-    animation: ef-pass 1.9s var(--ease-in-out) 2.15s both;
+  .ef__vis.is-live .ef-cam__det--2 {
+    animation: ef-det-pass 1.05s var(--ease-out) 2.85s both;
   }
 
-  .ef__vis.is-live .ef-cam__bin--3 {
-    animation: ef-arrive 0.6s var(--ease-out) 4s both;
+  .ef__vis.is-live .ef-cam__det--3 {
+    animation: ef-det 0.35s var(--ease-out) 4.75s both;
   }
 
-  .ef__vis.is-live .ef-cam__bin--1 .ef-cam__det {
-    animation: ef-det 0.35s var(--ease-out) 0.95s both;
-  }
-
-  .ef__vis.is-live .ef-cam__bin--2 .ef-cam__det {
-    animation: ef-det 0.35s var(--ease-out) 2.85s both;
-  }
-
-  .ef__vis.is-live .ef-cam__bin--3 .ef-cam__det {
-    animation: ef-det 0.35s var(--ease-out) 4.65s both;
+  .ef__vis.is-live .ef-cam__photo--tip {
+    animation: ef-tip 1.9s var(--ease-in-out) 1.75s 2 both;
   }
 
   .ef__vis.is-live .ef-cam__num > b:nth-child(1) {
@@ -453,59 +412,56 @@ const BINS = [
   }
 
   .ef__vis.is-live .ef-cam__num > b:nth-child(3) {
-    animation: ef-tick 1.8s linear 2.95s both;
+    animation: ef-tick 1.9s linear 2.95s both;
   }
 
   .ef__vis.is-live .ef-cam__num > b:nth-child(4) {
-    animation: ef-in 0.3s var(--ease-out) 4.75s both;
+    animation: ef-in 0.3s var(--ease-out) 4.85s both;
   }
 
   /* счётчик чуть вздрагивает на каждой погрузке */
   .ef__vis.is-live .ef-cam__count {
-    animation: ef-bump 5s linear both;
+    animation: ef-bump 5.2s linear both;
   }
 
   .ef__vis.is-live .ef-cam__ok {
-    animation: ef-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 5.2s both;
-  }
-
-  /* контейнер подъезжает на подъёмнике, стоит, пока ИИ его считает, и уходит в бункер */
-  @keyframes ef-pass {
-    0% {
-      opacity: 0;
-      transform: translate(-50%, -92%) scale(0.88);
-    }
-    10% {
-      opacity: 1;
-    }
-    30%,
-    74% {
-      opacity: 1;
-      transform: translate(-50%, -50%);
-    }
-    86% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-      transform: translate(-50%, -2%) scale(1.16);
-    }
-  }
-
-  @keyframes ef-arrive {
-    from {
-      opacity: 0;
-      transform: translate(-50%, -92%) scale(0.88);
-    }
-    35% {
-      opacity: 1;
-    }
+    animation: ef-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 5.3s both;
   }
 
   @keyframes ef-det {
     from {
       opacity: 0;
       transform: scale(1.1);
+    }
+  }
+
+  /* рамка ложится на контейнер, держится, пока ИИ его считает, и гаснет, когда контейнер опрокидывают */
+  @keyframes ef-det-pass {
+    0% {
+      opacity: 0;
+      transform: scale(1.1);
+    }
+    33%,
+    76% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+      transform: none;
+    }
+  }
+
+  /* кадр «контейнер опрокинут» проявляется поверх и уходит (0,3 + 0,45 + 0,3 с), дальше — следующий контейнер */
+  @keyframes ef-tip {
+    0%,
+    55.3%,
+    100% {
+      opacity: 0;
+    }
+    15.8%,
+    39.5% {
+      opacity: 1;
     }
   }
 
@@ -541,20 +497,21 @@ const BINS = [
     }
   }
 
+  /* толчки — вместе со счётом: 1,05, 2,95 и 4,85 с из 5,2 */
   @keyframes ef-bump {
     0%,
-    18%,
-    25%,
-    56%,
-    63%,
-    92%,
-    99%,
+    17%,
+    23%,
+    54%,
+    60%,
+    90%,
+    96%,
     100% {
       transform: none;
     }
-    21%,
-    59%,
-    95% {
+    20%,
+    57%,
+    93% {
       transform: scale(1.08);
     }
   }
@@ -865,18 +822,39 @@ const BINS = [
 <script>
   import { reducedMotion } from '../../scripts/motion';
 
-  // Кадр камеры: контейнеры проходят через подъёмник, когда кадр на экране; за экраном сцена
-  // возвращается в начало. Рисунок «100 → 60»: полосы вырастают один раз. При «уменьшить движение»
-  // классы не ставятся — видно итоговое состояние.
+  // Кадр камеры: три погрузки подряд, когда кадр на экране; за экраном сцена возвращается в начало.
+  // Начинается, только когда оба кадра загружены и готовы к показу: иначе второй кадр проявится с задержкой.
+  // Рисунок «100 → 60»: полосы вырастают один раз. При «уменьшить движение» классы не ставятся —
+  // видно итоговое состояние.
   if (!reducedMotion() && 'IntersectionObserver' in window) {
     const cam = document.querySelector<HTMLElement>('[data-ef-cam]');
     if (cam) {
+      // кадр не загрузился или не раскодирован — всё равно начинаем, сцена не должна застрять на «0»
+      const ready = Promise.all(
+        [...cam.querySelectorAll('img')].map((img) =>
+          (img.complete
+            ? Promise.resolve()
+            : new Promise<void>((done) => {
+                img.addEventListener('load', () => done(), { once: true });
+                img.addEventListener('error', () => done(), { once: true });
+              })
+          )
+            .then(() => img.decode())
+            .catch(() => {}),
+        ),
+      );
+      let shown = false;
       cam.classList.add('is-armed');
       new IntersectionObserver(
         ([entry]) => {
           // начинаем, когда видна заметная часть кадра, а сбрасываем — только когда он ушёл целиком
-          if (entry.intersectionRatio >= 0.45) cam.classList.add('is-live');
-          else if (!entry.isIntersecting) cam.classList.remove('is-live');
+          if (entry.intersectionRatio >= 0.45) {
+            shown = true;
+            ready.then(() => shown && cam.classList.add('is-live'));
+          } else if (!entry.isIntersecting) {
+            shown = false;
+            cam.classList.remove('is-live');
+          }
         },
         { threshold: [0, 0.45] },
       ).observe(cam);

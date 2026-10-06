@@ -4,9 +4,12 @@
 // Ниже в той же панели — градиентная карточка с экраном «Контроль качества погрузки мусора»
 // (перерисован с кадров продукта): список погрузок, итоги дня, кадры до и после погрузки
 // с рамками ИИ и уведомление о несанкционированной погрузке.
+// Кадры в списке и в подробностях — настоящие снимки камер с прежнего лендинга (людей нет, служебные
+// надписи размыты); рамки ИИ, время и подписи поверх них — демо-данные.
 import Icon from '../../components/Icon.astro';
 import ProductLabel from '../../components/ProductLabel.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
+import { withBase } from '../../config/site';
 
 const NB = '\u00a0';
 
@@ -27,45 +30,29 @@ const STATUS: Record<Status, string> = {
   less: 'Погружено меньше плана',
   more: 'Погружено больше плана',
 };
-const LOADS: { time: string; plate: string; id: string; addr: string; st: Status; scene: string; flip?: boolean }[] = [
-  { time: '08:42', plate: 'В 214 ОК 102', id: '3298', addr: 'ул. Садовая, 21', st: 'ok', scene: 'empty' },
-  { time: '08:36', plate: 'Н 375 РТ 02', id: '3307', addr: 'ул. Полевая, 12', st: 'more', scene: 'empty', flip: true },
-  { time: '08:31', plate: 'С 548 ЕМ 102', id: '124', addr: 'ул. Лесная, 3', st: 'less', scene: 'mixed' },
-  { time: '08:24', plate: 'М 091 ТВ 702', id: '9345', addr: 'ул. Школьная, 8', st: 'ok', scene: 'empty', flip: true },
-  { time: '08:12', plate: 'В 214 ОК 102', id: '3266', addr: 'пер. Мирный, 5', st: 'ok', scene: 'empty' },
+// thumb — кадр камеры этой погрузки (thumb-*.webp, 320×180), x — какая часть кадра по ширине видна
+// в плитке (на телефоне она квадратная, а контейнеры не везде посередине). У новой погрузки — кадр
+// «после погрузки» из подробностей, у «Погружено меньше плана» — площадка, где контейнеры остались полными.
+const LOADS: { time: string; plate: string; id: string; addr: string; st: Status; thumb: string; x: number }[] = [
+  { time: '08:42', plate: 'В 214 ОК 102', id: '3298', addr: 'ул. Садовая, 21', st: 'ok', thumb: 'cam-a-after', x: 50 },
+  { time: '08:36', plate: 'Н 375 РТ 02', id: '3307', addr: 'ул. Полевая, 12', st: 'more', thumb: 'lift-full', x: 50 },
+  { time: '08:31', plate: 'С 548 ЕМ 102', id: '124', addr: 'ул. Лесная, 3', st: 'less', thumb: 'cam-b-before', x: 87 },
+  { time: '08:24', plate: 'М 091 ТВ 702', id: '9345', addr: 'ул. Школьная, 8', st: 'ok', thumb: 'lift-tip', x: 50 },
+  { time: '08:12', plate: 'В 214 ОК 102', id: '3266', addr: 'пер. Мирный, 5', st: 'ok', thumb: 'cam-b-after', x: 80 },
 ];
 
-// Мусорный контейнер — тот же рисунок, что в кадрах камер на главной (Shot.astro): x, y — левый верх, w — ширина
-function bin(x: number, y: number, w: number, color: string, full: boolean): string {
-  const s = w / 40;
-  const bags = full
-    ? '<ellipse cx="13" cy="7" rx="9" ry="6" fill="#4d5a66"/><ellipse cx="26" cy="6" rx="10" ry="7" fill="#6b7884"/><ellipse cx="20" cy="4" rx="6" ry="4" fill="#3e4954"/>'
-    : '';
-  const lid = full
-    ? '<rect x="2" y="2" width="36" height="5" rx="2" fill="#2b3a33" transform="rotate(-24 2 7)"/>'
-    : '<rect x="1" y="5" width="38" height="6" rx="2" fill="#2b3a33" fill-opacity=".55"/>';
-  return `<g transform="translate(${x} ${y}) scale(${s})">${bags}<path d="M3.5 10h33l-3 28a3 3 0 0 1-3 2.7H9.5a3 3 0 0 1-3-2.7Z" fill="${color}"/>${lid}<path d="M13 16v17M20 16v17M27 16v17" stroke="#000" stroke-opacity=".14" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="43" r="3.2" fill="#26313a"/><circle cx="29" cy="43" r="3.2" fill="#26313a"/></g>`;
-}
-
-// Контейнерная площадка под навесом (кадр 160×100): full — какие из трёх контейнеров полные.
-// Рамки ИИ стоят поверх рисунка в процентах кадра — см. BOXES, их место считается от KP_BINS.
-const KP_BINS = [
-  { x: 20, color: '#3f8a6c' },
-  { x: 62, color: '#3f8a6c' },
-  { x: 104, color: '#4a76ad' },
-];
-const kp = (full: boolean[]) =>
-  '<rect width="160" height="100" fill="#dde7ed"/>' +
-  '<rect y="26" width="160" height="36" fill="#ccd6dd"/>' +
-  '<path d="M0 33h160M6 26v36M38 26v36M70 26v36M102 26v36M134 26v36" stroke="#b9c4cc" stroke-width="1.5"/>' +
-  '<rect y="74" width="160" height="26" fill="#b3bfc7"/>' +
-  '<rect x="10" y="77" width="140" height="13" rx="3" fill="#c5cdd3"/>' +
-  '<path d="M13 23v55M147 23v55" stroke="#8d9ba6" stroke-width="3"/>' +
-  '<path d="M6 22C30 12 130 12 154 22v4C130 16 30 16 6 26Z" fill="#93a3af"/>' +
-  KP_BINS.map((b, k) => bin(b.x, 38, 36, b.color, full[k])).join('');
-
-// рамка вокруг контейнера: на 1,5 единицы шире бака с каждой стороны
-const BOXES = KP_BINS.map((b) => `left:${((b.x - 1.5) / 160) * 100}%`);
+// Кадры выбранной погрузки — задняя камера над подъёмником: тот же контейнер до и после опорожнения,
+// снято с одной точки, поэтому рамка ИИ в обоих кадрах на одном месте (оно задано в стилях .trh-box).
+// На площадке три контейнера, камера видит их в подъёмнике по одному: ИИ считает опорожнения 1 → 2 → 3.
+// Ширина снимка: на компьютере 215 px, на планшете — 310–510 px; на телефоне подробностей нет
+// (скрытые снимки с loading="lazy" не грузятся).
+const shot = (name: string) => ({
+  src: withBase(`/media/tracker/${name}-720.webp`),
+  srcset: `${withBase(`/media/tracker/${name}-720.webp`)} 720w, ${withBase(`/media/tracker/${name}-1200.webp`)} 1200w`,
+});
+const FRAME_SIZES = '(max-width: 1199.98px) 500px, 215px';
+const BEFORE = shot('cam-a-before');
+const AFTER = shot('cam-a-after');
 
 // Фон кнопки «карта» в строке погрузки: кусочек схемы города
 const MAP =
@@ -121,11 +108,8 @@ const MAP =
         label="Экран «Контроль качества погрузки мусора» QODEX Tracker: погрузки со статусами, кадры до и после погрузки, ИИ посчитал контейнеры, уведомление о несанкционированной погрузке"
       >
         <div class="trh-wrap" data-trh-mock data-idle>
-          <!-- рисунки для кадров: площадка до погрузки, после, частично вывезенная; схема города -->
+          <!-- рисунок для плиток карты: кусочек схемы города -->
           <svg class="trh-defs" aria-hidden="true" focusable="false">
-            <symbol id="trh-kp-full" viewBox="0 0 160 100" set:html={kp([true, true, true])} />
-            <symbol id="trh-kp-empty" viewBox="0 0 160 100" set:html={kp([false, false, false])} />
-            <symbol id="trh-kp-mixed" viewBox="0 0 160 100" set:html={kp([true, false, true])} />
             <symbol id="trh-map" viewBox="0 0 40 40" set:html={MAP} />
           </svg>
 
@@ -179,10 +163,17 @@ const MAP =
                   {
                     LOADS.map((l, i) => (
                       <li class:list={['trh-row', `trh-row--${i + 1}`, `trh-row--${l.st}`, { 'is-sel': i === 0 }]}>
-                        <span class:list={['trh-thumb', { 'is-flip': l.flip }]}>
-                          <svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice">
-                            <use href={`#trh-kp-${l.scene}`} width="160" height="100" />
-                          </svg>
+                        <span class="trh-thumb">
+                          <img
+                            src={withBase(`/media/tracker/thumb-${l.thumb}.webp`)}
+                            width="320"
+                            height="180"
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            draggable="false"
+                            style={`--x:${l.x}%`}
+                          />
                         </span>
                         <span class="trh-maptile">
                           <svg viewBox="0 0 40 40" preserveAspectRatio="xMidYMid slice">
@@ -234,25 +225,42 @@ const MAP =
                 </div>
                 <div class="trh-frames">
                   <div class="trh-frame">
-                    <svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice">
-                      <use href="#trh-kp-full" width="160" height="100" />
-                    </svg>
-                    {BOXES.map((left) => <span class="trh-box trh-box--red" style={left} />)}
+                    <span class="trh-frame__photo">
+                      <img
+                        src={BEFORE.src}
+                        srcset={BEFORE.srcset}
+                        sizes={FRAME_SIZES}
+                        width="1200"
+                        height="675"
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        draggable="false"
+                      />
+                      <span class="trh-box trh-box--red"></span>
+                    </span>
                     <span class="trh-frame__tag">до погрузки</span>
                     <span class="trh-frame__time">08:42</span>
                   </div>
                   <div class="trh-frame trh-frame--after">
-                    <svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice">
-                      <use href="#trh-kp-empty" width="160" height="100" />
-                    </svg>
-                    {BOXES.map((left, k) => <span class="trh-box trh-box--red trh-box--scan" style={`${left}; --k:${k}`} />)}
-                    {
-                      BOXES.map((left, k) => (
-                        <span class="trh-box trh-box--green" style={`${left}; --k:${k}`}>
-                          <i>{k + 1}</i>
-                        </span>
-                      ))
-                    }
+                    <span class="trh-frame__photo">
+                      <img
+                        src={AFTER.src}
+                        srcset={AFTER.srcset}
+                        sizes={FRAME_SIZES}
+                        width="1200"
+                        height="675"
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        draggable="false"
+                      />
+                      <span class="trh-box trh-box--red trh-box--scan"></span>
+                      <span class="trh-box trh-box--green">
+                        <span class="trh-box__pulse"></span>
+                        <i class="trh-digits"><b class="trh-d1">1</b><b class="trh-d2">2</b><b class="trh-d3">3</b></i>
+                      </span>
+                    </span>
                     <span class="trh-frame__veil">
                       <Icon name="camera" size={22} strokeWidth={1.8} />
                     </span>
@@ -697,14 +705,13 @@ const MAP =
     background: #dde7ed;
   }
 
-  .trh-thumb svg,
-  .trh-frame svg {
+  /* снимок камеры заполняет плитку; какая часть кадра видна — --x у строки */
+  .trh-thumb img {
+    display: block;
     width: 100%;
     height: 100%;
-  }
-
-  .trh-thumb.is-flip svg {
-    transform: scaleX(-1);
+    object-fit: cover;
+    object-position: var(--x, 50%) 50%;
   }
 
   .trh-maptile {
@@ -896,24 +903,50 @@ const MAP =
     font-variant-numeric: tabular-nums;
   }
 
-  /* рамки ИИ вокруг контейнеров: красная — полный, зелёная — вывезен */
+  /* снимок 16:9 в кадре 16:10: он шире кадра на 1/9, края срезаны поровну.
+     Рамка ИИ лежит внутри снимка, поэтому её место задано в долях самого снимка. */
+  .trh-frame__photo {
+    position: absolute;
+    inset: 0 -5.556%;
+  }
+
+  .trh-frame__photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* мягкое затемнение по краям: под метками кадра — размытые служебные надписи камеры */
+  .trh-frame__photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(rgb(29 29 31 / 0.42), rgb(29 29 31 / 0) 30%, rgb(29 29 31 / 0) 84%, rgb(29 29 31 / 0.32));
+    pointer-events: none;
+  }
+
+  /* рамка ИИ вокруг контейнера в подъёмнике (на снимке он занимает 34–69 % ширины и 21–75 % высоты):
+     красная — полный, зелёная — опорожнён. Контур — тенью: border в 2 px WebKit при масштабе экрана 145 % не рисует */
   .trh-box {
+    --c: var(--t-bad-bg);
     position: absolute;
     z-index: 2;
-    top: 36%;
-    width: 24.4%;
-    height: 44%;
-    border: 2px solid;
+    left: 33.3%;
+    top: 18.8%;
+    width: 36.8%;
+    height: 57.4%;
     border-radius: 6px;
+    box-shadow: inset 0 0 0 2px var(--c);
   }
 
   .trh-box--red {
-    border-color: var(--t-bad-bg);
     background: rgb(229 72 77 / 0.1);
   }
 
   .trh-box--green {
-    border-color: var(--t-ok-bg);
+    --c: var(--t-ok-bg);
     background: rgb(15 168 111 / 0.12);
   }
 
@@ -923,8 +956,8 @@ const MAP =
 
   .trh-box i {
     position: absolute;
-    top: -2px;
-    left: -2px;
+    top: 0;
+    left: 0;
     display: grid;
     place-items: center;
     min-width: 17px;
@@ -937,6 +970,15 @@ const MAP =
     font-style: normal;
     font-weight: 650;
     line-height: 1;
+  }
+
+  /* каждое опорожнение, которое посчитал ИИ, — короткий отсвет рамки */
+  .trh-box__pulse {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 2px var(--t-ok-bg);
+    opacity: 0;
   }
 
   /* «после погрузки» до снимка: камера ждёт; снимок — короткая вспышка */
@@ -1137,8 +1179,9 @@ const MAP =
 
   /* ── Движение: цикл 9 с ───────────────────────────────────
      0,4 с — новая погрузка приезжает в начало списка (статус ещё считается), остальные сдвигаются вниз;
-     1,4 с — камера «после погрузки» делает снимок (вспышка); с 1,6 с ИИ по очереди находит контейнеры
-     (красная рамка) и видит, что они вывезены (зелёная), «Погружено» считает 1 → 2 → 3;
+     1,4 с — камера «после погрузки» делает снимок (вспышка); с 1,6 с ИИ находит контейнер в подъёмнике
+     (красная рамка) и видит, что он опорожнён (зелёная); три контейнера площадки проходят через подъёмник
+     по одному — номер на рамке и «Погружено» считают 1 → 2 → 3, рамка на каждом счёте отсвечивает;
      3,6 с — «Корректно»; 3,9 с — в итогах дня 88 → 89 и 83 % → 84 %; 4,6–7,5 с — уведомление
      о несанкционированной погрузке; с 7,7 с всё мягко возвращается к началу.
      Без анимации (и при «уменьшить движение») виден итог: погрузка посчитана, уведомление на месте. */
@@ -1185,12 +1228,14 @@ const MAP =
 
     .trh-box--scan {
       animation: trh-red 9s var(--ease-out) infinite both;
-      animation-delay: calc(var(--k) * 0.54s);
     }
 
     .trh-box--green {
       animation: trh-green 9s var(--ease-out) infinite both;
-      animation-delay: calc(var(--k) * 0.54s);
+    }
+
+    .trh-box__pulse {
+      animation: trh-pulse 9s ease-out infinite both;
     }
 
     .trh-d0 {
@@ -1379,7 +1424,7 @@ const MAP =
     }
   }
 
-  /* ИИ находит контейнер (красная рамка) и видит, что он вывезен (зелёная); у каждой рамки сдвиг 0,54 с */
+  /* ИИ находит контейнер (красная рамка) и видит, что он опорожнён (зелёная) */
   @keyframes trh-red {
     0%,
     17.5% {
@@ -1413,7 +1458,31 @@ const MAP =
     }
   }
 
-  /* «Погружено»: 0 → 1 → 2 → 3 вместе с зелёными рамками */
+  /* отсвет рамки на каждом счёте: 1 — 2,2 с, 2 — 2,7 с, 3 — 3,24 с (как у цифр ниже) */
+  @keyframes trh-pulse {
+    0%,
+    24.4% {
+      opacity: 0;
+      transform: none;
+    }
+    24.5%,
+    30%,
+    36% {
+      opacity: 0.9;
+      transform: none;
+    }
+    28%,
+    29.9%,
+    34%,
+    35.9%,
+    40%,
+    100% {
+      opacity: 0;
+      transform: scale(1.12);
+    }
+  }
+
+  /* «Погружено» и номер на рамке: 0 → 1 → 2 → 3 */
   @keyframes trh-d0 {
     0%,
     23.99% {
