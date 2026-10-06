@@ -1,5 +1,5 @@
 ---
-// Раздел 2 страницы «QODEX Tracker» [#video] — видео о продукте (2:58), как продуктовое видео у Calendly:
+// Раздел 2 страницы «QODEX Tracker» [#video] — видео о продукте (3:01), как продуктовое видео у Calendly:
 // плеер — скруглённая карточка с белой полупрозрачной рамкой на градиенте dusk.
 // Сначала только обложка и кнопка воспроизведения: файл видео (21 МБ) не грузится, пока его не включили.
 // По нажатию обложка сменяется плеером <video> того же размера (без скачка раскладки), фокус — на нём.
@@ -25,7 +25,7 @@ const POSTER_SM = withBase('/media/tracker/poster-800.webp');
       <GradientVisual preset="dusk" deco="none" class="tvd__bg" />
 
       <div class="tvd__player" data-tvd>
-        <button class="tvd__facade" type="button" aria-label="Смотреть видео о QODEX Tracker, 2 минуты 58 секунд" data-tvd-play>
+        <button class="tvd__facade" type="button" aria-label="Смотреть видео о QODEX Tracker, 3 минуты" data-tvd-play>
           <picture>
             <!-- sizes — ширина плеера: на компьютере около 1050 px раскладки, уже — почти во всю ширину окна -->
             <source
@@ -47,7 +47,7 @@ const POSTER_SM = withBase('/media/tracker/poster-800.webp');
           <span class="tvd__play" aria-hidden="true">
             <Icon name="play" size={40} strokeWidth={1.5} />
           </span>
-          <span class="tvd__time" aria-hidden="true">2:58</span>
+          <span class="tvd__time" aria-hidden="true">3:01</span>
         </button>
 
         <!-- плеер вставляется по нажатию; содержимое <template> браузер не загружает -->
