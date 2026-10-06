@@ -95,7 +95,7 @@
   --container: 1200px;
   --gutter: clamp(16px, calc(var(--vw) * 3.4), 40px);
   --header-h: 80px;
-  --section-y: clamp(72px, calc(var(--vw) * 9), 136px);
+  --section-y: clamp(60px, calc(var(--vw) * 9), 112px);
 
   /* Автомасштаб страницы (см. ниже) и размеры окна с поправкой на него.
      При CSS-масштабе vw/vh уменьшаются вместе со страницей, поэтому в стилях вместо них —
