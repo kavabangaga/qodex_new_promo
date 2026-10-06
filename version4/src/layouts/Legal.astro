@@ -147,6 +147,15 @@ const breadcrumbs = {
     padding-left: 22px;
   }
 
+  /* список с номерами пунктов в тексте (4.1.1. …) — без точек-маркеров */
+  .legal__body :global(ul.legal__points li) {
+    padding-left: 0;
+  }
+
+  .legal__body :global(ul.legal__points li::before) {
+    display: none;
+  }
+
   .legal__body :global(ul li::before) {
     content: '';
     position: absolute;
@@ -165,6 +174,8 @@ const breadcrumbs = {
     text-decoration-color: color-mix(in oklab, currentColor 55%, transparent);
     text-underline-offset: 4px;
     transition: text-decoration-color 0.2s;
+    /* длинный адрес в тексте (qodex.tech/documents/requirements) переносится на узком телефоне */
+    overflow-wrap: anywhere;
   }
 
   .legal__body :global(a:hover) {
@@ -173,6 +184,48 @@ const breadcrumbs = {
 
   .legal__body :global(.legal__intro p) {
     color: var(--ink);
+  }
+
+  /* Подразделы (цели обработки в Политике): заголовок и пары «что — значение» */
+  .legal__body :global(h3) {
+    margin: 26px 0 10px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .legal__body :global(dl) {
+    display: grid;
+    gap: 4px 20px;
+  }
+
+  .legal__body :global(dt) {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+
+  .legal__body :global(dd) {
+    margin: 0 0 8px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  @media (min-width: 760px) {
+    .legal__body :global(dl) {
+      grid-template-columns: 150px minmax(0, 1fr);
+    }
+
+    .legal__body :global(dd) {
+      margin-bottom: 6px;
+    }
   }
 
   /* Телефон: без бежевой подложки — у текста больше места */

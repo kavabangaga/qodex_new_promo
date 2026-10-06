@@ -25,11 +25,12 @@ export interface ProductDocs {
 
 /**
  * Общие документы компании (на прежнем сайте — «иные документы» и презентация из подвала).
- * «Пользовательское соглашение» — соглашение системы QODEX ECO (Gravity и Signall, то есть QODEX TONN),
- * поэтому оно в документах QODEX TONN; ссылка «Пользовательское соглашение» в подвале ведёт на тот же файл.
+ * «Пользовательское соглашение» — соглашение системы QODEX TONN (ранее QODEX ECO: Gravity и Signall),
+ * поэтому оно в документах QODEX TONN; ссылка «Пользовательское соглашение» в подвале ведёт на ту же страницу.
+ * Политика и соглашение — страницы сайта (pages/privacy.astro, pages/documents/user_agreement.astro).
  */
 export const GENERAL_DOCS: Doc[] = [
-  { title: 'Политика конфиденциальности', file: 'policy.pdf' },
+  { title: 'Политика в отношении обработки персональных данных (Политика конфиденциальности)', page: '/privacy/' },
   { title: 'Согласие на обработку персональных данных', page: '/consent/' },
   // согласие на cookie — только когда включена Яндекс Метрика (без неё сайт cookie не ставит)
   ...(METRIKA_ID ? [{ title: 'Согласие на использование файлов cookie и Яндекс Метрики', page: '/cookies/' }] : []),
@@ -50,7 +51,7 @@ export const PRODUCT_DOCS: ProductDocs[] = [
       { title: 'Технические требования', file: 'requirements.pdf' },
       { title: 'Инструкция Gravity', file: 'gravity_manual.pdf' },
       { title: 'Информационно-техническое сопровождение', file: 'support.pdf' },
-      { title: 'Пользовательское соглашение', file: 'user_agreement.pdf' },
+      { title: 'Пользовательское соглашение', page: '/documents/user_agreement/' },
       { title: 'О системе', file: 'system.pdf', kind: 'Презентация' },
     ],
   },

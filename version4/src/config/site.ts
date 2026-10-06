@@ -46,6 +46,12 @@ export const COMPANY = {
   pdRegistry: '2-26-060104',
 };
 
+/** Наименование с неразрывными пробелами: «ООО» не отрывается от названия, «КОДЕКС ТЕХНОЛОГИИ» не рвётся. */
+export function nbName(s: string): string {
+  const nb = String.fromCharCode(160);
+  return s.replace('ООО «', `ООО${nb}«`).replace('КОДЕКС ТЕХНОЛОГИИ', `КОДЕКС${nb}ТЕХНОЛОГИИ`);
+}
+
 export const CONTACTS = {
   phone: `+7${NB}996${NB}293${NB}03${NB}80`,
   phoneHref: 'tel:+79962930380',
@@ -175,12 +181,17 @@ export const FORM_ENDPOINT = '';
 export const SKOLKOVO_URL = 'https://navigator.sk.ru/orn/1125740';
 
 /**
- * Ссылки на документы для подвала, формы заявки и плашки cookie. Файлы — в public/files/, имена те же,
- * что на прежнем сайте qodex.tech/files/…; согласия — страницы сайта (pages/consent.astro, pages/[cookies].astro).
+ * Ссылки на документы для подвала, формы заявки и плашки cookie. Политика, соглашение и согласия — страницы
+ * сайта (pages/privacy.astro, pages/documents/user_agreement.astro, pages/consent.astro, pages/[cookies].astro);
+ * адреса /privacy/ и /documents/user_agreement/ напечатаны в прежних редакциях самих документов.
  */
 export const DOC_LINKS = {
-  policy: withBase('/files/policy.pdf'),
-  agreement: withBase('/files/user_agreement.pdf'),
+  /** Политика в отношении обработки персональных данных (Политика конфиденциальности). */
+  policy: withBase('/privacy/'),
+  /** Пользовательское соглашение системы QODEX TONN (ранее QODEX ECO). */
+  agreement: withBase('/documents/user_agreement/'),
+  /** Предыдущая редакция соглашения (от 25.05.2023) — PDF прежнего сайта, действует до вступления в силу новой. */
+  agreementPrev: withBase('/files/user_agreement.pdf'),
   /** Согласие на обработку персональных данных — для формы заявки. */
   consent: withBase('/consent/'),
   /** Согласие на использование файлов cookie и Яндекс Метрики — для плашки cookie (когда Метрика включена). */
@@ -196,6 +207,23 @@ export const DOC_LINKS = {
 export const CONSENT_EDITION = {
   form: '05.10.2026',
   cookies: '05.10.2026',
+};
+
+/**
+ * Редакции Политики и Пользовательского соглашения (даты). Новая редакция соглашения вступает в силу не раньше
+ * чем через 30 дней после публикации — так требует п. 4.2.2 самого соглашения; до этого действует предыдущая.
+ * Публикация — на боевом qodex.tech, а не на предпросмотре GitHub: при запуске нового сайта на qodex.tech
+ * поставить фактическую дату публикации, agreementFrom — не раньше чем публикация + 31 день (05.10 → 05.11,
+ * ст. 191 ГК: срок начинается на следующий день), agreementPrevUntil — день перед agreementFrom; в день
+ * публикации разослать Пользователям уведомление о новой редакции (п. 4.2.2 прежней редакции). Проверить
+ * и CONSENT_EDITION. Текст Политики зависит от METRIKA_ID — включили Метрику, поменяйте DOC_EDITION.policy.
+ */
+export const DOC_EDITION = {
+  policy: '05.10.2026',
+  agreement: '05.10.2026',
+  agreementFrom: '05.11.2026',
+  agreementPrev: '25.05.2023',
+  agreementPrevUntil: '04.11.2026',
 };
 
 /** Подпись у галочки согласия в форме — дословно так же она названа в тексте согласия. */
