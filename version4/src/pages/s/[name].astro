@@ -35,6 +35,19 @@ const K = {
   'k-trust': 'KTrust',
 } as const;
 
+// Разделы страницы «QODEX Tracker»: /s/t-hero, /s/t-video …
+const TRACKER = import.meta.glob('../../sections/tracker/*.astro');
+const T = {
+  't-hero': 'THero',
+  't-video': 'TVideo',
+  't-why': 'TWhy',
+  't-system': 'TSystem',
+  't-steps': 'TSteps',
+  't-photo': 'TPhoto',
+  't-results': 'TResults',
+  't-effect': 'TEffect',
+} as const;
+
 const MAP = {
   header: Header,
   hero: Hero,
@@ -84,14 +97,25 @@ export function getStaticPaths() {
     'k-features',
     'k-fit',
     'k-trust',
+    // те же имена, что в T
+    't-hero',
+    't-video',
+    't-why',
+    't-system',
+    't-steps',
+    't-photo',
+    't-results',
+    't-effect',
   ].map((name) => ({ params: { name } }));
 }
 
-const { name } = Astro.params as { name: keyof typeof MAP | keyof typeof K };
+const { name } = Astro.params as { name: keyof typeof MAP | keyof typeof K | keyof typeof T };
 const Section =
   name in K
     ? ((await KODEKS[`../../sections/kodeks/${K[name as keyof typeof K]}.astro`]()) as { default: typeof Header }).default
-    : MAP[name as keyof typeof MAP];
+    : name in T
+      ? ((await TRACKER[`../../sections/tracker/${T[name as keyof typeof T]}.astro`]()) as { default: typeof Header }).default
+      : MAP[name as keyof typeof MAP];
 ---
 
 <Base title={`Раздел: ${name}`}>

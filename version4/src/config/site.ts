@@ -93,6 +93,7 @@ export const PRODUCTS: Record<ProductId, Product> = {
     name: 'QODEX Tracker',
     url: 'https://tracker.qodex.tech',
     stage2Path: '/tracker',
+    onSite: true,
     color: '#1669F0',
     glow: '#6FB0FF',
   },
