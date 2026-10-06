@@ -1,11 +1,12 @@
 ---
 // Раздел 5 страницы «QODEX Tracker» [#algoritm] — «Алгоритм работы».
-// Физический процесс рассказан одной сценой, а не шестью карточками: мусоровоз сбоку (рисунок в духе
-// кадров с камер на главной) приезжает на площадку, четыре камеры снимают её до и после погрузки,
-// подъёмник опорожняет контейнер под запись, видео уходят в облако, ИИ считает контейнеры и находит
-// аномалию. Слева шесть шагов с полосой прогресса: шаги идут сами, пока сцена на экране; нажатый шаг
-// сразу показывается в сцене. Сцену скринридер не читает (aria-hidden ставит GradientVisual) — смысл
-// несёт список. Без анимации («уменьшить движение») сцена показывает итог выбранного шага.
+// Подан как плеер: сверху широкая сцена, под ней шкала из шести отрезков (как главы ролика), под шкалой —
+// подпись активного шага. Сцена: мусоровоз сбоку (рисунок в духе кадров с камер на главной) приезжает
+// на площадку, четыре камеры снимают её до и после погрузки, подъёмник опорожняет контейнер под запись,
+// видео уходят в облако, ИИ считает контейнеры и находит аномалию. Шаги идут сами, пока сцена на экране:
+// отрезок активного шага заполняется, и включается следующий; нажатый отрезок сразу показывается в сцене.
+// Сцену скринридер не читает (aria-hidden ставит GradientVisual) — смысл несут кнопки шкалы с полным
+// названием шага и подпись. Без анимации («уменьшить движение») сцена показывает итог выбранного шага.
 // Кадры «до» и «после», что всплывают над машиной, — настоящие снимки камер с прежнего лендинга.
 import SectionIntro from '../../components/SectionIntro.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
@@ -15,38 +16,49 @@ import { withBase } from '../../config/site';
 const NB = String.fromCharCode(160); // неразрывный пробел
 
 // Шаги — с лендинга tracker.qodex.tech дословно: заголовок шага и, если есть, текст.
-// ms — сколько шаг идёт при автопрокрутке: движение сцены и пауза после него
-const STEPS: { title: string; text?: string; ms: number }[] = [
-  { title: 'Машина прибывает на контейнерную площадку', ms: 4400 },
-  { title: 'Фото до погрузки', text: `Фотографируем на все 4${NB}камеры`, ms: 4200 },
-  { title: 'Видеонаблюдение за процессом загрузки', text: 'Запись погрузки', ms: 5200 },
-  { title: 'Фото после погрузки', text: `Фотографируем на все 4${NB}камеры`, ms: 4200 },
-  { title: 'Отправка видеозаписей всех опорожнений контейнеров в облако в процессе рабочего дня', ms: 4600 },
-  { title: 'Видеоаналитика с помощью ИИ и поиск аномалий', ms: 5600 },
+// short — подпись отрезка на шкале; ms — сколько шаг идёт при автопрокрутке: движение сцены и пауза после него
+const STEPS: { title: string; short: string; text?: string; ms: number }[] = [
+  { title: 'Машина прибывает на контейнерную площадку', short: 'Прибытие', ms: 4600 },
+  { title: 'Фото до погрузки', short: 'Фото до', text: `Фотографируем на все 4${NB}камеры`, ms: 4200 },
+  { title: 'Видеонаблюдение за процессом загрузки', short: 'Запись', text: 'Запись погрузки', ms: 5200 },
+  { title: 'Фото после погрузки', short: 'Фото после', text: `Фотографируем на все 4${NB}камеры`, ms: 4200 },
+  {
+    title: 'Отправка видеозаписей всех опорожнений контейнеров в облако в процессе рабочего дня',
+    short: 'В облако',
+    ms: 4600,
+  },
+  { title: 'Видеоаналитика с помощью ИИ и поиск аномалий', short: 'Анализ ИИ', ms: 5600 },
 ];
 
-// ── Сцена 720×440 (рисунок, не фото). Небо уходит вверх с запасом: на телефоне кадр выше сцены,
-//    сцена стоит внизу, а над ней — место для плашек. ──
-const POSTS = Array.from({ length: 16 }, (_, i) => `M${20 + i * 46} 206v56`).join('');
+// ── Сцена 1100×440 (рисунок, не фото). Площадка с машиной — x 248…904, слева дорога, по которой машина
+//    въезжает. Широкий кадр показывает сцену целиком, узкий — её середину, а на телефоне над сценой ещё
+//    остаётся небо под плашки (окно кадра задают --sw, --x0, --k у .tst-stage). ──
+const POSTS = Array.from({ length: 24 }, (_, i) => `M${20 + i * 46} 206v56`).join('');
 
 const BACKDROP =
-  `<rect x="-40" y="-560" width="800" height="1000" fill="#e2eaf0"/>` +
-  // деревья и дома вдали, за забором
-  `<circle cx="70" cy="184" r="30" fill="#d2dce3"/><circle cx="124" cy="196" r="22" fill="#d6e0e6"/>` +
-  `<circle cx="414" cy="184" r="26" fill="#d2dce3"/>` +
-  `<rect x="468" y="150" width="104" height="60" fill="#d6dfe6"/><path d="M456 154 520 114l64 40Z" fill="#c8d3db"/>` +
-  `<rect x="508" y="164" width="22" height="20" rx="2" fill="#c9d4dc"/>` +
-  `<rect x="604" y="164" width="98" height="46" fill="#d3dde4"/><path d="M592 168l61-36 61 36Z" fill="#c5d0d8"/>` +
-  `<rect x="642" y="176" width="20" height="18" rx="2" fill="#c7d2da"/>` +
+  `<rect x="-40" y="-560" width="1180" height="1000" fill="#e2eaf0"/>` +
+  // вдали, за забором: края зданий у краёв сцены (в узком кадре их не видно), деревья, два дома
+  `<rect x="-20" y="140" width="138" height="8" rx="2" fill="#c8d3db"/><rect x="-14" y="148" width="126" height="62" fill="#d6dfe6"/>` +
+  `<rect x="14" y="162" width="20" height="16" rx="2" fill="#c9d4dc"/><rect x="46" y="162" width="20" height="16" rx="2" fill="#c9d4dc"/>` +
+  `<rect x="78" y="162" width="20" height="16" rx="2" fill="#c9d4dc"/>` +
+  `<circle cx="176" cy="192" r="18" fill="#d6e0e6"/>` +
+  `<circle cx="284" cy="184" r="30" fill="#d2dce3"/><circle cx="338" cy="196" r="22" fill="#d6e0e6"/>` +
+  `<circle cx="628" cy="184" r="26" fill="#d2dce3"/>` +
+  `<rect x="682" y="150" width="104" height="60" fill="#d6dfe6"/><path d="M670 154 734 114l64 40Z" fill="#c8d3db"/>` +
+  `<rect x="722" y="164" width="22" height="20" rx="2" fill="#c9d4dc"/>` +
+  `<rect x="818" y="164" width="98" height="46" fill="#d3dde4"/><path d="M806 168l61-36 61 36Z" fill="#c5d0d8"/>` +
+  `<rect x="856" y="176" width="20" height="18" rx="2" fill="#c7d2da"/>` +
+  `<circle cx="960" cy="186" r="24" fill="#d2dce3"/><circle cx="996" cy="198" r="16" fill="#d6e0e6"/>` +
+  `<rect x="1030" y="160" width="90" height="50" fill="#d6dfe6"/><path d="M1020 164l52-34 52 34Z" fill="#c8d3db"/>` +
   // забор, дорога с разметкой, бордюр, тротуар с плитой площадки
-  `<rect y="206" width="720" height="56" fill="#ccd6dd"/><path d="M0 217H720${POSTS}" stroke="#bac5cd" stroke-width="2"/>` +
-  `<rect y="262" width="720" height="126" fill="#c3ccd4"/>` +
-  `<path d="M0 324H720" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-dasharray="28 24"/>` +
-  `<rect y="386" width="720" height="8" fill="#aab5be"/><rect y="394" width="720" height="46" fill="#d1d9df"/>` +
-  `<rect x="34" y="394" width="262" height="14" rx="3" fill="#bcc6cd"/>`;
+  `<rect y="206" width="1100" height="56" fill="#ccd6dd"/><path d="M0 217H1100${POSTS}" stroke="#bac5cd" stroke-width="2"/>` +
+  `<rect y="262" width="1100" height="126" fill="#c3ccd4"/>` +
+  `<path d="M0 324H1100" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-dasharray="28 24"/>` +
+  `<rect y="386" width="1100" height="8" fill="#aab5be"/><rect y="394" width="1100" height="46" fill="#d1d9df"/>` +
+  `<rect x="248" y="394" width="262" height="14" rx="3" fill="#bcc6cd"/>`;
 
 // Мусоровоз сбоку, кабиной вправо. Свои координаты: задний борт — x 0, крыша кузова — y 0,
-// низ колёс — y 172. На сцене стоит у площадки: translate(326 210).
+// низ колёс — y 172. На сцене стоит у площадки: translate(540 210).
 const TRUCK =
   // задний борт со скошенной стенкой, бункер внизу, гидроцилиндр
   `<path d="M60 2H38q-8 0-11 7L4 90q-3 8 0 15l3 10q2 5 8 5h45Z" fill="#8f9ca7"/>` +
@@ -85,9 +97,9 @@ const CAMS = [
 
 // Контейнеры на площадке: два зелёных и синий — его поднимает подъёмник. x — левый край, BIN_Y — верх
 const BINS = [
-  { x: 50, color: '#3f8a6c' },
-  { x: 130, color: '#3f8a6c' },
-  { x: 210, color: '#4a76ad' },
+  { x: 264, color: '#3f8a6c' },
+  { x: 344, color: '#3f8a6c' },
+  { x: 424, color: '#4a76ad' },
 ];
 const BIN_Y = 340;
 
@@ -102,7 +114,7 @@ const binBody = (x: number, y: number, color: string) =>
 // ── Кадры с камер «до» и «после» — снимки с прежнего лендинга (служебные надписи размыты, людей нет),
 //    по номерам камер. Спереди и слева после погрузки вид тот же. Справа — площадка (машина стоит к ней
 //    правым бортом; этот кадр — «Кам. 3 · 08:42» и в «О системе»), над подъёмником — контейнер: «после»
-//    они пустые. Миниатюры 320×180: кадр на странице не шире 100 px ──
+//    они пустые. Миниатюры 320×180: кадр на странице не шире 120 px ──
 const SHOTS = [
   { before: 'thumb-cam-front', after: 'thumb-cam-front' },
   { before: 'thumb-cam-left', after: 'thumb-cam-left' },
@@ -121,49 +133,30 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   <div class="container">
     <SectionIntro eyebrow="Как это работает" titleId="algoritm-title">Алгоритм работы</SectionIntro>
 
-    <div class="tst__row" data-tst data-idle>
-      <ol class="tst__list" data-tst-list data-reveal style="--d:2">
-        {
-          STEPS.map((s, i) => (
-            <li class:list={['tst-step', { 'is-on': i === 0 }]} style={`--ms:${s.ms}ms`}>
-              <h3 class="tst-step__h">
-                <button class="tst-step__btn" type="button" aria-current={i === 0 ? 'step' : undefined}>
-                  <span class="tst-step__n">{`Шаг${NB}${i + 1}`}</span>
-                  <span class="tst-step__t">{s.title}</span>
-                </button>
-              </h3>
-              {s.text && <p class="tst-step__d">{s.text}</p>}
-              <span class="tst-step__bar" aria-hidden="true">
-                <i data-tst-bar />
-              </span>
-            </li>
-          ))
-        }
-      </ol>
-
+    <div class="tst__player" data-tst data-idle>
       <div class="tst__visual" data-reveal style="--d:1">
         <GradientVisual preset="teal" deco="none">
           <div class="ui tst-ui">
             <div class="tst-stage is-run" data-tst-stage data-s="1">
-              <svg class="sc" viewBox="0 0 720 440" preserveAspectRatio="xMidYMax meet" focusable="false">
+              <svg class="sc" viewBox="0 0 1100 440" preserveAspectRatio="xMidYMax meet" focusable="false">
                 <g set:html={BACKDROP} />
 
                 {/* Облака стоят там, где плашки шагов 1–5 их не перекрывают */}
                 <g class="sc-cloud" fill="#fff">
-                  <rect x="158" y="138" width="88" height="18" rx="9" />
-                  <circle cx="180" cy="140" r="12" />
-                  <circle cx="206" cy="133" r="16" />
-                  <circle cx="228" cy="143" r="10" />
+                  <rect x="372" y="138" width="88" height="18" rx="9" />
+                  <circle cx="394" cy="140" r="12" />
+                  <circle cx="420" cy="133" r="16" />
+                  <circle cx="442" cy="143" r="10" />
                 </g>
                 <g class="sc-cloud" fill="#fff">
-                  <rect x="594" y="112" width="100" height="18" rx="9" />
-                  <circle cx="618" cy="114" r="12" />
-                  <circle cx="646" cy="107" r="15" />
-                  <circle cx="670" cy="116" r="10" />
+                  <rect x="808" y="132" width="100" height="18" rx="9" />
+                  <circle cx="832" cy="134" r="12" />
+                  <circle cx="860" cy="127" r="15" />
+                  <circle cx="884" cy="136" r="10" />
                 </g>
 
                 {/* Мусоровоз: в шаге 1 въезжает слева, колёса крутятся */}
-                <g transform="translate(326 210)">
+                <g transform="translate(540 210)">
                   <g class="sc-truck">
                     <g set:html={TRUCK} />
                     {/* каретка подъёмника внизу заднего борта */}
@@ -302,9 +295,9 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
                   ))
                 }
                 {/* на телефоне «до» и «после» не помещаются на кадрах — одна подпись под ними */}
-                <span class="tst-cap">
+                <span class="tst-shots__cap">
                   <span>до погрузки</span>
-                  <span class="tst-cap__after">после погрузки</span>
+                  <span class="tst-shots__after">после погрузки</span>
                 </span>
               </div>
 
@@ -377,6 +370,49 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
         </GradientVisual>
         <span class="tag tag--demo tst__demo" aria-hidden="true">демо-данные</span>
       </div>
+
+      {/* Шкала: отрезок на шаг, как главы ролика. Кнопка — отрезок с подписью; в aria-label сначала видимая подпись
+          («1 Прибытие» — её можно назвать голосом), затем полное название шага */}
+      <ol class="tst-tl" aria-label="Шаги алгоритма" data-tst-list data-reveal style="--d:2">
+        {
+          STEPS.map((s, i) => (
+            <li class:list={['tst-tl__item', { 'is-on': i === 0 }]} style={`--ms:${s.ms}ms`}>
+              <button
+                class="tst-tl__btn"
+                type="button"
+                aria-label={`${i + 1} ${s.short}. ${s.title}`}
+                aria-describedby={s.text ? `algoritm-d${i + 1}` : undefined}
+                aria-current={i === 0 ? 'step' : undefined}
+              >
+                <span class="tst-tl__track">
+                  <i data-tst-bar />
+                </span>
+                <span class="tst-tl__label">
+                  <span class="tst-tl__n">{i + 1}</span>
+                  <span class="tst-tl__t">{s.short}</span>
+                </span>
+              </button>
+            </li>
+          ))
+        }
+      </ol>
+
+      {/* Подпись активного шага. В разметке все шесть: тексты остаются на странице, высота — по самой длинной */}
+      <div class="tst-caps" data-reveal style="--d:3">
+        {
+          STEPS.map((s, i) => (
+            <div class:list={['tst-cap', { 'is-on': i === 0 }]} data-tst-cap>
+              <p class="tst-cap__n">{`Шаг${NB}${i + 1}`}</p>
+              <h3 class="tst-cap__t">{s.title}</h3>
+              {s.text && (
+                <p class="tst-cap__d" id={`algoritm-d${i + 1}`}>
+                  {s.text}
+                </p>
+              )}
+            </div>
+          ))
+        }
+      </div>
     </div>
 
     <p class="tst__cta" data-reveal>
@@ -389,121 +425,67 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
 </section>
 
 <style>
-  /* ── Ряд: шаги слева, сцена справа ───────────────────── */
-  .tst__row {
-    display: grid;
-    grid-template-columns: minmax(0, 0.6fr) minmax(0, 1fr);
-    grid-template-areas: 'list vis';
-    align-items: center;
-    column-gap: clamp(40px, calc(var(--vw) * 5), 72px);
-  }
-
-  .tst__list {
-    grid-area: list;
-  }
-
+  /* ── Плеер: широкая сцена, под ней шкала шагов и подпись ── */
   .tst__visual {
-    grid-area: vis;
     position: relative;
-    min-width: 0;
   }
 
+  /* сверху полоса под «демо-данные» */
   .tst__visual :global(.gv) {
-    padding: clamp(16px, calc(var(--vw) * 2.4), 40px);
+    min-height: 0;
+    padding: 54px 36px 36px;
   }
 
-  /* «демо-данные» в углу градиентной карточки */
   .tst__demo {
     position: absolute;
     z-index: 1;
-    top: clamp(14px, calc(var(--vw) * 1.6), 22px);
-    left: clamp(14px, calc(var(--vw) * 1.6), 22px);
+    top: 14px;
+    left: clamp(16px, calc(var(--vw) * 1.6), 22px);
     pointer-events: none;
   }
 
-  /* ── Шаги: «Шаг N», заголовок, текст; полоса прогресса под активным (как у FeatureAccordion) ── */
-  .tst-step {
-    position: relative;
-    padding: 15px 0 16px;
-    border-bottom: 1px solid var(--line-2);
-  }
-
-  .tst-step:first-child {
-    border-top: 1px solid var(--line-2);
-  }
-
-  .tst-step__h {
-    font: inherit;
-  }
-
-  .tst-step__btn {
+  /* ── Шкала: шесть отрезков; пройденные залиты, активный заполняется (он же часы автопрокрутки).
+       Кнопки стоят вплотную — нажатие между отрезками не пропадает; зазор между полосами — поля кнопок
+       (--tl-x с каждой стороны), а шкала выступает на них за края колонки, чтобы полосы шли от края до края ── */
+  .tst-tl {
+    --tl-x: 5px;
     display: grid;
-    gap: 3px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    margin: 14px calc(var(--tl-x) * -1) 0;
+  }
+
+  .tst-tl__btn {
+    display: grid;
+    align-content: start;
+    gap: 11px;
     width: 100%;
-    padding: 0;
+    height: 100%;
+    min-height: 48px;
+    padding: 12px var(--tl-x) 8px;
     border: 0;
+    border-radius: calc(10px * var(--rk));
+    corner-shape: var(--corner);
     background: none;
     color: var(--muted);
     text-align: left;
-    transition: color 0.3s;
   }
 
-  /* нажимается весь пункт, вместе с текстом шага */
-  .tst-step__btn::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: calc(10px * var(--rk));
-    corner-shape: var(--corner);
+  /* рамка фокуса — по краю кнопки: соседние полосы не задевает */
+  .tst-tl__btn:focus-visible {
+    outline-offset: 0;
   }
 
-  .tst-step__btn:focus-visible {
-    outline: none;
-  }
-
-  .tst-step__btn:focus-visible::after {
-    outline: 2px solid var(--blue);
-    outline-offset: 2px;
-  }
-
-  .tst-step__btn:hover,
-  .tst-step.is-on .tst-step__btn {
-    color: var(--ink);
-  }
-
-  .tst-step__n {
-    font-size: 14px;
-    font-weight: 560;
-    line-height: 1.3;
-  }
-
-  .tst-step__t {
-    font-size: 19px;
-    font-weight: 560;
-    line-height: 1.3;
-    letter-spacing: -0.012em;
-    text-wrap: balance;
-  }
-
-  .tst-step__d {
-    margin-top: 4px;
-    font-size: 16px;
-    line-height: 1.45;
-    color: var(--muted);
-  }
-
-  .tst-step__bar {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -1px;
-    height: 2px;
+  .tst-tl__track {
+    display: block;
+    height: 4px;
     overflow: hidden;
-    pointer-events: none;
+    border-radius: 999px;
+    background: rgb(29 29 31 / 0.1);
+    transition: background-color 0.25s;
   }
 
-  /* цвет Tracker, как у полосы пунктов «О системе» и на главной */
-  .tst-step__bar i {
+  /* цвет Tracker, как у полосы пунктов «О системе» */
+  .tst-tl__track i {
     display: block;
     height: 100%;
     background: var(--g-teal);
@@ -511,13 +493,22 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     transform-origin: left center;
   }
 
-  /* полоса и есть часы автопрокрутки: когда она дошла до конца, скрипт включает следующий шаг */
-  .tst-step.is-on .tst-step__bar i {
+  .tst-tl__item.is-done .tst-tl__track i {
+    transform: none;
+  }
+
+  /* дорожка активного отрезка темнее: на паузе в самом начале он не сливается со следующими */
+  .tst-tl__item.is-on .tst-tl__track {
+    background-color: rgb(29 29 31 / 0.16);
+  }
+
+  /* когда отрезок заполнился, скрипт включает следующий шаг */
+  .tst-tl__item.is-on .tst-tl__track i {
     animation: algo-progress var(--ms) linear both;
   }
 
-  .tst__row[data-paused] .tst-step__bar i,
-  .tst__row[data-idle] .tst-step__bar i {
+  .tst__player[data-paused] .tst-tl__track i,
+  .tst__player[data-idle] .tst-tl__track i {
     animation-play-state: paused;
   }
 
@@ -530,6 +521,89 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     }
   }
 
+  .tst-tl__label {
+    display: flex;
+    gap: 7px;
+    font-size: 15px;
+    font-weight: 560;
+    line-height: 1.3;
+  }
+
+  .tst-tl__n {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tst-tl__t {
+    transition: color 0.25s;
+  }
+
+  .tst-tl__item.is-on .tst-tl__t {
+    color: var(--ink);
+  }
+
+  @media (hover: hover) {
+    .tst-tl__btn:hover .tst-tl__t {
+      color: var(--ink);
+    }
+
+    .tst-tl__btn:hover .tst-tl__track {
+      background-color: rgb(29 29 31 / 0.16);
+    }
+  }
+
+  /* ── Подпись активного шага: все шесть в одной клетке, видна одна ── */
+  .tst-caps {
+    display: grid;
+    max-width: 780px;
+    margin: 14px auto 0;
+    text-align: center;
+  }
+
+  .tst-cap {
+    grid-area: 1 / 1;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(6px);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      visibility 0s linear 0.2s;
+  }
+
+  .tst-cap.is-on {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition:
+      opacity 0.45s var(--ease-out) 0.12s,
+      transform 0.6s var(--ease-out) 0.12s,
+      visibility 0s;
+  }
+
+  .tst-cap__n {
+    font-size: 15px;
+    font-weight: 560;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+
+  .tst-cap__t {
+    margin-top: 6px;
+    font-size: 26px;
+    font-weight: 560;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .tst-cap__d {
+    margin-top: 8px;
+    font-size: 17px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
   /* ── Карточка со сценой ─────────────────────────────── */
   .tst-ui {
     container: tst-ui / inline-size;
@@ -538,15 +612,22 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     border-radius: 22px;
   }
 
-  /* Кадр: сцена 720×440 прижата к низу. --k — высота кадра к ширине: на узких экранах кадр выше
-     сцены, и сверху остаётся небо под плашки. Плашки стоят в долях ширины кадра (cqw), поэтому
-     точка сцены (x, y) — это left: x / 7.2 cqw, top: --top + y / 7.2 cqw. */
+  /* Кадр — окно на сцену 1100×440: --sw единиц сцены по ширине, начиная с x = --x0; --k — высота кадра
+     к ширине. Сцена прижата к низу (--top — где её верх): кадр выше сцены — сверху остаётся небо под плашки,
+     ниже — срезан край пустого неба.
+     --u — единица сцены в пикселях кадра: точка сцены (x, y) — это left: (x − --x0) · --u, top: --top + y · --u. */
   .tst-stage {
-    --k: 0.6111;
-    --top: calc((var(--k) - 0.6111) * 100cqw);
-    --pad: 3cqw;
-    --cloud-x: 50cqw;
-    --cloud-y: calc(4cqw + 29px);
+    --sw: 1100;
+    --x0: 0;
+    --k: 0.39;
+    --u: calc(100cqw / var(--sw));
+    --top: calc(var(--k) * 100cqw - 440 * var(--u));
+    --pad: clamp(10px, 2cqw, 22px);
+    --cloud-top: calc(var(--pad) + 12px);
+    --cloud-y: calc(var(--cloud-top) + 28px);
+    /* камера над подъёмником — точка сцены (550, 216): от неё видео летят в облако */
+    --cam-x: calc((550 - var(--x0)) * var(--u));
+    --cam-y: calc(var(--top) + 216 * var(--u));
     position: relative;
     aspect-ratio: 1 / var(--k);
     overflow: hidden;
@@ -561,11 +642,14 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     user-select: none;
   }
 
+  /* шире кадра, когда окно — середина сцены: общий max-width: 100% у svg снят */
   .sc {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    left: calc(var(--x0) * var(--u) * -1);
+    bottom: 0;
+    width: calc(1100 * var(--u));
+    max-width: none;
+    height: calc(440 * var(--u));
   }
 
   /* ── Что видно на каждом шаге (переходы — между шагами, движение — ниже) ── */
@@ -690,7 +774,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   /* синий контейнер опрокидывается вокруг правого верхнего угла (координаты сцены) */
   .sc-lift {
     transform-box: view-box;
-    transform-origin: 268px 342px;
+    transform-origin: 482px 342px;
   }
 
   /* ── Плашки поверх сцены ───────────────────────────── */
@@ -754,12 +838,12 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     right: var(--pad);
     top: var(--pad);
     display: flex;
-    gap: 1.3cqw;
+    gap: calc(12 * var(--u));
   }
 
   .tst-shot {
     display: block;
-    width: 14.6cqw;
+    width: calc(118 * var(--u));
     aspect-ratio: 16 / 10;
   }
 
@@ -813,7 +897,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   }
 
   /* подпись «до/после погрузки» под кадрами — только на телефоне */
-  .tst-cap {
+  .tst-shots__cap {
     display: none;
   }
 
@@ -825,14 +909,14 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     opacity: 0;
   }
 
-  /* Видео погрузок: от камеры над подъёмником (точка сцены 336, 216) вверх по пунктиру, под карточку облака */
+  /* Видео погрузок: от камеры над подъёмником вверх по пунктиру, под карточку облака */
   .tst-link {
     position: absolute;
     z-index: 1;
-    left: calc(336cqw / 7.2 - 1px);
+    left: calc(var(--cam-x) - 1px);
     top: var(--cloud-y);
     width: 2px;
-    height: calc(var(--top) + 216cqw / 7.2 - 9px - var(--cloud-y));
+    height: calc(var(--cam-y) - 9px - var(--cloud-y));
     background: repeating-linear-gradient(180deg, #6bb1ff 0 5px, transparent 5px 10px);
     opacity: 0;
     transition: opacity 0.35s var(--ease-out);
@@ -843,11 +927,11 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   }
 
   .tst-vid {
-    --vy: calc(var(--cloud-y) - var(--top) - 216cqw / 7.2);
+    --vy: calc(var(--cloud-y) - var(--cam-y));
     position: absolute;
     z-index: 2;
-    left: calc(336cqw / 7.2 - 15px);
-    top: calc(var(--top) + 216cqw / 7.2 - 10px);
+    left: calc(var(--cam-x) - 15px);
+    top: calc(var(--cam-y) - 10px);
     display: grid;
     place-items: center;
     width: 30px;
@@ -861,8 +945,8 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   .tst-cloud {
     position: absolute;
     z-index: 3;
-    left: var(--cloud-x);
-    top: 4cqw;
+    left: 50cqw;
+    top: var(--cloud-top);
   }
 
   .tst-cloud__in {
@@ -1065,13 +1149,13 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   /* ── Движение шага: идёт, пока у кадра класс is-run (скрипт снимает и ставит его при смене шага).
        Без движения у каждого элемента виден итог шага. ── */
 
-  /* 1. Машина въезжает слева и останавливается у площадки; колёса крутятся в такт */
+  /* 1. Машина въезжает слева через весь кадр и останавливается у площадки; колёса крутятся в такт */
   .is-run[data-s='1'] .sc-truck {
-    animation: algo-drive 2.3s cubic-bezier(0.3, 0.55, 0.25, 1) 0.15s both;
+    animation: algo-drive 2.6s cubic-bezier(0.3, 0.55, 0.25, 1) 0.15s both;
   }
 
   .is-run[data-s='1'] .sc-wheel {
-    animation: algo-roll 2.3s cubic-bezier(0.3, 0.55, 0.25, 1) 0.15s both;
+    animation: algo-roll 2.6s cubic-bezier(0.3, 0.55, 0.25, 1) 0.15s both;
   }
 
   .is-run[data-s='1'] :is(.sc-bags, .sc-lid-open) {
@@ -1079,7 +1163,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   }
 
   .is-run[data-s='1'] .tst-loc__in {
-    animation: algo-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 2.35s both;
+    animation: algo-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 2.65s both;
   }
 
   /* 2 и 4. Камеры по очереди делают снимок — вспышка, следом всплывает или меняется кадр */
@@ -1190,16 +1274,17 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     animation-delay: var(--t);
   }
 
+  /* старт — за левым краем широкого кадра */
   @keyframes algo-drive {
     from {
-      transform: translateX(-700px);
+      transform: translateX(-920px);
     }
   }
 
-  /* 700 / (2π · 22) ≈ 5,06 оборота — колёса катятся, а не скользят */
+  /* 920 / (2π · 22) ≈ 6,66 оборота — колёса катятся, а не скользят */
   @keyframes algo-roll {
     from {
-      transform: rotate(-1823deg);
+      transform: rotate(-2396deg);
     }
   }
 
@@ -1355,29 +1440,34 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   }
 
   /* за экраном и на скрытой вкладке движение стоит (data-idle снимает скрипт) */
-  .tst__row[data-idle] .tst-stage *,
-  .tst__row[data-idle] .tst-stage *::after {
+  .tst__player[data-idle] .tst-stage *,
+  .tst__player[data-idle] .tst-stage *::after {
     animation-play-state: paused !important;
   }
 
   @media (scripting: none) {
-    .tst__row[data-idle] .tst-stage *,
-    .tst__row[data-idle] .tst-stage *::after,
-    .tst__row[data-idle] .tst-step__bar i {
+    .tst__player[data-idle] .tst-stage *,
+    .tst__player[data-idle] .tst-stage *::after,
+    .tst__player[data-idle] .tst-tl__track i {
       animation-play-state: running !important;
     }
   }
 
-  /* Без движения: шаги переключаются только нажатием, сцена сразу показывает итог шага.
-     Шаг 3 — главный кадр погрузки: синий контейнер опрокинут над кузовом, зелёные ещё полные. */
+  /* Без движения: шаги переключаются только нажатием, сцена сразу показывает итог шага, на шкале залиты
+     пройденные шаги и активный. Шаг 3 — главный кадр погрузки: синий контейнер опрокинут над кузовом,
+     зелёные ещё полные. */
   @media (prefers-reduced-motion: reduce) {
     .tst-stage *,
     .tst-stage *::after,
-    .tst-step__bar i {
+    .tst-tl__track i {
       animation: none !important;
     }
 
-    .tst-step.is-on .tst-step__bar i {
+    .tst-tl__item.is-on .tst-tl__track i {
+      transform: none;
+    }
+
+    .tst-cap {
       transform: none;
     }
 
@@ -1398,13 +1488,24 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     }
   }
 
-  /* ── Узкая карточка: кадр выше сцены, плашки — в небе над ней. Адрес и «Запись» — в строку,
+  /* ── Кадр уже 860 px: окно на середину сцены (площадка с машиной и немного улицы), сверху полоса неба ── */
+  @container tst-ui (max-width: 860px) {
+    .tst-stage {
+      --sw: 860;
+      --x0: 144;
+      --k: 0.55;
+    }
+  }
+
+  /* ── Узкая карточка: кадр — площадка с машиной, сверху небо под плашки. Адрес и «Запись» — в строку,
        кадры с камер и облако — под ними (у облака 56 px высоты, середина — на 28 px ниже верха) ── */
   @container tst-ui (max-width: 600px) {
     .tst-stage {
+      --sw: 720;
+      --x0: 214;
       --k: 0.74;
       --pad: 2.8cqw;
-      --cloud-y: calc(var(--pad) + 64px);
+      --cloud-top: calc(var(--pad) + 36px);
     }
 
     .tst-hud {
@@ -1425,10 +1526,6 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     .tst-shot {
       flex: 1 1 0;
       width: auto;
-    }
-
-    .tst-cloud {
-      top: calc(var(--pad) + 36px);
     }
   }
 
@@ -1480,14 +1577,14 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
       display: none;
     }
 
-    .tst-cap {
+    .tst-shots__cap {
       position: absolute;
       left: 0;
       top: calc(100% + 6px);
       display: grid;
     }
 
-    .tst-cap > span {
+    .tst-shots__cap > span {
       grid-area: 1 / 1;
       justify-self: start;
       padding: 1px 6px;
@@ -1501,62 +1598,66 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
       transition: opacity 0.3s;
     }
 
-    .tst-cap__after,
-    .tst-stage:is([data-s='4'], [data-s='5'], [data-s='6']) .tst-cap > :first-child {
+    .tst-shots__after,
+    .tst-stage:is([data-s='4'], [data-s='5'], [data-s='6']) .tst-shots__cap > :first-child {
       opacity: 0;
     }
 
-    .tst-stage:is([data-s='4'], [data-s='5'], [data-s='6']) .tst-cap__after {
+    .tst-stage:is([data-s='4'], [data-s='5'], [data-s='6']) .tst-shots__after {
       opacity: 1;
     }
   }
 
-  /* ── Кнопка под шагами ─────────────────────────────── */
+  /* ── Кнопка под подписью ───────────────────────────── */
   .tst__cta {
     display: flex;
     justify-content: center;
-    margin-top: clamp(32px, calc(var(--vw) * 3.6), 52px);
+    margin-top: clamp(28px, calc(var(--vw) * 2.8), 40px);
   }
 
-  /* ── Уже 1200 px: сцена сверху во всю ширину, шаги под ней ── */
+  /* ── Уже 1200 px: всё то же, уже; поля градиента вокруг сцены — от ширины окна ── */
   @media (max-width: 1199.98px) {
-    .tst__row {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-areas:
-        'vis'
-        'list';
-      row-gap: 28px;
-    }
-
-    /* сверху место под «демо-данные»; карточка не шире 760 px, по бокам градиент */
     .tst__visual :global(.gv) {
-      min-height: 0;
-      padding: 54px clamp(14px, calc(var(--vw) * 4), 48px) clamp(16px, calc(var(--vw) * 4), 48px);
+      padding: 54px clamp(14px, calc(var(--vw) * 3.4), 36px) clamp(14px, calc(var(--vw) * 3.4), 36px);
     }
 
-    .tst-ui {
-      max-width: 760px;
+    .tst-tl {
+      --tl-x: 4px;
+    }
+
+    .tst-tl__label {
+      font-size: 14px;
+    }
+
+    .tst-cap__t {
+      font-size: 24px;
     }
   }
 
-  /* планшет: шаги в две колонки по три — линии между шагами идут через обе колонки */
-  @media (min-width: 621px) and (max-width: 1199.98px) {
-    .tst__list {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-template-rows: repeat(3, auto);
-      grid-auto-flow: column;
-      column-gap: 32px;
+  /* на узкой шкале подписи отрезков не помещаются — только номера; название шага — в подписи ниже */
+  @media (max-width: 719.98px) {
+    .tst-tl {
+      --tl-x: 3px;
     }
 
-    .tst-step:nth-child(4) {
-      border-top: 1px solid var(--line-2);
+    .tst-tl__t {
+      display: none;
+    }
+
+    .tst-tl__item.is-on .tst-tl__n {
+      color: var(--ink);
+      font-weight: 600;
     }
   }
 
   @media (max-width: 560px) {
     .tst__visual :global(.gv) {
       padding: 46px 8px 10px;
+    }
+
+    .tst__demo {
+      top: 13px;
+      left: 14px;
     }
 
     .tst-ui {
@@ -1571,20 +1672,25 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
       border-radius: 12px;
     }
 
-    .tst-step {
-      padding: 12px 0 13px;
+    .tst-tl {
+      margin-top: 12px;
     }
 
-    .tst-step__n {
-      font-size: 13px;
+    .tst-tl__btn {
+      padding: 14px var(--tl-x) 10px;
     }
 
-    .tst-step__t {
-      font-size: 17px;
+    .tst-cap__n {
+      font-size: 14px;
     }
 
-    .tst-step__d {
-      margin-top: 2px;
+    .tst-cap__t {
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .tst-cap__d {
+      margin-top: 6px;
       font-size: 15px;
     }
 
@@ -1597,10 +1703,11 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
 <script>
   import { reducedMotion } from '../../scripts/motion';
 
-  // Шаги идут сами: следующий включается, когда полоса прогресса активного шага дошла до конца.
-  // Полоса и сцена стоят, пока сцена за экраном или вкладка скрыта; полоса стоит, пока курсор над списком
-  // или в нём фокус с клавиатуры. Нажатый шаг сразу показывается в сцене. При «уменьшить движение»
-  // шаги переключаются только нажатием.
+  // Шаги идут сами: следующий включается, когда отрезок активного шага на шкале заполнился.
+  // Шкала и сцена стоят, пока сцена за экраном или вкладка скрыта; шкала стоит, пока курсор над плеером
+  // (сцена, шкала, подпись) или в шкале фокус с клавиатуры. Нажатый отрезок сразу показывается в сцене;
+  // стрелки влево и вправо, Home и End переходят по шагам. При «уменьшить движение» шаги переключаются
+  // только нажатием.
   const root = document.querySelector<HTMLElement>('[data-tst]');
   if (root) {
     const stage = root.querySelector<HTMLElement>('[data-tst-stage]')!;
@@ -1608,6 +1715,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     const items = [...list.querySelectorAll<HTMLElement>(':scope > li')];
     const buttons = items.map((li) => li.querySelector<HTMLButtonElement>('button')!);
     const bars = items.map((li) => li.querySelector<HTMLElement>('[data-tst-bar]')!);
+    const caps = [...root.querySelectorAll<HTMLElement>('[data-tst-cap]')];
     let index = 0;
     let inView = false;
     let hover = false;
@@ -1615,12 +1723,16 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
 
     const show = (i: number) => {
       index = (i + items.length) % items.length;
-      items.forEach((li, k) => li.classList.toggle('is-on', k === index));
+      items.forEach((li, k) => {
+        li.classList.toggle('is-on', k === index);
+        li.classList.toggle('is-done', k < index);
+      });
       buttons.forEach((btn, k) => {
         if (k === index) btn.setAttribute('aria-current', 'step');
         else btn.removeAttribute('aria-current');
       });
-      // движение шага и полоса начинаются заново, даже если нажат тот же шаг
+      caps.forEach((cap, k) => cap.classList.toggle('is-on', k === index));
+      // движение шага и отрезок начинаются заново, даже если нажат тот же шаг
       stage.classList.remove('is-run');
       stage.dataset.s = String(index + 1);
       bars[index].style.animation = 'none';
@@ -1643,14 +1755,11 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
       }
     };
 
-    // уже 1200 px сцена стоит над списком: шаг, нажатый внизу списка, показывается в сцене под шапкой или
-    // за верхом окна — подтягиваем карточку в окно (отступ под шапку даёт scroll-padding-top у html,
-    // плавность — scroll-behavior: при «уменьшить движение» сразу). Шире сцена рядом со списком.
-    const stacked = window.matchMedia('(max-width: 1199.98px)');
+    // шаг нажат, а верх сцены ушёл под шапку или за окно — подтягиваем сцену в окно (отступ под шапку даёт
+    // scroll-padding-top у html, плавность — scroll-behavior: при «уменьшить движение» сразу)
     const visual = root.querySelector<HTMLElement>('.tst__visual')!;
     const header = document.querySelector<HTMLElement>('[data-hdr]');
     const reveal = () => {
-      if (!stacked.matches) return;
       const top = header ? header.getBoundingClientRect().bottom : 0;
       if (stage.getBoundingClientRect().top < top) visual.scrollIntoView({ block: 'nearest' });
     };
@@ -1661,17 +1770,33 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
         reveal();
       }),
     );
+    list.addEventListener('keydown', (e) => {
+      const k = buttons.indexOf(e.target as HTMLButtonElement);
+      if (k < 0) return;
+      const to =
+        e.key === 'ArrowRight' ? k + 1
+        : e.key === 'ArrowLeft' ? k - 1
+        : e.key === 'Home' ? 0
+        : e.key === 'End' ? items.length - 1
+        : null;
+      if (to === null) return;
+      e.preventDefault();
+      const next = (to + items.length) % items.length;
+      buttons[next].focus();
+      show(next);
+      reveal();
+    });
     bars.forEach((bar) =>
       bar.addEventListener('animationend', (e) => {
         if (e.target === bar && !reducedMotion()) show(index + 1);
       }),
     );
-    list.addEventListener('pointerenter', (e) => {
+    root.addEventListener('pointerenter', (e) => {
       if (e.pointerType !== 'mouse') return;
       hover = true;
       sync();
     });
-    list.addEventListener('pointerleave', () => {
+    root.addEventListener('pointerleave', () => {
       hover = false;
       sync();
     });
