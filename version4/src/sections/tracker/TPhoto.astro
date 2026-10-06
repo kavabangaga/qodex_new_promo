@@ -1,0 +1,873 @@
+---
+// Раздел страницы «QODEX Tracker» — «Автоматическая фотофиксация „до“ и „после“» [#foto].
+// В центре — настоящие кадры с камер мусоровоза (не рисунок, поэтому без метки «демо-данные»):
+// шторка «до / после» на мятной градиентной панели. Если пар кадров больше одной, над кадром — камеры,
+// выбранная соединена с карточкой «каплей», как вкладки на первом экране главной. Под панелью — три пункта с лендинга
+// бежевыми плитками с «мостиками». Шторку двигают мышью, пальцем (вертикальная прокрутка страницы
+// при этом работает) и стрелками клавиатуры — через настоящий <input type="range">.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+import { withBase } from '../../config/site';
+
+const NB = '\u00a0';
+
+// Пары кадров. Сейчас одна — камера над подъёмником (контейнер полный → пустой). Пара боковой камеры
+// (cam-b-*, площадка) снята с разных мест — машина сдвинулась, и шторка показывала склейку двух кадров;
+// когда будут кадры с одной точки, добавьте её сюда — появятся кнопки камер.
+// start — где шторка показывает разницу лучше всего.
+const PAIRS = [
+  {
+    cam: `Кам.${NB}4 · подъёмник`,
+    before: 'cam-a-before',
+    after: 'cam-a-after',
+    beforeAlt: 'Кадр камеры до погрузки: контейнер полный',
+    afterAlt: 'Кадр камеры после погрузки: контейнер пуст',
+    start: 50,
+  },
+];
+
+const src = (name: string, w: number) => withBase(`/media/tracker/${name}-${w}.webp`);
+const srcset = (name: string) => `${src(name, 720)} 720w, ${src(name, 1200)} 1200w`;
+// ширина кадра на странице: телефон, планшет, компьютер (раскладка 1200 px)
+const SIZES = '(max-width: 699.98px) 360px, (max-width: 1199.98px) 760px, 1000px';
+
+// Тексты — с лендинга продукта, дословно
+const POINTS: { icon: IconName; text: string }[] = [
+  { icon: 'map-pin', text: 'Каждое фото точно привязано к контейнерной площадке' },
+  { icon: 'shield-check', text: 'Исключены человеческие ошибки и подмена фото' },
+  { icon: 'user-x', text: 'Водитель больше не нужен для фотофиксации' },
+];
+---
+
+<section class="section tph" id="foto" aria-labelledby="foto-title">
+  <div class="container">
+    <SectionIntro eyebrow="Фотофиксация" titleId="foto-title">
+      Автоматическая фотофиксация «до» и&nbsp;«после»
+    </SectionIntro>
+
+    <div class="gv gv--mint tph__stage" data-tph data-reveal>
+      <!-- Камеры (если пар кадров несколько): выбранная соединена «каплей» с карточкой кадра -->
+      {
+        PAIRS.length > 1 && (
+          <div class="tph__cams" role="group" aria-label="Камера">
+            {PAIRS.map((p, i) => (
+              <button class="tph__cam" type="button" aria-pressed={i === 0 ? 'true' : 'false'} data-tph-cam>
+                <span class="tph__cam-ico" aria-hidden="true">
+                  <Icon name="cctv" size={20} strokeWidth={1.9} />
+                </span>
+                <span class="tph__cam-label">{p.cam}</span>
+              </button>
+            ))}
+          </div>
+        )
+      }
+
+      <div class="tph__card">
+        <div class="tph__cmp" data-tph-cmp>
+          <input
+            class="tph__range"
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value="50"
+            aria-label="Сравнить кадры до и после погрузки"
+            data-tph-range
+          />
+
+          {
+            PAIRS.map((p, i) => (
+              <div
+                class:list={['tph__pair', { 'is-active': i === 0 }]}
+                aria-hidden={i === 0 ? undefined : 'true'}
+                data-tph-pair
+                data-start={p.start}
+              >
+                <img
+                  class="tph__img"
+                  src={src(p.before, 1200)}
+                  srcset={srcset(p.before)}
+                  sizes={SIZES}
+                  width="1200"
+                  height="675"
+                  alt={p.beforeAlt}
+                  loading="lazy"
+                  decoding="async"
+                  draggable="false"
+                />
+                {/* «после» — справа от шторки: слой сдвинут на её положение, кадр внутри — обратно */}
+                <div class="tph__after">
+                  <img
+                    class="tph__img tph__after-img"
+                    src={src(p.after, 1200)}
+                    srcset={srcset(p.after)}
+                    sizes={SIZES}
+                    width="1200"
+                    height="675"
+                    alt={p.afterAlt}
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                  />
+                </div>
+              </div>
+            ))
+          }
+
+          <span class="tph__pill tph__pill--before" aria-hidden="true" data-tph-pill>До погрузки</span>
+          <span class="tph__pill tph__pill--after" aria-hidden="true" data-tph-pill>После погрузки</span>
+
+          <div class="tph__line" aria-hidden="true">
+            <span class="tph__knob">
+              <Icon name="arrow-left" size={16} strokeWidth={2.2} />
+              <Icon name="arrow-right" size={16} strokeWidth={2.2} />
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p class="tph__cap">
+        <Icon name="cctv" size={16} strokeWidth={2} />
+        <span>Кадры с камер QODEX&nbsp;Tracker</span>
+      </p>
+    </div>
+
+    <!-- Три пункта: бежевые плитки, соединённые мостиками -->
+    <ul class="tph__points bridged">
+      {
+        POINTS.map((p, i) => (
+          <li class="tph__point" data-reveal style={`--d:${i + 1}`}>
+            <span class="tph__chip" aria-hidden="true">
+              <Icon name={p.icon} size={22} />
+            </span>
+            <h3 class="tph__text">{p.text}</h3>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .tph {
+    /* выбранная камера — фирменный фиолетовый (не чёрный и не цвет продукта), как вкладки «Кодекса ТКО» */
+    --tph-accent: #6b4dff;
+    --tph-card-r: clamp(22px, calc(var(--vw) * 2.2), 32px);
+    --tph-card-pad: clamp(5px, calc(var(--vw) * 0.6), 10px);
+    --tph-knob: 52px;
+  }
+
+  /* ── Мятная панель: камеры, карточка кадра, подпись ───── */
+  /* overflow: clip, а не hidden: панель не становится прокручиваемой. Размытый слой .gv::before
+     выступает за её край, и scrollIntoView (поиск по странице, скрипты) иначе сдвигал бы содержимое
+     панели — снизу проступал бы плоский фон. */
+  .tph__stage {
+    --gv-r: clamp(28px, calc(var(--vw) * 3), 48px);
+    display: grid;
+    justify-items: center;
+    min-height: 0;
+    overflow: hidden;
+    overflow: clip;
+    padding: clamp(18px, calc(var(--vw) * 2.4), 36px) clamp(10px, calc(var(--vw) * 3.6), 64px)
+      clamp(14px, calc(var(--vw) * 1.8), 26px);
+  }
+
+  /* одна пара кадров, кнопок камер нет — поле сверху как по бокам */
+  .tph__stage:not(:has(.tph__cams)) {
+    padding-top: clamp(10px, calc(var(--vw) * 3.6), 64px);
+  }
+
+  .tph__stage > * {
+    width: min(100%, 1000px);
+  }
+
+  /* ── Камеры: плитки в светлой рамке, как вкладки на первом экране главной ── */
+  .tph__cams {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    /* поле снизу — под «каплю» выбранной камеры; ряд на 2px заходит на карточку, чтобы капля срослась с ней */
+    padding-bottom: 16px;
+    margin-bottom: -2px;
+  }
+
+  .tph__cam {
+    --bw: 3px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 52px;
+    padding: 0 18px 0 13px;
+    border: var(--bw) solid var(--card-warm);
+    border-radius: calc(16px * var(--rk));
+    corner-shape: var(--corner);
+    background: rgb(255 255 255 / 0.6);
+    color: var(--ink);
+    font-size: 15.5px;
+    font-weight: 560;
+    white-space: nowrap;
+    box-shadow: 0 6px 18px -10px rgb(29 29 31 / 0.35);
+    transition:
+      background-color 0.35s var(--ease),
+      color 0.35s var(--ease),
+      transform 0.3s var(--ease-out);
+  }
+
+  /* на градиенте синее кольцо фокуса теряется — графитовое */
+  .tph__cam:focus-visible {
+    outline-color: var(--ink);
+  }
+
+  @media (hover: hover) {
+    .tph__cam:hover {
+      background: rgb(255 255 255 / 0.85);
+      transform: translateY(-2px);
+    }
+  }
+
+  .tph__cam[aria-pressed='true'] {
+    background: var(--tph-accent);
+    color: #fff;
+    transform: none;
+  }
+
+  .tph__cam-ico {
+    display: grid;
+    place-items: center;
+  }
+
+  /* «Капля» от выбранной камеры к карточке кадра */
+  .tph__cam::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: calc(100% + var(--bw) - 1px);
+    width: 44px;
+    height: 17px;
+    margin-left: -22px;
+    background: var(--card-warm);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 17' preserveAspectRatio='none'%3E%3Cpath d='M0 17C14 17 16 12 16 6V0h12v6c0 6 2 11 16 11Z'/%3E%3C/svg%3E")
+      center / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 17' preserveAspectRatio='none'%3E%3Cpath d='M0 17C14 17 16 12 16 6V0h12v6c0 6 2 11 16 11Z'/%3E%3C/svg%3E")
+      center / 100% 100% no-repeat;
+    opacity: 0;
+    transform: scaleY(0.2);
+    transform-origin: 50% 100%;
+    transition:
+      opacity 0.2s,
+      transform 0.45s var(--ease-out);
+    pointer-events: none;
+  }
+
+  .tph__cam[aria-pressed='true']::after {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0.08s;
+  }
+
+  /* ── Карточка с кадром ─────────────────────────────────── */
+  .tph__card {
+    padding: var(--tph-card-pad);
+    border-radius: calc(var(--tph-card-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card-warm);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Окно сравнения 16:9. Обрезка clip-path — страховка для Safari, который не всегда обрезает
+     движущиеся слои по скруглению; дуга чуть меньше и суперэллипс не задевает (--rclip). */
+  .tph__cmp {
+    --p: 50;
+    --tph-pr: calc(var(--tph-card-r) - var(--tph-card-pad));
+    position: relative;
+    aspect-ratio: 16 / 9;
+    /* clip — по той же причине, что у панели: слой «после» выступает вправо на положение шторки */
+    overflow: hidden;
+    overflow: clip;
+    isolation: isolate;
+    container-type: inline-size;
+    border-radius: calc(var(--tph-pr) * var(--rk));
+    corner-shape: var(--corner);
+    clip-path: inset(0 round calc(var(--tph-pr) * var(--rclip)));
+    background: #dbe5eb;
+    cursor: ew-resize;
+    /* по горизонтали тянем шторку, по вертикали страница прокручивается как обычно */
+    touch-action: pan-y;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Ползунок для клавиатуры и экранного диктора: прозрачный, лежит поверх кадра, мышь и палец
+     обрабатывает скрипт (так шторку можно тянуть с любого места кадра) */
+  .tph__range {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* пары кадров лежат друг на друге: смена камеры — плавная смена прозрачности */
+  .tph__pair {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.45s var(--ease-out);
+  }
+
+  .tph__pair.is-active {
+    opacity: 1;
+  }
+
+  .tph__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* виньетка «камеры», как у кадров на главной: углы чуть темнее — подписи читаются на любом кадре,
+     а размытые служебные надписи камеры в углах не спорят с ними */
+  .tph__cmp::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(120% 95% at 50% 50%, rgb(29 29 31 / 0) 52%, rgb(29 29 31 / 0.3));
+    pointer-events: none;
+  }
+
+  /* «после»: слой сдвинут вправо на положение шторки, кадр в нём — на столько же влево,
+     поэтому сам кадр стоит на месте, а видна только его часть справа от шторки.
+     Двигаются только transform — без перерисовки. */
+  .tph__after {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    overflow: clip;
+    transform: translateX(calc(var(--p) * 1%));
+    will-change: transform;
+  }
+
+  .tph__after-img {
+    transform: translateX(calc(var(--p) * -1%));
+    will-change: transform;
+  }
+
+  /* ── Шторка: белая линия и круглая ручка ───────────────── */
+  .tph__line {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    transform: translateX(calc(var(--p) * 1%));
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  .tph__line::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -1px;
+    width: 2px;
+    background: #fff;
+    box-shadow: 0 0 10px rgb(29 29 31 / 0.3);
+  }
+
+  /* у края кадра ручка не уходит за край: сдвиг считается от ширины окна (1cqw = 1 % ширины) */
+  .tph__knob {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--tph-knob) / -2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--tph-knob);
+    height: var(--tph-knob);
+    margin-top: calc(var(--tph-knob) / -2);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--ink);
+    box-shadow:
+      0 0 0 1px rgb(29 29 31 / 0.06),
+      0 6px 18px -6px rgb(29 29 31 / 0.45);
+    transform: translateX(
+      calc(
+        max(0px, var(--tph-knob) / 2 + 6px - var(--p) * 1cqw) -
+          max(0px, var(--tph-knob) / 2 + 6px - (100 - var(--p)) * 1cqw)
+      )
+    );
+    transition: scale 0.3s var(--ease-out);
+  }
+
+  .tph__knob :global(svg) {
+    flex: none;
+    margin-inline: -1px;
+  }
+
+  /* под курсором ручка чуть крупнее — видно, что её можно тянуть */
+  @media (hover: hover) {
+    .tph__cmp:hover .tph__knob {
+      scale: 1.06;
+    }
+  }
+
+  /* фокус с клавиатуры — кольцо вокруг ручки: синее и белый ореол, видно на любом кадре */
+  .tph__range:focus-visible ~ .tph__line .tph__knob {
+    box-shadow:
+      0 0 0 3px var(--blue),
+      0 0 0 6px #fff,
+      0 6px 18px -6px rgb(29 29 31 / 0.45);
+  }
+
+  /* ── Подписи «до» и «после» в верхних углах; гаснут, когда шторка подходит к ним ── */
+  .tph__pill {
+    position: absolute;
+    top: clamp(8px, calc(var(--vw) * 1), 14px);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.92);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 560;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px -6px rgb(29 29 31 / 0.4);
+    pointer-events: none;
+  }
+
+  .tph__pill--before {
+    left: clamp(8px, calc(var(--vw) * 1), 14px);
+  }
+
+  .tph__pill--after {
+    right: clamp(8px, calc(var(--vw) * 1), 14px);
+  }
+
+  /* Плавный ход шторки после щелчка, касания и клавиш (при перетаскивании — без задержки) */
+  .tph__cmp.is-glide .tph__after,
+  .tph__cmp.is-glide .tph__after-img,
+  .tph__cmp.is-glide .tph__line,
+  .tph__cmp.is-glide .tph__knob {
+    transition:
+      transform 0.35s var(--ease-out),
+      scale 0.3s var(--ease-out);
+  }
+
+  .tph__cmp.is-glide .tph__pill {
+    transition: opacity 0.3s var(--ease-out);
+  }
+
+  /* Подсказка при первом появлении: шторка проходит 50 → 30 → 70 → 50 %, — видно, что её можно двигать */
+  .tph__cmp.is-hint .tph__after,
+  .tph__cmp.is-hint .tph__line {
+    animation: tph-hint 1.6s var(--ease-in-out) both;
+  }
+
+  .tph__cmp.is-hint .tph__after-img {
+    animation: tph-hint-back 1.6s var(--ease-in-out) both;
+  }
+
+  @keyframes tph-hint {
+    0% {
+      transform: translateX(50%);
+    }
+    30% {
+      transform: translateX(30%);
+    }
+    70% {
+      transform: translateX(70%);
+    }
+    100% {
+      transform: translateX(50%);
+    }
+  }
+
+  @keyframes tph-hint-back {
+    0% {
+      transform: translateX(-50%);
+    }
+    30% {
+      transform: translateX(-30%);
+    }
+    70% {
+      transform: translateX(-70%);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tph__cmp .tph__after,
+    .tph__cmp .tph__after-img,
+    .tph__cmp .tph__line {
+      animation: none !important;
+    }
+  }
+
+  /* подпись под кадром: настоящие кадры, не рисунок */
+  .tph__cap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: clamp(12px, calc(var(--vw) * 1.4), 18px);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink-2);
+  }
+
+  /* ── Три пункта: бежевые плитки с белыми плашками значков ── */
+  .tph__points {
+    --gap: clamp(14px, calc(var(--vw) * 1.6), 20px);
+    --tph-pad: clamp(18px, calc(var(--vw) * 2), 24px);
+    --tph-chip: 48px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--gap);
+    margin-top: var(--gap);
+    isolation: isolate;
+  }
+
+  .tph__point {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: var(--tph-pad);
+    border-radius: calc(24px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  /* мостик к плитке слева — на высоте значка (маски — .bridged в global.css) */
+  .tph__point + .tph__point::before {
+    content: '';
+    position: absolute;
+    top: calc(50% - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  .tph__chip {
+    display: grid;
+    place-items: center;
+    width: var(--tph-chip);
+    height: var(--tph-chip);
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+    color: var(--ink);
+    box-shadow:
+      0 1px 2px rgb(29 29 31 / 0.05),
+      0 10px 18px -12px rgb(29 29 31 / 0.22);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  /* при наведении приподнимается значок, а не плитка: стык с мостиком остаётся на месте */
+  @media (hover: hover) {
+    .tph__point:hover .tph__chip {
+      transform: translateY(-2px) scale(1.05);
+    }
+  }
+
+  .tph__text {
+    font-size: 1.125rem;
+    line-height: 1.32;
+    letter-spacing: -0.012em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  /* ── Планшет: три плитки в ряд, значок над текстом; мостики — на высоте значка ── */
+  @media (max-width: 1199.98px) {
+    .tph__point {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .tph__point + .tph__point::before {
+      top: calc(var(--tph-pad) + var(--tph-chip) / 2 - (var(--gap) + 14px) / 2);
+    }
+
+    .tph__text {
+      font-size: 1.0625rem;
+    }
+  }
+
+  /* Телефон: панель шире — до краёв экрана с небольшим полем, кадр во всю её ширину */
+  @media (max-width: 639.98px) {
+    .tph {
+      --tph-knob: 44px;
+    }
+
+    .tph__stage {
+      margin-inline: calc(var(--page-pad) - var(--gutter));
+    }
+
+    .tph__cams {
+      gap: 6px;
+    }
+
+    .tph__cam {
+      --bw: 2px;
+      height: 46px;
+      padding: 0 12px;
+      border-radius: calc(14px * var(--rk));
+      corner-shape: var(--corner);
+      font-size: 13.5px;
+    }
+
+    .tph__cam-ico {
+      display: none;
+    }
+
+    .tph__pill {
+      height: 24px;
+      padding: 0 9px;
+      font-size: 12px;
+    }
+
+    /* пункты столбиком, значок слева; мостики — к плитке сверху */
+    .tph__points {
+      --tph-chip: 44px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tph__point {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .tph__point + .tph__point::before {
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--tph-pad) + var(--tph-chip) / 2 - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .tph__chip {
+      border-radius: calc(13px * var(--rk));
+      corner-shape: var(--corner);
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Шторка «до / после». Положение (0–100 %) — переменная --p у окна кадра: по ней CSS сдвигает
+  // слой «после», кадр внутри него и линию — только transform. Мышь и палец обрабатываем сами
+  // (тянуть можно с любого места кадра, вертикальная прокрутка на телефоне не мешает), клавиатура
+  // и экранный диктор работают с настоящим ползунком.
+  document.querySelectorAll<HTMLElement>('[data-tph]').forEach((root) => {
+    const cmp = root.querySelector<HTMLElement>('[data-tph-cmp]');
+    const range = root.querySelector<HTMLInputElement>('[data-tph-range]');
+    const line = root.querySelector<HTMLElement>('.tph__line');
+    const [pillBefore, pillAfter] = [...root.querySelectorAll<HTMLElement>('[data-tph-pill]')];
+    if (!cmp || !range || !line || !pillBefore || !pillAfter) return;
+    const pairs = [...root.querySelectorAll<HTMLElement>('[data-tph-pair]')];
+    const cams = [...root.querySelectorAll<HTMLButtonElement>('[data-tph-cam]')];
+
+    let pos = 50;
+    let moved = false; // шторку ставил сам пользователь — при смене камеры она остаётся на месте
+    let hintOff = false; // подсказка уже была или больше не нужна
+
+    // Подпись гаснет, когда линия заходит на неё: видна целиком, пока линия не ближе 4 px,
+    // и исчезает, когда линия зашла на 16 px. Отсчёт — в пикселях раскладки (offset*: до автомасштаба
+    // страницы), в них же живёт и всё внутри окна кадра.
+    const geo = { w: 1, before: 0, after: 0 };
+    const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+    const fade = () => {
+      const x = (pos / 100) * geo.w;
+      pillBefore.style.opacity = String(clamp01((x - geo.before + 16) / 20));
+      pillAfter.style.opacity = String(clamp01((geo.after - x + 16) / 20));
+    };
+    const measure = () => {
+      geo.w = cmp.offsetWidth || 1;
+      geo.before = pillBefore.offsetLeft + pillBefore.offsetWidth;
+      geo.after = pillAfter.offsetLeft;
+      fade();
+    };
+
+    // glide — плавный ход (щелчок, касание, клавиши, смена камеры); при перетаскивании — без задержки
+    const set = (p: number, glide: boolean) => {
+      pos = Math.min(100, Math.max(0, p));
+      cmp.classList.toggle('is-glide', glide);
+      cmp.style.setProperty('--p', pos.toFixed(2));
+      range.value = String(Math.round(pos));
+      fade();
+    };
+
+    const stopHint = () => {
+      hintOff = true;
+      cmp.classList.remove('is-hint');
+    };
+    const userMoved = () => {
+      moved = true;
+      stopHint();
+    };
+
+    // ── Мышь и палец ──
+    const toPos = (clientX: number) => {
+      const r = cmp.getBoundingClientRect();
+      return ((clientX - r.left) / r.width) * 100;
+    };
+    let drag = -1; // pointerId, который тянет шторку
+    let tap: { id: number; x: number; y: number } | null = null; // касание, направление ещё не ясно
+    // браузер и так присылает pointermove не чаще кадра; меняется одна переменная — без перерисовки
+    const follow = (clientX: number) => set(toPos(clientX), false);
+
+    cmp.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      if (e.pointerType === 'mouse') {
+        // мышь: шторка сразу едет к курсору и дальше идёт за ним
+        e.preventDefault();
+        userMoved();
+        drag = e.pointerId;
+        cmp.setPointerCapture(e.pointerId);
+        set(toPos(e.clientX), true);
+      } else {
+        // палец: ждём, куда он пойдёт — вбок тянет шторку, вверх-вниз прокручивает страницу
+        // (прокрутка через кадр подсказку не отменяет)
+        tap = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      }
+    });
+
+    cmp.addEventListener('pointermove', (e) => {
+      if (tap && e.pointerId === tap.id) {
+        const dx = Math.abs(e.clientX - tap.x);
+        const dy = Math.abs(e.clientY - tap.y);
+        if (dx > 6 && dx > dy) {
+          userMoved();
+          drag = e.pointerId;
+          tap = null;
+          cmp.setPointerCapture(e.pointerId);
+          follow(e.clientX);
+        } else if (dy > 10) {
+          tap = null;
+        }
+        return;
+      }
+      if (e.pointerId === drag) follow(e.clientX);
+    });
+
+    const end = (e: PointerEvent) => {
+      if (tap && e.pointerId === tap.id) {
+        // короткое касание без движения — шторка плавно переходит к этому месту
+        if (e.type === 'pointerup') {
+          userMoved();
+          set(toPos(e.clientX), true);
+        }
+        tap = null;
+      }
+      if (e.pointerId === drag) drag = -1;
+    };
+    cmp.addEventListener('pointerup', end);
+    cmp.addEventListener('pointercancel', end);
+    // палец браузер сам «прикрепляет» к слою под ним; когда мы забираем указатель себе, этот слой
+    // теряет захват — его событие всплывает сюда, и на нём перетаскивание не заканчивается
+    cmp.addEventListener('lostpointercapture', (e) => {
+      if (e.target === cmp && e.pointerId === drag) drag = -1;
+    });
+
+    // ── Клавиатура: стрелки, Home/End, PageUp/PageDown — у самого ползунка ──
+    range.addEventListener('input', () => {
+      userMoved();
+      set(Number(range.value), true);
+    });
+
+    // лучшая точка камеры, но не под подписью: на узком кадре подписи занимают заметную часть ширины
+    const startFor = (i: number) => {
+      const start = Number(pairs[i]?.dataset.start ?? 50);
+      const min = ((geo.before + 8) / geo.w) * 100;
+      const max = ((geo.after - 8) / geo.w) * 100;
+      return Math.min(max, Math.max(min, start));
+    };
+
+    // ── Смена камеры: кадры плавно сменяются. Шторку, которую поставил пользователь, не трогаем;
+    // иначе она переходит туда, где у этой камеры лучше видна разница ──
+    cams.forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        stopHint();
+        cams.forEach((b, k) => b.setAttribute('aria-pressed', String(k === i)));
+        pairs.forEach((pair, k) => {
+          pair.classList.toggle('is-active', k === i);
+          if (k === i) pair.removeAttribute('aria-hidden');
+          else pair.setAttribute('aria-hidden', 'true');
+        });
+        if (!moved) set(startFor(i), true);
+      });
+    });
+
+    // размеры окна и подписей меняются при смене раскладки и когда догружается шрифт
+    if ('ResizeObserver' in window) {
+      const ro = new ResizeObserver(measure);
+      [cmp, pillBefore, pillAfter].forEach((el) => ro.observe(el));
+    }
+    measure();
+
+    // ── Подсказка: когда окно кадра впервые на экране, шторка один раз проходит 50 → 30 → 70 → 50 % ──
+    if (reducedMotion() || !('IntersectionObserver' in window)) return;
+    let timer = 0;
+    let seen = false;
+    let waiting = false;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        seen = entry.isIntersecting;
+        clearTimeout(timer);
+        // пауза — чтобы панель успела появиться (data-reveal)
+        if (seen && !hintOff) timer = window.setTimeout(play, 650);
+      },
+      { threshold: 0.6 },
+    );
+    function play() {
+      if (hintOff) return;
+      if (document.hidden) {
+        // вкладка в фоне — покажем, когда к ней вернутся, если окно кадра всё ещё на экране
+        if (waiting) return;
+        waiting = true;
+        document.addEventListener(
+          'visibilitychange',
+          () => {
+            waiting = false;
+            if (seen) play();
+          },
+          { once: true },
+        );
+        return;
+      }
+      hintOff = true;
+      io.disconnect();
+      cmp!.classList.add('is-hint');
+      line!.addEventListener('animationend', () => cmp!.classList.remove('is-hint'), { once: true });
+    }
+    io.observe(cmp);
+  });
+</script>

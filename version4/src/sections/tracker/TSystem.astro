@@ -1,0 +1,2027 @@
+---
+// Раздел «О системе» страницы «QODEX Tracker» [#o-sisteme]. Продуктовый ряд, как на главной
+// (ProductHow + Shot) и в «Импорте из Excel» «Кодекса ТКО»: слева метка, заголовок, текст, четыре пункта
+// с полосой прогресса, сноска и кнопка; справа большая градиентная карточка — у каждого пункта своя
+// иллюстрация: мусоровоз сверху с четырьмя камерами → ИИ считает контейнеры → оповещение о погрузке
+// вне маршрута → видео погрузок уходят в облако.
+// Тексты — с лендинга tracker.qodex.tech дословно. Картинку описывают пункты рядом, поэтому для
+// скринридера она скрыта (aria-hidden ставит GradientVisual).
+import GradientVisual from '../../components/GradientVisual.astro';
+import FeatureAccordion, { type AccItem } from '../../components/FeatureAccordion.astro';
+import Icon from '../../components/Icon.astro';
+
+const NB = String.fromCharCode(160);
+
+// Пункты: короткое название + текст с лендинга
+const items: AccItem[] = [
+  { icon: 'cctv', title: 'Камеры', text: 'Камеры автоматически фиксируют погрузки' },
+  { icon: 'ai-scan', title: 'ИИ', text: 'ИИ сам считает контейнеры и сверяет с маршрутом' },
+  { icon: 'bell-ring', title: 'Оповещения', text: 'Моментальное оповещение о подозрительных случаях' },
+  { icon: 'cloud-upload', title: 'Облако', text: 'Всё работает через облако — дорогую технику ставить не нужно' },
+];
+
+// ── Демо-данные (общие для страницы и главной: Мусоровоз 07, Маршрут 14, ул. Садовая, 21 — 08:42) ──
+const SADOVAYA = `ул.${NB}Садовая,${NB}21`;
+const LESNAYA = `ул.${NB}Лесная,${NB}3`;
+const SNT = `СНТ${NB}«Рассвет»`;
+
+// Мусорный контейнер (как в Shot.astro): x, y — левый верх, w — ширина
+function bin(x: number, y: number, w: number, color: string, full = false): string {
+  const s = w / 40;
+  const bags = full
+    ? '<ellipse cx="13" cy="7" rx="9" ry="6" fill="#4d5a66"/><ellipse cx="26" cy="6" rx="10" ry="7" fill="#6b7884"/><ellipse cx="20" cy="4" rx="6" ry="4" fill="#3e4954"/>'
+    : '';
+  const lid = full
+    ? '<rect x="2" y="2" width="36" height="5" rx="2" fill="#2b3a33" transform="rotate(-24 2 7)"/>'
+    : '<rect x="1" y="5" width="38" height="6" rx="2" fill="#2b3a33" fill-opacity=".55"/>';
+  return `<g transform="translate(${x} ${y}) scale(${s})">${bags}<path d="M3.5 10h33l-3 28a3 3 0 0 1-3 2.7H9.5a3 3 0 0 1-3-2.7Z" fill="${color}"/>${lid}<path d="M13 16v17M20 16v17M27 16v17" stroke="#000" stroke-opacity=".14" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="43" r="3.2" fill="#26313a"/><circle cx="29" cy="43" r="3.2" fill="#26313a"/></g>`;
+}
+
+// ── Кадры четырёх камер (рисунки 160×100, не фото): full — контейнеры полные, «до» погрузки ──
+// спереди: дорога, площадка у обочины справа, внизу капот
+const front = (full: boolean) =>
+  `<rect width="160" height="100" fill="#dbe5eb"/>` +
+  `<circle cx="22" cy="36" r="9" fill="#b9cbc0"/><path d="M34 42V32l10-8 10 8v10Z" fill="#c4ced6"/>` +
+  `<rect y="42" width="160" height="58" fill="#c6d1cc"/><path d="M66 42h28l50 58H16Z" fill="#b3bfc7"/>` +
+  `<path d="M80 47v5M80 58v7M80 72v9" stroke="#d6dde2" stroke-width="2.2" stroke-linecap="round"/>` +
+  `<rect x="102" y="46" width="52" height="11" rx="2" fill="#c5cdd3"/>` +
+  bin(106, 32, 20, '#3f8a6c', full) +
+  bin(130, 32, 20, '#4a76ad', full) +
+  `<path d="M0 89c38-6 122-6 160 0v11H0Z" fill="#57636e"/>`;
+
+// слева: другая сторона улицы — дом, деревья, забор (до и после погрузки одинаково)
+const left =
+  `<rect width="160" height="100" fill="#dbe5eb"/>` +
+  `<circle cx="30" cy="38" r="11" fill="#c3d3c8"/>` +
+  `<path d="M64 56V33l22-16 22 16v23Z" fill="#c4ced6"/>` +
+  `<path d="M60 35 86 16l26 19" fill="none" stroke="#9eacb8" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>` +
+  `<rect x="78" y="35" width="15" height="11" rx="1.5" fill="#a9bccb"/>` +
+  `<circle cx="132" cy="33" r="14" fill="#b9cbc0"/><rect x="130" y="44" width="4" height="12" fill="#8d9aa3"/>` +
+  `<rect y="50" width="160" height="8" fill="#c8d3da"/>` +
+  `<path d="M0 50h160M14 50v8M34 50v8M54 50v8M74 50v8M94 50v8M114 50v8M134 50v8M154 50v8" stroke="#b5c1c9" stroke-width="1.5"/>` +
+  `<rect y="58" width="160" height="42" fill="#b3bfc7"/>` +
+  `<path d="M8 80h16M40 80h16M72 80h16M104 80h16M136 80h16" stroke="#d3dade" stroke-width="2.4" stroke-linecap="round"/>`;
+
+// справа: контейнерная площадка под навесом
+const site = (full: boolean) =>
+  `<rect width="160" height="100" fill="#dbe5eb"/>` +
+  `<rect x="14" y="26" width="132" height="34" fill="#cdd8d2"/><path d="M8 27h144l-7-9H15Z" fill="#9fb0a6"/>` +
+  `<path d="M16 27v33M144 27v33" stroke="#8d9aa3" stroke-width="3"/>` +
+  `<rect y="58" width="160" height="42" fill="#b3bfc7"/><rect x="16" y="62" width="128" height="22" rx="3" fill="#c5cdd3"/>` +
+  bin(30, 38, 28, '#3f8a6c', full) +
+  bin(66, 38, 28, '#3f8a6c', full) +
+  bin(102, 38, 28, '#4a76ad', full);
+
+// сзади: камера над подъёмником — контейнер у бункера, по краям борта мусоровоза
+const rear = (full: boolean) =>
+  `<rect width="160" height="100" fill="#b3bfc7"/><rect width="160" height="30" fill="#c8d3da"/>` +
+  `<path d="M0 30h160M22 0v30M62 0v30M102 0v30M142 0v30" stroke="#b5c1c9" stroke-width="1.5"/>` +
+  bin(122, 12, 22, '#4a76ad', full) +
+  bin(58, 34, 44, '#3f8a6c', full) +
+  `<path d="M0 100V56l22 12v32Z" fill="#7d8a95"/><path d="M160 100V56l-22 12v32Z" fill="#7d8a95"/>` +
+  `<rect x="22" y="88" width="116" height="12" fill="#57636e"/>`;
+
+// ── Схема 460×420: мусоровоз сверху, четыре камеры, их поля обзора и кадры ──
+const SW = 460;
+const SH = 420;
+const FW = 150;
+const FH = 94;
+const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
+
+const CAMS = [
+  { n: 1, side: 'спереди', x: 155, y: 8, dot: [230, 140], cone: 'M230 140 162 102H298Z', scene: front },
+  { n: 2, side: 'слева', x: 10, y: 163, dot: [206, 210], cone: 'M206 210 160 170V250Z', scene: null },
+  { n: 3, side: 'справа', x: 300, y: 163, dot: [254, 210], cone: 'M254 210 300 170V250Z', scene: site },
+  { n: 4, side: 'сзади', x: 155, y: 318, dot: [230, 279], cone: 'M230 279 162 318H298Z', scene: rear },
+];
+
+// мусоровоз сверху: кабина спереди (вверху), кузов, задний борт с подъёмником
+const truckTop =
+  `<rect x="211" y="146" width="46" height="138" rx="9" fill="#1d1d1f" fill-opacity=".07"/>` +
+  `<rect x="202" y="156" width="6" height="13" rx="2" fill="#2f3840"/><rect x="252" y="156" width="6" height="13" rx="2" fill="#2f3840"/>` +
+  `<rect x="202" y="229" width="6" height="13" rx="2" fill="#2f3840"/><rect x="252" y="229" width="6" height="13" rx="2" fill="#2f3840"/>` +
+  `<rect x="202" y="246" width="6" height="13" rx="2" fill="#2f3840"/><rect x="252" y="246" width="6" height="13" rx="2" fill="#2f3840"/>` +
+  `<rect x="207" y="177" width="46" height="93" rx="5" fill="#e3e9ee" stroke="#c3ccd4" stroke-width="1.5"/>` +
+  `<path d="M211 192h38M211 207h38M211 222h38M211 237h38M211 252h38" stroke="#cfd7de" stroke-width="1.5"/>` +
+  `<rect x="211" y="269" width="38" height="9" rx="2" fill="#7d8a95"/>` +
+  `<rect x="209" y="141" width="42" height="33" rx="9" fill="#f7f9fb" stroke="#c3ccd4" stroke-width="1.5"/>` +
+  `<rect x="213" y="145" width="34" height="8" rx="3" fill="#9fb3c6"/>` +
+  `<rect x="202" y="149" width="7" height="4" rx="1.5" fill="#6f7c88"/><rect x="251" y="149" width="7" height="4" rx="1.5" fill="#6f7c88"/>`;
+
+// ── ИИ: крупный кадр камеры справа — три контейнера под навесом (320×190) ──
+const yard =
+  `<rect width="320" height="190" fill="#dde7ed"/>` +
+  `<rect x="36" y="44" width="248" height="78" fill="#cdd8d2"/><path d="M22 46h276l-13-17H35Z" fill="#9fb0a6"/>` +
+  `<path d="M40 46v86M280 46v86" stroke="#8d9aa3" stroke-width="5"/>` +
+  `<rect y="120" width="320" height="70" fill="#b6c2ca"/><rect x="44" y="126" width="232" height="20" rx="3" fill="#c6ced4"/>` +
+  bin(66, 80, 50, '#3f8a6c', true) +
+  bin(135, 80, 50, '#3f8a6c', true) +
+  bin(204, 80, 50, '#4a76ad', true);
+
+// рамки распознавания: левый край каждой — в долях кадра
+const DETS = [62, 131, 200].map((x) => pct(x, 320));
+
+// ── Оповещение: карта 440×280 — маршрут идёт по верхней улице, машина сворачивает в СНТ ──
+const MW = 440;
+const MH = 280;
+const TURN = { x: 120, y: 50 };
+const PIN = { x: 158, y: 150 };
+
+// участки СНТ: слева от уведомления — вокруг проезда, метки и подписи; справа — у нижнего края
+const PLOTS = [
+  ...[72, 96, 120].flatMap((y) => [68, 94].map((x) => [x, y])),
+  ...[72, 96].flatMap((y) => [128, 154].map((x) => [x, y])),
+  ...[68, 94, 128].map((x) => [x, 172]),
+  ...[68, 94, 128, 154].map((x) => [x, 194]),
+  ...[190, 216, 242, 268, 294].map((x) => [x, 240]),
+]
+  .map(([x, y]) => `M${x} ${y}h22v16h-22Z`)
+  .join('');
+
+// ── Облако: мусоровоз сбоку (240×108) ──
+const truckSide =
+  `<rect y="100" width="240" height="8" rx="4" fill="#eef2f5"/>` +
+  `<rect x="80" y="34" width="128" height="54" rx="8" fill="#e3e9ee" stroke="#c3ccd4" stroke-width="2"/>` +
+  `<path d="M100 42v38M120 42v38M140 42v38M160 42v38M180 42v38" stroke="#cfd7de" stroke-width="2"/>` +
+  `<path d="M208 38h12a4 4 0 0 1 4 4v50h-16Z" fill="#7d8a95"/>` +
+  `<rect x="22" y="86" width="202" height="6" rx="2" fill="#57636e"/>` +
+  `<path d="M24 90V58c0-5 2-9 6-12l12-10h32a4 4 0 0 1 4 4v50Z" fill="#f7f9fb" stroke="#c3ccd4" stroke-width="2"/>` +
+  `<path d="M36 58 47 46h21v12Z" fill="#9fb3c6"/><rect x="25" y="74" width="8" height="5" rx="2" fill="#f4e3a6"/>` +
+  `<circle cx="50" cy="94" r="11" fill="#26313a"/><circle cx="50" cy="94" r="4" fill="#8a97a3"/>` +
+  `<circle cx="154" cy="94" r="11" fill="#26313a"/><circle cx="154" cy="94" r="4" fill="#8a97a3"/>` +
+  `<circle cx="182" cy="94" r="11" fill="#26313a"/><circle cx="182" cy="94" r="4" fill="#8a97a3"/>` +
+  `<rect x="50" y="28" width="18" height="8" rx="2.5" fill="#57636e"/><path d="M63 28v-8" stroke="#57636e" stroke-width="2" stroke-linecap="round"/>`;
+
+// дуги сигнала над антенной модуля связи (кончик антенны — 63, 19)
+const SIG = [5, 9.5, 14].map((r) => {
+  const d = (r * Math.SQRT1_2).toFixed(2);
+  return `M${(63 - +d).toFixed(2)} ${(19 - +d).toFixed(2)}A${r} ${r} 0 0 1 ${(63 + +d).toFixed(2)} ${(19 - +d).toFixed(2)}`;
+});
+
+// видео погрузок за смену: первое уже в облаке, два догружаются
+const UPLOADS = [
+  { place: SADOVAYA, time: '08:42', full: false },
+  { place: LESNAYA, time: '08:57', full: false, t0: 0.35, t1: 1.6 },
+  { place: SNT, time: '09:14', full: true, t0: 1.0, t1: 2.7 },
+];
+---
+
+<section class="section tsys" id="o-sisteme" aria-labelledby="o-sisteme-title">
+  <div class="container">
+    <div class="tsys__row" data-acc-scope>
+      <div class="tsys__text">
+        <p class="tsys__label" data-reveal>
+          <span class="plabel plabel--lg p-tracker">
+            <span class="plabel__ico" aria-hidden="true"><Icon name="cctv" strokeWidth={2} /></span>
+            О системе
+          </span>
+        </p>
+
+        <h2 class="t-serif tsys__title" id="o-sisteme-title" data-reveal style="--d:1">
+          Полный контроль выгрузки с&nbsp;помощью&nbsp;ИИ
+        </h2>
+
+        <p class="tsys__lead" data-reveal style="--d:2">
+          QODEX&nbsp;Tracker — это система, которая использует 4&nbsp;камеры, установленные на мусоровозе, для фиксации
+          каждой выгрузки.
+        </p>
+
+        <div class="tsys__steps" data-reveal style="--d:3">
+          <FeatureAccordion id="tracker-system" items={items} color="var(--g-teal)" />
+        </div>
+
+        <p class="footnote tsys__note" data-reveal style="--d:4">Оборудование и монтаж камер — на QODEX.</p>
+
+        <div class="tsys__cta" data-reveal style="--d:4">
+          <a href="#forma" class="btn btn--primary" data-interest="tracker" data-goal="pilot_click">
+            Запросить демо
+            <Icon name="arrow-right" />
+          </a>
+        </div>
+      </div>
+
+      <div class="tsys__visual" data-reveal style="--d:1">
+        <GradientVisual preset="aqua" deco="bars">
+          <div class="ts" data-ts data-idle data-panes>
+            {/* 1. Камеры: мусоровоз сверху, четыре камеры по очереди снимают площадку до и после погрузки */}
+            <div class="tsp is-active" data-pane>
+              <div class="ui tc">
+                <div class="th">
+                  <span class="th__title">Мусоровоз 07</span>
+                  <span class="th__sub">Маршрут 14</span>
+                  <span class="tp tp--rec">
+                    <i class="a-blink"></i>
+                    Запись
+                  </span>
+                </div>
+
+                <div class="sch">
+                  <svg class="sch__svg" viewBox={`0 0 ${SW} ${SH}`}>
+                    <rect x="186" width="88" height={SH} fill="#e7edf1"></rect>
+                    <path d="M186 0V420M274 0V420" stroke="#fff" stroke-width="2" stroke-dasharray="10 10"></path>
+                    {
+                      CAMS.map((c, k) => (
+                        <g style={`--k:${k}`}>
+                          <path class="cone" d={c.cone} />
+                          <path class="cone__hi" d={c.cone} />
+                        </g>
+                      ))
+                    }
+                    <g set:html={truckTop} />
+                    {
+                      CAMS.map((c, k) => (
+                        <g style={`--k:${k}`}>
+                          <circle class="cdot__ring" cx={c.dot[0]} cy={c.dot[1]} r="6" />
+                          <circle class="cdot" cx={c.dot[0]} cy={c.dot[1]} r="6" />
+                        </g>
+                      ))
+                    }
+                  </svg>
+
+                  {
+                    CAMS.map((c, k) => (
+                      <div
+                        class="cf"
+                        style={`--k:${k}; left:${pct(c.x, SW)}; top:${pct(c.y, SH)}; width:${pct(FW, SW)}; height:${pct(FH, SH)}`}
+                      >
+                        <svg
+                          class="cf__img"
+                          viewBox="0 0 160 100"
+                          preserveAspectRatio="xMidYMid slice"
+                          set:html={c.scene ? c.scene(false) : left}
+                        />
+                        {c.scene && (
+                          <svg
+                            class="cf__img cf__img--before"
+                            viewBox="0 0 160 100"
+                            preserveAspectRatio="xMidYMid slice"
+                            set:html={c.scene(true)}
+                          />
+                        )}
+                        <span class="cf__tag">
+                          Кам.{NB}{c.n} · {c.side}
+                        </span>
+                        {c.n === 4 && (
+                          <span class="cf__rec">
+                            <i />
+                          </span>
+                        )}
+                        <span class="cf__state">
+                          <span class="cf__chip cf__chip--do">до</span>
+                          <span class="cf__chip cf__chip--after">после</span>
+                        </span>
+                        <span class="cf__flash" />
+                      </div>
+                    ))
+                  }
+                </div>
+
+                <div class="tf">
+                  <span class="tf__place">
+                    <Icon name="map-pin" size={15} strokeWidth={2} />
+                    {SADOVAYA}
+                  </span>
+                  <span class="tp tp--mute">ID КП 3298</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. ИИ: рамки вокруг контейнеров по одной, счётчик «Погружено», сверка с планом */}
+            <div class="tsp" data-pane>
+              <div class="ui tc">
+                <div class="th">
+                  <span class="th__title th__title--sm">Контроль качества погрузки мусора</span>
+                </div>
+                <div class="fr">
+                  <svg class="fr__img" viewBox="0 0 320 190" preserveAspectRatio="xMidYMid slice" set:html={yard} />
+                  <span class="scan">
+                    <b></b>
+                    <i></i>
+                  </span>
+                  {
+                    DETS.map((x, k) => (
+                      <span class="det a-pop" style={`left:${x}; --t:${(0.67 + k * 0.24).toFixed(2)}s`}>
+                        <i>{k + 1}</i>
+                      </span>
+                    ))
+                  }
+                  <span class="fr__tag">Кам.{NB}3 · 08:42</span>
+                  <span class="fr__count">
+                    <span class="td td--ok"></span>
+                    Погружено:
+                    <span class="num">
+                      <b class="a-blip" style="--t:0s; --dur:0.67s">0</b>
+                      <b class="a-blip" style="--t:0.67s; --dur:0.24s">1</b>
+                      <b class="a-blip" style="--t:0.91s; --dur:0.24s">2</b>
+                      <b class="a-pop" style="--t:1.15s">3</b>
+                    </span>
+                  </span>
+                </div>
+                <ul class="trs">
+                  <li class="tr a-in" style="--t:1.45s">
+                    <span class="td td--ok"></span>
+                    <span class="tr__main">
+                      <b>{SADOVAYA}</b>
+                      <small>план 3 · факт 3 · посчитал ИИ</small>
+                    </span>
+                    <span class="tp tp--ok a-pop" style="--t:1.75s">
+                      <Icon name="check" size={12} strokeWidth={3} />
+                      Корректно
+                    </span>
+                  </li>
+                  <li class="tr a-in" style="--t:1.65s">
+                    <span class="td td--bad"></span>
+                    <span class="tr__main">
+                      <b>{LESNAYA}</b>
+                      <small>план 4 · факт 2</small>
+                    </span>
+                    <span class="tp tp--bad a-pop" style="--t:1.95s">Погружено меньше плана</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 3. Оповещения: машина съезжает с маршрута в СНТ — метка краснеет, всплывает оповещение */}
+            <div class="tsp" data-pane>
+              <div class="ui tc">
+                <div class="th">
+                  <span class="th__title">Маршрут 14</span>
+                  <span class="tp tp--mute">
+                    <Icon name="truck" size={13} strokeWidth={2.2} />
+                    Мусоровоз 07
+                  </span>
+                </div>
+                <div class="mpw">
+                  <div class="mp">
+                    <svg class="mp__svg" viewBox={`0 0 ${MW} ${MH}`}>
+                      <rect x="14" y="8" width="92" height="30" rx="7" fill="#e3e9f1"></rect>
+                      <rect x="134" y="8" width="182" height="30" rx="7" fill="#e3e9f1"></rect>
+                      <rect x="344" y="8" width="86" height="30" rx="7" fill="#e3e9f1"></rect>
+                      <rect x="14" y="64" width="30" height="206" rx="7" fill="#e3e9f1"></rect>
+                      <rect x="344" y="64" width="86" height="98" rx="7" fill="#dcebe1"></rect>
+                      <rect x="344" y="176" width="86" height="94" rx="7" fill="#e3e9f1"></rect>
+                      <rect x="60" y="64" width="258" height="206" rx="10" fill="#d7ecdf"></rect>
+                      <path d={PLOTS} fill="#c4e2cd"></path>
+                      <path d="M0 50H440M52 50V280M331 50V280" stroke="#fff" stroke-width="11" fill="none"></path>
+                      <path d={`M${TURN.x} ${TURN.y}V${PIN.y}H186`} stroke="#fff" stroke-width="8" fill="none" stroke-linejoin="round"></path>
+                      <path d="M8 50H432" stroke="#006bff" stroke-width="3.5" stroke-linecap="round" stroke-opacity=".9"></path>
+                    </svg>
+                    <span class="mp__label">{SNT}</span>
+                    {
+                      [
+                        { x: 84, c: 'ok' },
+                        { x: 228, c: 'plan' },
+                        { x: 384, c: 'plan' },
+                      ].map((s) => (
+                        <span class:list={['stop', `stop--${s.c}`]} style={`left:${pct(s.x, MW)}; top:${pct(TURN.y, MH)}`} />
+                      ))
+                    }
+                    {/* съезд с маршрута: вниз по проезду и вправо к площадке */}
+                    <span
+                      class="dev dev--v"
+                      style={`left:${pct(TURN.x, MW)}; top:${pct(TURN.y, MH)}; height:${pct(PIN.y - TURN.y, MH)}`}
+                    >
+                      <i></i>
+                    </span>
+                    <span
+                      class="dev dev--h"
+                      style={`left:${pct(TURN.x, MW)}; top:${pct(PIN.y, MH)}; width:${pct(PIN.x - TURN.x, MW)}`}
+                    >
+                      <i></i>
+                    </span>
+                    <span class="mover">
+                      <span class="pin" style={`left:${pct(PIN.x, MW)}; top:${pct(PIN.y, MH)}`}>
+                        <span class="pin__blue a-gone" style="--t:1.65s">
+                          <Icon name="truck" size={13} strokeWidth={2.2} />
+                        </span>
+                        <span class="pin__pulse"></span>
+                        <span class="pin__red a-pop" style="--t:1.65s">
+                          <Icon name="truck" size={15} strokeWidth={2.1} />
+                        </span>
+                      </span>
+                    </span>
+                  </div>
+                  <div class="alert-pos">
+                    <div class="ui ui--plain alert">
+                      <b class="alert__title">Несанкционированная погрузка!</b>
+                      <span class="alert__coords">
+                        <small>Координаты</small>
+                        <span>54.7432, 55.9671</span>
+                      </span>
+                      <span class="alert__btn">
+                        <span class="a-ring" style="--t:2.35s">
+                          <Icon name="bell-ring" size={15} strokeWidth={2.2} />
+                        </span>
+                        Внимание!
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <ul class="trs">
+                  <li class="tr a-in" style="--t:2.4s">
+                    <span class="td td--bad"></span>
+                    <span class="tr__main">
+                      <b>{SNT}</b>
+                      <small>нет в плане · 2 контейнера · 09:14</small>
+                    </span>
+                    <span class="tp tp--bad a-pop" style="--t:2.65s">Левак</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 4. Облако: камеры и модуль связи на машине, видео погрузок сами уходят в облако */}
+            <div class="tsp" data-pane>
+              <div class="cl">
+                <div class="ui ui--plain cl-truck">
+                  <div class="th th--sm">
+                    <span class="th__title th__title--sm">Мусоровоз 07</span>
+                    <span class="tp tp--mute">4{NB}камеры</span>
+                  </div>
+                  <svg class="cl-truck__svg" viewBox="0 0 240 108">
+                    <g set:html={truckSide} />
+                    {SIG.map((d, k) => <path class="sig" d={d} style={`--s:${k}`} />)}
+                    <circle class="cl-cam" cx="31" cy="50" r="4.5" />
+                    <circle class="cl-cam" cx="86" cy="40" r="4.5" />
+                    <circle class="cl-cam" cx="216" cy="44" r="4.5" />
+                  </svg>
+                </div>
+
+                <span class="cl-link">
+                  {[0, 1, 2].map((p) => (
+                    <span class="pkt" style={`--p:${p}`}>
+                      <i></i>
+                    </span>
+                  ))}
+                </span>
+
+                <div class="ui cl-card">
+                  <div class="cl__head">
+                    <span class="cl__ico">
+                      <Icon name="cloud-upload" size={20} strokeWidth={1.9} />
+                    </span>
+                    <span class="cl__txt">
+                      Видео погрузок за смену:{NB}<span class="num">
+                        <b class="a-blip" style="--t:0s; --dur:1.6s">45</b>
+                        <b class="a-blip" style="--t:1.6s; --dur:1.1s">46</b>
+                        <b class="a-pop" style="--t:2.7s">47</b>
+                      </span>
+                    </span>
+                  </div>
+                  <ul class="ups">
+                    {
+                      UPLOADS.map((u) => (
+                        <li class="up">
+                          <span class="up__thumb">
+                            <svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" set:html={site(u.full)} />
+                          </span>
+                          <span class="up__main">
+                            <b>{u.place}</b>
+                            <small>{u.time}</small>
+                          </span>
+                          <span class="up__state">
+                            {u.t1 !== undefined && (
+                              <span class="up__spin a-gone" style={`--t:${u.t1}s`}>
+                                <span class="a-spin">
+                                  <Icon name="loader-circle" size={18} strokeWidth={2.2} />
+                                </span>
+                              </span>
+                            )}
+                            <span
+                              class:list={['up__done', { 'a-pop': u.t1 !== undefined }]}
+                              style={u.t1 !== undefined ? `--t:${u.t1}s` : undefined}
+                            >
+                              <Icon name="cloud-done" size={16} strokeWidth={2} />
+                            </span>
+                          </span>
+                          {u.t1 !== undefined && (
+                            <span class="up__bar" style={`--t1:${u.t1}s`}>
+                              <i class="a-fill" style={`--t:${u.t0}s; --dur:${(u.t1 - (u.t0 ?? 0)).toFixed(2)}s`} />
+                            </span>
+                          )}
+                        </li>
+                      ))
+                    }
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </GradientVisual>
+        <span class="tag tag--demo tsys__demo" aria-hidden="true">демо-данные</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Ряд: текст слева, картинка справа ─────────────────── */
+  .tsys__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    grid-template-areas: 'text visual';
+    align-items: center;
+    column-gap: clamp(40px, calc(var(--vw) * 6), 96px);
+  }
+
+  .tsys__text {
+    grid-area: text;
+    min-width: 0;
+  }
+
+  .tsys__title {
+    margin-top: 18px;
+  }
+
+  .tsys__lead {
+    max-width: 50ch;
+    margin-top: 20px;
+    font-size: clamp(1.03rem, calc(var(--vw) * 1.2), 1.15rem);
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .tsys__steps {
+    margin-top: clamp(26px, calc(var(--vw) * 3), 40px);
+  }
+
+  /* у открытого пункта место под две строки: последний текст длиннее остальных, и без запаса
+     всё, что ниже, сдвигалось бы при каждом переключении */
+  .tsys__steps :global(.acc__inner > p) {
+    min-height: calc(3em + 22px);
+  }
+
+  .tsys__note {
+    margin-top: 18px;
+  }
+
+  .tsys__cta {
+    margin-top: 26px;
+  }
+
+  .tsys__visual {
+    grid-area: visual;
+    position: relative;
+    min-width: 0;
+  }
+
+  /* поля градиентной карточки поменьше: схеме с камерами нужна ширина; сверху — место
+     для плашки «демо-данные» */
+  .tsys__visual :global(.gv) {
+    padding: clamp(14px, calc(var(--vw) * 2.6), 46px);
+    padding-top: clamp(54px, calc(var(--vw) * 3.4), 60px);
+  }
+
+  /* «демо-данные» в углу градиентной карточки */
+  .tsys__demo {
+    position: absolute;
+    z-index: 1;
+    top: clamp(14px, calc(var(--vw) * 1.6), 22px);
+    left: clamp(14px, calc(var(--vw) * 1.6), 22px);
+    pointer-events: none;
+  }
+
+  /* ── Иллюстрация: четыре панели, по одной на пункт ─────── */
+  .ts {
+    --u-blue: #006bff;
+    --u-blue-soft: #e8f1ff;
+    --u-ok: #087a52;
+    --u-ok-bg: #0fa86f;
+    --u-ok-soft: #e1f5ec;
+    --u-bad: #b8283a;
+    --u-bad-bg: #e5484d;
+    --u-bad-soft: #fde8ea;
+    --u-row: #f5f6f8;
+    width: min(100%, 476px);
+    container-type: inline-size;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink);
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .tsp {
+    display: grid;
+    align-content: center;
+  }
+
+  .tc {
+    width: 100%;
+    padding: clamp(13px, 4.8cqi, 24px);
+    border-radius: clamp(18px, 5cqi, 24px);
+  }
+
+  /* шапка карточки: название, подпись, плашка справа */
+  .th {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: clamp(10px, 3cqi, 14px);
+  }
+
+  .th__title {
+    font-size: clamp(16px, 4.2cqi, 19px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .th__title--sm {
+    font-size: clamp(14.5px, 3.6cqi, 16.5px);
+    letter-spacing: -0.012em;
+    white-space: normal;
+  }
+
+  .th__sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .th > .tp:last-child {
+    margin-left: auto;
+  }
+
+  .tp {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: var(--u-row);
+    font-size: 12px;
+    font-weight: 560;
+    line-height: 1;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .tp--mute {
+    background: var(--panel);
+  }
+
+  .tp--ok {
+    background: var(--u-ok-soft);
+    color: var(--u-ok);
+  }
+
+  .tp--bad,
+  .tp--rec {
+    background: var(--u-bad-soft);
+    color: var(--u-bad);
+  }
+
+  .tp--rec i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .td {
+    width: 10px;
+    height: 10px;
+    flex: none;
+    border-radius: 50%;
+  }
+
+  .td--ok {
+    background: var(--u-ok-bg);
+  }
+
+  .td--bad {
+    background: var(--u-bad-bg);
+  }
+
+  /* строки под кадром и картой */
+  .trs {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .tr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 9px 10px 9px 12px;
+    border-radius: 14px;
+    background: var(--u-row);
+  }
+
+  .tr__main {
+    display: grid;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tr__main b {
+    overflow: hidden;
+    font-size: clamp(13px, 3.4cqi, 14px);
+    font-weight: 560;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tr__main small {
+    overflow: hidden;
+    font-size: clamp(11.5px, 3cqi, 12.5px);
+    color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* числа, которые сменяют друг друга в одной клетке */
+  .num {
+    display: inline-grid;
+  }
+
+  .num > b {
+    grid-area: 1 / 1;
+    font-weight: inherit;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── 1. Камеры: схема мусоровоза ───────────────────────── */
+  .sch {
+    position: relative;
+    aspect-ratio: 460 / 420;
+    overflow: hidden;
+    border-radius: clamp(10px, 3cqi, 16px);
+    background: #f1f5f8;
+  }
+
+  .sch__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* поле обзора камеры: пунктир, при снимке — ярче */
+  .cone {
+    fill: rgb(0 107 255 / 0.06);
+    stroke: rgb(0 107 255 / 0.42);
+    stroke-width: 1.4;
+    stroke-dasharray: 4 4;
+    stroke-linejoin: round;
+  }
+
+  .cone__hi {
+    fill: rgb(0 107 255 / 0.17);
+    stroke: var(--u-blue);
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    opacity: 0;
+  }
+
+  .cdot {
+    fill: var(--u-blue);
+    stroke: #fff;
+    stroke-width: 2.5;
+  }
+
+  .cdot__ring {
+    fill: none;
+    stroke: var(--u-blue);
+    stroke-width: 2;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* кадр камеры */
+  .cf {
+    position: absolute;
+    overflow: hidden;
+    border-radius: clamp(6px, 2.2cqi, 10px);
+    background: #dbe5eb;
+    box-shadow:
+      0 0 0 2px #fff,
+      0 10px 18px -10px rgb(29 29 31 / 0.5);
+    isolation: isolate;
+  }
+
+  .cf__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* без анимации видно итоговое состояние: кадры «после» */
+  .cf__img--before {
+    opacity: 0;
+  }
+
+  .cf__tag,
+  .cf__chip,
+  .fr__tag {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgb(29 29 31 / 0.62);
+    color: #fff;
+    font-size: clamp(9.5px, 2.5cqi, 11px);
+    font-weight: 500;
+    line-height: 1.45;
+    white-space: nowrap;
+  }
+
+  .cf__tag {
+    position: absolute;
+    z-index: 2;
+    left: clamp(3px, 1cqi, 5px);
+    top: clamp(3px, 1cqi, 5px);
+  }
+
+  .cf__state {
+    position: absolute;
+    z-index: 2;
+    right: clamp(3px, 1cqi, 5px);
+    bottom: clamp(3px, 1cqi, 5px);
+    display: grid;
+  }
+
+  .cf__chip {
+    grid-area: 1 / 1;
+    justify-self: end;
+    padding-inline: 6px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  .cf__chip--do {
+    opacity: 0;
+  }
+
+  .cf__chip--after {
+    background: var(--u-ok);
+  }
+
+  /* камера сзади пишет видео погрузки между снимками «до» и «после» */
+  .cf__rec {
+    position: absolute;
+    z-index: 2;
+    top: clamp(4px, 1.2cqi, 6px);
+    right: clamp(4px, 1.2cqi, 6px);
+    display: grid;
+    place-items: center;
+    width: clamp(11px, 2.8cqi, 14px);
+    height: clamp(11px, 2.8cqi, 14px);
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0;
+  }
+
+  .cf__rec i {
+    width: 58%;
+    height: 58%;
+    border-radius: 50%;
+    background: var(--u-bad-bg);
+  }
+
+  /* вспышка: снимок сделан */
+  .cf__flash {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .tf {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 560;
+  }
+
+  .tf__place {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  /* ── 2. ИИ: крупный кадр ───────────────────────────────── */
+  .fr {
+    position: relative;
+    aspect-ratio: 320 / 190;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #dde7ed;
+    isolation: isolate;
+  }
+
+  .fr__img {
+    width: 100%;
+    height: 100%;
+  }
+
+  .fr__tag {
+    position: absolute;
+    z-index: 3;
+    left: 8px;
+    top: 8px;
+  }
+
+  /* проход ИИ по кадру: линия с мягким следом */
+  .scan {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .scan i {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    background: #4f9bff;
+  }
+
+  .scan b {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 100%;
+    width: 16%;
+    background: rgb(79 155 255 / 0.16);
+  }
+
+  /* рамки распознавания вокруг контейнеров */
+  .det {
+    position: absolute;
+    z-index: 2;
+    top: 32.6%;
+    width: 18.1%;
+    height: 41%;
+    border: 2px solid #4f9bff;
+    border-radius: 8px;
+    background: rgb(79 155 255 / 0.12);
+  }
+
+  .det i {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px 0 6px 0;
+    background: #1d6ae0;
+    color: #fff;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .fr__count {
+    position: absolute;
+    z-index: 3;
+    left: 10px;
+    bottom: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px 6px 10px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 6px 18px -8px rgb(29 29 31 / 0.45);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .fr__count .td {
+    width: 9px;
+    height: 9px;
+  }
+
+  /* ── 3. Оповещения: карта и уведомление ────────────────── */
+  .mpw {
+    position: relative;
+  }
+
+  .mp {
+    position: relative;
+    aspect-ratio: 440 / 280;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #edf3f5;
+  }
+
+  .mp__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .mp__label {
+    position: absolute;
+    left: 15.5%;
+    top: 75.5%;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgb(255 255 255 / 0.9);
+    color: #1f6b44;
+    font-size: clamp(10px, 2.6cqi, 11.5px);
+    font-weight: 600;
+    line-height: 1.35;
+    white-space: nowrap;
+  }
+
+  .stop {
+    position: absolute;
+    z-index: 1;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgb(29 29 31 / 0.25);
+  }
+
+  .stop--ok {
+    background: var(--u-ok-bg);
+  }
+
+  /* площадки впереди по плану */
+  .stop--plan {
+    background: #b8d4ff;
+  }
+
+  /* съезд с маршрута: красный пунктир (проявляется вслед за машиной) */
+  .dev {
+    position: absolute;
+    overflow: hidden;
+  }
+
+  /* штрихи — полосами с жёсткими краями, а не dashed-рамкой: Safari при дробном масштабе экрана
+     (Windows 145 %) тонкую dashed-рамку не рисует */
+  .dev i {
+    position: absolute;
+    inset: 0;
+  }
+
+  .dev--v {
+    width: 3px;
+    margin-left: -1.5px;
+  }
+
+  .dev--v i {
+    background: repeating-linear-gradient(180deg, var(--u-bad-bg) 0 6px, transparent 6px 10px);
+  }
+
+  .dev--h {
+    height: 3px;
+    margin-top: -1.5px;
+  }
+
+  .dev--h i {
+    background: repeating-linear-gradient(90deg, var(--u-bad-bg) 0 6px, transparent 6px 10px);
+  }
+
+  /* метка машины едет вся вместе со слоем размером с карту: сдвиг в % — от размеров карты */
+  .mover {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .pin {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  .pin__blue,
+  .pin__red,
+  .pin__pulse {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    color: #fff;
+  }
+
+  .pin__blue {
+    left: -13px;
+    top: -13px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--u-blue);
+    box-shadow: 0 0 0 4px rgb(0 107 255 / 0.2);
+  }
+
+  .pin__red,
+  .pin__pulse {
+    left: -16px;
+    top: -16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .pin__red {
+    background: var(--u-bad-bg);
+    box-shadow:
+      0 0 0 3px #fff,
+      0 6px 14px -4px rgb(184 40 58 / 0.55);
+  }
+
+  .pin__pulse {
+    background: rgb(229 72 77 / 0.35);
+    opacity: 0;
+  }
+
+  /* Уведомление (как в самом сервисе) стоит справа от метки, сразу под линией маршрута, хвостиком
+     к метке. Высота карты — 57.53cqi (ширина карточки минус поля 4.8cqi с каждой стороны, × 280/440),
+     поэтому хвостик ставится в cqi: (53.57% − 23%) высоты карты = 17.6cqi от верха уведомления. */
+  .alert-pos {
+    position: absolute;
+    z-index: 3;
+    top: 23%;
+    left: 43%;
+    right: 2.5%;
+  }
+
+  .alert {
+    display: grid;
+    gap: clamp(7px, 2cqi, 9px);
+    width: 100%;
+    padding: clamp(9px, 2.6cqi, 12px);
+    border-radius: 16px;
+    box-shadow:
+      0 0 0 1px rgb(229 72 77 / 0.28),
+      0 18px 40px -16px rgb(29 29 31 / 0.5);
+    transform-origin: 0 50%;
+  }
+
+  .alert::before {
+    content: '';
+    position: absolute;
+    top: calc(17.6cqi - 6.5px);
+    left: -6px;
+    width: 13px;
+    height: 13px;
+    border-radius: 2px;
+    background: #fff;
+    box-shadow: -1px 1px 0 rgb(229 72 77 / 0.28);
+    transform: rotate(45deg);
+  }
+
+  .alert__title {
+    padding: clamp(6px, 1.8cqi, 8px) clamp(8px, 2.2cqi, 10px);
+    border-radius: 10px;
+    background: var(--u-bad-soft);
+    color: var(--u-bad);
+    font-size: clamp(12.5px, 3.2cqi, 14.5px);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .alert__coords {
+    display: grid;
+    gap: 1px;
+    padding-inline: 2px;
+  }
+
+  .alert__coords small {
+    font-size: clamp(11px, 2.9cqi, 12.5px);
+    color: var(--muted);
+  }
+
+  .alert__coords span {
+    font-size: clamp(13px, 3.4cqi, 15px);
+    font-weight: 560;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .alert__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: clamp(30px, 8.4cqi, 36px);
+    border-radius: 999px;
+    background: #d6293b;
+    color: #fff;
+    font-size: clamp(12.5px, 3.3cqi, 14px);
+    font-weight: 600;
+  }
+
+  .alert__btn > span {
+    display: grid;
+    transform-origin: 50% 10%;
+  }
+
+  /* ── 4. Облако ─────────────────────────────────────────── */
+  .cl {
+    display: grid;
+    justify-items: center;
+  }
+
+  .cl-truck {
+    width: min(100%, 300px);
+    padding: clamp(10px, 3cqi, 14px) clamp(12px, 3.6cqi, 16px) clamp(8px, 2.4cqi, 12px);
+    border-radius: 18px;
+  }
+
+  .th--sm {
+    margin-bottom: 6px;
+  }
+
+  .cl-truck__svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .cl-cam {
+    fill: var(--u-blue);
+    stroke: #fff;
+    stroke-width: 2;
+  }
+
+  .sig {
+    fill: none;
+    stroke: var(--u-blue);
+    stroke-width: 2;
+    stroke-linecap: round;
+    opacity: 0.6;
+  }
+
+  /* связь машины с облаком: пунктир (полосами, как у съезда на карте), по нему бегут «пакеты» */
+  .cl-link {
+    position: relative;
+    display: block;
+    width: 2px;
+    height: clamp(24px, 7.4cqi, 36px);
+    background: repeating-linear-gradient(180deg, rgb(0 107 255 / 0.55) 0 5px, transparent 5px 9px);
+  }
+
+  .pkt {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+  }
+
+  .pkt i {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    margin-left: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--u-blue);
+    box-shadow: 0 0 0 3px rgb(0 107 255 / 0.18);
+  }
+
+  .cl-card {
+    width: 100%;
+    padding: clamp(13px, 4.4cqi, 22px);
+    border-radius: clamp(18px, 5cqi, 24px);
+  }
+
+  .cl__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .cl__ico {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 10px;
+    background: var(--u-blue-soft);
+    color: var(--u-blue);
+  }
+
+  .cl__txt {
+    font-size: clamp(14px, 3.7cqi, 16px);
+    font-weight: 560;
+    line-height: 1.25;
+  }
+
+  .ups {
+    display: grid;
+    gap: 6px;
+  }
+
+  .up {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px 9px;
+    border-radius: 12px;
+    background: var(--u-row);
+  }
+
+  .up__thumb {
+    width: clamp(40px, 11cqi, 50px);
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #dbe5eb;
+  }
+
+  .up__thumb svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .up__main {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .up__main b {
+    overflow: hidden;
+    font-size: clamp(13px, 3.4cqi, 14px);
+    font-weight: 560;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .up__main small {
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .up__state {
+    display: grid;
+    width: 26px;
+    height: 26px;
+  }
+
+  .up__spin,
+  .up__done {
+    display: grid;
+    place-items: center;
+    grid-area: 1 / 1;
+  }
+
+  .up__spin {
+    color: var(--u-blue);
+  }
+
+  .up__spin > span {
+    display: grid;
+  }
+
+  .up__done {
+    border-radius: 50%;
+    background: var(--u-ok-soft);
+    color: var(--u-ok);
+  }
+
+  /* полоса загрузки видео: видна, пока файл догружается */
+  .up__bar {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 3px;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e1e6ec;
+    opacity: 0;
+  }
+
+  .up__bar i {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--u-blue);
+    transform-origin: left center;
+  }
+
+  /* ── Анимации: только у активной панели ──
+     Без анимации видно итоговое состояние: «ожидание» и промежуточные числа скрыты. */
+  .a-gone,
+  .a-blip,
+  .up__spin {
+    opacity: 0;
+  }
+
+  .tsp.is-active .a-in {
+    animation: ts-in 0.6s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .tsp.is-active .a-pop {
+    animation: ts-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .tsp.is-active .a-gone {
+    animation: ts-gone 0.25s ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .tsp.is-active .a-blip {
+    animation: ts-blip var(--dur, 0.4s) linear forwards;
+    animation-delay: var(--t, 0s);
+  }
+
+  .tsp.is-active .a-fill {
+    animation: ts-fill var(--dur, 1.2s) var(--ease-in-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .tsp.is-active .a-ring {
+    animation: ts-ring 1s ease-in-out both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .tsp.is-active .a-blink {
+    animation: ts-blink 1.4s ease-in-out infinite;
+  }
+
+  .tsp.is-active .a-spin {
+    animation: ts-spin 0.9s linear infinite;
+  }
+
+  /* 1. Камеры по очереди: поле обзора ярче, вспышка, «до»; после погрузки — так же, «после».
+     Круг 10 с, у каждой камеры сдвиг 0,5 с. */
+  .tsp.is-active .cone__hi {
+    animation: ts-cone 10s linear infinite both;
+    animation-delay: calc(var(--k) * 0.5s);
+  }
+
+  .tsp.is-active .cdot__ring {
+    animation: ts-shot-ring 10s linear infinite both;
+    animation-delay: calc(var(--k) * 0.5s);
+  }
+
+  .tsp.is-active .cf__flash {
+    animation: ts-flash 10s linear infinite both;
+    animation-delay: calc(var(--k) * 0.5s);
+  }
+
+  .tsp.is-active .cf__img--before {
+    animation: ts-before 10s linear infinite both;
+    animation-delay: calc(var(--k) * 0.5s);
+  }
+
+  .tsp.is-active .cf__chip--do {
+    animation: ts-do 10s linear infinite both;
+    animation-delay: calc(var(--k) * 0.5s);
+  }
+
+  .tsp.is-active .cf__chip--after {
+    animation: ts-after 10s linear infinite both;
+    animation-delay: calc(var(--k) * 0.5s);
+  }
+
+  .tsp.is-active .cf__rec {
+    animation: ts-rec 10s linear infinite both;
+    animation-delay: calc(var(--k) * 0.5s);
+  }
+
+  .tsp.is-active .cf__rec i {
+    animation: ts-blink 1.1s ease-in-out infinite;
+  }
+
+  /* 2. ИИ проходит по кадру */
+  .tsp.is-active .scan {
+    animation: ts-scan 1.3s linear 0.15s both;
+  }
+
+  /* 3. Машина едет по маршруту и сворачивает в СНТ, за ней — красный пунктир; затем оповещение.
+     Пунктир проявляется вместе с машиной: те же доли пути и времени, что в ts-drive. */
+  .tsp.is-active .mover {
+    animation: ts-drive 1.5s 0.15s both;
+  }
+
+  .tsp.is-active .dev--v i {
+    animation: ts-dev-v 0.86s linear 0.46s both;
+  }
+
+  .tsp.is-active .dev--h i {
+    animation: ts-dev-h 0.33s ease-out 1.32s both;
+  }
+
+  .tsp.is-active .pin__pulse {
+    animation: ts-pulse 1.8s ease-out 1.9s infinite;
+  }
+
+  .tsp.is-active .alert {
+    animation: ts-note 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) 1.9s both;
+  }
+
+  /* 4. Модуль связи передаёт, по пунктиру бегут пакеты, видео догружаются */
+  .tsp.is-active .sig {
+    animation: ts-sig 1.8s ease-in-out infinite;
+    animation-delay: calc(var(--s) * 0.22s);
+  }
+
+  .tsp.is-active .pkt {
+    animation: ts-pkt 1.5s linear infinite;
+    animation-delay: calc(var(--p) * 0.5s);
+  }
+
+  .tsp.is-active .up__bar {
+    animation: ts-bar var(--t1) linear both;
+  }
+
+  @keyframes ts-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  @keyframes ts-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+  }
+
+  /* «ожидание» видно до своей задержки, потом исчезает */
+  @keyframes ts-gone {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* промежуточное значение видно только во время своей анимации */
+  @keyframes ts-blip {
+    0%,
+    99.9% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ts-fill {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes ts-ring {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    15% {
+      transform: rotate(-18deg);
+    }
+    30% {
+      transform: rotate(15deg);
+    }
+    45% {
+      transform: rotate(-10deg);
+    }
+    60% {
+      transform: rotate(6deg);
+    }
+    75% {
+      transform: rotate(-2deg);
+    }
+  }
+
+  @keyframes ts-blink {
+    50% {
+      opacity: 0.25;
+    }
+  }
+
+  @keyframes ts-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* снимки на 0,6 с («до») и 4,4 с («после») от начала круга камеры */
+  @keyframes ts-cone {
+    0%,
+    4% {
+      opacity: 0;
+    }
+    6% {
+      opacity: 1;
+    }
+    14%,
+    42% {
+      opacity: 0;
+    }
+    44% {
+      opacity: 1;
+    }
+    52%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ts-shot-ring {
+    0%,
+    5.9% {
+      opacity: 0;
+      transform: scale(1);
+    }
+    6% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    14% {
+      opacity: 0;
+      transform: scale(2.8);
+    }
+    43.9% {
+      opacity: 0;
+      transform: scale(1);
+    }
+    44% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    52% {
+      opacity: 0;
+      transform: scale(2.8);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes ts-flash {
+    0%,
+    5.9% {
+      opacity: 0;
+    }
+    6% {
+      opacity: 0.85;
+      animation-timing-function: ease-out;
+    }
+    11%,
+    43.9% {
+      opacity: 0;
+    }
+    44% {
+      opacity: 0.85;
+      animation-timing-function: ease-out;
+    }
+    49%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* кадр «до» сменяется кадром «после» во вспышке, к концу круга возвращается */
+  @keyframes ts-before {
+    0%,
+    43.9% {
+      opacity: 1;
+    }
+    44%,
+    93% {
+      opacity: 0;
+    }
+    97%,
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes ts-do {
+    0%,
+    6% {
+      opacity: 0;
+      transform: scale(0.6);
+      animation-timing-function: cubic-bezier(0.2, 1.5, 0.4, 1);
+    }
+    8.5%,
+    43.9% {
+      opacity: 1;
+      transform: none;
+    }
+    44%,
+    100% {
+      opacity: 0;
+      transform: none;
+    }
+  }
+
+  @keyframes ts-after {
+    0%,
+    44% {
+      opacity: 0;
+      transform: scale(0.6);
+      animation-timing-function: cubic-bezier(0.2, 1.5, 0.4, 1);
+    }
+    46.5%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    96%,
+    100% {
+      opacity: 0;
+      transform: none;
+    }
+  }
+
+  @keyframes ts-scan {
+    0% {
+      opacity: 1;
+      transform: translateX(-16%);
+    }
+    88% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+  }
+
+  /* (84, 50) по маршруту → поворот (120, 50) → вниз по проезду (120, 150) → к площадке (158, 150);
+     сдвиг — в долях карты, доли времени — по длине отрезков */
+  @keyframes ts-drive {
+    0% {
+      transform: translate(-16.818%, -35.714%);
+      animation-timing-function: ease-in;
+    }
+    20.7% {
+      transform: translate(-8.636%, -35.714%);
+      animation-timing-function: linear;
+    }
+    78.2% {
+      transform: translate(-8.636%, 0);
+      animation-timing-function: ease-out;
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes ts-dev-v {
+    from {
+      transform: translateY(-100%);
+    }
+  }
+
+  @keyframes ts-dev-h {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+
+  /* у камеры сзади: запись от снимка «до» до снимка «после» */
+  @keyframes ts-rec {
+    0%,
+    8% {
+      opacity: 0;
+    }
+    9%,
+    42% {
+      opacity: 1;
+    }
+    43%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ts-pulse {
+    from {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(2.1);
+    }
+  }
+
+  @keyframes ts-note {
+    from {
+      opacity: 0;
+      transform: translateX(-10px) scale(0.92);
+    }
+  }
+
+  @keyframes ts-sig {
+    0%,
+    100% {
+      opacity: 0.18;
+    }
+    35% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes ts-pkt {
+    0% {
+      opacity: 0;
+      transform: translateY(-10%);
+    }
+    15%,
+    80% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes ts-bar {
+    0%,
+    96% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* за экраном и в скрытой вкладке анимации стоят: data-idle снимает скрипт ниже */
+  .ts[data-idle] * {
+    animation-play-state: paused !important;
+  }
+
+  @media (scripting: none) {
+    .ts[data-idle] * {
+      animation-play-state: running !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ts * {
+      animation: none !important;
+    }
+  }
+
+  /* ── Узкая картинка (телефон): поменьше подписи и отступы ── */
+  @container (max-width: 360px) {
+    .th__sub {
+      display: none;
+    }
+
+    .fr__tag {
+      left: 6px;
+      top: 6px;
+    }
+
+    .fr__count {
+      left: 6px;
+      bottom: 6px;
+      gap: 5px;
+      padding: 4px 9px 4px 7px;
+      font-size: 12.5px;
+    }
+
+    .det i {
+      width: 17px;
+      height: 17px;
+      font-size: 10px;
+    }
+
+    .tr {
+      gap: 8px;
+      padding: 8px 9px 8px 10px;
+    }
+
+    .tp {
+      height: 22px;
+      padding: 0 8px;
+      font-size: 11.5px;
+    }
+
+    .alert-pos {
+      top: 24%;
+      right: 2%;
+    }
+
+    .alert {
+      gap: 6px;
+      border-radius: 14px;
+    }
+
+    .alert::before {
+      top: calc(17cqi - 6.5px);
+    }
+
+    /* подпись СНТ ушла бы под уведомление — место названо в строке под картой */
+    .mp__label {
+      display: none;
+    }
+  }
+
+  /* ── Планшет и телефон: столбиком — метка, заголовок, текст, картинка, пункты, сноска, кнопка.
+     Обёртка текста «растворяется» (display: contents), чтобы картинка встала между текстом
+     и пунктами: нажал пункт — картинка над ним сразу меняется. */
+  @media (max-width: 900px) {
+    .tsys__row {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .tsys__text {
+      display: contents;
+    }
+
+    .tsys__lead {
+      max-width: 60ch;
+    }
+
+    .tsys__visual {
+      order: 1;
+      margin-top: 26px;
+    }
+
+    .tsys__steps {
+      order: 2;
+      margin-top: 26px;
+    }
+
+    .tsys__note {
+      order: 3;
+    }
+
+    .tsys__cta {
+      order: 4;
+    }
+
+    /* карточка интерфейса стоит ниже плашки «демо-данные» */
+    .tsys__visual :global(.gv) {
+      padding-block: 54px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .tsys__visual :global(.gv) {
+      padding-block: 50px 20px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .tsys__cta .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Анимации иллюстрации идут, только пока она на экране и вкладка открыта (в разметке они стоят:
+  // data-idle). При «уменьшить движение» анимации выключены в CSS — следить не нужно.
+  document.querySelectorAll<HTMLElement>('[data-ts]').forEach((el) => {
+    if (reducedMotion()) return;
+    let inView = !('IntersectionObserver' in window);
+    const sync = () => {
+      if (inView && !document.hidden) delete el.dataset.idle;
+      else el.dataset.idle = '';
+    };
+    if (!inView) {
+      new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting;
+          sync();
+        },
+        { threshold: 0.2 },
+      ).observe(el);
+    }
+    document.addEventListener('visibilitychange', sync);
+    sync();
+  });
+</script>

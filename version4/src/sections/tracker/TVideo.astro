@@ -1,0 +1,297 @@
+---
+// Раздел 2 страницы «QODEX Tracker» [#video] — видео о продукте (2:58), как продуктовое видео у Calendly:
+// плеер — скруглённая карточка с белой полупрозрачной рамкой на градиенте dusk.
+// Сначала только обложка и кнопка воспроизведения: файл видео (21 МБ) не грузится, пока его не включили.
+// По нажатию обложка сменяется плеером <video> того же размера (без скачка раскладки), фокус — на нём.
+import SectionIntro from '../../components/SectionIntro.astro';
+import GradientVisual from '../../components/GradientVisual.astro';
+import Icon from '../../components/Icon.astro';
+import { withBase } from '../../config/site';
+
+const VIDEO = withBase('/media/tracker/video.mp4');
+const POSTER = withBase('/media/tracker/poster-1600.webp');
+const POSTER_SM = withBase('/media/tracker/poster-800.webp');
+---
+
+<section class="section" id="video" aria-labelledby="video-title">
+  <div class="container">
+    <SectionIntro eyebrow="Видео" titleId="video-title">
+      3&nbsp;минуты, и&nbsp;вы увидите, где теряете до&nbsp;30% прибыли
+    </SectionIntro>
+
+    <div class="tvd" data-reveal style="--d:2">
+      <!-- подложка — отдельным слоем под плеером: GradientVisual скрыт от скринридера целиком,
+           а кнопка воспроизведения должна оставаться доступной -->
+      <GradientVisual preset="dusk" deco="none" class="tvd__bg" />
+
+      <div class="tvd__player" data-tvd>
+        <button class="tvd__facade" type="button" aria-label="Смотреть видео о QODEX Tracker, 2 минуты 58 секунд" data-tvd-play>
+          <picture>
+            <!-- sizes — ширина плеера: на компьютере около 1050 px раскладки, уже — почти во всю ширину окна -->
+            <source
+              type="image/webp"
+              srcset={`${POSTER_SM} 800w, ${POSTER} 1600w`}
+              sizes="(min-width: 1200px) 1060px, 100vw"
+            />
+            <img
+              class="tvd__poster"
+              src={POSTER}
+              width="1600"
+              height="900"
+              alt="Мусоровоз с камерами QODEX Tracker"
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
+          <span class="tvd__scrim" aria-hidden="true"></span>
+          <span class="tvd__play" aria-hidden="true">
+            <Icon name="play" size={40} strokeWidth={1.5} />
+          </span>
+          <span class="tvd__time" aria-hidden="true">2:58</span>
+        </button>
+
+        <!-- плеер вставляется по нажатию; содержимое <template> браузер не загружает -->
+        <template data-tvd-tpl>
+          <video class="tvd__video" src={VIDEO} poster={POSTER} controls playsinline preload="metadata" autoplay></video>
+        </template>
+
+        <p class="tvd__error" data-tvd-error hidden>
+          <span>Видео не загрузилось.</span>
+          <a href={VIDEO}>Открыть файл</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* рамка обрезает тень плеера по своему скруглению: на узком экране поля тонкие, и тень вылезала бы на фон */
+  .tvd {
+    --tvd-pad: clamp(12px, calc(var(--vw) * 4.4), 76px);
+    --tvd-frame-r: clamp(28px, calc(var(--vw) * 3.4), 48px);
+    --tvd-r: clamp(12px, calc(var(--vw) * 1.5), 24px);
+    --tvd-play: clamp(72px, calc(var(--vw) * 6), 104px);
+    position: relative;
+    padding: var(--tvd-pad);
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: calc(var(--tvd-frame-r) * var(--rk));
+    corner-shape: var(--corner);
+  }
+
+  /* градиент — во всю рамку, под плеером; скругление то же, что у рамки */
+  .tvd__bg {
+    --gv-r: var(--tvd-frame-r);
+    position: absolute;
+    inset: 0;
+    min-height: 0;
+    padding: 0;
+  }
+
+  /* ── Плеер: 16:9, скруглённая карточка с белой полупрозрачной рамкой (как .ui) ── */
+  .tvd__player {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: calc(var(--tvd-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: #16171a;
+    box-shadow:
+      0 0 0 8px rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+  }
+
+  /* обложка и плеер занимают одну и ту же рамку */
+  .tvd__facade,
+  .tvd__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    corner-shape: inherit;
+  }
+
+  .tvd__facade {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: none;
+    overflow: hidden;
+  }
+
+  .tvd__poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .tvd__video {
+    background: #000;
+    object-fit: contain;
+  }
+
+  /* при наведении обложка мягко темнеет */
+  .tvd__scrim {
+    position: absolute;
+    inset: 0;
+    background: rgb(29 29 31 / 0.22);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  /* круглая белая кнопка по центру; белое кольцо — как рамка у карточек интерфейса */
+  .tvd__play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: var(--tvd-play);
+    height: var(--tvd-play);
+    margin: calc(var(--tvd-play) / -2) 0 0 calc(var(--tvd-play) / -2);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--ink);
+    box-shadow:
+      0 0 0 10px rgb(255 255 255 / 0.32),
+      0 18px 44px -14px rgb(29 29 31 / 0.55);
+    transition: transform 0.45s var(--ease-out);
+  }
+
+  /* значок Icon — контур; здесь он залит, треугольник чуть сдвинут вправо: так он выглядит по центру */
+  .tvd__play :global(svg) {
+    width: 38%;
+    height: 38%;
+    fill: currentColor;
+    translate: 7% 0;
+  }
+
+  .tvd__time {
+    position: absolute;
+    right: clamp(10px, calc(var(--vw) * 1.1), 18px);
+    bottom: clamp(10px, calc(var(--vw) * 1.1), 18px);
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.92);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tvd__facade:hover .tvd__scrim,
+  .tvd__facade:focus-visible .tvd__scrim {
+    opacity: 1;
+  }
+
+  .tvd__facade:hover .tvd__play,
+  .tvd__facade:focus-visible .tvd__play {
+    transform: scale(1.07);
+  }
+
+  /* фокус с клавиатуры — кольцо вокруг кнопки (рамку плеера обрезает скругление) */
+  .tvd__facade:focus-visible {
+    outline: none;
+  }
+
+  .tvd__facade:focus-visible .tvd__play {
+    outline: 3px solid var(--blue);
+    outline-offset: 4px;
+  }
+
+  /* видео не загрузилось — спокойная строка со ссылкой на файл поверх плеера */
+  .tvd__error {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 10px;
+    width: max-content;
+    max-width: calc(100% - 32px);
+    padding: 12px 18px;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+    box-shadow: var(--shadow-card);
+    font-size: 15px;
+    line-height: 1.4;
+    text-align: center;
+    translate: -50% -50%;
+  }
+
+  .tvd__error a {
+    font-weight: 560;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tvd__facade:hover .tvd__play,
+    .tvd__facade:focus-visible .tvd__play {
+      transform: none;
+    }
+  }
+
+  /* ── Телефон: рамка тоньше, кольца меньше ─────────────── */
+  @media (max-width: 639.98px) {
+    .tvd__player {
+      box-shadow:
+        0 0 0 5px rgb(255 255 255 / 0.4),
+        var(--shadow-card);
+    }
+
+    .tvd__play {
+      box-shadow:
+        0 0 0 7px rgb(255 255 255 / 0.32),
+        0 14px 32px -12px rgb(29 29 31 / 0.55);
+    }
+
+    .tvd__time {
+      padding: 5px 9px;
+      font-size: 12.5px;
+    }
+  }
+</style>
+
+<script>
+  // Видео включается по нажатию: обложка сменяется плеером в той же рамке.
+  const player = document.querySelector<HTMLElement>('[data-tvd]');
+  const facade = player?.querySelector<HTMLButtonElement>('[data-tvd-play]');
+  const tpl = player?.querySelector<HTMLTemplateElement>('[data-tvd-tpl]');
+  const error = player?.querySelector<HTMLElement>('[data-tvd-error]');
+
+  if (player && facade && tpl) {
+    facade.addEventListener('click', () => {
+      const video = document.importNode(tpl.content, true).querySelector('video');
+      if (!video) return;
+      // обложка уже загружена — плеер показывает её же, пока грузится видео
+      const poster = facade.querySelector('img')?.currentSrc;
+      if (poster) video.poster = poster;
+      video.addEventListener(
+        'error',
+        () => {
+          if (!error) return;
+          error.hidden = false;
+          error.querySelector('a')?.focus();
+        },
+        { once: true },
+      );
+      facade.replaceWith(video);
+      video.focus({ preventScroll: true });
+      // Safari фокусирует видео, только если у него есть tabindex
+      if (document.activeElement !== video) {
+        video.tabIndex = -1;
+        video.focus({ preventScroll: true });
+      }
+      video.play()?.catch(() => {
+        /* браузер не дал включить сам — остаются кнопки плеера */
+      });
+    });
+  }
+</script>

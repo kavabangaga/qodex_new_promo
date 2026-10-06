@@ -1,0 +1,391 @@
+---
+// Раздел страницы «QODEX Tracker» — «Результаты пилота» [#rezultaty]. Приём «Цифр» главной: крупные числа
+// на плитках. Слева графитовая карточка места пилота: логотип клиента на белой плашке и сведения о нём.
+// Справа главная цифра пилота (17%) на широкой плитке, под ней три плитки, соединённые мостиками.
+// Раздел стоит на фоне страницы, поэтому плитки цвета панели, а не белые. Числа досчитываются
+// при появлении (data-count, scripts/motion.ts); знаки «−» и «%» стоят на месте.
+import SectionIntro from '../../components/SectionIntro.astro';
+import ClientLogo from '../../components/ClientLogo.astro';
+import { CLIENTS } from '../../data/clients';
+
+const NB = '\u00a0';
+
+// Логотип — тот же файл, что в плитках «Нам доверяют»
+const eko = CLIENTS.find((c) => c.logo === 'eko-siti.png');
+if (!eko?.logo) throw new Error('Нет клиента с логотипом eko-siti.png в src/data/clients.ts');
+
+interface Result {
+  prefix?: string;
+  /** Число для досчёта и его вид на странице (с запятой). */
+  count: number;
+  decimals?: number;
+  value: string;
+  caption: string;
+  note: string;
+}
+
+// Тексты — с лендинга tracker.qodex.tech (цифры ИИ и диспетчера — как в разделе Tracker на главной);
+// первая — главная цифра
+const RESULTS: Result[] = [
+  {
+    count: 17,
+    value: '17',
+    caption: 'Расхождение между плановым и фактическим вывозом контейнеров',
+    note: `Мусоровоз в среднем убирает на 10${NB}контейнеров больше, чем было в плане`,
+  },
+  {
+    count: 96.4,
+    decimals: 1,
+    value: '96,4',
+    caption: 'ИИ считает контейнеры сам',
+    note: 'Спорные 3,6% диспетчер проверяет по фото',
+  },
+  {
+    prefix: '−',
+    count: 83,
+    value: '83',
+    caption: 'Уменьшение времени на проверку данных диспетчером',
+    note: `Вместо 2${NB}часов сверки — 20${NB}минут проверки отчёта`,
+  },
+  {
+    count: 100,
+    value: '100',
+    caption: 'Автоматизация фотоотчётов до и после загрузки контейнеров',
+    note: 'Каждый контейнер зафиксирован автоматически, без участия водителя',
+  },
+];
+---
+
+<section class="section" id="rezultaty" aria-labelledby="rezultaty-title">
+  <div class="container">
+    <SectionIntro eyebrow="Пилот" titleId="rezultaty-title">Результаты пилота</SectionIntro>
+
+    <div class="rs">
+      <!-- Где шёл пилот: клиент и сведения о нём -->
+      <div class="rs__pilot dark" data-reveal>
+        <div class="rs__logo">
+          <ClientLogo file={eko.logo} name={eko.name} />
+        </div>
+        <dl class="rs__facts">
+          <div class="rs__fact">
+            <dt>Место запуска пилота</dt>
+            <dd class="rs__val">ООО{NB}РО{NB}«Эко-Сити»</dd>
+            <dd class="rs__sub"><span class="nobr">4-й</span> по выручке РО в Приволжском федеральном округе</dd>
+          </div>
+          <div class="rs__fact">
+            <dt>Выручка компании</dt>
+            <dd class="rs__val">3,2{NB}млрд{NB}руб.</dd>
+          </div>
+          <div class="rs__fact">
+            <dt>Регион</dt>
+            <dd class="rs__val">Республика Башкортостан</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Результаты: главная цифра на широкой плитке, под ней три плитки с мостиками -->
+      <ul class="rs__list bridged">
+        {
+          RESULTS.map((r, i) => (
+            <li class:list={['rs__item', { 'rs__item--lead': i === 0 }]} style={`--d:${i + 1}`} data-reveal>
+              <p class="rs__num">{r.prefix}<span data-count={r.count} data-decimals={r.decimals ?? 0}>{r.value}</span>%</p>
+              <div class="rs__text">
+                <p class="rs__cap">{r.caption}</p>
+                <p class="rs__note">{r.note}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Раскладка: карточка пилота во всю высоту слева, плитки результатов справа ──
+     Ширина карточки — ровно одна колонка из четырёх: плитки нижнего ряда той же ширины. */
+  .rs {
+    --rs-gap: clamp(12px, calc(var(--vw) * 1.4), 20px);
+    --rs-pad: clamp(22px, calc(var(--vw) * 2.4), 32px);
+    --rs-num: clamp(2.5rem, calc(var(--vw) * 3.7), 3.5rem);
+    display: grid;
+    grid-template-columns: minmax(0, calc((100% - 3 * var(--rs-gap)) / 4)) minmax(0, 1fr);
+    gap: var(--rs-gap);
+  }
+
+  /* ── Карточка пилота: графитовая, логотип на белой плашке ── */
+  .rs__pilot {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 32px;
+    min-width: 0;
+    padding: var(--rs-pad);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background:
+      radial-gradient(90% 50% at 0% 0%, rgb(72 144 227 / 0.32) 0%, transparent 70%),
+      radial-gradient(80% 45% at 100% 100%, rgb(93 223 215 / 0.14) 0%, transparent 70%),
+      var(--ink);
+  }
+
+  /* логотип зелёный на прозрачном: на графите он теряется, поэтому — белая плашка */
+  .rs__logo {
+    display: grid;
+    place-items: center;
+    min-height: 96px;
+    padding: 18px 20px;
+    border-radius: calc(16px * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+  }
+
+  .rs__facts {
+    --rs-line: rgb(255 255 255 / 0.16);
+    display: grid;
+  }
+
+  .rs__fact {
+    position: relative;
+    padding-block: 16px;
+  }
+
+  .rs__fact:first-child {
+    padding-top: 0;
+  }
+
+  .rs__fact:last-child {
+    padding-bottom: 0;
+  }
+
+  /* разделитель — полоска-псевдоэлемент: однопиксельные рамку и тень при дробном масштабе экрана
+     Safari не рисует */
+  .rs__fact + .rs__fact::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: var(--rs-line);
+  }
+
+  .rs__fact dt {
+    font-size: 14px;
+    line-height: 1.35;
+    color: rgb(255 255 255 / 0.66);
+  }
+
+  .rs__val {
+    margin-top: 4px;
+    font-size: clamp(1.125rem, calc(var(--vw) * 1.4), 1.3125rem);
+    line-height: 1.25;
+    font-weight: 560;
+    letter-spacing: -0.015em;
+  }
+
+  .rs__sub {
+    margin-top: 8px;
+    font-size: 14.5px;
+    line-height: 1.4;
+    color: rgb(255 255 255 / 0.74);
+    text-wrap: pretty;
+  }
+
+  /* ── Плитки результатов ───────────────────────────────── */
+  .rs__list {
+    --gap: var(--rs-gap);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--rs-gap);
+    isolation: isolate;
+  }
+
+  /* цифра сверху, под ней подпись и пояснение: подписи соседних плиток начинаются на одной высоте */
+  .rs__item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(20px, calc(var(--vw) * 2), 28px);
+    min-width: 0;
+    padding: var(--rs-pad);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  /* Цифра: Geist 600 с плотной разрядкой, как в «Цифрах» на главной */
+  .rs__num {
+    font-size: var(--rs-num);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+
+  .rs__text {
+    display: grid;
+    gap: 8px;
+  }
+
+  .rs__cap {
+    font-size: 1.0625rem;
+    line-height: 1.35;
+    font-weight: 560;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .rs__note {
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* мостик к плитке слева в нижнем ряду — на высоте цифры (маски — .bridged в global.css) */
+  .rs__item:nth-child(n + 3)::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--rs-pad) + var(--rs-num) / 2 - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  /* ── Главная цифра: широкая плитка, число крупно слева, текст справа ── */
+  .rs__item--lead {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: clamp(28px, calc(var(--vw) * 4.4), 72px);
+  }
+
+  .rs__item--lead .rs__num {
+    font-size: clamp(5rem, calc(var(--vw) * 9.6), 9rem);
+    line-height: 0.82;
+    letter-spacing: -0.06em;
+  }
+
+  .rs__item--lead .rs__text {
+    gap: 10px;
+    padding-bottom: 2px;
+  }
+
+  .rs__item--lead .rs__cap {
+    max-width: 22em;
+    font-size: clamp(1.25rem, calc(var(--vw) * 1.7), 1.5rem);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .rs__item--lead .rs__note {
+    max-width: 44ch;
+    font-size: 16px;
+  }
+
+  /* ── Планшет: карточка пилота полосой сверху, сведения в три колонки ── */
+  @media (max-width: 1199.98px) {
+    .rs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rs__pilot {
+      display: grid;
+      grid-template-columns: minmax(170px, 0.7fr) minmax(0, 2.3fr);
+      align-items: center;
+      gap: 24px 32px;
+    }
+
+    .rs__facts {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .rs__fact,
+    .rs__fact:first-child,
+    .rs__fact:last-child {
+      padding: 0 0 0 20px;
+    }
+
+    .rs__fact:first-child {
+      padding-left: 0;
+    }
+
+    /* разделители — вертикальные, слева от второго и третьего сведения */
+    .rs__fact + .rs__fact::before {
+      inset: 0 auto 0 0;
+      width: 1px;
+      height: auto;
+    }
+  }
+
+  /* ── Телефон: всё столбиком, мостики — к плитке сверху ── */
+  @media (max-width: 759.98px) {
+    .rs__pilot {
+      display: flex;
+      align-items: stretch;
+      gap: 26px;
+    }
+
+    .rs__logo {
+      min-height: 84px;
+    }
+
+    .rs__facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rs__fact,
+    .rs__fact:first-child,
+    .rs__fact:last-child {
+      padding: 14px 0;
+    }
+
+    .rs__fact:first-child {
+      padding-top: 0;
+    }
+
+    .rs__fact:last-child {
+      padding-bottom: 0;
+    }
+
+    .rs__fact + .rs__fact::before {
+      inset: 0 0 auto;
+      width: auto;
+      height: 1px;
+    }
+
+    .rs__list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rs__item {
+      gap: 20px;
+    }
+
+    .rs__item--lead {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .rs__item--lead .rs__num {
+      font-size: clamp(4.5rem, calc(var(--vw) * 22), 5.5rem);
+    }
+
+    .rs__item:nth-child(n + 2)::before {
+      content: '';
+      position: absolute;
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--rs-pad) + 22px - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      background: var(--panel);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+  }
+</style>

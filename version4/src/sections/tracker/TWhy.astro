@@ -1,0 +1,771 @@
+---
+// Раздел 3 страницы «QODEX Tracker» [#pochemu-vazhno] — «Почему цифровизация важна для отрасли ТКО».
+// Приём Calendly: три белые карточки-проблемы на бежевой панели, соединённые «мостиками». Над текстом
+// каждой — маленький рисунок в стиле иллюстраций главной (демо-данные): обращение приходит на телефон,
+// неплановый рейс уходит с маршрута, сколько контейнеров на площадке — неизвестно. Рисунок
+// «проигрывается» один раз, когда карточка на экране. Ниже — вывод на графитовой полосе и кнопка заявки.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon from '../../components/Icon.astro';
+
+const NB = ' ';
+
+// Тексты — с лендинга продукта, дословно
+const PROBLEMS = [
+  'Фото делают на телефоны. Проверяют вручную, когда кто-то оставит обращение',
+  'Водитель может обмануть — неплановые рейсы не отследить',
+  'Контейнеров не хватает или наоборот слишком много — никто точно не знает',
+] as const;
+
+// Мусорный контейнер — тот же рисунок, что в иллюстрациях главной (Shot.astro): x, y — левый верх, w — ширина
+function bin(x: number, y: number, w: number, color: string, full = false): string {
+  const s = w / 40;
+  const bags = full
+    ? '<ellipse cx="13" cy="7" rx="9" ry="6" fill="#4d5a66"/><ellipse cx="26" cy="6" rx="10" ry="7" fill="#6b7884"/><ellipse cx="20" cy="4" rx="6" ry="4" fill="#3e4954"/>'
+    : '';
+  const lid = full
+    ? '<rect x="2" y="2" width="36" height="5" rx="2" fill="#2b3a33" transform="rotate(-24 2 7)"/>'
+    : '<rect x="1" y="5" width="38" height="6" rx="2" fill="#2b3a33" fill-opacity=".55"/>';
+  return `<g transform="translate(${x} ${y}) scale(${s})">${bags}<path d="M3.5 10h33l-3 28a3 3 0 0 1-3 2.7H9.5a3 3 0 0 1-3-2.7Z" fill="${color}"/>${lid}<path d="M13 16v17M20 16v17M27 16v17" stroke="#000" stroke-opacity=".14" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="43" r="3.2" fill="#26313a"/><circle cx="29" cy="43" r="3.2" fill="#26313a"/></g>`;
+}
+
+// 1. Снимок площадки на экране телефона: контейнеры переполнены, мешки рядом; кадр блёклый, как с телефона
+const phonePhoto =
+  `<rect width="120" height="224" fill="#dde6ec"/><rect y="66" width="120" height="46" fill="#c9d4db"/>` +
+  `<path d="M0 72h120M12 66v46M36 66v46M60 66v46M84 66v46M108 66v46" stroke="#b8c4cc" stroke-width="1.5"/>` +
+  `<rect y="112" width="120" height="112" fill="#b6c2ca"/><rect x="6" y="128" width="108" height="42" rx="4" fill="#c3cbd1"/>` +
+  bin(10, 100, 46, '#3f8a6c', true) +
+  bin(62, 100, 46, '#4a76ad', true) +
+  `<ellipse cx="104" cy="164" rx="10" ry="7" fill="#5b6873"/><ellipse cx="93" cy="170" rx="8" ry="6" fill="#6b7884"/>` +
+  `<ellipse cx="15" cy="167" rx="9" ry="6" fill="#4d5a66"/>` +
+  `<rect width="120" height="224" fill="#fff" fill-opacity=".16"/>` +
+  `<path d="M8 92v-9h9M112 92v-9h-9M8 172v9h9M112 172v9h-9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+// 2. Карта: дороги через 114 по горизонтали (x = 56 + 114k) и на y = 58 и 150, между ними кварталы.
+//    Рисуется и далеко за краями сцены — до краёв карточки любой ширины. Возле маршрута кварталы
+//    расставлены вручную, дальше — по простому правилу.
+const BLOCK = '#e2e9ef';
+const PARK = '#d9ebe1';
+const NEAR: Record<string, string> = {
+  '-1,-1': BLOCK, '0,-1': PARK, '1,-1': BLOCK, '2,-1': '',
+  '-1,0': BLOCK, '0,0': PARK, '1,0': BLOCK, '2,0': BLOCK,
+  '-1,1': '', '0,1': BLOCK, '1,1': '', '2,1': PARK,
+};
+let blocks = '';
+for (let k = -4; k <= 5; k++) {
+  for (let j = -1; j <= 1; j++) {
+    const fill = NEAR[`${k},${j}`] ?? [BLOCK, PARK, BLOCK, ''][(k * 7 + j * 3 + 40) % 4];
+    if (fill) blocks += `<rect x="${67 + 114 * k}" y="${69 + 92 * j}" width="92" height="70" rx="8" fill="${fill}"/>`;
+  }
+}
+const roads = Array.from({ length: 11 }, (_, k) => `M${56 + 114 * (k - 4)} -60V280`).join('');
+const cityMap =
+  blocks +
+  `<path d="M-460 58H800M-460 150H800${roads}" stroke="#fff" stroke-width="12"/>` +
+  `<path d="M-460 150H170V58H800" fill="none" stroke="#006bff" stroke-width="4" stroke-linejoin="round"/>` +
+  `<g fill="#006bff" stroke="#fff" stroke-width="3"><circle cx="-78" cy="150" r="7"/><circle cx="30" cy="150" r="7"/>` +
+  `<circle cx="112" cy="150" r="7"/><circle cx="228" cy="58" r="7"/><circle cx="318" cy="58" r="7"/><circle cx="432" cy="58" r="7"/></g>`;
+
+// …и неплановый рейс: пунктир с маршрута в сторону, к «?»
+const detour =
+  `<path d="M170 150H266" fill="none" stroke="#1d1d1f" stroke-opacity=".5" stroke-width="3.5" stroke-dasharray="5 8" stroke-linecap="round"/>`;
+
+// 3. Площадка: три контейнера на бетонном основании; небо, забор и земля — тоже далеко за краями сцены
+const posts = Array.from({ length: 41 }, (_, k) => `M${-458 + 30 * k} 58v46`).join('');
+const yard =
+  `<rect x="-460" y="-40" width="1260" height="98" fill="#e1e9ee"/><rect x="-460" y="58" width="1260" height="46" fill="#cbd5dc"/>` +
+  `<path d="M-460 65H800${posts}" stroke="#bac6ce" stroke-width="2"/>` +
+  `<rect x="-460" y="104" width="1260" height="150" fill="#b8c3cb"/><rect x="38" y="122" width="264" height="46" rx="6" fill="#c8d0d6"/>` +
+  bin(70, 80, 58, '#3f8a6c') +
+  bin(141, 80, 58, '#3f8a6c') +
+  bin(212, 80, 58, '#4a76ad');
+---
+
+<section class="section panel" id="pochemu-vazhno" aria-labelledby="pochemu-vazhno-title">
+  <div class="container tw">
+    <SectionIntro eyebrow="Как сейчас" titleId="pochemu-vazhno-title">
+      Почему цифровизация важна для отрасли&nbsp;ТКО
+    </SectionIntro>
+
+    <!-- Три проблемы: белые карточки с мостиками -->
+    <ul class="tw__cards bridged" data-reveal style="--d:2">
+      <li class="tw__card">
+        <!-- 1. Снимок на телефоне; проверка начинается, только когда приходит обращение -->
+        <div class="tw__art tw__art--phone" aria-hidden="true" data-tw-art>
+          <span class="tw__stage">
+            <span class="tw__phone">
+              <span class="tw__screen">
+                <svg viewBox="0 0 120 224" set:html={phonePhoto} />
+                <span class="tw__flash"></span>
+              </span>
+              <span class="tw__island"></span>
+            </span>
+            <span class="tw__note">
+              <span class="tw__note-ico"><Icon name="bell-ring" size={16} strokeWidth={2} /></span>
+              <span class="tw__note-text"><b>Обращение:</b> не вывезли мусор, ул.{NB}Ленина,{NB}20</span>
+            </span>
+          </span>
+        </div>
+        <h3 class="tw__text">{PROBLEMS[0]}</h3>
+      </li>
+
+      <li class="tw__card">
+        <!-- 2. Маршрут по плану и пунктир неплановой поездки к «?» -->
+        <div class="tw__art tw__art--map" aria-hidden="true" data-tw-art>
+          <span class="tw__stage">
+            <svg class="tw__scene" viewBox="0 0 340 208" set:html={cityMap} />
+            <!-- пунктир открывается окном, которое едет вправо, а рисунок внутри едет навстречу и стоит на месте -->
+            <span class="tw__mask">
+              <span class="tw__mask-in">
+                <svg class="tw__detour" viewBox="0 0 340 208" set:html={detour} />
+              </span>
+            </span>
+            <span class="tw__q">?</span>
+          </span>
+          <span class="tw__chip">
+            <span class="tw__chip-ico"><Icon name="route" size={14} strokeWidth={2} /></span>
+            <span>Маршрут{NB}14</span>
+          </span>
+        </div>
+        <h3 class="tw__text">{PROBLEMS[1]}</h3>
+      </li>
+
+      <li class="tw__card">
+        <!-- 3. По плану на площадке 3 контейнера, сколько по факту — неизвестно -->
+        <div class="tw__art tw__art--yard" aria-hidden="true" data-tw-art>
+          <span class="tw__stage">
+            <svg class="tw__scene" viewBox="0 0 340 208" set:html={yard} />
+          </span>
+          <span class="tw__count">
+            <span class="tw__count-item">план <b>3</b></span>
+            <span class="tw__count-item">
+              факт
+              <span class="tw__num">
+                <b class="tw__blip" style="--t:0.5s">2</b>
+                <b class="tw__blip" style="--t:0.95s">4</b>
+                <b class="tw__unknown">?</b>
+              </span>
+            </span>
+          </span>
+        </div>
+        <h3 class="tw__text">{PROBLEMS[2]}</h3>
+      </li>
+    </ul>
+
+    <!-- Вывод и кнопка заявки -->
+    <div class="tw__band dark" data-reveal style="--d:3">
+      <p class="tw__eq">
+        <span>Нет фактической информации</span>
+        <span class="tw__eq-res"><span class="tw__op">=</span>{NB}нет{NB}контроля</span>
+      </p>
+      <a href="#forma" class="btn btn--light tw__cta" data-interest="tracker" data-goal="pilot_click">
+        Запросить демо
+        <Icon name="arrow-right" />
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Карточки и полоса под ними — один блок: общий зазор и общее скругление */
+  .tw {
+    --tw-gap: clamp(14px, calc(var(--vw) * 1.4), 20px);
+    --tw-r: clamp(22px, calc(var(--vw) * 2), 28px);
+    --tw-in: 10px;
+    --tw-art-h: 224px;
+    /* ширина рисунка, когда он слева от текста (планшет); проценты — от ширины карточки */
+    --tw-art-w: clamp(300px, 44%, 360px);
+  }
+
+  /* ── Три карточки в ряд, соединённые мостиками ─────────── */
+  .tw__cards {
+    --gap: var(--tw-gap);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--tw-gap);
+    isolation: isolate;
+  }
+
+  .tw__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-radius: calc(var(--tw-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  /* мостик к карточке слева — на середине рисунка (маски — .bridged в global.css) */
+  .tw__card + .tw__card::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--tw-in) + var(--tw-art-h) / 2 - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  .tw__text {
+    padding: 20px 26px 28px;
+    font-size: clamp(1.125rem, calc(var(--vw) * 1.5), 1.3125rem);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  /* ── Рисунок: светлая «карточка» внутри карточки ───────── */
+  .tw__art {
+    position: relative;
+    flex: none;
+    height: var(--tw-art-h);
+    margin: var(--tw-in) var(--tw-in) 0;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: calc(calc(var(--tw-r) - var(--tw-in)) * var(--rk));
+    corner-shape: var(--corner);
+    background: #edf3f5;
+    color: var(--ink);
+    font-size: 12.5px;
+    line-height: 1.35;
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* сцена фиксированного размера по центру: рисунок не мельчает и не растягивается вместе с карточкой */
+  .tw__stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 340px;
+    height: 208px;
+    margin: -104px 0 0 -170px;
+  }
+
+  .tw__scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+
+  /* ── 1. Телефон и обращение ────────────────────────────── */
+  .tw__art--phone {
+    background: #eef2f5;
+  }
+
+  /* телефон стоит на нижнем крае рисунка, его низ уходит за край */
+  .tw__phone {
+    position: absolute;
+    left: 50%;
+    top: 22px;
+    width: 132px;
+    height: 236px;
+    margin-left: -66px;
+    padding: 6px;
+    border-radius: 26px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(29 29 31 / 0.06),
+      0 22px 40px -18px rgb(29 29 31 / 0.35);
+  }
+
+  .tw__screen {
+    position: relative;
+    display: block;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #dde6ec;
+  }
+
+  .tw__screen svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .tw__island {
+    position: absolute;
+    left: 50%;
+    top: 13px;
+    width: 34px;
+    height: 9px;
+    margin-left: -17px;
+    border-radius: 999px;
+    background: var(--ink);
+  }
+
+  /* вспышка: телефон делает снимок */
+  .tw__flash {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+  }
+
+  /* обращение — уведомление поверх экрана, шире телефона */
+  .tw__note {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    top: 46px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 244px;
+    margin-left: -122px;
+    padding: 10px 12px 10px 10px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow:
+      0 0 0 5px rgb(255 255 255 / 0.5),
+      0 14px 30px -12px rgb(29 29 31 / 0.35);
+  }
+
+  .tw__note-ico {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: 10px;
+    background: #fff0da;
+    color: #9a5800;
+  }
+
+  .tw__note-text b {
+    font-weight: 600;
+  }
+
+  /* ── 2. Маршрут и неплановый рейс ──────────────────────── */
+  .tw__art--map {
+    background: #edf3f5;
+  }
+
+  /* окно над пунктиром: от поворота маршрута до «?» */
+  .tw__mask {
+    position: absolute;
+    left: 170px;
+    top: 138px;
+    width: 100px;
+    height: 24px;
+    overflow: hidden;
+  }
+
+  .tw__mask-in {
+    position: absolute;
+    inset: 0;
+  }
+
+  .tw__detour {
+    position: absolute;
+    left: -170px;
+    top: -138px;
+    width: 340px;
+    max-width: none;
+    height: 208px;
+    overflow: visible;
+  }
+
+  /* «?» — куда уехала машина, никто не знает */
+  .tw__q {
+    position: absolute;
+    left: 284px;
+    top: 150px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    background: #fff0da;
+    color: #9a5800;
+    box-shadow: 0 4px 12px -2px rgb(29 29 31 / 0.25);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .tw__q::after,
+  .tw__unknown::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border: 2px solid #f29d38;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .tw__chip {
+    position: absolute;
+    z-index: 2;
+    left: 12px;
+    bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px 5px 8px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 6px 16px -8px rgb(29 29 31 / 0.35);
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .tw__chip-ico {
+    display: grid;
+    color: #006bff;
+  }
+
+  /* ── 3. Площадка: план и факт ──────────────────────────── */
+  .tw__art--yard {
+    background: #e1e9ee;
+  }
+
+  .tw__count {
+    position: absolute;
+    z-index: 2;
+    left: 12px;
+    bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 6px 18px -8px rgb(29 29 31 / 0.4);
+    font-size: 13.5px;
+    font-weight: 560;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .tw__count-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 30px;
+    padding: 0 10px;
+  }
+
+  .tw__count-item + .tw__count-item {
+    border-left: 1px solid var(--line);
+  }
+
+  .tw__count-item > b {
+    font-weight: 650;
+    color: var(--ink);
+  }
+
+  /* числа сменяют друг друга в одной клетке: «2» и «4» видны только во время своей анимации */
+  .tw__num {
+    display: inline-grid;
+  }
+
+  .tw__num > b {
+    position: relative;
+    grid-area: 1 / 1;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+
+  .tw__blip {
+    background: var(--panel);
+    opacity: 0;
+  }
+
+  .tw__unknown {
+    background: #fff0da;
+    color: #9a5800 !important;
+  }
+
+  .tw__unknown::after {
+    inset: -2px;
+  }
+
+  /* ── Движение: один раз, когда рисунок на экране ──────────
+     Классы is-armed и is-live ставит скрипт; без них (нет скриптов, «уменьшить движение»)
+     сразу видно итоговое состояние. */
+  .tw__art.is-armed:not(.is-live) .tw__note,
+  .tw__art.is-armed:not(.is-live) .tw__q,
+  .tw__art.is-armed:not(.is-live) .tw__unknown {
+    opacity: 0;
+  }
+
+  .tw__art.is-armed:not(.is-live) .tw__mask {
+    transform: translateX(-100%);
+  }
+
+  .tw__art.is-armed:not(.is-live) .tw__mask-in {
+    transform: translateX(100%);
+  }
+
+  /* 1: снимок — вспышка на экране, потом сверху выезжает обращение */
+  .tw__art.is-live .tw__flash {
+    animation: tw-flash 0.55s ease-out 0.3s both;
+  }
+
+  .tw__art.is-live .tw__note {
+    animation: tw-drop 0.7s var(--ease-out) 1s both;
+  }
+
+  /* 2: пунктир открывается слева направо, «?» появляется и один раз «зовёт» */
+  .tw__art.is-live .tw__mask {
+    animation: tw-window 1.1s var(--ease-in-out) 0.45s both;
+  }
+
+  .tw__art.is-live .tw__mask-in {
+    animation: tw-window-in 1.1s var(--ease-in-out) 0.45s both;
+  }
+
+  .tw__art.is-live .tw__q {
+    animation: tw-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 1.5s both;
+  }
+
+  .tw__art.is-live .tw__q::after {
+    animation: tw-ring 1s ease-out 1.85s both;
+  }
+
+  /* 3: факт «2»… «4»… — точно никто не знает: «?» */
+  .tw__art.is-live .tw__blip {
+    animation: tw-blip 0.45s linear var(--t) forwards;
+  }
+
+  .tw__art.is-live .tw__unknown {
+    animation: tw-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 1.4s both;
+  }
+
+  .tw__art.is-live .tw__unknown::after {
+    animation: tw-ring 1s ease-out 1.7s both;
+  }
+
+  @keyframes tw-flash {
+    from {
+      opacity: 0.85;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes tw-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-16px) scale(0.97);
+    }
+  }
+
+  @keyframes tw-window {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes tw-window-in {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes tw-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  @keyframes tw-ring {
+    from {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.9);
+    }
+  }
+
+  @keyframes tw-blip {
+    0%,
+    99.9% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tw__art *,
+    .tw__art *::after {
+      animation: none !important;
+    }
+  }
+
+  /* ── Графитовая полоса с выводом ───────────────────────── */
+  .tw__band {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px clamp(28px, calc(var(--vw) * 4), 64px);
+    margin-top: var(--tw-gap);
+    padding: clamp(26px, calc(var(--vw) * 3), 40px) clamp(22px, calc(var(--vw) * 3.4), 48px);
+    border-radius: calc(var(--tw-r) * var(--rk));
+    corner-shape: var(--corner);
+    background:
+      radial-gradient(60% 140% at 0% 0%, rgb(72 144 227 / 0.38) 0%, transparent 60%),
+      radial-gradient(45% 140% at 100% 100%, rgb(184 159 250 / 0.24) 0%, transparent 60%),
+      var(--ink);
+    overflow: hidden;
+  }
+
+  /* вывод — как формула: «= нет контроля» с новой строки, «=» на своей плашке */
+  .tw__eq {
+    font-size: clamp(1.6rem, calc(var(--vw) * 2.6), 2.75rem);
+    line-height: 1.16;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .tw__eq-res {
+    display: block;
+    margin-top: 0.08em;
+  }
+
+  .tw__op {
+    display: inline-grid;
+    place-items: center;
+    width: 1.18em;
+    height: 1.18em;
+    margin-right: 0.06em;
+    border-radius: calc(0.3em * var(--rk));
+    corner-shape: var(--corner);
+    background: rgb(184 159 250 / 0.2);
+    box-shadow: inset 0 0 0 1px rgb(212 194 255 / 0.28);
+    color: #d4c2ff;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  /* ── Планшет: карточки столбиком, рисунок слева от текста; мостики — к карточке сверху ── */
+  @media (max-width: 1199.98px) {
+    .tw__cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tw__card {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .tw__art {
+      width: var(--tw-art-w);
+      margin: var(--tw-in);
+    }
+
+    .tw__text {
+      flex: 1;
+      max-width: 30em;
+      padding: 20px clamp(20px, calc(var(--vw) * 4), 40px) 20px clamp(10px, calc(var(--vw) * 2), 22px);
+      font-size: clamp(1.125rem, calc(var(--vw) * 2.4), 1.375rem);
+    }
+
+    .tw__eq {
+      font-size: clamp(1.6rem, calc(var(--vw) * 3.4), 2.25rem);
+    }
+
+    .tw__card + .tw__card::before {
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--tw-in) + var(--tw-art-w) / 2 - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+  }
+
+  @media (max-width: 760px) {
+    .tw__band {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tw__cta {
+      width: 100%;
+      white-space: normal;
+    }
+  }
+
+  /* ── Телефон: рисунок над текстом, мостики посередине ── */
+  @media (max-width: 719.98px) {
+    .tw {
+      --tw-art-h: 208px;
+    }
+
+    .tw__card {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .tw__art {
+      width: auto;
+      margin: var(--tw-in) var(--tw-in) 0;
+    }
+
+    .tw__text {
+      max-width: none;
+      padding: 18px 20px 22px;
+      font-size: 1.125rem;
+    }
+
+    .tw__card + .tw__card::before {
+      left: calc(50% - (var(--gap) + 14px) / 2);
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Рисунки «проигрываются» один раз, когда карточка на экране; за экраном возвращаются в начало.
+  // При «уменьшить движение» классы не ставятся — видно итоговое состояние.
+  const arts = document.querySelectorAll<HTMLElement>('[data-tw-art]');
+  if (arts.length && !reducedMotion() && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const el = entry.target as HTMLElement;
+          // начинаем, когда видна заметная часть рисунка, а сбрасываем — только когда он ушёл с экрана
+          if (entry.intersectionRatio >= 0.4) el.classList.add('is-live');
+          else if (!entry.isIntersecting) el.classList.remove('is-live');
+        }
+      },
+      { threshold: [0, 0.4] },
+    );
+    arts.forEach((el) => {
+      el.classList.add('is-armed');
+      io.observe(el);
+    });
+  }
+</script>

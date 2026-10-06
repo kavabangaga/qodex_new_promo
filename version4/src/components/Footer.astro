@@ -15,6 +15,13 @@ import {
   SKOLKOVO_URL,
 } from '../config/site';
 
+interface Props {
+  /** Надпись на кнопке заявки: на странице продукта без пилота (QODEX Tracker) — «Запросить демо». */
+  cta?: string;
+}
+
+const { cta = 'Запустить бесплатный пилот' } = Astro.props;
+
 // Все документы в подвале — страницы сайта (file: true — PDF, откроется в новой вкладке).
 // Согласие на cookie и сразу под ним «Настройки cookie» — только когда включена Яндекс Метрика (см. Floating.astro).
 const docs = [
@@ -35,7 +42,7 @@ const docs = [
         <div class="ftr__lead">
           <p class="ftr__slogan">Вы начисляете и платите по фактическим данным.</p>
           <a href="#forma" class="btn btn--light ftr__cta" data-goal="pilot_click">
-            Запустить бесплатный пилот
+            {cta}
             <Icon name="arrow-right" />
           </a>
         </div>
