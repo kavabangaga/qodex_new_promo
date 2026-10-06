@@ -1,7 +1,7 @@
 ---
 // Блок 15. Заявка и контакты — приём Calendly «Get started»: надпись, крупный заголовок по центру,
 // подзаголовок, горизонтальная форма на белой карточке, ниже — ряд градиентных карточек палитры
-// Calendly с белыми плашками интерфейса (вместо фото людей): контакт по пилоту, почта, Telegram.
+// Calendly с белыми плашками интерфейса (вместо фото людей): контакт по пилоту (у номера — плашка MAX), почта, Telegram.
 import SectionIntro from '../components/SectionIntro.astro';
 import LeadForm from '../components/LeadForm.astro';
 import Icon from '../components/Icon.astro';
@@ -75,6 +75,11 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
             <span class="cc__chip cc__chip--big">
               <Icon name="phone" size={22} />
               {CONTACTS.phone}
+              {/* по этому номеру можно написать в MAX — ссылки «написать по номеру» у MAX нет, поэтому это подпись */}
+              <span class="cc__max">
+                <span class="visually-hidden">, номер есть в мессенджере </span>
+                {CONTACTS.phoneMessenger}
+              </span>
             </span>
           </span>
         </a>
@@ -243,6 +248,19 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
     padding: 12px 18px;
     font-size: clamp(20px, calc(var(--vw) * 2.1), 30px);
     letter-spacing: -0.03em;
+  }
+
+  /* плашка «MAX» у номера: мягкий лавандовый палитры, без логотипа мессенджера */
+  .cc__max {
+    align-self: center;
+    padding: 6px 11px 5px;
+    border-radius: 999px;
+    background: var(--g-lav-soft);
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: #4b33c8;
   }
 
   .cc__card:hover .cc__chip {

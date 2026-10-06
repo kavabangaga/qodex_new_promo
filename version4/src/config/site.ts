@@ -55,6 +55,8 @@ export function nbName(s: string): string {
 export const CONTACTS = {
   phone: `+7${NB}996${NB}293${NB}03${NB}80`,
   phoneHref: 'tel:+79962930380',
+  /** К этому номеру привязан аккаунт в российском мессенджере MAX (на сайте — плашка у номера; см. политику, п. 7.6). */
+  phoneMessenger: 'MAX',
   email: 'info@qodex.tech',
   emailHref: 'mailto:info@qodex.tech',
   telegram: '@qodex_t',

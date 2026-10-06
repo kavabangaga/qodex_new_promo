@@ -42,6 +42,10 @@ const {
           <a href={CONTACTS.phoneHref} data-goal="phone_click">
             <Icon name="phone" size={16} />
             {CONTACTS.phone}
+            <span class="lm__max">
+              <span class="visually-hidden">, номер есть в мессенджере </span>
+              {CONTACTS.phoneMessenger}
+            </span>
           </a>
         </div>
       </div>
@@ -243,6 +247,19 @@ const {
     display: grid;
     gap: 2px;
     min-width: 0;
+  }
+
+  /* плашка «MAX» у номера — как в блоке заявки */
+  .lm__max {
+    margin-left: 2px;
+    padding: 3px 7px 2px;
+    border-radius: 999px;
+    background: var(--g-lav-soft);
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: #4b33c8;
   }
 
   .lm__person-label {
