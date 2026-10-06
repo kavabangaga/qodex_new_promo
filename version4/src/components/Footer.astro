@@ -23,7 +23,7 @@ const docs = [
   ...(METRIKA_ID
     ? [{ href: DOC_LINKS.cookies, label: 'Согласие на cookie и Яндекс Метрику', file: false, settings: true }]
     : []),
-  { href: DOC_LINKS.agreement, label: 'Пользовательское соглашение', file: false },
+  { href: DOC_LINKS.agreement, label: 'Пользовательское соглашение QODEX TONN', file: false },
   { href: DOC_LINKS.page, label: 'Документы', file: false },
 ];
 ---
@@ -72,6 +72,7 @@ const docs = [
               <li>
                 <a href={CONTACTS.telegramHref} target="_blank" rel="noopener" data-goal="telegram_click">
                   Telegram {CONTACTS.telegram}
+                  <span class="visually-hidden"> (откроется в новой вкладке)</span>
                 </a>
               </li>
               <li>
