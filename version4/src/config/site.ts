@@ -87,6 +87,7 @@ export const PRODUCTS: Record<ProductId, Product> = {
     name: 'РО-БОТ',
     url: 'https://romoney.qodex.tech',
     stage2Path: '/ro-bot',
+    onSite: true,
     color: '#6B4DFF',
     glow: '#A594FF',
   },

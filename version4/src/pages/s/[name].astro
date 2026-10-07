@@ -48,6 +48,22 @@ const T = {
   't-effect': 'TEffect',
 } as const;
 
+// Разделы страницы «РО-БОТ»: /s/r-hero, /s/r-modules …
+const ROBOT = import.meta.glob('../../sections/robot/*.astro');
+const R = {
+  'r-hero': 'RHero',
+  'r-modules': 'RModules',
+  'r-steps': 'RSteps',
+  'r-calc': 'RCalc',
+  'r-gis': 'RGis',
+  'r-week': 'RWeek',
+  'r-interface': 'RInterface',
+  'r-cases': 'RCases',
+  'r-objects': 'RObjects',
+  'r-legal': 'RLegal',
+  'r-security': 'RSecurity',
+} as const;
+
 const MAP = {
   header: Header,
   hero: Hero,
@@ -106,16 +122,30 @@ export function getStaticPaths() {
     't-photo',
     't-results',
     't-effect',
+    // те же имена, что в R
+    'r-hero',
+    'r-modules',
+    'r-steps',
+    'r-calc',
+    'r-gis',
+    'r-week',
+    'r-interface',
+    'r-cases',
+    'r-objects',
+    'r-legal',
+    'r-security',
   ].map((name) => ({ params: { name } }));
 }
 
-const { name } = Astro.params as { name: keyof typeof MAP | keyof typeof K | keyof typeof T };
+const { name } = Astro.params as { name: keyof typeof MAP | keyof typeof K | keyof typeof T | keyof typeof R };
 const Section =
   name in K
     ? ((await KODEKS[`../../sections/kodeks/${K[name as keyof typeof K]}.astro`]()) as { default: typeof Header }).default
     : name in T
       ? ((await TRACKER[`../../sections/tracker/${T[name as keyof typeof T]}.astro`]()) as { default: typeof Header }).default
-      : MAP[name as keyof typeof MAP];
+      : name in R
+        ? ((await ROBOT[`../../sections/robot/${R[name as keyof typeof R]}.astro`]()) as { default: typeof Header }).default
+        : MAP[name as keyof typeof MAP];
 ---
 
 <Base title={`Раздел: ${name}`}>
