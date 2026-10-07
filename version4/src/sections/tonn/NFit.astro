@@ -1,8 +1,9 @@
 ---
 // Раздел 2 страницы «QODEX TONN» [#komu-podhodit] — «Для каких предприятий подходит QODEX TONN» (лендинг, блок B06).
 // Бенто из бежевых плиток на фоне страницы: крупная плитка «Полигоны ТКО и МСК» (два столбца и два ряда) и пять
-// отраслей. В крупной плитке — что получает регоператор и что объект, и маленький рисунок весовой (демо-данные):
-// машина заезжает на платформу, камера читает номер, акт с весом уходит во ФГИС УТКО. Рисунок «проигрывается»
+// отраслей. В крупной плитке — текст лендинга и рисунок весовой (демо-данные): машина заезжает на платформу,
+// камера читает номер, акт с весом уходит во ФГИС УТКО. Что видят регоператор и объект, рассказывает раздел
+// «Честный вес выгоден обеим сторонам» (NBoth) — здесь эти фразы не повторяем. Рисунок «проигрывается»
 // один раз, когда он на экране; без анимации виден итог. Стоковые фото лендинга не используем.
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
@@ -15,19 +16,6 @@ const MAIN = {
   title: 'Полигоны ТКО и МСК',
   text: `Подмена класса отходов, занижение веса промышленных грузов под видом ТКО. Обязательная передача во ФГИС${NB}УТКО с${NB}2026${NB}года.`,
 };
-
-const SIDES: { icon: IconName; title: string; text: string }[] = [
-  {
-    icon: 'building-2',
-    title: 'Регоператору',
-    text: 'Платите объекту только за реальный вес. Одни и те же взвешивания сразу видят и объект, и регоператор.',
-  },
-  {
-    icon: 'factory',
-    title: 'Полигону и сортировке',
-    text: `Номер, фото и вес машины без ручного ввода, акт сразу в облаке, данные уходят во ФГИС${NB}УТКО. Соответствует п.${NB}36 ПП${NB}№${NB}567.`,
-  },
-];
 
 const FITS: { icon: IconName; title: string; text: string }[] = [
   {
@@ -60,38 +48,40 @@ const FITS: { icon: IconName; title: string; text: string }[] = [
 // «ЗПП-28» не рвётся по дефису (типограф склеивает только буквы с буквами)
 const nobr = (s: string) => s.replace('ЗПП-28', '<span class="nobr">ЗПП-28</span>');
 
-// Рисунок весовой (вид сбоку), сцена 340×210, земля — y = 180. Фон, земля и холм полигона уходят далеко
-// за края сцены — до краёв рисунка любой ширины.
+// Рисунок весовой (вид сбоку), сцена 340×210, земля — y = 180. Один стиль с машинами в «Схемах хищений» (NSchemes)
+// и весовой на странице «Кодекса ТКО» (KFit): белые плашки с графитовым контуром, платформа вровень с землёй
+// на трёх датчиках. Фон, земля и холм полигона уходят далеко за края сцены — до краёв рисунка любой ширины.
+const INK = '#1d1d1f';
+
 const scene =
-  // холм полигона и корпус сортировки на заднем плане
-  `<path d="M120 180C190 146 250 122 330 116C420 110 560 138 760 180Z" fill="#e0e7e2"/>` +
-  `<rect x="-440" y="112" width="470" height="68" fill="#e2e7ed"/><rect x="-440" y="104" width="478" height="10" rx="3" fill="#d6dde5"/>` +
-  `<path d="M-200 124h28v20h-28zM-150 124h28v20h-28zM-100 124h28v20h-28zM-50 124h28v20h-28zM0 124h20v20H0z" fill="#d3dbe3"/>` +
+  // холм полигона и корпус сортировки вдали — бледные, без контура
+  `<path d="M120 180C190 146 250 122 330 116C420 110 560 138 760 180Z" fill="#dfe8e3"/>` +
+  `<rect x="-440" y="112" width="470" height="68" fill="#e2e9ee"/><rect x="-440" y="104" width="478" height="10" rx="3" fill="#d6dee5"/>` +
+  `<path d="M-200 124h28v20h-28zM-150 124h28v20h-28zM-100 124h28v20h-28zM-50 124h28v20h-28zM0 124h20v20H0z" fill="#d3dce3"/>` +
   // земля
-  `<rect x="-460" y="180" width="1260" height="260" fill="#dce2e8"/><path d="M-460 180.5H800" stroke="#ccd4dc" stroke-width="2"/>` +
-  // платформа весов с пандусами, приямок
-  `<rect x="22" y="180" width="282" height="5" fill="#c6ced6"/>` +
-  `<path d="M4 181 26 171V181ZM300 171 322 181H300Z" fill="#c3ccd5"/>` +
-  `<rect x="26" y="171" width="274" height="10" rx="2" fill="#aab6c1"/><rect x="26" y="171" width="274" height="3" rx="1.5" fill="#c2ccd5"/>` +
-  // столб с камерой распознавания номеров перед машиной
-  `<rect x="326" y="56" width="5" height="124" rx="2" fill="#a9b4bf"/><path d="M328 63h-12" stroke="#a9b4bf" stroke-width="4" stroke-linecap="round"/>` +
-  `<rect x="296" y="55" width="22" height="13" rx="3.5" fill="#56626d"/><rect x="291" y="57.5" width="6" height="8" rx="1.5" fill="#3e4953"/>` +
-  `<circle cx="312.5" cy="59.5" r="1.6" fill="#3ddba8"/>`;
+  `<rect x="-460" y="180" width="1260" height="260" fill="#dfe7ec"/><path d="M-460 180H800" stroke="#ccd7de" stroke-width="2"/>` +
+  // платформа весов и датчики под ней
+  `<rect x="22" y="180" width="282" height="11" rx="2.5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>` +
+  [46, 163, 280].map((cx) => `<rect x="${cx - 8}" y="193" width="16" height="6" rx="1.5" fill="${INK}"/>`).join('') +
+  // столб с камерой распознавания номеров перед машиной (объектив — слева, навстречу машине)
+  `<rect x="325" y="58" width="5" height="122" rx="2" fill="${INK}"/><path d="M326 62h-8" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>` +
+  `<rect x="295" y="54" width="24" height="14" rx="4" fill="#fff" stroke="${INK}" stroke-width="2.5"/>` +
+  `<rect x="289" y="56.5" width="7" height="9" rx="2" fill="${INK}"/><circle cx="312" cy="61" r="2" fill="#12b886"/>`;
 
 // луч камеры к передней части машины — отдельным слоем: появляется, когда машина встала на весы
-const beam = `<path d="M292 62 258 134 284 152Z" fill="#12b886" fill-opacity=".16"/><path d="M292 62 258 134M292 62 284 152" stroke="#12b886" stroke-opacity=".35" stroke-width="1.2" stroke-dasharray="3 4"/>`;
+const beam = `<path d="M290 61 246 128 260 150Z" fill="#12b886" fill-opacity=".16"/><path d="M290 61 246 128M290 61 260 150" stroke="#12b886" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="3 4"/>`;
 
-// мусоровоз — отдельным слоем, заезжает на платформу
+// мусоровоз — отдельным слоем, заезжает на платформу. Кузов — как у весовой «Кодекса ТКО» (задний борт со скосом,
+// бирюзовая полоса), кабина и колёса — как у самосвала в «Схемах хищений»; колёса стоят на y = 180
 const truck =
-  `<rect x="52" y="146" width="224" height="8" rx="3" fill="#4b5661"/>` +
-  `<path d="M48 98h14v48H52a4 4 0 0 1-4-4Z" fill="#c3ced8"/>` +
-  `<rect x="60" y="84" width="140" height="62" rx="8" fill="#d8e1e9"/>` +
-  `<rect x="78" y="110" width="104" height="8" rx="4" fill="#bdcad6"/><path d="M104 92v12M156 92v12M104 124v14M156 124v14" stroke="#c9d4de" stroke-width="2.5" stroke-linecap="round"/>` +
-  `<path d="M206 146V104a8 8 0 0 1 8-8h30a8 8 0 0 1 7 4.2l17 30a8 8 0 0 1 1 3.9V146Z" fill="#fff"/>` +
-  `<path d="M216 106h26l13 23h-39Z" fill="#c6d4e1"/><path d="M215 137h10" stroke="#d3dce4" stroke-width="2.5" stroke-linecap="round"/>` +
-  `<rect x="263" y="133" width="6" height="6" rx="2" fill="#f6dc8a"/><rect x="262" y="142" width="12" height="7" rx="2.5" fill="#56626d"/>` +
-  `<g fill="#39434d"><circle cx="86" cy="157" r="14"/><circle cx="120" cy="157" r="14"/><circle cx="244" cy="157" r="14"/></g>` +
-  `<g fill="#a8b4bf"><circle cx="86" cy="157" r="5.5"/><circle cx="120" cy="157" r="5.5"/><circle cx="244" cy="157" r="5.5"/></g>`;
+  `<g stroke="${INK}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">` +
+  `<rect x="50" y="149" width="206" height="7" rx="3" fill="${INK}" stroke="none"/>` +
+  `<path d="M73 94H192a8 8 0 0 1 8 8v47H58a9 9 0 0 1-9-9v-19a9 9 0 0 1 2.9-6.6L66 97a9 9 0 0 1 7-3Z" fill="#fff"/>` +
+  `<path d="M82 97v49" stroke-opacity=".22"/><rect x="98" y="115" width="86" height="10" rx="5" fill="#7fe5de" stroke="none"/>` +
+  `<path d="M206 149V114a8 8 0 0 1 8-8h22a8 8 0 0 1 7 4l12 21a8 8 0 0 1 1 4V149Z" fill="#fff"/>` +
+  `<path d="M214 114h20l10 17h-30Z" fill="#cfe2ff" stroke-width="2"/><path d="M216 139h7"/>` +
+  `<rect x="249" y="137" width="6" height="6" rx="2" fill="#eef3a6" stroke-width="1.75"/></g>` +
+  [90, 120, 234].map((cx) => `<circle cx="${cx}" cy="167" r="13" fill="${INK}"/><circle cx="${cx}" cy="167" r="5" fill="#fff"/>`).join('');
 ---
 
 <section class="section" id="komu-podhodit" aria-labelledby="komu-podhodit-title">
@@ -105,29 +95,13 @@ const truck =
     </SectionIntro>
 
     <ul class="nfit-grid">
-      <!-- Отходы: крупная плитка — что получают регоператор и объект, рисунок весовой -->
+      <!-- Отходы: крупная плитка — текст лендинга и рисунок весовой -->
       <li class="nfit-tile nfit-tile--main" data-reveal style="--d:1">
         <div class="nfit-head">
           <span class="nfit-ico" aria-hidden="true"><Icon name={MAIN.icon} size={24} /></span>
           <h3 class="nfit-title nfit-title--main">{MAIN.title}</h3>
         </div>
         <p class="nfit-text nfit-text--main">{MAIN.text}</p>
-
-        <ul class="nfit-sides">
-          {
-            SIDES.map((s) => (
-              <li class="nfit-side">
-                <p class="nfit-side__head">
-                  <span class="nfit-side__ico" aria-hidden="true">
-                    <Icon name={s.icon} size={18} strokeWidth={1.9} />
-                  </span>
-                  <span class="nfit-side__title">{s.title}</span>
-                </p>
-                <p class="nfit-side__text">{s.text}</p>
-              </li>
-            ))
-          }
-        </ul>
 
         <!-- Весовая: камера читает номер, вес и акт уходят во ФГИС УТКО (демо-данные) -->
         <div class="nfit-art" aria-hidden="true" data-nfit-art>
@@ -236,7 +210,7 @@ const truck =
     text-wrap: pretty;
   }
 
-  /* ── Крупная плитка: текст, две стороны, рисунок внизу на всю оставшуюся высоту ── */
+  /* ── Крупная плитка: текст, рисунок внизу на всю оставшуюся высоту ── */
   .nfit-tile--main {
     grid-column: span 2;
     grid-row: span 2;
@@ -265,66 +239,17 @@ const truck =
     font-size: clamp(1rem, calc(var(--vw) * 1.2), 1.0625rem);
   }
 
-  /* регоператору и объекту — две белые карточки рядом */
-  .nfit-sides {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--nfit-in);
-    margin: 20px var(--nfit-in) 0;
-  }
-
-  .nfit-side {
-    min-width: 0;
-    padding: 16px 20px 18px 18px;
-    border-radius: calc(calc(var(--nfit-r) - var(--nfit-in)) * var(--rk));
-    corner-shape: var(--corner);
-    background: #fff;
-  }
-
-  .nfit-side__head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .nfit-side__ico {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    flex: none;
-    border-radius: calc(10px * var(--rk));
-    corner-shape: var(--corner);
-    background: var(--panel);
-    color: var(--nfit-green);
-  }
-
-  .nfit-side__title {
-    font-size: 1.0625rem;
-    line-height: 1.25;
-    letter-spacing: -0.012em;
-    font-weight: 600;
-  }
-
-  .nfit-side__text {
-    margin-top: 8px;
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--muted);
-    text-wrap: pretty;
-  }
-
-  /* ── Рисунок: светлая «карточка» внутри плитки ─────────── */
+  /* ── Рисунок: светлая «карточка» внутри плитки (фон — как у рисунков «Схем хищений») ─────────── */
   .nfit-art {
     position: relative;
     flex: 1;
     min-height: 246px;
-    margin: var(--nfit-in);
+    margin: 22px var(--nfit-in) var(--nfit-in);
     overflow: hidden;
     isolation: isolate;
     border-radius: calc(calc(var(--nfit-r) - var(--nfit-in)) * var(--rk));
     corner-shape: var(--corner);
-    background: #edf1f4;
+    background: #edf3f5;
     color: var(--ink);
     font-size: 12.5px;
     line-height: 1.25;
@@ -341,9 +266,10 @@ const truck =
     pointer-events: none;
   }
 
-  /* сцена фиксированного размера внизу по центру: весовая слева, карточка акта справа от камеры */
+  /* сцена фиксированного размера внизу по центру: весовая слева, карточка акта справа от камеры.
+     На компьютере рисунок занимает высоту двух соседних плиток (около 390 px) — весовая крупнее */
   .nfit-stage {
-    --nfit-s: 1.1;
+    --nfit-s: 1.45;
     --nfit-sw: calc(340px * var(--nfit-s));
     position: absolute;
     left: 50%;
@@ -543,6 +469,10 @@ const truck =
       flex: none;
       height: 280px;
     }
+
+    .nfit-stage {
+      --nfit-s: 1.1;
+    }
   }
 
   /* ── Телефон: один столбец; у отраслей значок слева, заголовок и текст справа ── */
@@ -587,8 +517,8 @@ const truck =
       padding: 20px 20px 0;
     }
 
+    /* заголовок в одной строке со значком — без отступа сверху, иначе встаёт ниже центра значка */
     .nfit-title--main {
-      margin-top: 18px;
       font-size: 1.5rem;
     }
 
@@ -596,22 +526,10 @@ const truck =
       font-size: 15.5px;
     }
 
-    .nfit-sides {
-      grid-template-columns: minmax(0, 1fr);
-      margin-top: 18px;
-    }
-
-    .nfit-side {
-      padding: 16px 18px 18px;
-    }
-
-    .nfit-side__text {
-      font-size: 15px;
-    }
-
     /* рисунок: весовая по центру, карточка акта — в левом верхнем углу, метка — справа */
     .nfit-art {
       height: 276px;
+      margin-top: 18px;
     }
 
     .nfit-demo {

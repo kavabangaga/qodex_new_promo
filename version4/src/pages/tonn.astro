@@ -38,6 +38,8 @@ const description =
 // Тексты формы заявки на этой странице (с лендинга; шаги — как у его формы, условия запуска — как на главной)
 const leadTitle = 'Перестаньте терять деньги';
 const leadText = `Мы поможем на любом этапе — от знакомства с системой до запуска на вашем${NB}объекте.`;
+// строка у формы — не «73 клиента»: так называется раздел «Клиенты» прямо над вопросами
+const leadProof = 'Работает с любыми автовесами';
 const leadSteps = [
   { title: 'Расчёт потерь', text: 'Узнайте, сколько вы теряете на весовой прямо сейчас' },
   { title: 'Онлайн-демо', text: 'Покажем систему в работе на реальном объекте' },
@@ -69,21 +71,21 @@ const breadcrumbs = {
     <NHero />
     <NFit />
     <NPains />
-    <NSchemes />
     <NLaw />
     <NHow />
     <NKit />
     <NGallery />
     <NCabinet />
+    <NSchemes />
     <NCalc />
     <NResults />
     <NBoth />
     <NTrust />
     <Questions items={FAQ_TONN} />
-    <Contact title={leadTitle} lead={leadText} personLabel="Ваш контакт" steps={leadSteps} />
+    <Contact title={leadTitle} lead={leadText} proof={leadProof} personLabel="Ваш контакт" steps={leadSteps} />
   </main>
   <Footer cta="Подключить весовую" />
-  <LeadModal title={leadTitle} lead={leadText} personLabel="Ваш контакт" />
+  <LeadModal title={leadTitle} lead={leadText} proof={leadProof} personLabel="Ваш контакт" />
 </Base>
 
 <script>

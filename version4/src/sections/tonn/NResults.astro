@@ -1,8 +1,9 @@
 ---
 // Раздел страницы «QODEX TONN» — «Результаты» [#rezultaty], бежевая панель. Два разных кейса, цифры не складываем.
 // 1. История РО «Эко-Сити» (как в «Историях» главной: задача → решение → результат, без цитат). Слева белая карточка:
-//    метка, две крупные цифры (>60 млн ₽, 28 млн ₽) и задача, решение, результат строками. Справа градиент mint
-//    (единственный на странице) с белой карточкой −57%: рисунок «тоннаж в актах — март 2024 и март 2025».
+//    метка, две крупные цифры — это и есть результат (>60 млн ₽, 28 млн ₽), под ними задача и решение строками.
+//    Справа градиент mint (единственный на странице) с белой карточкой −57%: рисунок «тоннаж в актах — март 2024
+//    и март 2025».
 //    Подложка собрана классами .gv, а не компонентом GradientVisual: компонент прячет содержимое от скринридера,
 //    а здесь настоящая цифра и её подпись.
 // 2. Кейс мусоросортировочного комплекса с лендинга (блок B13): текст, кнопка, четыре цифры и «Что внедрили».
@@ -37,10 +38,7 @@ const STORY_QA = [
     term: 'Решение',
     text: `QODEX${NB}TONN на${NB}весовых объектов — номер, фото и${NB}вес без ручного ввода, акты в${NB}облаке.`,
   },
-  {
-    term: 'Результат',
-    text: `28${NB}млн${NB}₽ экономии за${NB}июнь–декабрь 2021, подключено 10${NB}объектов; более 60${NB}млн${NB}₽ экономии за${NB}год.`,
-  },
+  // строки «Результат» нет: его уже говорят две крупные цифры с подписями — второй раз те же числа не повторяем
 ];
 
 // Кейс 2 — мусоросортировочный комплекс (лендинг, блок B13)
@@ -120,7 +118,8 @@ const DONE: { icon: IconName; text: string }[] = [
             <p class="nres-chart__cap">тоннажа в актах после установки</p>
 
             <!-- март 2024 — полный столбик; март 2025 — 43%, ушедшая часть штрихом. Сначала оба столбика
-                 вырастают одинаковыми, затем верх второго тает — остаётся штриховка «−57%». -->
+                 вырастают одинаковыми, затем верх второго тает — остаётся штриховка. Подписи «−57%» на ней нет:
+                 крупная цифра стоит прямо над рисунком. -->
             <div class="nres-plot" aria-hidden="true">
               <div class="nres-plot__bars">
                 <span class="nres-bar">
@@ -129,7 +128,7 @@ const DONE: { icon: IconName; text: string }[] = [
                   </span>
                 </span>
                 <span class="nres-bar nres-bar--after">
-                  <span class="nres-bar__ghost"><b class="nres-bar__chip">−57%</b></span>
+                  <span class="nres-bar__ghost"></span>
                   <span class="nres-bar__grow">
                     <i class="nres-bar__gone"></i>
                     <i class="nres-bar__fill nres-bar__fill--after"></i>
@@ -338,7 +337,10 @@ const DONE: { icon: IconName; text: string }[] = [
     gap: clamp(28px, calc(var(--vw) * 2.8), 40px);
   }
 
+  /* карточку по высоте задаёт градиент рядом: лишнее место делится поровну над цифрами и под ними,
+     а не одной дырой между цифрами и задачей */
   .nres-figs {
+    margin-top: auto;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px clamp(20px, calc(var(--vw) * 2.2), 32px);
@@ -348,7 +350,7 @@ const DONE: { icon: IconName; text: string }[] = [
     font-size: clamp(3rem, calc(var(--vw) * 4.6), 4.5rem);
   }
 
-  /* Задача, решение, результат — строками: подпись слева, текст справа */
+  /* Задача и решение — строками: подпись слева, текст справа */
   .nres-qa {
     display: grid;
     margin-top: auto;
@@ -487,24 +489,9 @@ const DONE: { icon: IconName; text: string }[] = [
     position: absolute;
     font-style: normal;
     inset: 0 0 calc(43% + 3px);
-    display: grid;
-    place-items: center;
     border-radius: 10px 10px 3px 3px;
     background: repeating-linear-gradient(135deg, rgb(29 29 31 / 0.13) 0 1.5px, transparent 1.5px 7px);
     box-shadow: inset 0 0 0 1.5px rgb(29 29 31 / 0.2);
-  }
-
-  .nres-bar__chip {
-    padding: 4px 9px;
-    border-radius: 999px;
-    background: #fff;
-    box-shadow: var(--shadow-soft);
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-    white-space: nowrap;
-    color: var(--ink);
   }
 
   .nres-plot__axis {
@@ -524,8 +511,8 @@ const DONE: { icon: IconName; text: string }[] = [
     text-wrap: pretty;
   }
 
-  /* Движение — один раз, когда рисунок на экране: столбики вырастают одинаковыми, затем верх второго тает,
-     проступает штриховка и «−57%». Классы ставит скрипт; без них (нет скриптов, «уменьшить движение») сразу
+  /* Движение — один раз, когда рисунок на экране: столбики вырастают одинаковыми, затем верх второго тает
+     и проступает штриховка. Классы ставит скрипт; без них (нет скриптов, «уменьшить движение») сразу
      видно итоговое состояние. */
   .nres-chart.is-armed .nres-bar__grow {
     transform: scaleY(0);
@@ -535,13 +522,8 @@ const DONE: { icon: IconName; text: string }[] = [
     opacity: 1;
   }
 
-  .nres-chart.is-armed .nres-bar__ghost,
-  .nres-chart.is-armed .nres-bar__chip {
+  .nres-chart.is-armed .nres-bar__ghost {
     opacity: 0;
-  }
-
-  .nres-chart.is-armed .nres-bar__chip {
-    transform: scale(0.7);
   }
 
   .nres-chart.is-live .nres-bar__grow {
@@ -561,14 +543,6 @@ const DONE: { icon: IconName; text: string }[] = [
   .nres-chart.is-live .nres-bar__ghost {
     opacity: 1;
     transition: opacity 0.7s var(--ease-in-out) 1.45s;
-  }
-
-  .nres-chart.is-live .nres-bar__chip {
-    opacity: 1;
-    transform: none;
-    transition:
-      opacity 0.3s ease 2s,
-      transform 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 2s;
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -34,14 +34,16 @@ const FRAMES = ALTS.map((alt, i) => {
   };
 });
 
-// ширина кадра в сетке: телефон (2 колонки), планшет (3), компьютер (4 колонки в раскладке 1200 px)
-const SIZES = '(max-width: 639.98px) 50vw, (max-width: 1199.98px) 33vw, 290px';
+// ширина кадра в сетке: телефон (2 колонки), планшет (3), компьютер (4 колонки в раскладке 1200 px).
+// Планшет: (100vw − два поля − два промежутка) / 3 ≈ 30vw. Телефон: на деле 168–203 px, указано 180 px —
+// так телефон с плотностью 3× берёт кадр 540w (на глаз не отличить), а не 12 кадров по 1080w (~2 МБ).
+const SIZES = '(max-width: 639.98px) 180px, (max-width: 1199.98px) 30vw, 290px';
 ---
 
 <section class="section ngl" id="v-dejstvii" aria-labelledby="v-dejstvii-title">
   <div class="container">
     <SectionIntro eyebrow="Кадры с весовых" titleId="v-dejstvii-title">
-      QODEX в действии: для&nbsp;любых весовых площадок
+      <span class="ngl-line">QODEX в действии:</span> <span class="ngl-line">для&nbsp;любых весовых площадок</span>
       <Fragment slot="lead">
         Современные решения для всех типов весовых — убедитесь в их эффективности и универсальности с&nbsp;QODEX
       </Fragment>
@@ -81,7 +83,7 @@ const SIZES = '(max-width: 639.98px) 50vw, (max-width: 1199.98px) 33vw, 290px';
     <p class="ngl-note">Номера машин скрыты</p>
   </div>
 
-  <!-- Крупный кадр -->
+  <!-- Крупный кадр; loading="lazy" — пока окно закрыто, кадр 1080w не скачивается -->
   <dialog class="ngl-dlg" aria-label="Кадры с весовых" data-ngl-dlg>
     <div class="ngl-box">
       <div class="ngl-stage" data-ngl-stage>
@@ -91,6 +93,7 @@ const SIZES = '(max-width: 639.98px) 50vw, (max-width: 1199.98px) 33vw, 290px';
           width="1080"
           height="672"
           alt={FRAMES[0].alt}
+          loading="lazy"
           decoding="async"
           draggable="false"
           data-ngl-big
@@ -103,7 +106,9 @@ const SIZES = '(max-width: 639.98px) 50vw, (max-width: 1199.98px) 33vw, 290px';
         </button>
       </div>
       <div class="ngl-bar">
-        <span class="ngl-count" aria-live="polite" data-ngl-count>1 / {FRAMES.length}</span>
+        <span class="ngl-count" aria-hidden="true" data-ngl-count>1 / {FRAMES.length}</span>
+        <!-- для чтения с экрана: номер и описание кадра (фокус остаётся на стрелке, alt сам не озвучивается) -->
+        <span class="visually-hidden" aria-live="polite" data-ngl-live></span>
         <button class="ngl-close" type="button" aria-label="Закрыть" data-ngl-close>
           <Icon name="x" size={20} strokeWidth={2} />
         </button>
@@ -113,6 +118,13 @@ const SIZES = '(max-width: 639.98px) 50vw, (max-width: 1199.98px) 33vw, 290px';
 </section>
 
 <style>
+  /* Заголовок: перенос после двоеточия. Каждая половина — свой блок: так обе выравниваются по строкам
+     (после <br> Chromium строки не выравнивает — на телефоне вышло бы «…весовых» / «площадок»).
+     На телефоне — «QODEX в действии:» / «для любых» / «весовых площадок». */
+  .ngl-line {
+    display: block;
+  }
+
   /* ── Сетка кадров ──────────────────────────────────────── */
   .ngl-grid {
     --ngl-gap: clamp(10px, calc(var(--vw) * 1.2), 16px);
@@ -410,6 +422,7 @@ const SIZES = '(max-width: 639.98px) 50vw, (max-width: 1199.98px) 33vw, 290px';
     const html = document.documentElement;
     const big = dlg.querySelector<HTMLImageElement>('[data-ngl-big]')!;
     const count = dlg.querySelector<HTMLElement>('[data-ngl-count]')!;
+    const live = dlg.querySelector<HTMLElement>('[data-ngl-live]')!;
     const stage = dlg.querySelector<HTMLElement>('[data-ngl-stage]')!;
     let index = 0;
     let opener: HTMLButtonElement | null = null;
@@ -420,6 +433,7 @@ const SIZES = '(max-width: 639.98px) 50vw, (max-width: 1199.98px) 33vw, 290px';
       const src = tile.dataset.big ?? '';
       const alt = tile.querySelector('img')?.alt ?? '';
       count.textContent = `${index + 1} / ${tiles.length}`;
+      live.textContent = `${index + 1} из ${tiles.length}. ${alt}`;
       if (big.getAttribute('src') === src) return;
       big.classList.add('is-loading');
       big.alt = alt;

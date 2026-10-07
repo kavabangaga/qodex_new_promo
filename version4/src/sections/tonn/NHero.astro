@@ -1,9 +1,10 @@
 ---
 // Первый экран страницы «QODEX TONN» [#tonn]. Устроен как первые экраны «Кодекса ТКО», Tracker и РО-БОТ:
 // большая тёплая панель, по центру — метка продукта, заголовок, подзаголовок, две кнопки, тихая строка
-// условий и ряд цифр (первые две ведут к «Результатам»).
-// Ниже в той же панели — градиентная карточка с настоящим снимком кабинета (экран «Аналитика»,
-// демо-доступ) и две выноски с прежнего лендинга: «Экономия за месяц» и «Номер распознан».
+// условий и ряд цифр (без ссылок, как у «Кодекса ТКО» и Tracker: у ссылки здесь не было бы видимой подсказки).
+// Ниже в той же панели — градиентная карточка с настоящим снимком кабинета (экран «Аналитика», демо-доступ;
+// видны итог начислений и две плитки, без графика — почему, см. .nh-win) и две выноски с прежнего лендинга:
+// «Экономия за месяц» и «Номер распознан».
 import Icon from '../../components/Icon.astro';
 import ProductLabel from '../../components/ProductLabel.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
@@ -12,10 +13,9 @@ import { withBase } from '../../config/site';
 const NB = '\u00a0';
 
 // Цифры под кнопками. Число досчитывается от нуля (data-count), знаки — вне счётчика.
-// src — откуда цифра (мелкая строка), href — ссылка на раздел «Результаты».
+// src — откуда цифра (мелкая строка).
 const FIGS = [
   {
-    href: '#rezultaty',
     pre: '−',
     num: 57,
     suf: '%',
@@ -23,7 +23,6 @@ const FIGS = [
     src: `март${NB}2025 к${NB}марту${NB}2024, 4${NB}района Башкортостана`,
   },
   {
-    href: '#rezultaty',
     pre: '>',
     num: 60,
     suf: `${NB}млн${NB}₽`,
@@ -69,26 +68,17 @@ const SHOT = {
 
     <ul class="nh-figs" data-reveal style="--d:4">
       {
-        FIGS.map((f) => {
-          const body = [
-            <span class="nh-fig__num">
-              {f.value ?? [f.pre, <span data-count={f.num}>{f.num}</span>, f.suf]}
-            </span>,
-            <span class="nh-fig__text">{f.text}</span>,
-            f.src && <span class="nh-fig__src">{f.src}</span>,
-          ];
-          return (
-            <li class="nh-figs__item">
-              {f.href ? (
-                <a class="nh-fig nh-fig--link" href={f.href}>
-                  {body}
-                </a>
-              ) : (
-                <div class="nh-fig">{body}</div>
-              )}
-            </li>
-          );
-        })
+        FIGS.map((f) => (
+          <li class="nh-figs__item">
+            <div class="nh-fig">
+              <span class="nh-fig__num">
+                {f.value ?? [f.pre, <span data-count={f.num}>{f.num}</span>, f.suf]}
+              </span>
+              <span class="nh-fig__text">{f.text}</span>
+              {f.src && <span class="nh-fig__src">{f.src}</span>}
+            </div>
+          </li>
+        ))
       }
       <li class="nh-figs__item">
         <div class="nh-fig nh-fig--text">
@@ -107,7 +97,7 @@ const SHOT = {
         preset="sky"
         deco="bars"
         class="nh__gv"
-        label="Кабинет QODEX TONN, экран «Аналитика» (демо-данные): суммарный объём начислений площадкам 29 082 234 ₽, прогноз по начислениям на конец месяца, выполнение терсхемы, график тоннажа и начислений по дням. Выноски: «Экономия за месяц: +2,4 млн ₽» и «Номер распознан: А983ВВ 102»."
+        label="Кабинет QODEX TONN, экран «Аналитика» (демо-данные): суммарный объём начислений площадкам 29 082 234 ₽, прогноз по начислениям на конец месяца, выполнение терсхемы. Выноски: «Экономия за месяц: +2,4 млн ₽» и «Номер распознан: А983ВВ 102»."
       >
         <div class="nh-win">
           <!-- окно кабинета: снимок экрана «Аналитика» -->
@@ -120,7 +110,7 @@ const SHOT = {
                 sizes="(max-width: 640px) 1000px, 940px"
                 width="1000"
                 height="750"
-                alt="Экран «Аналитика» в кабинете QODEX TONN: суммарный объём начислений площадкам 29 082 234 ₽, прогноз на конец месяца, выполнение терсхемы 12 465 т из 55 665 т, график тоннажа и начислений по дням месяца"
+                alt="Экран «Аналитика» в кабинете QODEX TONN: суммарный объём начислений площадкам 29 082 234 ₽, прогноз на конец месяца, выполнение терсхемы 12 465 т из 55 665 т"
                 loading="eager"
                 decoding="async"
                 draggable="false"
@@ -246,8 +236,6 @@ const SHOT = {
     gap: 8px;
     width: 100%;
     padding: 8px 24px 10px;
-    border-radius: calc(16px * var(--rk));
-    corner-shape: var(--corner);
     text-align: center;
   }
 
@@ -293,20 +281,6 @@ const SHOT = {
     text-wrap: balance;
   }
 
-  .nh-fig--link {
-    transition: background-color 0.25s;
-  }
-
-  .nh-fig--link:hover {
-    background: rgb(29 29 31 / 0.035);
-  }
-
-  .nh-fig--link:hover .nh-fig__text {
-    text-decoration: underline;
-    text-decoration-color: var(--line-2);
-    text-underline-offset: 3px;
-  }
-
   /* ── Градиентная карточка со снимком кабинета ─────────────── */
   .nh__stage {
     margin-top: clamp(32px, calc(var(--vw) * 3), 48px);
@@ -327,7 +301,7 @@ const SHOT = {
 
   .nh__gv {
     min-height: 0;
-    padding: 64px 48px 72px;
+    padding: 64px 48px 84px;
   }
 
   /* «демо-данные» в углу градиентной карточки */
@@ -339,13 +313,15 @@ const SHOT = {
     pointer-events: none;
   }
 
-  /* ── Окно кабинета: снимок 1000×750 без нижней строки меню и таблицы (до подписей дней под графиком).
+  /* ── Окно кабинета: верх снимка 1000×750 — шапка, итог начислений и две плитки (до линии над графиком).
+     График не показываем: снимок сделан 18 февраля, и с 19-го числа линия лежит на нуле — рядом
+     с «Экономией за месяц» это читалось как обвал тоннажа.
      --x0, --y0, --cw, --ch — какая часть снимка видна, в его пикселях ── */
   .nh-win {
     --x0: 0;
     --y0: 0;
     --cw: 1000;
-    --ch: 592;
+    --ch: 300;
     --win-r: 18px;
     position: relative;
     width: min(100%, 940px);
@@ -398,15 +374,16 @@ const SHOT = {
     white-space: nowrap;
   }
 
-  /* «Экономия» — у правого края на уровне итога начислений, «Номер» — на нижнем левом углу окна */
+  /* «Экономия» — у правого края на уровне итога начислений, «Номер» — на нижнем левом углу окна,
+     ниже суммы прогноза в левой плитке (её не закрывает) */
   .nh-call--save {
-    top: 17%;
+    top: 26%;
     right: -72px;
   }
 
   .nh-call--plate {
     left: -72px;
-    bottom: -28px;
+    bottom: -56px;
   }
 
   /* значок в цвете продукта */
@@ -443,14 +420,15 @@ const SHOT = {
     color: var(--ink);
   }
 
-  /* российский номер: белая плашка в чёрной рамке, справа регион */
+  /* российский номер: белая плашка в чёрной рамке, справа регион
+     (рамка — внутренней тенью, как в NFit: border при дробном масштабе в Safari пропадает) */
   .nh-plate {
     position: relative;
     display: inline-flex;
     align-items: stretch;
     height: 30px;
-    border: 1.5px solid #1b2229;
     border-radius: 5px;
+    box-shadow: inset 0 0 0 1.5px #1b2229;
     background: #fff;
     color: #11171c;
     font-weight: 700;
@@ -470,8 +448,8 @@ const SHOT = {
     align-content: center;
     justify-items: center;
     gap: 1px;
-    padding: 0 6px;
-    border-left: 1.5px solid #1b2229;
+    padding: 0 6px 0 7.5px;
+    box-shadow: inset 1.5px 0 0 #1b2229;
   }
 
   .nh-plate__reg b {
@@ -489,7 +467,7 @@ const SHOT = {
   /* рамка распознавания: один раз мягко сходится на номер */
   .nh-plate__ring {
     position: absolute;
-    inset: -5px;
+    inset: -6.5px;
     border: 2px solid var(--blue);
     border-radius: 8px;
     opacity: 0;
@@ -569,7 +547,8 @@ const SHOT = {
       flex-wrap: wrap;
       justify-content: center;
       gap: 12px;
-      margin-top: -34px;
+      /* заходят только на поле под плитками снимка: суммы и подписи в плитках остаются видны */
+      margin-top: -16px;
       padding-inline: 12px;
     }
 
@@ -650,12 +629,12 @@ const SHOT = {
       left: 14px;
     }
 
-    /* на телефоне кадр крупнее: итог начислений, прогноз, терсхема и левая часть графика */
+    /* на телефоне кадр крупнее: без пустого правого края — шапка, итог начислений, прогноз и терсхема */
     .nh-win {
       --x0: 70;
-      --y0: 62;
+      --y0: 0;
       --cw: 660;
-      --ch: 530;
+      --ch: 300;
       --win-r: 14px;
     }
 
@@ -670,7 +649,7 @@ const SHOT = {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
-      margin-top: -20px;
+      margin-top: -12px;
       padding-inline: 6px;
     }
 
@@ -708,7 +687,7 @@ const SHOT = {
     }
 
     .nh-plate__reg {
-      padding: 0 4px;
+      padding: 0 4px 0 5.5px;
     }
 
     .nh-plate__reg b {

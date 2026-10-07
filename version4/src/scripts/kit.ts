@@ -80,7 +80,8 @@ export function initAccordions(): void {
 
     const sync = () => {
       if (!auto) return;
-      if (inView && !hover && !hoverPanes && !focus) {
+      // в свёрнутой или фоновой вкладке пункты не переключаются
+      if (inView && !document.hidden && !hover && !hoverPanes && !focus) {
         delete acc.dataset.paused;
         timer.resume();
       } else {
@@ -88,6 +89,7 @@ export function initAccordions(): void {
         timer.pause();
       }
     };
+    document.addEventListener('visibilitychange', sync);
 
     function open(i: number) {
       index = (i + items.length) % items.length;
@@ -173,9 +175,10 @@ export function initChains(): void {
 
     const sync = () => {
       if (!canAuto()) return timer.pause();
-      if (inView && !hover && !focus) timer.resume();
+      if (inView && !document.hidden && !hover && !focus) timer.resume();
       else timer.pause();
     };
+    document.addEventListener('visibilitychange', sync);
 
     function open(i: number) {
       index = (i + cards.length) % cards.length;

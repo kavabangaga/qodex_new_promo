@@ -78,7 +78,7 @@ const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).
       <article class="ntr-doc" data-reveal style="--d:1">
         <span class="ntr-doc__ico" aria-hidden="true"><Icon name="presentation" size={24} /></span>
         <h3 class="ntr-doc__title">Презентация QODEX&nbsp;TONN</h3>
-        <p class="ntr-doc__text">О системе: возможности, оборудование и результаты — в&nbsp;одном PDF.</p>
+        <p class="ntr-doc__text">О системе: возможности и&nbsp;оборудование — в&nbsp;одном PDF.</p>
         <p class="ntr-doc__act">
           <a
             class="btn btn--outline ntr-doc__btn"
@@ -237,6 +237,7 @@ const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).
   }
 
   .ntr-doc {
+    container: ntr-doc / inline-size;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -307,6 +308,22 @@ const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).
   /* у второй карточки действие на той же высоте, что кнопка у первой */
   .ntr-doc__act:has(.ntr-doc__link) {
     min-height: calc(50px + 24px);
+  }
+
+  /* узкие карточки рядом (планшет): размер файла — всегда строкой под кнопкой (порог задаёт ширина карточки,
+     а не шрифт); под ссылкой — пустая строка той же высоты, и ссылка остаётся на одной линии с кнопкой */
+  @media (min-width: 760px) {
+    @container ntr-doc (max-width: 359.98px) {
+      .ntr-doc__meta {
+        flex-basis: 100%;
+      }
+
+      .ntr-doc__act:has(.ntr-doc__link) {
+        --ntr-meta-row: calc(12px + 14px * 1.3);
+        min-height: calc(50px + 24px + var(--ntr-meta-row));
+        padding-bottom: var(--ntr-meta-row);
+      }
+    }
   }
 
   /* ── Планшет: четыре плитки в ряд ─────────────────────── */

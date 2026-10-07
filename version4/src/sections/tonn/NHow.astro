@@ -3,7 +3,7 @@
 // Часть 1: слева четыре шага (тексты шагов с главной), справа на бирюзовом градиенте — нарисованная весовая.
 // Шаги идут сами, пока сцена на экране: у активного шага заполняется полоса, затем включается следующий;
 // нажатый шаг сразу показывается в сцене. Сцена: мусоровоз подъезжает к шлагбауму, камера читает номер
-// «А983ВВ 102», шлагбаум поднимается; машина заезжает на весы, вес растёт до 18 420 кг, обзорная камера
+// «А983ВВ 102», шлагбаум поднимается; машина заезжает на весы, вес растёт до 17 130 кг, обзорная камера
 // снимает кузов; акт уходит в облако; о подозрительном взвешивании приходит уведомление.
 // Сцену скринридер не читает (aria-hidden ставит GradientVisual) — смысл несут кнопки шагов и их тексты.
 // Без анимации («уменьшить движение») сцена показывает итог выбранного шага.
@@ -17,7 +17,7 @@ const NB = String.fromCharCode(160); // неразрывный пробел
 // Шаги — тексты с главной дословно. ms — сколько шаг идёт при автопрокрутке: движение сцены и пауза после него
 const STEPS: { title: string; text: string; icon: IconName; ms: number }[] = [
   { title: 'Въезд', text: 'Номер машины распознаётся на въезде.', icon: 'scan-line', ms: 5800 },
-  { title: 'Взвешивание', text: 'Вес и фото кузова записываются без ручного ввода.', icon: 'scale', ms: 5800 },
+  { title: 'Взвешивание', text: `Вес и фото кузова записываются без${NB}ручного ввода.`, icon: 'scale', ms: 5800 },
   { title: 'Акт в облаке', text: `Акт сразу попадает в облако${NB}— задним числом его не исправить.`, icon: 'cloud-upload', ms: 5200 },
   { title: 'Уведомление', text: 'О подозрительном взвешивании система сразу уведомляет.', icon: 'bell-ring', ms: 5000 },
 ];
@@ -31,7 +31,7 @@ const PERKS: { icon: IconName; title: string; text: string }[] = [
   },
   {
     icon: 'laptop-check',
-    title: 'Подходит для любых автовесов',
+    title: `Подходит для${NB}любых автовесов`,
     text: 'Вам не нужно менять старое оборудование. Решения QODEX легко интегрируются с любыми весовыми платформами, превращая обычные весы в современный цифровой пост за один выезд.',
   },
   {
@@ -46,9 +46,9 @@ const PERKS: { icon: IconName; title: string; text: string }[] = [
   },
 ];
 
-// ── Демо-данные сцены (номер — как на главной; нетто = брутто − тара) ──
+// ── Демо-данные сцены (номер, акт и нетто — как на главной и в «Кому подходит»; нетто = брутто − тара) ──
 const PLATE = `А983ВВ${NB}102`;
-const ACT = `Акт №${NB}268101`;
+const ACT = `Акт №${NB}4127`;
 const KG = (n: string) => n.replace(' ', NB);
 
 // ── Сцена 900×640 (рисунок, не фото). Весы — x 420…876, колёса стоят на y 532. Машина у шлагбаума —
@@ -139,7 +139,7 @@ const FRONT =
   `<rect y="84" width="240" height="12" fill="#c3ccd4"/>`;
 
 // Брутто растёт на табло весов: промежуточные числа, затем итог
-const RISE = ['6 240', '12 970', '17 860'];
+const RISE = ['6 240', '12 970', '16 560'];
 ---
 
 <section class="section" id="kak-eto-rabotaet" aria-labelledby="kak-eto-rabotaet-title">
@@ -311,7 +311,7 @@ const RISE = ['6 240', '12 970', '17 860'];
                           </b>
                         ))}
                         <b class="nhw-a-pop" style="--t:3.31s">
-                          {KG('18 420')}
+                          {KG('17 130')}
                         </b>
                       </span>
                       <span class="nhw-kg">кг</span>
@@ -350,7 +350,7 @@ const RISE = ['6 240', '12 970', '17 860'];
                 <div class="nhw-stats">
                   <span class="nhw-stat nhw-a-in" style="--t:0.45s">
                     <small>Брутто, кг</small>
-                    <b>{KG('18 420')}</b>
+                    <b>{KG('17 130')}</b>
                   </span>
                   <span class="nhw-stat nhw-a-in" style="--t:0.6s">
                     <small>Тара, кг</small>
@@ -358,7 +358,7 @@ const RISE = ['6 240', '12 970', '17 860'];
                   </span>
                   <span class="nhw-stat nhw-stat--net nhw-a-in" style="--t:0.75s">
                     <small>Нетто, кг</small>
-                    <b>{KG('5 460')}</b>
+                    <b>{KG('4 170')}</b>
                   </span>
                 </div>
                 <p class="nhw-act__foot">
@@ -566,7 +566,7 @@ const RISE = ['6 240', '12 970', '17 860'];
     left: 80px;
     right: 22px;
     bottom: 11px;
-    height: 3px;
+    height: 2px;
     overflow: hidden;
     border-radius: 999px;
     background: rgb(29 29 31 / 0.08);
@@ -579,7 +579,8 @@ const RISE = ['6 240', '12 970', '17 860'];
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: var(--c-tonn);
+    /* как у «Возможностей системы» (цвет палитры); цвет продукта — только у значка шага */
+    background: var(--g-blue);
     transform: scaleX(0);
     transform-origin: left center;
   }
@@ -1689,12 +1690,16 @@ const RISE = ['6 240', '12 970', '17 860'];
     }
   }
 
-  /* Без движения: шаги переключаются только нажатием, сцена сразу показывает итог шага, полоса шага залита */
+  /* Без движения: шаги переключаются только нажатием, сцена сразу показывает итог шага; полосы шага нет —
+     шаги сами не идут, активный виден по плитке и зелёному значку (как в «Возможностях системы») */
   @media (prefers-reduced-motion: reduce) {
     .nhw-stage *,
-    .nhw-stage *::after,
-    .nhw-step__bar i {
+    .nhw-stage *::after {
       animation: none !important;
+    }
+
+    .nhw-step__bar {
+      display: none;
     }
 
     .nhw-sc {
@@ -1703,10 +1708,6 @@ const RISE = ['6 240', '12 970', '17 860'];
 
     .nhw-card,
     .nhw-cloud {
-      transform: none;
-    }
-
-    .nhw-step.is-on .nhw-step__bar i {
       transform: none;
     }
   }
@@ -1807,10 +1808,11 @@ const RISE = ['6 240', '12 970', '17 860'];
     text-align: center;
   }
 
+  /* плитки 2×2 на любой ширине: тексты лендинга длинные, в четырёх узких колонках они рвались в 7–8 строк */
   .nhw-perks__list {
     --gap: var(--pk-gap);
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--pk-gap);
     isolation: isolate;
   }
@@ -1836,6 +1838,11 @@ const RISE = ['6 240', '12 970', '17 860'];
     background: var(--panel);
     -webkit-mask: var(--bridge-mask-row);
     mask: var(--bridge-mask-row);
+  }
+
+  /* у первой плитки второго ряда соседа слева нет */
+  .nhw-perk + .nhw-perk:nth-child(2n + 1)::before {
+    content: none;
   }
 
   .nhw-perk__chip {
@@ -1883,7 +1890,7 @@ const RISE = ['6 240', '12 970', '17 860'];
     margin-top: clamp(32px, calc(var(--vw) * 3.4), 48px);
   }
 
-  /* ── Уже 1200 px: сцена сверху во всю ширину, шаги под ней 2×2, плитки 2×2 ── */
+  /* ── Уже 1200 px: сцена сверху во всю ширину, шаги под ней 2×2 ── */
   @media (max-width: 1199.98px) {
     .nhw {
       grid-template-columns: minmax(0, 1fr);
@@ -1903,14 +1910,6 @@ const RISE = ['6 240', '12 970', '17 860'];
     }
 
     .nhw-steps::before {
-      content: none;
-    }
-
-    .nhw-perks__list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .nhw-perk + .nhw-perk:nth-child(2n + 1)::before {
       content: none;
     }
   }

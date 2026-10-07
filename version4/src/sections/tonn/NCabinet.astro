@@ -5,12 +5,10 @@
 // по всему сайту; справа на подложке dusk — снимок открытого пункта в рамке окна приложения.
 // Пункты переключаются сами (6 с) с полосой прогресса, снимок меняется вместе с ними ([data-acc-scope]).
 // Снимок не крупнее ~650 px: исходник 1000 px, на 2K (×1.45) он остаётся чётким.
-// Под туром — кнопки: заявка на демонстрацию и презентация (PDF, размер считается при сборке).
+// Под туром — кнопка заявки на демонстрацию (презентация — одна на странице, в «Клиенты и документы»).
 // Уже 1200 px: вступление, снимок во всю ширину, под ним карточки, затем кнопки.
 // Подложка собрана классами .gv, а не компонентом GradientVisual: компонент прячет содержимое от скринридера,
 // а у снимков экрана есть смысловые подписи (alt), как в «Интерфейсе» РО-БОТа.
-import fs from 'node:fs';
-import path from 'node:path';
 import SectionIntro from '../../components/SectionIntro.astro';
 import FeatureAccordion, { type AccItem } from '../../components/FeatureAccordion.astro';
 import Icon from '../../components/Icon.astro';
@@ -23,18 +21,9 @@ interface Screen extends AccItem {
   alt: string;
 }
 
-// Заголовки и тексты — с лендинга дословно
+// Заголовки и тексты — с лендинга дословно. Тур открывается «Актами», а не «Аналитикой», как на лендинге:
+// экран «Аналитика» уже показан на первом экране страницы (NHero), второй раз подряд он не нужен
 const SCREENS: Screen[] = [
-  {
-    icon: 'chart-line',
-    title: `Аналитика в${NB}реальном времени`,
-    text: `Выручка, прогноз, отклонения${NB}— без${NB}бухгалтера и${NB}Excel`,
-    file: 'cab-analytica',
-    alt:
-      'Экран «Аналитика»: суммарный объём начислений площадкам на 18 февраля — 29 082 234 ₽, −11% к периоду ' +
-      'с 1 по 18 января; прогноз начислений на конец месяца — 44 684 312 ₽; выполнение терсхемы — 12 465 т ' +
-      'из 55 665 т; график тоннажа и начислений по дням',
-  },
   {
     icon: 'camera',
     title: `Акты взвешивания с${NB}фото`,
@@ -44,6 +33,16 @@ const SCREENS: Screen[] = [
       'Экран «Акты»: тоннаж 288,23 т, 71 взвешивание; у каждого акта — фото машины с госномером, брутто, тара ' +
       'и нетто, перевозчик, площадка и клиент; у раскрытого акта — кнопка «Оспорить акт» и дополнительные данные: ' +
       'категория отходов, вид груза, объём кузова, пункт назначения',
+  },
+  {
+    icon: 'chart-line',
+    title: `Аналитика в${NB}реальном времени`,
+    text: `Выручка, прогноз, отклонения${NB}— без${NB}бухгалтера и${NB}Excel`,
+    file: 'cab-analytica',
+    alt:
+      'Экран «Аналитика»: суммарный объём начислений площадкам на 18 февраля — 29 082 234 ₽, −11% к периоду ' +
+      'с 1 по 18 января; прогноз начислений на конец месяца — 44 684 312 ₽; выполнение терсхемы — 12 465 т ' +
+      'из 55 665 т; график тоннажа и начислений по дням',
   },
   {
     icon: 'truck',
@@ -67,12 +66,6 @@ const SCREENS: Screen[] = [
 
 const items: AccItem[] = SCREENS.map(({ icon, title, text }) => ({ icon, title, text }));
 const src = (file: string, w: number) => withBase(`/media/tonn/${file}-${w}.webp`);
-
-// Презентация — с лендинга (решение заказчика: оставить). Размер — при сборке; нет файла — сборка останавливается.
-const DECK = 'system.pdf';
-const deckPath = path.join(process.cwd(), 'public', 'files', DECK);
-if (!fs.existsSync(deckPath)) throw new Error(`Нет файла презентации public/files/${DECK}`);
-const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).replace('.', ',')}${NB}МБ`;
 ---
 
 <section class="section panel ncab" id="kabinet" aria-labelledby="kabinet-title">
@@ -126,18 +119,6 @@ const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).
         Получить демонстрацию системы
         <Icon name="arrow-right" />
       </a>
-      <span class="ncab__deck">
-        <a
-          class="btn btn--outline"
-          href={withBase(`/files/${DECK}`)}
-          download="QODEX TONN Презентация.pdf"
-          aria-describedby="ncab-deck-meta"
-        >
-          <Icon name="download" />
-          Скачать презентацию
-        </a>
-        <span class="ncab__meta" id="ncab-deck-meta">{DECK_META}</span>
-      </span>
     </div>
   </div>
 </section>
@@ -276,8 +257,11 @@ const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).
     transform-origin: left center;
   }
 
+  /* только имя анимации: длительность и остальное — из global.css. Сокращённое свойство `animation`
+     сбросило бы animation-play-state, и полоса бежала бы дальше, пока аккордеон на паузе
+     (раздел за экраном, курсор или фокус на карточках) */
   .ncab__steps :global(.acc__item.is-open .acc__progress) {
-    animation: ncab-progress var(--acc-ms, 6000ms) linear forwards;
+    animation-name: ncab-progress;
   }
 
   .ncab__steps :global(.acc__item::after) {
@@ -382,20 +366,6 @@ const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).
     margin-top: clamp(36px, calc(var(--vw) * 3.4), 52px);
   }
 
-  .ncab__deck {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 16px;
-  }
-
-  .ncab__meta {
-    font-size: 14px;
-    line-height: 1.3;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
   /* ── Уже 1200 px: вступление, снимок, карточки, кнопки — столбиком ── */
   @media (max-width: 1199.98px) {
     .ncab__tour {
@@ -488,16 +458,6 @@ const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).
     .ncab__cta .btn {
       min-width: 0;
       white-space: normal;
-      text-align: center;
-    }
-
-    .ncab__deck {
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .ncab__meta {
       text-align: center;
     }
   }

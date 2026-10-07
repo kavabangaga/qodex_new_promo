@@ -14,8 +14,9 @@ import { productHref, type ProductId } from '../../config/site';
 
 const NB = String.fromCharCode(160);
 
-// ── Макет: один акт в двух кабинетах (демо-данные; госномер — как в «Едином балансе» на главной) ──
-const ACT = { n: `Акт №${NB}268101`, plate: `А983ВВ${NB}102`, net: `9${NB}960${NB}кг`, time: '09:42' };
+// ── Макет: один акт в двух кабинетах (демо-данные; тот же акт, что в макетах QODEX TONN на главной и в «Кому подходит»:
+//    № 4127, А983ВВ 102, 09:42, нетто 4 170 кг) ──
+const ACT = { n: `Акт №${NB}4127`, plate: `А983ВВ${NB}102`, net: `4${NB}170${NB}кг`, time: '09:42' };
 const APPS: { key: 'a' | 'b'; title: string; icon: IconName }[] = [
   { key: 'a', title: 'Кабинет объекта', icon: 'warehouse' },
   { key: 'b', title: 'Кабинет регоператора', icon: 'building-2' },
@@ -206,8 +207,11 @@ const STEPS: Step[] = [
       <article class="nbo-card" aria-labelledby="nbo-card-diff" data-reveal style="--d:1">
         <p class="nbo-card__labels">
           <ProductLabel id="tracker" />
-          <span class="nbo-card__plus" aria-hidden="true">+</span>
-          <ProductLabel id="tonn" />
+          <!-- «+» переносится вместе со второй меткой, а не остаётся в конце строки -->
+          <span class="nbo-card__pair">
+            <span class="nbo-card__plus" aria-hidden="true">+</span>
+            <ProductLabel id="tonn" />
+          </span>
         </p>
         <h3 class="nbo-card__title" id="nbo-card-diff">
           Вывезли 100&nbsp;контейнеров — а&nbsp;до полигона доехало&nbsp;60?
@@ -235,7 +239,8 @@ const STEPS: Step[] = [
         <h3 class="nbo-card__title" id="nbo-card-fgis">Начать передавать данные сейчас — Кодекс&nbsp;ТКО</h3>
         <p class="nbo-card__text">
           Загружаете Excel из своей учётной системы, сервис проверяет ошибки и дубли и отправляет данные во ФГИС&nbsp;УТКО
-          по&nbsp;API. Подключение за 15&nbsp;минут, неделя бесплатно.
+          по&nbsp;API. Без&nbsp;доработок 1С и обучения персонала. Подключение за 15&nbsp;минут, неделя бесплатно, поможем получить
+          ключ доступа к ФГИС.
         </p>
         <p class="nbo-card__act">
           <a
@@ -388,11 +393,12 @@ const STEPS: Step[] = [
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 7px;
+    padding: 2px 8px;
     border-radius: 6px;
     background: rgb(29 29 31 / 0.66);
     color: #fff;
-    font-size: 11px;
+    /* не мельче 12 px, как остальные подписи макета */
+    font-size: 12px;
     font-weight: 500;
   }
 
@@ -904,6 +910,15 @@ const STEPS: Step[] = [
     text-wrap: pretty;
   }
 
+  /* звенья в ряд: две метки «Передано» встают в две строки — у всех звеньев место под две строки меток
+     (значок метки 26 px + зазор 8 px), чтобы пояснения начинались на одной высоте */
+  @media (min-width: 1200px) {
+    .nbo-step__labels {
+      min-height: calc(2 * 26px + 8px);
+      align-content: flex-start;
+    }
+  }
+
   /* ── 3. Две карточки ─────────────────────────────────── */
   .nbo-more {
     display: grid;
@@ -928,6 +943,13 @@ const STEPS: Step[] = [
     flex-wrap: wrap;
     align-items: center;
     gap: 8px 10px;
+  }
+
+  .nbo-card__pair {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
   }
 
   .nbo-card__plus {
@@ -998,6 +1020,11 @@ const STEPS: Step[] = [
 
     .nbo-act__net-v {
       font-size: 17px;
+    }
+
+    /* заголовок здесь мельче 24 px — «=» темнее, чтобы контраст был не ниже 4,5:1 */
+    .nbo-bal__eq {
+      color: var(--muted);
     }
 
     .nbo-chain {
