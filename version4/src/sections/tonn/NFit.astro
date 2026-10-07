@@ -1,10 +1,673 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Раздел 2 страницы «QODEX TONN» [#komu-podhodit] — «Для каких предприятий подходит QODEX TONN» (лендинг, блок B06).
+// Бенто из бежевых плиток на фоне страницы: крупная плитка «Полигоны ТКО и МСК» (два столбца и два ряда) и пять
+// отраслей. В крупной плитке — что получает регоператор и что объект, и маленький рисунок весовой (демо-данные):
+// машина заезжает на платформу, камера читает номер, акт с весом уходит во ФГИС УТКО. Рисунок «проигрывается»
+// один раз, когда он на экране; без анимации виден итог. Стоковые фото лендинга не используем.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = ' ';
+
+// Тексты — с лендинга (опечатки и кавычки исправлены), решения заказчика: «подходит», а не «работаем»
+const MAIN = {
+  icon: 'recycle' as IconName,
+  title: 'Полигоны ТКО и МСК',
+  text: `Подмена класса отходов, занижение веса промышленных грузов под видом ТКО. Обязательная передача во ФГИС${NB}УТКО с${NB}2026${NB}года.`,
+};
+
+const SIDES: { icon: IconName; title: string; text: string }[] = [
+  {
+    icon: 'building-2',
+    title: 'Регоператору',
+    text: 'Платите объекту только за реальный вес. Одни и те же взвешивания сразу видят и объект, и регоператор.',
+  },
+  {
+    icon: 'factory',
+    title: 'Полигону и сортировке',
+    text: `Номер, фото и вес машины без ручного ввода, акт сразу в облаке, данные уходят во ФГИС${NB}УТКО. Соответствует п.${NB}36 ПП${NB}№${NB}567.`,
+  },
+];
+
+const FITS: { icon: IconName; title: string; text: string }[] = [
+  {
+    icon: 'mountain',
+    title: 'Карьеры: песок, щебень, ПГС',
+    text: `Недогруз самосвалов, «забытые» взвешивания, споры с покупателями о фактическом тоннаже. До${NB}20% машин уходит с${NB}занижением.`,
+  },
+  {
+    icon: 'wheat',
+    title: 'Элеваторы и комбикормовые заводы',
+    text: 'Журналы ЗПП-28 вручную, споры с поставщиками зерна, потери до 2% оборота при ручном учёте. Интеграция с 1С:Элеватор.',
+  },
+  {
+    icon: 'molecules',
+    title: 'Производство полимеров и пластика',
+    text: 'Гранулят в биг-бегах и навалом, отгрузка переработчикам. Споры по весу с дилерами и контроль «своих» водителей.',
+  },
+  {
+    icon: 'paint-bucket',
+    title: 'Лакокрасочные заводы',
+    text: 'Приёмка сырья (пигменты, смолы, растворители) и отгрузка готовой продукции. Контроль соответствия фактического и заявленного тоннажа.',
+  },
+  {
+    icon: 'magnet',
+    title: 'Приёмка металлолома',
+    text: 'Самая высокая цена за тонну — самые дорогие «ошибки». Сговор приёмщиков, занижение засора, теневые отгрузки. Обязательный ПСА.',
+  },
+];
+
+// «ЗПП-28» не рвётся по дефису (типограф склеивает только буквы с буквами)
+const nobr = (s: string) => s.replace('ЗПП-28', '<span class="nobr">ЗПП-28</span>');
+
+// Рисунок весовой (вид сбоку), сцена 340×210, земля — y = 180. Фон, земля и холм полигона уходят далеко
+// за края сцены — до краёв рисунка любой ширины.
+const scene =
+  // холм полигона и корпус сортировки на заднем плане
+  `<path d="M120 180C190 146 250 122 330 116C420 110 560 138 760 180Z" fill="#e0e7e2"/>` +
+  `<rect x="-440" y="112" width="470" height="68" fill="#e2e7ed"/><rect x="-440" y="104" width="478" height="10" rx="3" fill="#d6dde5"/>` +
+  `<path d="M-200 124h28v20h-28zM-150 124h28v20h-28zM-100 124h28v20h-28zM-50 124h28v20h-28zM0 124h20v20H0z" fill="#d3dbe3"/>` +
+  // земля
+  `<rect x="-460" y="180" width="1260" height="260" fill="#dce2e8"/><path d="M-460 180.5H800" stroke="#ccd4dc" stroke-width="2"/>` +
+  // платформа весов с пандусами, приямок
+  `<rect x="22" y="180" width="282" height="5" fill="#c6ced6"/>` +
+  `<path d="M4 181 26 171V181ZM300 171 322 181H300Z" fill="#c3ccd5"/>` +
+  `<rect x="26" y="171" width="274" height="10" rx="2" fill="#aab6c1"/><rect x="26" y="171" width="274" height="3" rx="1.5" fill="#c2ccd5"/>` +
+  // столб с камерой распознавания номеров перед машиной
+  `<rect x="326" y="56" width="5" height="124" rx="2" fill="#a9b4bf"/><path d="M328 63h-12" stroke="#a9b4bf" stroke-width="4" stroke-linecap="round"/>` +
+  `<rect x="296" y="55" width="22" height="13" rx="3.5" fill="#56626d"/><rect x="291" y="57.5" width="6" height="8" rx="1.5" fill="#3e4953"/>` +
+  `<circle cx="312.5" cy="59.5" r="1.6" fill="#3ddba8"/>`;
+
+// луч камеры к передней части машины — отдельным слоем: появляется, когда машина встала на весы
+const beam = `<path d="M292 62 258 134 284 152Z" fill="#12b886" fill-opacity=".16"/><path d="M292 62 258 134M292 62 284 152" stroke="#12b886" stroke-opacity=".35" stroke-width="1.2" stroke-dasharray="3 4"/>`;
+
+// мусоровоз — отдельным слоем, заезжает на платформу
+const truck =
+  `<rect x="52" y="146" width="224" height="8" rx="3" fill="#4b5661"/>` +
+  `<path d="M48 98h14v48H52a4 4 0 0 1-4-4Z" fill="#c3ced8"/>` +
+  `<rect x="60" y="84" width="140" height="62" rx="8" fill="#d8e1e9"/>` +
+  `<rect x="78" y="110" width="104" height="8" rx="4" fill="#bdcad6"/><path d="M104 92v12M156 92v12M104 124v14M156 124v14" stroke="#c9d4de" stroke-width="2.5" stroke-linecap="round"/>` +
+  `<path d="M206 146V104a8 8 0 0 1 8-8h30a8 8 0 0 1 7 4.2l17 30a8 8 0 0 1 1 3.9V146Z" fill="#fff"/>` +
+  `<path d="M216 106h26l13 23h-39Z" fill="#c6d4e1"/><path d="M215 137h10" stroke="#d3dce4" stroke-width="2.5" stroke-linecap="round"/>` +
+  `<rect x="263" y="133" width="6" height="6" rx="2" fill="#f6dc8a"/><rect x="262" y="142" width="12" height="7" rx="2.5" fill="#56626d"/>` +
+  `<g fill="#39434d"><circle cx="86" cy="157" r="14"/><circle cx="120" cy="157" r="14"/><circle cx="244" cy="157" r="14"/></g>` +
+  `<g fill="#a8b4bf"><circle cx="86" cy="157" r="5.5"/><circle cx="120" cy="157" r="5.5"/><circle cx="244" cy="157" r="5.5"/></g>`;
 ---
 
 <section class="section" id="komu-podhodit" aria-labelledby="komu-podhodit-title">
-  <div class="container">
-    <h2 id="komu-podhodit-title" class="t-h2">Для каких предприятий подходит QODEX TONN</h2>
-    <p class="t-body">Раздел в работе.</p>
+  <div class="container nfit">
+    <SectionIntro eyebrow="Отрасли" titleId="komu-podhodit-title">
+      Для каких предприятий подходит QODEX&nbsp;TONN
+      <Fragment slot="lead">
+        Везде, где есть автомобильные весы и тарифы за тонну — там есть и потери. QODEX TONN подходит для
+        6&nbsp;ключевых отраслей.
+      </Fragment>
+    </SectionIntro>
+
+    <ul class="nfit-grid">
+      <!-- Отходы: крупная плитка — что получают регоператор и объект, рисунок весовой -->
+      <li class="nfit-tile nfit-tile--main" data-reveal style="--d:1">
+        <div class="nfit-head">
+          <span class="nfit-ico" aria-hidden="true"><Icon name={MAIN.icon} size={24} /></span>
+          <h3 class="nfit-title nfit-title--main">{MAIN.title}</h3>
+        </div>
+        <p class="nfit-text nfit-text--main">{MAIN.text}</p>
+
+        <ul class="nfit-sides">
+          {
+            SIDES.map((s) => (
+              <li class="nfit-side">
+                <p class="nfit-side__head">
+                  <span class="nfit-side__ico" aria-hidden="true">
+                    <Icon name={s.icon} size={18} strokeWidth={1.9} />
+                  </span>
+                  <span class="nfit-side__title">{s.title}</span>
+                </p>
+                <p class="nfit-side__text">{s.text}</p>
+              </li>
+            ))
+          }
+        </ul>
+
+        <!-- Весовая: камера читает номер, вес и акт уходят во ФГИС УТКО (демо-данные) -->
+        <div class="nfit-art" aria-hidden="true" data-nfit-art>
+          <span class="tag tag--demo nfit-demo">демо-данные</span>
+          <span class="nfit-stage">
+            <svg class="nfit-scene" viewBox="0 0 340 210" set:html={scene} />
+            <svg class="nfit-scene nfit-beam" viewBox="0 0 340 210" set:html={beam} />
+            <svg class="nfit-scene nfit-truck" viewBox="0 0 340 210" set:html={truck} />
+            <span class="nfit-act">
+              <span class="nfit-act__no">Акт №{NB}4127</span>
+              <span class="nfit-plate">
+                <span class="nfit-plate__num">А{NB}983{NB}ВВ</span>
+                <span class="nfit-plate__reg">102</span>
+              </span>
+              <span class="nfit-act__w">
+                <small>Нетто</small>
+                <b>4{NB}170 кг</b>
+              </span>
+              <span class="nfit-fgis">
+                <span class="nfit-fgis__ok"><Icon name="check" size={11} strokeWidth={3.2} /></span>
+                ФГИС{NB}УТКО
+              </span>
+            </span>
+          </span>
+        </div>
+      </li>
+
+      {
+        FITS.map((f, i) => (
+          <li class="nfit-tile" data-reveal style={`--d:${i + 2}`}>
+            <span class="nfit-ico" aria-hidden="true">
+              <Icon name={f.icon} size={24} />
+            </span>
+            <h3 class="nfit-title">{f.title}</h3>
+            <p class="nfit-text" set:html={nobr(f.text)} />
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </section>
+
+<style>
+  .nfit {
+    --nfit-gap: clamp(14px, calc(var(--vw) * 1.4), 20px);
+    --nfit-r: clamp(22px, calc(var(--vw) * 2), 28px);
+    --nfit-pad: clamp(22px, calc(var(--vw) * 2.2), 28px);
+    --nfit-in: 10px;
+    /* значки отраслей — цветом QODEX TONN, чуть темнее: на белой плашке контраст не ниже 3:1 */
+    --nfit-green: #0e9f74;
+  }
+
+  /* ── Бенто: крупная плитка — два столбца и два ряда, рядом две плитки, ниже ещё три ── */
+  .nfit-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--nfit-gap);
+  }
+
+  .nfit-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    padding: var(--nfit-pad);
+    border-radius: calc(var(--nfit-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .nfit-ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+    color: var(--nfit-green);
+    box-shadow:
+      0 1px 2px rgb(29 29 31 / 0.05),
+      0 10px 18px -12px rgb(29 29 31 / 0.22);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  /* при наведении приподнимается значок, плитка стоит на месте */
+  .nfit-tile:hover .nfit-ico {
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  .nfit-title {
+    margin-top: 22px;
+    font-size: clamp(1.2rem, calc(var(--vw) * 1.5), 1.3125rem);
+    line-height: 1.22;
+    letter-spacing: -0.02em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .nfit-text {
+    margin-top: 10px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* ── Крупная плитка: текст, две стороны, рисунок внизу на всю оставшуюся высоту ── */
+  .nfit-tile--main {
+    grid-column: span 2;
+    grid-row: span 2;
+    align-items: stretch;
+    padding: 0;
+  }
+
+  /* значок и заголовок — в одну строку: крупная плитка ниже, рядом с ней две плитки без пустот */
+  .nfit-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: var(--nfit-pad) var(--nfit-pad) 0;
+  }
+
+  .nfit-title--main {
+    margin-top: 0;
+    font-size: clamp(1.5rem, calc(var(--vw) * 2.2), 1.875rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+
+  .nfit-text--main {
+    max-width: 40em;
+    margin: 12px var(--nfit-pad) 0;
+    font-size: clamp(1rem, calc(var(--vw) * 1.2), 1.0625rem);
+  }
+
+  /* регоператору и объекту — две белые карточки рядом */
+  .nfit-sides {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--nfit-in);
+    margin: 20px var(--nfit-in) 0;
+  }
+
+  .nfit-side {
+    min-width: 0;
+    padding: 16px 20px 18px 18px;
+    border-radius: calc(calc(var(--nfit-r) - var(--nfit-in)) * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+  }
+
+  .nfit-side__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nfit-side__ico {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: calc(10px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--nfit-green);
+  }
+
+  .nfit-side__title {
+    font-size: 1.0625rem;
+    line-height: 1.25;
+    letter-spacing: -0.012em;
+    font-weight: 600;
+  }
+
+  .nfit-side__text {
+    margin-top: 8px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* ── Рисунок: светлая «карточка» внутри плитки ─────────── */
+  .nfit-art {
+    position: relative;
+    flex: 1;
+    min-height: 246px;
+    margin: var(--nfit-in);
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: calc(calc(var(--nfit-r) - var(--nfit-in)) * var(--rk));
+    corner-shape: var(--corner);
+    background: #edf1f4;
+    color: var(--ink);
+    font-size: 12.5px;
+    line-height: 1.25;
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .nfit-demo {
+    position: absolute;
+    z-index: 3;
+    top: 12px;
+    left: 12px;
+    pointer-events: none;
+  }
+
+  /* сцена фиксированного размера внизу по центру: весовая слева, карточка акта справа от камеры */
+  .nfit-stage {
+    --nfit-s: 1.1;
+    --nfit-sw: calc(340px * var(--nfit-s));
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: calc(var(--nfit-sw) + 28px + 176px);
+    height: calc(210px * var(--nfit-s));
+    transform: translateX(-50%);
+  }
+
+  /* рисунок весовой крупнее на широкой плитке (векторный — не мылится) */
+  .nfit-scene {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--nfit-sw);
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* карточка акта: номер, вес нетто, передача во ФГИС УТКО */
+  .nfit-act {
+    position: absolute;
+    left: calc(var(--nfit-sw) + 28px);
+    top: 24px;
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+    width: 176px;
+    padding: 13px 14px 14px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow:
+      0 0 0 5px rgb(255 255 255 / 0.5),
+      0 14px 30px -12px rgb(29 29 31 / 0.3);
+  }
+
+  .nfit-act__no {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* госномер — в рамке, как на главной (рамка — внутренней тенью: border при дробном масштабе в Safari пропадает) */
+  .nfit-plate {
+    display: inline-flex;
+    align-items: stretch;
+    height: 24px;
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 1.5px #1b2229;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .nfit-plate__num {
+    display: grid;
+    place-items: center;
+    padding: 0 7px;
+    letter-spacing: 0.02em;
+  }
+
+  .nfit-plate__reg {
+    display: grid;
+    place-items: center;
+    padding: 0 6px;
+    box-shadow: inset 1.5px 0 0 #1b2229;
+    font-size: 11.5px;
+  }
+
+  .nfit-act__w {
+    display: grid;
+    gap: 2px;
+  }
+
+  .nfit-act__w small {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .nfit-act__w b {
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .nfit-fgis {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 10px 0 5px;
+    border-radius: 999px;
+    background: #e3f6ee;
+    color: #07704f;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .nfit-fgis__ok {
+    display: grid;
+    place-items: center;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: var(--c-tonn);
+    color: #fff;
+  }
+
+  /* ── Движение: один раз, когда рисунок на экране ──────────
+     Классы is-armed и is-live ставит скрипт; без них (нет скриптов, «уменьшить движение»)
+     сразу видно итоговое состояние: машина на весах, акт передан. */
+  .nfit-art.is-armed:not(.is-live) .nfit-truck,
+  .nfit-art.is-armed:not(.is-live) .nfit-beam,
+  .nfit-art.is-armed:not(.is-live) .nfit-act,
+  .nfit-art.is-armed:not(.is-live) .nfit-fgis {
+    opacity: 0;
+  }
+
+  .nfit-art.is-live .nfit-truck {
+    animation: nfit-drive 1.6s var(--ease-out) 0.1s both;
+  }
+
+  .nfit-art.is-live .nfit-beam {
+    animation: nfit-fade 0.5s ease-out 1.45s both;
+  }
+
+  .nfit-art.is-live .nfit-act {
+    animation: nfit-rise 0.6s var(--ease-out) 1.8s both;
+  }
+
+  .nfit-art.is-live .nfit-fgis {
+    animation: nfit-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) 2.55s both;
+  }
+
+  @keyframes nfit-drive {
+    from {
+      opacity: 0;
+      transform: translateX(-150px);
+    }
+    25% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes nfit-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes nfit-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes nfit-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nfit-art * {
+      animation: none !important;
+    }
+
+    .nfit-ico {
+      transition: none;
+    }
+  }
+
+  /* ── Планшет: два столбца, крупная плитка во всю ширину, последняя отрасль — тоже ── */
+  @media (max-width: 1199.98px) {
+    .nfit-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .nfit-tile--main {
+      grid-column: 1 / -1;
+      grid-row: auto;
+    }
+
+    .nfit-tile:last-child {
+      grid-column: 1 / -1;
+    }
+
+    .nfit-tile:last-child .nfit-text {
+      max-width: 40em;
+    }
+
+    .nfit-art {
+      flex: none;
+      height: 280px;
+    }
+  }
+
+  /* ── Телефон: один столбец; у отраслей значок слева, заголовок и текст справа ── */
+  @media (max-width: 699.98px) {
+    .nfit-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .nfit-tile:not(.nfit-tile--main) {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      grid-template-areas:
+        'ico title'
+        'ico text';
+      align-content: start;
+      column-gap: 14px;
+      padding: 18px 20px 20px 18px;
+    }
+
+    .nfit-tile:not(.nfit-tile--main) .nfit-ico {
+      grid-area: ico;
+      width: 44px;
+      height: 44px;
+      border-radius: calc(13px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .nfit-tile:not(.nfit-tile--main) .nfit-title {
+      grid-area: title;
+      margin-top: 0;
+      font-size: 1.0625rem;
+      text-wrap: pretty;
+    }
+
+    .nfit-tile:not(.nfit-tile--main) .nfit-text {
+      grid-area: text;
+      margin-top: 4px;
+      font-size: 15px;
+    }
+
+    .nfit-head {
+      padding: 20px 20px 0;
+    }
+
+    .nfit-title--main {
+      margin-top: 18px;
+      font-size: 1.5rem;
+    }
+
+    .nfit-text--main {
+      font-size: 15.5px;
+    }
+
+    .nfit-sides {
+      grid-template-columns: minmax(0, 1fr);
+      margin-top: 18px;
+    }
+
+    .nfit-side {
+      padding: 16px 18px 18px;
+    }
+
+    .nfit-side__text {
+      font-size: 15px;
+    }
+
+    /* рисунок: весовая по центру, карточка акта — в левом верхнем углу, метка — справа */
+    .nfit-art {
+      height: 276px;
+    }
+
+    .nfit-demo {
+      left: auto;
+      right: 12px;
+    }
+
+    .nfit-stage {
+      --nfit-s: 1;
+      width: 340px;
+    }
+
+    /* сцена стоит на нижнем крае рисунка (276 − 210 = 66 px сверху): карточка — в 12 px от верха и края */
+    .nfit-act {
+      left: 12px;
+      top: -54px;
+      gap: 6px;
+      width: auto;
+      padding: 10px 12px 12px;
+      border-radius: 14px;
+    }
+
+    .nfit-act__no {
+      display: none;
+    }
+
+    .nfit-act__w b {
+      font-size: 18px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Рисунок «проигрывается» один раз, когда заметная часть его на экране и вкладка открыта
+  // (во фоновой вкладке ждёт, пока на неё вернутся). При «уменьшить движение» классы не ставятся —
+  // видно итоговое состояние.
+  const art = document.querySelector<HTMLElement>('[data-nfit-art]');
+  if (art && !reducedMotion() && 'IntersectionObserver' in window) {
+    art.classList.add('is-armed');
+    let inView = false;
+    const play = () => {
+      if (!inView || document.hidden) return;
+      art.classList.add('is-live');
+      io.disconnect();
+      document.removeEventListener('visibilitychange', play);
+    };
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.intersectionRatio >= 0.5;
+        play();
+      },
+      { threshold: [0, 0.5] },
+    );
+    io.observe(art);
+    document.addEventListener('visibilitychange', play);
+  }
+</script>

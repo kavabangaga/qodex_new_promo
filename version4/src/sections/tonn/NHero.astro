@@ -1,10 +1,757 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Первый экран страницы «QODEX TONN» [#tonn]. Устроен как первые экраны «Кодекса ТКО», Tracker и РО-БОТ:
+// большая тёплая панель, по центру — метка продукта, заголовок, подзаголовок, две кнопки, тихая строка
+// условий и ряд цифр (первые две ведут к «Результатам»).
+// Ниже в той же панели — градиентная карточка с настоящим снимком кабинета (экран «Аналитика»,
+// демо-доступ) и две выноски с прежнего лендинга: «Экономия за месяц» и «Номер распознан».
+import Icon from '../../components/Icon.astro';
+import ProductLabel from '../../components/ProductLabel.astro';
+import GradientVisual from '../../components/GradientVisual.astro';
+import { withBase } from '../../config/site';
+
+const NB = '\u00a0';
+
+// Цифры под кнопками. Число досчитывается от нуля (data-count), знаки — вне счётчика.
+// src — откуда цифра (мелкая строка), href — ссылка на раздел «Результаты».
+const FIGS = [
+  {
+    href: '#rezultaty',
+    pre: '−',
+    num: 57,
+    suf: '%',
+    text: `тоннажа в${NB}актах после установки`,
+    src: `март${NB}2025 к${NB}марту${NB}2024, 4${NB}района Башкортостана`,
+  },
+  {
+    href: '#rezultaty',
+    pre: '>',
+    num: 60,
+    suf: `${NB}млн${NB}₽`,
+    text: `сэкономил РО${NB}«Эко-Сити» за${NB}год`,
+  },
+  { pre: '', num: 0, suf: '', value: `1${NB}месяц`, text: 'бесплатно после запуска' },
+];
+
+// Снимок кабинета 1000×750 (демо-доступ)
+const SHOT = {
+  src: withBase('/media/tonn/cab-analytica-1000.webp'),
+  srcset: `${withBase('/media/tonn/cab-analytica-600.webp')} 600w, ${withBase('/media/tonn/cab-analytica-1000.webp')} 1000w`,
+};
 ---
 
-<section class="section panel" id="tonn" aria-labelledby="tonn-title">
-  <div class="container">
-    <h1 id="tonn-title" class="t-display">Перестаньте терять десятки миллионов на махинациях с весами</h1>
-    <p class="t-body">Раздел в работе.</p>
+<section class="section panel nh" id="tonn" aria-labelledby="tonn-title">
+  <div class="nh__intro container">
+    <div class="nh__label" data-reveal>
+      <ProductLabel id="tonn" size="lg" />
+    </div>
+    <h1 class="t-display nh__title" id="tonn-title" data-reveal style="--d:1">
+      Перестаньте терять десятки миллионов на&nbsp;махинациях с&nbsp;весами
+    </h1>
+    <p class="t-lead nh__sub" data-reveal style="--d:2">
+      Система автоматизации весовых для предприятий с&nbsp;тоннажным учётом. Исключает хищения, фальсификации
+      и&nbsp;человеческий фактор. Окупается за&nbsp;1–2&nbsp;месяца.
+    </p>
+    <div class="nh__cta" data-reveal style="--d:3">
+      <a href="#forma" class="btn btn--primary" data-interest="tonn" data-goal="pilot_click">
+        Подключить весовую
+        <Icon name="arrow-right" />
+      </a>
+      <a href="#kalkulyator" class="btn btn--outline">
+        <Icon name="calculator" />
+        Рассчитать экономию
+      </a>
+    </div>
+    <p class="nh__note" data-reveal style="--d:3">
+      <span>Номер, фото и&nbsp;вес машины&nbsp;— без ручного ввода</span><span class="nh__note-sep"> · </span><span
+        >Работает с&nbsp;любыми автовесами</span
+      ><span class="nh__note-sep"> · </span><span>Монтаж от&nbsp;3&nbsp;дней</span>
+    </p>
+
+    <ul class="nh-figs" data-reveal style="--d:4">
+      {
+        FIGS.map((f) => {
+          const body = [
+            <span class="nh-fig__num">
+              {f.value ?? [f.pre, <span data-count={f.num}>{f.num}</span>, f.suf]}
+            </span>,
+            <span class="nh-fig__text">{f.text}</span>,
+            f.src && <span class="nh-fig__src">{f.src}</span>,
+          ];
+          return (
+            <li class="nh-figs__item">
+              {f.href ? (
+                <a class="nh-fig nh-fig--link" href={f.href}>
+                  {body}
+                </a>
+              ) : (
+                <div class="nh-fig">{body}</div>
+              )}
+            </li>
+          );
+        })
+      }
+      <li class="nh-figs__item">
+        <div class="nh-fig nh-fig--text">
+          <span class="nh-fig__head"><span class="nh-fig__title">Полная картина</span></span>
+          <span class="nh-fig__text">
+            1С, ERP и&nbsp;отраслевые гос-системы из&nbsp;коробки&nbsp;— отчётность под&nbsp;контролем
+          </span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="container nh__stage">
+    <div class="nh__vis" data-nh-vis data-nh-wait>
+      <GradientVisual
+        preset="sky"
+        deco="bars"
+        class="nh__gv"
+        label="Кабинет QODEX TONN, экран «Аналитика» (демо-данные): суммарный объём начислений площадкам 29 082 234 ₽, прогноз по начислениям на конец месяца, выполнение терсхемы, график тоннажа и начислений по дням. Выноски: «Экономия за месяц: +2,4 млн ₽» и «Номер распознан: А983ВВ 102»."
+      >
+        <div class="nh-win">
+          <!-- окно кабинета: снимок экрана «Аналитика» -->
+          <div class="nh-win__screen">
+            <div class="nh-win__clip">
+              <img
+                class="nh-win__img"
+                src={SHOT.src}
+                srcset={SHOT.srcset}
+                sizes="(max-width: 640px) 1000px, 940px"
+                width="1000"
+                height="750"
+                alt="Экран «Аналитика» в кабинете QODEX TONN: суммарный объём начислений площадкам 29 082 234 ₽, прогноз на конец месяца, выполнение терсхемы 12 465 т из 55 665 т, график тоннажа и начислений по дням месяца"
+                loading="eager"
+                decoding="async"
+                draggable="false"
+              />
+            </div>
+          </div>
+
+          <!-- выноски: появляются по одной, когда карточка на экране -->
+          <div class="nh-calls">
+            <div class="nh-call nh-call--save" style="--i:0">
+              <span class="nh-call__ico">
+                <Icon name="wallet" size={20} strokeWidth={1.9} />
+              </span>
+              <span class="nh-call__body">
+                <span class="nh-call__lab">Экономия за&nbsp;месяц</span>
+                <b class="nh-call__val">+2,4&nbsp;млн&nbsp;₽</b>
+              </span>
+            </div>
+
+            <div class="nh-call nh-call--plate" style="--i:1">
+              <span class="nh-call__ico">
+                <Icon name="scan" size={20} strokeWidth={1.9} />
+              </span>
+              <span class="nh-call__body">
+                <span class="nh-call__lab">Номер распознан</span>
+                <span class="nh-plate">
+                  <span class="nh-plate__num">А&nbsp;983&nbsp;ВВ</span>
+                  <span class="nh-plate__reg">
+                    <b>102</b>
+                    <small>RUS</small>
+                  </span>
+                  <span class="nh-plate__ring"></span>
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </GradientVisual>
+      <span class="tag tag--demo nh__demo" aria-hidden="true">демо-данные</span>
+    </div>
   </div>
 </section>
+
+<style>
+  /* Отступы панели — как у первых экранов «Кодекса ТКО», Tracker и РО-БОТ */
+  .nh.panel {
+    padding-top: clamp(48px, calc(var(--vw) * 7), 104px);
+    padding-bottom: clamp(8px, calc(var(--vw) * 4.2), 72px);
+  }
+
+  .nh__intro {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .nh__label {
+    margin-bottom: 22px;
+  }
+
+  /* заголовок длинный: на компьютере две строки, и весь первый экран (с цифрами) помещается в окно 1766×880 */
+  .nh__title {
+    max-width: 1180px;
+    font-size: clamp(2.4rem, calc(var(--vw) * 4.4), 4rem);
+  }
+
+  .nh__sub {
+    max-width: 860px;
+    margin-top: 24px;
+    text-wrap: balance;
+  }
+
+  .nh__cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 36px;
+  }
+
+  /* условия — тихая строка под кнопками */
+  .nh__note {
+    margin-top: 18px;
+    font-size: 14.5px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: balance;
+  }
+
+  .nh__note-sep {
+    padding-inline: 4px;
+    white-space: pre;
+  }
+
+  /* ── Ряд цифр: число, подпись, источник; тонкие разделители между ними ── */
+  .nh-figs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: min(100%, 1180px);
+    margin-top: 40px;
+  }
+
+  .nh-figs__item {
+    position: relative;
+    display: flex;
+  }
+
+  .nh-figs__item + .nh-figs__item::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 0;
+    width: 1px;
+    background: var(--line-2);
+  }
+
+  .nh-fig {
+    --num: clamp(2.3rem, calc(var(--vw) * 2.8), 2.75rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 24px 10px;
+    border-radius: calc(16px * var(--rk));
+    corner-shape: var(--corner);
+    text-align: center;
+  }
+
+  .nh-fig__num {
+    font-size: var(--num);
+    font-weight: 600;
+    line-height: 1;
+    /* не теснее −0,025em: табличные цифры иначе слипаются (DESIGN.md) */
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* у текстовой плитки заголовок стоит на строке цифр: та же высота, низ по линии цифр */
+  .nh-fig__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: var(--num);
+  }
+
+  .nh-fig__title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+  }
+
+  .nh-fig__text {
+    max-width: 250px;
+    font-size: 15px;
+    line-height: 1.42;
+    color: var(--ink-2);
+    text-wrap: balance;
+  }
+
+  .nh-fig__src {
+    max-width: 240px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--muted);
+    text-wrap: balance;
+  }
+
+  .nh-fig--link {
+    transition: background-color 0.25s;
+  }
+
+  .nh-fig--link:hover {
+    background: rgb(29 29 31 / 0.035);
+  }
+
+  .nh-fig--link:hover .nh-fig__text {
+    text-decoration: underline;
+    text-decoration-color: var(--line-2);
+    text-underline-offset: 3px;
+  }
+
+  /* ── Градиентная карточка со снимком кабинета ─────────────── */
+  .nh__stage {
+    margin-top: clamp(32px, calc(var(--vw) * 3), 48px);
+    animation: nh-in 0.9s var(--ease-out) 0.4s backwards;
+  }
+
+  /* карточка стоит у первого экрана, поэтому появляется сразу при загрузке, а не по прокрутке */
+  @keyframes nh-in {
+    from {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+  }
+
+  .nh__vis {
+    position: relative;
+  }
+
+  .nh__gv {
+    min-height: 0;
+    padding: 64px 48px 72px;
+  }
+
+  /* «демо-данные» в углу градиентной карточки */
+  .nh__demo {
+    position: absolute;
+    z-index: 1;
+    top: 20px;
+    left: 22px;
+    pointer-events: none;
+  }
+
+  /* ── Окно кабинета: снимок 1000×750 без нижней строки меню и таблицы (до подписей дней под графиком).
+     --x0, --y0, --cw, --ch — какая часть снимка видна, в его пикселях ── */
+  .nh-win {
+    --x0: 0;
+    --y0: 0;
+    --cw: 1000;
+    --ch: 592;
+    --win-r: 18px;
+    position: relative;
+    width: min(100%, 940px);
+  }
+
+  .nh-win__screen {
+    position: relative;
+    aspect-ratio: var(--cw) / var(--ch);
+    border-radius: var(--win-r);
+    background: #fff;
+    box-shadow:
+      0 0 0 8px rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+  }
+
+  .nh-win__clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    /* страховка для Safari на iPhone: скругление обрезает и слой снимка */
+    clip-path: inset(0 round var(--win-r));
+  }
+
+  .nh-win__img {
+    position: absolute;
+    top: calc(var(--y0) / var(--ch) * -100%);
+    left: calc(var(--x0) / var(--cw) * -100%);
+    width: calc(1000 / var(--cw) * 100%);
+    max-width: none;
+    height: auto;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* ── Выноски: белые карточки поверх краёв окна ── */
+  .nh-call {
+    position: absolute;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px 14px 14px;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow:
+      0 0 0 6px rgb(255 255 255 / 0.5),
+      var(--shadow-float);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  /* «Экономия» — у правого края на уровне итога начислений, «Номер» — на нижнем левом углу окна */
+  .nh-call--save {
+    top: 17%;
+    right: -72px;
+  }
+
+  .nh-call--plate {
+    left: -72px;
+    bottom: -28px;
+  }
+
+  /* значок в цвете продукта */
+  .nh-call__ico {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 13px;
+    background: color-mix(in oklab, var(--c-tonn) 13%, white);
+    color: #0b7a58;
+  }
+
+  .nh-call__body {
+    display: grid;
+    justify-items: start;
+    gap: 5px;
+  }
+
+  .nh-call__lab {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--muted);
+  }
+
+  .nh-call__val {
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+
+  /* российский номер: белая плашка в чёрной рамке, справа регион */
+  .nh-plate {
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+    height: 30px;
+    border: 1.5px solid #1b2229;
+    border-radius: 5px;
+    background: #fff;
+    color: #11171c;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .nh-plate__num {
+    display: grid;
+    place-items: center;
+    padding: 0 9px;
+    font-size: 17px;
+    letter-spacing: 0.03em;
+  }
+
+  .nh-plate__reg {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 1px;
+    padding: 0 6px;
+    border-left: 1.5px solid #1b2229;
+  }
+
+  .nh-plate__reg b {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .nh-plate__reg small {
+    font-size: 6.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  /* рамка распознавания: один раз мягко сходится на номер */
+  .nh-plate__ring {
+    position: absolute;
+    inset: -5px;
+    border: 2px solid var(--blue);
+    border-radius: 8px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ── Движение: когда карточка на экране, выноски появляются по одной (0 и 0,8 с),
+     затем рамка распознавания один раз сходится на номер. Без анимации всё видно сразу. ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .nh-call {
+      transition:
+        opacity 0.6s ease,
+        transform 0.8s var(--ease-out);
+      transition-delay: calc(var(--i) * 0.8s);
+    }
+
+    .nh__vis[data-nh-wait] .nh-call {
+      opacity: 0;
+      transform: translateY(18px) scale(0.96);
+    }
+
+    .nh__vis:not([data-nh-wait]) .nh-plate__ring {
+      animation: nh-ring 1.3s var(--ease-out) 1.4s both;
+    }
+  }
+
+  @keyframes nh-ring {
+    0% {
+      opacity: 0;
+      transform: scale(1.35);
+    }
+    35% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    75% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+
+  @media (scripting: none) {
+    .nh__vis[data-nh-wait] .nh-call {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ── Планшет и телефон: выноски — под снимком, с заходом на его нижний край ── */
+  @media (max-width: 1199.98px) {
+    .nh-figs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: min(100%, 720px);
+      margin-top: 36px;
+      row-gap: 18px;
+    }
+
+    /* в сетке 2×2 разделитель только между столбцами */
+    .nh-figs__item:nth-child(odd)::before {
+      display: none;
+    }
+
+    .nh-fig {
+      padding-inline: 18px;
+    }
+
+    .nh__gv {
+      padding: 64px clamp(10px, calc(var(--vw) * 3), 40px) clamp(18px, calc(var(--vw) * 3.6), 40px);
+    }
+
+    .nh-calls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: -34px;
+      padding-inline: 12px;
+    }
+
+    .nh-call {
+      position: relative;
+      inset: auto;
+    }
+  }
+
+  @media (max-width: 640px) {
+    /* кегль по ширине телефона */
+    .nh__title {
+      font-size: clamp(1.85rem, calc(var(--vw) * 8.4), 2.6rem);
+    }
+
+    .nh__cta {
+      display: grid;
+      width: 100%;
+    }
+
+    /* условия — три строки без точек */
+    .nh__note {
+      display: grid;
+      gap: 2px;
+      font-size: 14px;
+    }
+
+    .nh__note-sep {
+      display: none;
+    }
+
+    /* цифры списком: число сверху, подпись и источник под ним */
+    .nh-figs {
+      grid-template-columns: minmax(0, 1fr);
+      width: min(100%, 460px);
+      margin-top: 32px;
+      row-gap: 0;
+      border-top: 1px solid var(--line-2);
+    }
+
+    .nh-figs__item {
+      border-bottom: 1px solid var(--line-2);
+    }
+
+    .nh-figs__item::before {
+      display: none;
+    }
+
+    .nh-fig {
+      --num: 2.1rem;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 16px 4px;
+      text-align: left;
+    }
+
+    .nh-fig__head {
+      justify-content: flex-start;
+    }
+
+    .nh-fig__text,
+    .nh-fig__src {
+      max-width: none;
+      text-wrap: pretty;
+    }
+
+    .nh__stage {
+      padding-inline: 8px;
+    }
+
+    .nh__gv {
+      --gv-r: 22px;
+      padding: 54px 10px 16px;
+    }
+
+    .nh__demo {
+      top: 14px;
+      left: 14px;
+    }
+
+    /* на телефоне кадр крупнее: итог начислений, прогноз, терсхема и левая часть графика */
+    .nh-win {
+      --x0: 70;
+      --y0: 62;
+      --cw: 660;
+      --ch: 530;
+      --win-r: 14px;
+    }
+
+    .nh-win__screen {
+      box-shadow:
+        0 0 0 6px rgb(255 255 255 / 0.4),
+        var(--shadow-card);
+    }
+
+    /* выноски рядом, без значков */
+    .nh-calls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: -20px;
+      padding-inline: 6px;
+    }
+
+    .nh-call {
+      padding: 11px 10px 12px 12px;
+      border-radius: 14px;
+      box-shadow:
+        0 0 0 4px rgb(255 255 255 / 0.5),
+        var(--shadow-float);
+    }
+
+    .nh-call__ico {
+      display: none;
+    }
+
+    .nh-call__body {
+      gap: 6px;
+    }
+
+    .nh-call__lab {
+      font-size: 12.5px;
+    }
+
+    .nh-call__val {
+      font-size: 20px;
+    }
+
+    .nh-plate {
+      height: 25px;
+    }
+
+    .nh-plate__num {
+      padding: 0 6px;
+      font-size: 14px;
+    }
+
+    .nh-plate__reg {
+      padding: 0 4px;
+    }
+
+    .nh-plate__reg b {
+      font-size: 11px;
+    }
+
+    .nh-plate__reg small {
+      font-size: 5.5px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Выноски появляются по одной, когда карточка на экране (один раз). Первый показ — после того,
+  // как карточка проявилась при загрузке (1,3 с). При «уменьшить движение» всё видно сразу.
+  const vis = document.querySelector<HTMLElement>('[data-nh-vis]');
+  if (vis) {
+    if (reducedMotion() || !('IntersectionObserver' in window)) {
+      delete vis.dataset.nhWait;
+    } else {
+      let ready = false;
+      let seen = false;
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          seen = entry.isIntersecting;
+          start();
+        },
+        { threshold: 0.4 },
+      );
+      const start = () => {
+        if (!ready || !seen || document.hidden) return;
+        delete vis.dataset.nhWait;
+        io.disconnect();
+        document.removeEventListener('visibilitychange', start);
+      };
+      io.observe(vis);
+      document.addEventListener('visibilitychange', start);
+      window.setTimeout(() => {
+        ready = true;
+        start();
+      }, 1300);
+    }
+  }
+</script>

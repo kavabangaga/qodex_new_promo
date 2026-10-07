@@ -1,10 +1,597 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Раздел страницы «QODEX TONN» — «Калькулятор потерь» [#kalkulyator]. Настоящий калькулятор с прежнего лендинга
+// tonn.qodex.tech: четыре ползунка, их пределы, шаги и формула — оттуда без изменений. Слева бежевая карточка
+// с ползунками, справа графитовая карточка результата: метка «прогноз», потери в месяц крупно, за год строкой ниже,
+// потери в день и окупаемость, внизу кнопка заявки. Раздел на фоне страницы, без градиента. Числа пересчитываются
+// при каждом сдвиге ползунка; вслух объявляется только итог — скрытой строкой, когда ползунки затихли.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon from '../../components/Icon.astro';
+
+const NB = String.fromCharCode(160); // неразрывный пробел
+
+// Стоимость системы, ₽ — константа лендинга, по ней считается окупаемость. На странице её не показываем.
+// То же число — в скрипте ниже (SYSTEM_COST).
+const SYSTEM_COST = 513610;
+
+interface Field {
+  key: 'cars' | 'weight' | 'loss' | 'tariff';
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  unit: string;
+}
+
+// Ползунки лендинга: значение по умолчанию, пределы и шаг — как там
+const FIELDS: Field[] = [
+  { key: 'cars', label: `Машин в${NB}день`, value: 100, min: 10, max: 300, step: 5, unit: 'машин' },
+  { key: 'weight', label: 'Средний вес машины', value: 20, min: 5, max: 40, step: 1, unit: 'т' },
+  { key: 'loss', label: 'Уровень потерь', value: 5, min: 1, max: 20, step: 1, unit: '%' },
+  { key: 'tariff', label: 'Тариф за тонну', value: 1500, min: 800, max: 3500, step: 100, unit: '₽/т' },
+];
+
+const num = (n: number) =>
+  new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Math.round(n)).replace(/\s/g, NB);
+
+const plural = (n: number, forms: [string, string, string]) => {
+  const a = n % 100;
+  const b = n % 10;
+  if (a >= 11 && a <= 14) return forms[2];
+  if (b === 1) return forms[0];
+  if (b >= 2 && b <= 4) return forms[1];
+  return forms[2];
+};
+
+// Для программ чтения с экрана: значение ползунка словами (то же — в скрипте)
+const sayValue = (key: Field['key'], v: number) =>
+  key === 'cars'
+    ? `${v} ${plural(v, ['машина', 'машины', 'машин'])}`
+    : key === 'weight'
+      ? `${v} ${plural(v, ['тонна', 'тонны', 'тонн'])}`
+      : key === 'loss'
+        ? `${v}%`
+        : `${num(v)} ₽ за${NB}тонну`;
+
+// Значение у подписи: «100 машин», «20 т», «5%», «1 500 ₽/т»
+const unitText = (f: Field) => (f.unit === '%' ? '%' : `${NB}${f.unit}`);
+
+// Формула лендинга: в день = машины × вес × (потери / 100) × тариф; в месяц = день × 30; в год = месяц × 12;
+// окупаемость = ⌈стоимость системы / потери в день⌉. Деление на 100 — последним: так в целых числах нет
+// погрешности дробей, результат тот же.
+const [cars, weight, loss, tariff] = FIELDS.map((f) => f.value);
+const perDay = (cars * weight * loss * tariff) / 100;
+const perMonth = perDay * 30;
+const perYear = perMonth * 12;
+const payback = perDay > 0 ? Math.ceil(SYSTEM_COST / perDay) : 0;
+const paybackText = payback ? `${num(payback)}${NB}${plural(payback, ['день', 'дня', 'дней'])}` : '—';
 ---
 
 <section class="section" id="kalkulyator" aria-labelledby="kalkulyator-title">
   <div class="container">
-    <h2 id="kalkulyator-title" class="t-h2">Калькулятор потерь</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Калькулятор" titleId="kalkulyator-title">
+      Калькулятор потерь
+      <Fragment slot="lead">Узнайте, сколько вы теряете без автоматизированного весового контроля</Fragment>
+    </SectionIntro>
+
+    <div class="ncalc" data-ncalc>
+      <!-- Ползунки: число машин, вес, уровень потерь, тариф -->
+      <div class="ncalc-in" data-reveal style="--d:1">
+        {
+          FIELDS.map((f) => (
+            <div class="ncalc-field">
+              <div class="ncalc-top">
+                <label class="ncalc-label" for={`ncalc-${f.key}`}>
+                  {f.label}
+                </label>
+                <span class="ncalc-val" aria-hidden="true">
+                  <span class="ncalc-val-num" data-val={f.key}>
+                    {num(f.value)}
+                  </span>
+                  <span class="ncalc-unit">{unitText(f)}</span>
+                </span>
+              </div>
+              <input
+                class="ncalc-range"
+                id={`ncalc-${f.key}`}
+                type="range"
+                min={f.min}
+                max={f.max}
+                step={f.step}
+                value={f.value}
+                aria-valuetext={sayValue(f.key, f.value)}
+                data-in={f.key}
+                style={`--p:${((f.value - f.min) / (f.max - f.min)).toFixed(4)}`}
+              />
+              <div class="ncalc-scale" aria-hidden="true">
+                <span>{num(f.min)}</span>
+                <span>{num(f.max)}</span>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Результат: потери в месяц крупно, за год строкой ниже, потери в день и окупаемость, внизу кнопка заявки -->
+      <div class="ncalc-res dark" data-reveal style="--d:2">
+        <div class="ncalc-head">
+          <h3 class="ncalc-title">Потери в{NB}месяц</h3>
+          <span class="tag tag--forecast ncalc-tag">прогноз</span>
+        </div>
+
+        <p class="ncalc-sum">
+          <span class="ncalc-num" data-out="month">{num(perMonth)}</span><span class="ncalc-cur">{NB}₽</span>
+        </p>
+        <p class="ncalc-year">
+          или <span class="ncalc-year-num"><span data-out="year">{num(perYear)}</span>{NB}₽</span> в{NB}год
+        </p>
+
+        <dl class="ncalc-stats">
+          <div class="ncalc-stat">
+            <dt class="ncalc-stat-name">Потери в{NB}день</dt>
+            <dd class="ncalc-stat-val" data-out="day">{`${num(perDay)}${NB}₽`}</dd>
+          </div>
+          <div class="ncalc-stat">
+            <dt class="ncalc-stat-name">Окупаемость</dt>
+            <dd class="ncalc-stat-val" data-out="payback">{paybackText}</dd>
+          </div>
+        </dl>
+
+        <!-- Для программ чтения с экрана: итог одной фразой, когда ползунки затихли (заполняет скрипт) -->
+        <p class="visually-hidden" aria-live="polite" data-say></p>
+
+        <div class="ncalc-foot">
+          <a href="#forma" class="btn btn--light ncalc-cta" data-interest="tonn" data-goal="pilot_click">
+            Получить расчёт для моего объекта <Icon name="arrow-right" />
+          </a>
+          <p class="ncalc-note">Расчёт за 1&nbsp;день · Без спама</p>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
+
+<style>
+  /* ── Раскладка: слева ползунки, справа результат той же высоты ── */
+  .ncalc {
+    --ncalc-gap: clamp(12px, calc(var(--vw) * 1.4), 20px);
+    --ncalc-pad: clamp(22px, calc(var(--vw) * 2.4), 36px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--ncalc-gap);
+  }
+
+  /* ── Ползунки ─────────────────────────────────────────── */
+  .ncalc-in {
+    display: grid;
+    align-content: space-between;
+    row-gap: 22px;
+    min-width: 0;
+    padding: var(--ncalc-pad);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .ncalc-field {
+    display: grid;
+    min-width: 0;
+  }
+
+  .ncalc-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .ncalc-label {
+    font-size: 15px;
+    font-weight: 560;
+    line-height: 1.35;
+    color: var(--ink-2);
+  }
+
+  /* текущее значение: цифры табличные — при сдвиге ширина не скачет */
+  .ncalc-val {
+    flex: none;
+    font-size: 1.375rem;
+    line-height: 1.2;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+
+  .ncalc-unit {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
+
+  /* Ползунок: дорожка, графитовая заполненная часть до центра бегунка, белый бегунок.
+     Высота поля 44 px — палец попадает, дорожка 6 px по центру. --p (0…1) ставит скрипт. */
+  .ncalc-range {
+    --th: 26px;
+    --fill: calc(var(--th) / 2 + (100% - var(--th)) * var(--p, 0));
+    --track: rgb(29 29 31 / 0.12);
+    display: block;
+    width: 100%;
+    height: 44px;
+    margin: 2px 0 -5px;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ncalc-range:focus {
+    outline: none;
+  }
+
+  .ncalc-range::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--ink) 0 var(--fill), var(--track) var(--fill) 100%);
+  }
+
+  .ncalc-range::-webkit-slider-thumb {
+    width: var(--th);
+    height: var(--th);
+    margin-top: calc((6px - var(--th)) / 2);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 8px -2px rgb(29 29 31 / 0.3);
+    -webkit-appearance: none;
+    appearance: none;
+    transition:
+      transform 0.25s var(--ease-out),
+      box-shadow 0.2s;
+  }
+
+  .ncalc-range::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--track);
+  }
+
+  .ncalc-range::-moz-range-progress {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--ink);
+  }
+
+  .ncalc-range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: var(--th);
+    height: var(--th);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 8px -2px rgb(29 29 31 / 0.3);
+    transition:
+      transform 0.25s var(--ease-out),
+      box-shadow 0.2s;
+  }
+
+  .ncalc-range:hover::-webkit-slider-thumb {
+    transform: scale(1.08);
+  }
+
+  .ncalc-range:active::-webkit-slider-thumb {
+    transform: scale(1.14);
+  }
+
+  .ncalc-range:hover::-moz-range-thumb {
+    transform: scale(1.08);
+  }
+
+  .ncalc-range:active::-moz-range-thumb {
+    transform: scale(1.14);
+  }
+
+  /* фокус с клавиатуры — синее кольцо вокруг бегунка, как у полей формы */
+  .ncalc-range:focus-visible::-webkit-slider-thumb {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 5px rgb(0 107 255 / 0.28);
+  }
+
+  .ncalc-range:focus-visible::-moz-range-thumb {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 5px rgb(0 107 255 / 0.28);
+  }
+
+  /* пределы ползунка под дорожкой */
+  .ncalc-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+
+  /* ── Результат: графитовая карточка с мягким свечением палитры ── */
+  .ncalc-res {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: clamp(24px, calc(var(--vw) * 2.8), 44px);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background:
+      radial-gradient(80% 50% at 100% 0%, rgb(93 223 215 / 0.16) 0%, transparent 70%),
+      radial-gradient(75% 45% at 0% 100%, rgb(72 144 227 / 0.24) 0%, transparent 70%),
+      var(--ink);
+  }
+
+  .ncalc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .ncalc-title {
+    font-size: 1.0625rem;
+    line-height: 1.35;
+    font-weight: 560;
+    letter-spacing: -0.01em;
+  }
+
+  /* метка прогноза — та же пунктирная плашка, но для тёмного фона */
+  .ncalc-tag {
+    flex: none;
+    border-color: rgb(255 255 255 / 0.4);
+    color: rgb(255 255 255 / 0.86);
+  }
+
+  /* итог в месяц: одна строка при любых значениях ползунков — карточка не прыгает */
+  .ncalc-sum {
+    margin-top: 22px;
+    font-size: clamp(2.75rem, calc(var(--vw) * 4.3), 4.25rem);
+    line-height: 1.04;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    /* табличные цифры: не теснее −0,025em, иначе «88» и «44» слипаются */
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+  }
+
+  .ncalc-cur {
+    font-size: 0.5em;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: rgb(255 255 255 / 0.68);
+  }
+
+  .ncalc-year {
+    margin-top: 12px;
+    font-size: 1.0625rem;
+    line-height: 1.4;
+    color: rgb(255 255 255 / 0.72);
+  }
+
+  .ncalc-year-num {
+    font-weight: 560;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: #fff;
+  }
+
+  /* потери в день и окупаемость — две ячейки под чертой, между ними тонкая линия */
+  .ncalc-stats {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    margin-top: 32px;
+  }
+
+  /* черты — полоски-псевдоэлементы: однопиксельную рамку при дробном масштабе Safari не рисует */
+  .ncalc-stats::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: rgb(255 255 255 / 0.14);
+  }
+
+  .ncalc-stat {
+    position: relative;
+    min-width: 0;
+    padding-top: 24px;
+  }
+
+  .ncalc-stat + .ncalc-stat {
+    padding-left: clamp(18px, calc(var(--vw) * 2), 28px);
+  }
+
+  .ncalc-stat + .ncalc-stat::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    bottom: 4px;
+    left: 0;
+    width: 1px;
+    background: rgb(255 255 255 / 0.14);
+  }
+
+  .ncalc-stat-name {
+    font-size: 15.5px;
+    line-height: 1.35;
+    color: rgb(255 255 255 / 0.76);
+  }
+
+  .ncalc-stat-val {
+    margin-top: 8px;
+    font-size: clamp(1.5rem, calc(var(--vw) * 1.9), 2rem);
+    line-height: 1.15;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+
+  /* кнопка прижата к низу карточки: на широком экране карточка вытянута до высоты ползунков */
+  .ncalc-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 22px;
+    margin-top: auto;
+    padding-top: 36px;
+  }
+
+  .ncalc-note {
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: rgb(255 255 255 / 0.64);
+  }
+
+  /* ── Планшет: ползунки два на два, под ними результат во всю ширину ── */
+  @media (max-width: 1199.98px) {
+    .ncalc {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ncalc-in {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 36px;
+      row-gap: 26px;
+    }
+
+    .ncalc-sum {
+      font-size: 3.75rem;
+    }
+  }
+
+  /* ── Телефон: ползунки столбиком, результат ниже ── */
+  @media (max-width: 759.98px) {
+    .ncalc-in {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 18px;
+    }
+
+    .ncalc-sum {
+      /* «252 000 000 ₽» (все ползунки на максимуме) умещается в строку и на экране 360 px */
+      font-size: clamp(2.25rem, calc(var(--vw) * 11), 2.75rem);
+    }
+
+    .ncalc-year {
+      font-size: 1rem;
+    }
+
+    .ncalc-stat-name {
+      font-size: 14.5px;
+    }
+
+    .ncalc-stat-val {
+      font-size: clamp(1.125rem, calc(var(--vw) * 5.6), 1.375rem);
+    }
+
+    .ncalc-foot {
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+      padding-top: 28px;
+    }
+
+    /* если подпись не уместилась в строку (узкий телефон) — две ровные строки */
+    .ncalc-cta {
+      padding-block: 12px;
+      white-space: normal;
+      text-align: center;
+      text-wrap: balance;
+      line-height: 1.25;
+    }
+  }
+
+  /* Телефон: без стрелки подпись кнопки умещается в одну строку на экране 390 px */
+  @media (max-width: 479.98px) {
+    .ncalc-cta {
+      font-size: 15px;
+    }
+
+    .ncalc-cta :global(svg) {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // Стоимость системы, ₽ — константа лендинга для окупаемости (то же число — SYSTEM_COST в шапке файла).
+  // На странице не показывается.
+  const SYSTEM_COST = 513610;
+  const NB = String.fromCharCode(160); // неразрывный пробел
+
+  const num = (n: number) =>
+    new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Math.round(n)).replace(/\s/g, NB);
+
+  const plural = (n: number, forms: [string, string, string]) => {
+    const a = n % 100;
+    const b = n % 10;
+    if (a >= 11 && a <= 14) return forms[2];
+    if (b === 1) return forms[0];
+    if (b >= 2 && b <= 4) return forms[1];
+    return forms[2];
+  };
+
+  const sayValue = (key: string, v: number) =>
+    key === 'cars'
+      ? `${v} ${plural(v, ['машина', 'машины', 'машин'])}`
+      : key === 'weight'
+        ? `${v} ${plural(v, ['тонна', 'тонны', 'тонн'])}`
+        : key === 'loss'
+          ? `${v}%`
+          : `${num(v)} ₽ за${NB}тонну`;
+
+  document.querySelectorAll<HTMLElement>('[data-ncalc]').forEach((root) => {
+    const ranges = [...root.querySelectorAll<HTMLInputElement>('[data-in]')];
+    const out = (k: string) => root.querySelector<HTMLElement>(`[data-out="${k}"]`)!;
+    const say = root.querySelector<HTMLElement>('[data-say]')!;
+    let sayTimer = 0;
+
+    // announce = false при первом расчёте: при загрузке страницы читать итог вслух незачем
+    const update = (announce = true) => {
+      const v: Record<string, number> = {};
+      for (const el of ranges) {
+        const key = el.dataset.in!;
+        const n = Number(el.value);
+        const min = Number(el.min);
+        const max = Number(el.max);
+        v[key] = n;
+        el.style.setProperty('--p', ((n - min) / (max - min)).toFixed(4));
+        el.setAttribute('aria-valuetext', sayValue(key, n));
+        const shown = root.querySelector<HTMLElement>(`[data-val="${key}"]`);
+        if (shown) shown.textContent = num(n);
+      }
+
+      // формула лендинга (деление на 100 — последним, результат тот же)
+      const perDay = (v.cars * v.weight * v.loss * v.tariff) / 100;
+      const perMonth = perDay * 30;
+      const perYear = perMonth * 12;
+      const payback = perDay > 0 ? Math.ceil(SYSTEM_COST / perDay) : 0;
+
+      out('month').textContent = num(perMonth);
+      out('year').textContent = num(perYear);
+      out('day').textContent = `${num(perDay)}${NB}₽`;
+      out('payback').textContent = payback ? `${num(payback)}${NB}${plural(payback, ['день', 'дня', 'дней'])}` : '—';
+
+      // вслух — одной фразой, когда ползунки затихли: на каждый шаг программа чтения выстроила бы очередь фраз
+      if (!announce) return;
+      window.clearTimeout(sayTimer);
+      sayTimer = window.setTimeout(() => {
+        say.textContent = `Потери в${NB}месяц: ${num(perMonth)}${NB}₽`;
+      }, 900);
+    };
+
+    root.addEventListener('input', () => update());
+    // браузер мог вернуть ползункам прежние значения (кнопка «Назад»)
+    update(false);
+  });
+</script>

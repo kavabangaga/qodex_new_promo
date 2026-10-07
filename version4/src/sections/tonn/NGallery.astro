@@ -1,10 +1,481 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Раздел страницы «QODEX TONN» — «QODEX в действии» [#v-dejstvii] (лендинг, блок B14).
+// Двенадцать настоящих кадров с камер на весовых клиентов — спокойной сеткой (4 × 3, на планшете 3, на телефоне 2
+// колонки). Номера машин на кадрах размыты (решение заказчика): рамки и контрольный лист —
+// .playwright-mcp/qa/tonn/kit-gallery/plates.json и plates-before-after.png; исходники без размытия в public/ не кладём.
+// Дата и время камеры и подпись объекта в углу кадра остаются. Кадр открывается крупно в <dialog>:
+// стрелки на экране и на клавиатуре, смахивание пальцем, Esc и щелчок мимо кадра закрывают.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon from '../../components/Icon.astro';
+import { withBase } from '../../config/site';
+
+// Порядок — как на лендинге (gallery-01 … gallery-12)
+const ALTS = [
+  'Кадр камеры на весовой: самосвал на въезде, номер скрыт',
+  'Кадр камеры на весовой: мусоровоз на въезде, номер скрыт',
+  'Кадр камеры на весовой: фургон на въезде под навесом, номер скрыт',
+  'Кадр камеры на весовой: мусоровоз на выезде у шлагбаума, номер скрыт',
+  'Кадр камеры на весовой: мусоровоз на выезде, рядом будка весовщика, номер скрыт',
+  'Кадр камеры на весовой: мусоровоз на выезде, номер скрыт',
+  'Кадр камеры на весовой: мусоровоз на дальнем краю весов, номер скрыт',
+  'Кадр камеры на весовой: мусоровоз на весах, номер скрыт',
+  'Кадр камеры на весовой: мусоровоз на въезде у шлагбаума, номер скрыт',
+  'Кадр камеры на весовой: трактор с прицепом на весах, номера машин на стоянке скрыты',
+  'Кадр камеры на весовой: мусоровоз на въезде под навесом, номер скрыт',
+  'Кадр камеры на весовой: мусоровоз на выезде у шлагбаума, номер скрыт',
+];
+
+const FRAMES = ALTS.map((alt, i) => {
+  const key = `gallery-${String(i + 1).padStart(2, '0')}`;
+  return {
+    alt,
+    small: withBase(`/media/tonn/${key}-540.webp`),
+    big: withBase(`/media/tonn/${key}-1080.webp`),
+  };
+});
+
+// ширина кадра в сетке: телефон (2 колонки), планшет (3), компьютер (4 колонки в раскладке 1200 px)
+const SIZES = '(max-width: 639.98px) 50vw, (max-width: 1199.98px) 33vw, 290px';
 ---
 
-<section class="section" id="v-dejstvii" aria-labelledby="v-dejstvii-title">
+<section class="section ngl" id="v-dejstvii" aria-labelledby="v-dejstvii-title">
   <div class="container">
-    <h2 id="v-dejstvii-title" class="t-h2">QODEX в действии: для любых весовых площадок</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Кадры с весовых" titleId="v-dejstvii-title">
+      QODEX в действии: для&nbsp;любых весовых площадок
+      <Fragment slot="lead">
+        Современные решения для всех типов весовых — убедитесь в их эффективности и универсальности с&nbsp;QODEX
+      </Fragment>
+    </SectionIntro>
+
+    <ul class="ngl-grid" data-ngl>
+      {
+        FRAMES.map((f, i) => (
+          <li class="ngl-cell" data-reveal style={`--d:${(i % 4) + 1}`}>
+            <button
+              class="ngl-tile"
+              type="button"
+              aria-haspopup="dialog"
+              data-ngl-open={i}
+              data-big={f.big}
+            >
+              <img
+                class="ngl-img"
+                src={f.small}
+                srcset={`${f.small} 540w, ${f.big} 1080w`}
+                sizes={SIZES}
+                width="1080"
+                height="672"
+                alt={f.alt}
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="ngl-zoom" aria-hidden="true">
+                <Icon name="search" size={16} strokeWidth={2.2} />
+              </span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="ngl-note">Номера машин скрыты</p>
   </div>
+
+  <!-- Крупный кадр -->
+  <dialog class="ngl-dlg" aria-label="Кадры с весовых" data-ngl-dlg>
+    <div class="ngl-box">
+      <div class="ngl-stage" data-ngl-stage>
+        <img
+          class="ngl-big"
+          src={FRAMES[0].big}
+          width="1080"
+          height="672"
+          alt={FRAMES[0].alt}
+          decoding="async"
+          draggable="false"
+          data-ngl-big
+        />
+        <button class="ngl-arrow ngl-arrow--prev" type="button" aria-label="Предыдущий кадр" data-ngl-step="-1">
+          <Icon name="arrow-left" size={20} strokeWidth={2} />
+        </button>
+        <button class="ngl-arrow ngl-arrow--next" type="button" aria-label="Следующий кадр" data-ngl-step="1">
+          <Icon name="arrow-right" size={20} strokeWidth={2} />
+        </button>
+      </div>
+      <div class="ngl-bar">
+        <span class="ngl-count" aria-live="polite" data-ngl-count>1 / {FRAMES.length}</span>
+        <button class="ngl-close" type="button" aria-label="Закрыть" data-ngl-close>
+          <Icon name="x" size={20} strokeWidth={2} />
+        </button>
+      </div>
+    </div>
+  </dialog>
 </section>
+
+<style>
+  /* ── Сетка кадров ──────────────────────────────────────── */
+  .ngl-grid {
+    --ngl-gap: clamp(10px, calc(var(--vw) * 1.2), 16px);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--ngl-gap);
+  }
+
+  .ngl-tile {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1080 / 672;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    border-radius: calc(18px * var(--rk));
+    corner-shape: var(--corner);
+    /* страховка для Safari: увеличенный при наведении кадр не выходит за скругление */
+    clip-path: inset(0 round calc(18px * var(--rclip)));
+    background: #dfe3e3;
+    cursor: zoom-in;
+    box-shadow: 0 1px 2px rgb(29 29 31 / 0.06);
+  }
+
+  /* фокус: clip-path срезал бы обычное кольцо снаружи — рисуем его внутри */
+  .ngl-tile:focus-visible {
+    outline: none;
+  }
+
+  .ngl-tile:focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    corner-shape: inherit;
+    box-shadow:
+      inset 0 0 0 3px var(--blue),
+      inset 0 0 0 5px #fff;
+  }
+
+  .ngl-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s var(--ease-out);
+  }
+
+  /* значок «открыть крупно» в правом верхнем углу: дата камеры — слева, подпись объекта — справа внизу */
+  .ngl-zoom {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.92);
+    color: var(--ink);
+    box-shadow: 0 4px 12px -6px rgb(29 29 31 / 0.45);
+    opacity: 0;
+    transform: scale(0.85);
+    transition:
+      opacity 0.3s var(--ease-out),
+      transform 0.4s var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .ngl-tile:hover .ngl-img {
+      transform: scale(1.04);
+    }
+
+    .ngl-tile:hover .ngl-zoom {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .ngl-tile:focus-visible .ngl-zoom {
+    opacity: 1;
+    transform: none;
+  }
+
+  .ngl-note {
+    margin-top: clamp(16px, calc(var(--vw) * 1.6), 22px);
+    font-size: 13.5px;
+    line-height: 1.5;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  /* ── Окно с крупным кадром ─────────────────────────────── */
+  .ngl-dlg {
+    width: min(
+      1080px,
+      calc(var(--vw) * 100 - 32px),
+      calc((var(--dvh) * 100 - 112px) * 1080 / 672)
+    );
+    max-width: none;
+    max-height: calc(var(--dvh) * 100 - 24px);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+    color: var(--ink);
+  }
+
+  .ngl-dlg::backdrop {
+    background: rgb(29 29 31 / 0.62);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .ngl-dlg[open] .ngl-box {
+    animation: ngl-in 0.4s var(--ease-out);
+  }
+
+  .ngl-dlg[open]::backdrop {
+    animation: ngl-fade 0.3s ease;
+  }
+
+  @keyframes ngl-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.97);
+    }
+  }
+
+  @keyframes ngl-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .ngl-box {
+    padding: 8px;
+    border-radius: calc(26px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card-warm);
+    box-shadow: 0 40px 120px -30px rgb(0 0 0 / 0.55);
+  }
+
+  .ngl-stage {
+    position: relative;
+    aspect-ratio: 1080 / 672;
+    overflow: hidden;
+    border-radius: calc(18px * var(--rk));
+    corner-shape: var(--corner);
+    background: #dfe3e3;
+    touch-action: pan-y;
+  }
+
+  .ngl-big {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.25s var(--ease-out);
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .ngl-big.is-loading {
+    opacity: 0;
+  }
+
+  /* круглые белые стрелки по краям кадра */
+  .ngl-arrow {
+    position: absolute;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin-top: -24px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.94);
+    color: var(--ink);
+    box-shadow: 0 6px 18px -8px rgb(29 29 31 / 0.5);
+    transition: transform 0.3s var(--ease-out);
+  }
+
+  .ngl-arrow--prev {
+    left: 14px;
+  }
+
+  .ngl-arrow--next {
+    right: 14px;
+  }
+
+  @media (hover: hover) {
+    .ngl-arrow:hover {
+      transform: scale(1.06);
+    }
+  }
+
+  .ngl-arrow:focus-visible {
+    outline-color: #fff;
+    box-shadow:
+      0 0 0 3px var(--blue),
+      0 6px 18px -8px rgb(29 29 31 / 0.5);
+  }
+
+  .ngl-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 4px 0 14px;
+  }
+
+  .ngl-count {
+    font-size: 14px;
+    font-weight: 560;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ngl-close {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: calc(12px * var(--rk));
+    corner-shape: var(--corner);
+    background: transparent;
+    color: var(--ink);
+    transition: background-color 0.2s;
+  }
+
+  .ngl-close:hover {
+    background: var(--panel-2);
+  }
+
+  /* ── Планшет: три колонки ──────────────────────────────── */
+  @media (max-width: 1199.98px) {
+    .ngl-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* ── Телефон: две колонки, сетка чуть шире — до краёв экрана с небольшим полем ── */
+  @media (max-width: 639.98px) {
+    .ngl-grid {
+      --ngl-gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-inline: calc(var(--page-pad) - var(--gutter));
+    }
+
+    .ngl-tile {
+      border-radius: calc(14px * var(--rk));
+      corner-shape: var(--corner);
+      clip-path: inset(0 round calc(14px * var(--rclip)));
+    }
+
+    .ngl-box {
+      padding: 6px;
+      border-radius: calc(20px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .ngl-stage {
+      border-radius: calc(14px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .ngl-arrow {
+      width: 44px;
+      height: 44px;
+      margin-top: -22px;
+    }
+
+    .ngl-arrow--prev {
+      left: 8px;
+    }
+
+    .ngl-arrow--next {
+      right: 8px;
+    }
+  }
+</style>
+
+<script>
+  // Крупный кадр в <dialog>: открывается нажатием на кадр сетки; стрелки (кнопки и клавиши ← →),
+  // смахивание пальцем, Esc и щелчок по подложке. Пока окно открыто, страница не прокручивается
+  // (класс is-modal у <html> — тот же, что у окна заявки). При закрытии фокус возвращается на кадр.
+  const dlg = document.querySelector<HTMLDialogElement>('[data-ngl-dlg]');
+  const tiles = [...document.querySelectorAll<HTMLButtonElement>('[data-ngl-open]')];
+
+  if (dlg && tiles.length && typeof dlg.showModal === 'function') {
+    const html = document.documentElement;
+    const big = dlg.querySelector<HTMLImageElement>('[data-ngl-big]')!;
+    const count = dlg.querySelector<HTMLElement>('[data-ngl-count]')!;
+    const stage = dlg.querySelector<HTMLElement>('[data-ngl-stage]')!;
+    let index = 0;
+    let opener: HTMLButtonElement | null = null;
+
+    const show = (i: number) => {
+      index = (i + tiles.length) % tiles.length;
+      const tile = tiles[index];
+      const src = tile.dataset.big ?? '';
+      const alt = tile.querySelector('img')?.alt ?? '';
+      count.textContent = `${index + 1} / ${tiles.length}`;
+      if (big.getAttribute('src') === src) return;
+      big.classList.add('is-loading');
+      big.alt = alt;
+      big.src = src;
+      if (big.complete) big.classList.remove('is-loading');
+    };
+    big.addEventListener('load', () => big.classList.remove('is-loading'));
+    big.addEventListener('error', () => big.classList.remove('is-loading'));
+
+    tiles.forEach((tile, i) =>
+      tile.addEventListener('click', () => {
+        opener = tile;
+        show(i);
+        dlg.showModal();
+        html.classList.add('is-modal');
+        dlg.querySelector<HTMLButtonElement>('[data-ngl-close]')?.focus({ preventScroll: true });
+      }),
+    );
+
+    dlg.querySelectorAll<HTMLButtonElement>('[data-ngl-step]').forEach((btn) =>
+      btn.addEventListener('click', () => show(index + Number(btn.dataset.nglStep))),
+    );
+    dlg.querySelector('[data-ngl-close]')?.addEventListener('click', () => dlg.close());
+    // щелчок по подложке (мимо окна)
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) dlg.close();
+    });
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        show(index - 1);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        show(index + 1);
+      }
+    });
+    dlg.addEventListener('close', () => {
+      html.classList.remove('is-modal');
+      opener?.focus({ preventScroll: true });
+    });
+
+    // смахивание пальцем по кадру: влево — следующий, вправо — предыдущий
+    let start: { id: number; x: number; y: number } | null = null;
+    stage.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse') return;
+      start = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    });
+    stage.addEventListener('pointerup', (e) => {
+      if (!start || e.pointerId !== start.id) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      start = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) show(index + (dx < 0 ? 1 : -1));
+    });
+    stage.addEventListener('pointercancel', () => {
+      start = null;
+    });
+  }
+</script>

@@ -1,10 +1,2132 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Раздел 6 страницы «QODEX TONN» [#kak-eto-rabotaet] — «Как это работает».
+// Часть 1: слева четыре шага (тексты шагов с главной), справа на бирюзовом градиенте — нарисованная весовая.
+// Шаги идут сами, пока сцена на экране: у активного шага заполняется полоса, затем включается следующий;
+// нажатый шаг сразу показывается в сцене. Сцена: мусоровоз подъезжает к шлагбауму, камера читает номер
+// «А983ВВ 102», шлагбаум поднимается; машина заезжает на весы, вес растёт до 18 420 кг, обзорная камера
+// снимает кузов; акт уходит в облако; о подозрительном взвешивании приходит уведомление.
+// Сцену скринридер не читает (aria-hidden ставит GradientVisual) — смысл несут кнопки шагов и их тексты.
+// Без анимации («уменьшить движение») сцена показывает итог выбранного шага.
+// Часть 2: «Интеллектуальный контроль, который окупает себя» — четыре бежевые плитки с мостиками (блок 9 лендинга).
+import SectionIntro from '../../components/SectionIntro.astro';
+import GradientVisual from '../../components/GradientVisual.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = String.fromCharCode(160); // неразрывный пробел
+
+// Шаги — тексты с главной дословно. ms — сколько шаг идёт при автопрокрутке: движение сцены и пауза после него
+const STEPS: { title: string; text: string; icon: IconName; ms: number }[] = [
+  { title: 'Въезд', text: 'Номер машины распознаётся на въезде.', icon: 'scan-line', ms: 5800 },
+  { title: 'Взвешивание', text: 'Вес и фото кузова записываются без ручного ввода.', icon: 'scale', ms: 5800 },
+  { title: 'Акт в облаке', text: `Акт сразу попадает в облако${NB}— задним числом его не исправить.`, icon: 'cloud-upload', ms: 5200 },
+  { title: 'Уведомление', text: 'О подозрительном взвешивании система сразу уведомляет.', icon: 'bell-ring', ms: 5000 },
+];
+
+// Блок 9 лендинга (решения заказчика: уведомления только «в приложение», «монтаж от 3 дней», «любых автовесов»)
+const PERKS: { icon: IconName; title: string; text: string }[] = [
+  {
+    icon: 'smartphone',
+    title: 'Мгновенный контроль в кармане',
+    text: 'Получайте уведомления о подозрительных рейсах и попытках обмана прямо в приложение. Вы узнаете о внештатной ситуации в ту же секунду, даже если находитесь в другом городе.',
+  },
+  {
+    icon: 'laptop-check',
+    title: 'Подходит для любых автовесов',
+    text: 'Вам не нужно менять старое оборудование. Решения QODEX легко интегрируются с любыми весовыми платформами, превращая обычные весы в современный цифровой пост за один выезд.',
+  },
+  {
+    icon: 'atomic-power',
+    title: `Молниеносный запуск${NB}— монтаж от 3${NB}дней`,
+    text: `Монтаж и настройка занимают от 3${NB}дней и не требуют сложных подготовительных работ. Начинайте экономить и видеть реальный грузооборот уже на этой неделе.`,
+  },
+  {
+    icon: 'chart-bar-line',
+    title: 'Аналитика, которая исключает воровство',
+    text: 'Забудьте о ручных журналах и ошибках в 1С. Получайте автоматические отчёты по прибыли и отгрузкам, на основе которых легко принимать решения и исключать любые финансовые потери.',
+  },
+];
+
+// ── Демо-данные сцены (номер — как на главной; нетто = брутто − тара) ──
+const PLATE = `А983ВВ${NB}102`;
+const ACT = `Акт №${NB}268101`;
+const KG = (n: string) => n.replace(' ', NB);
+
+// ── Сцена 900×640 (рисунок, не фото). Весы — x 420…876, колёса стоят на y 532. Машина у шлагбаума —
+//    x −4…356, на весах — x 468…828 (сдвиг 472). Мачта с камерами — x 440. Широкий кадр показывает сцену
+//    целиком, узкий — окно 600 единиц, которое едет за машиной (--pan) ──
+const POSTS = Array.from({ length: 20 }, (_, i) => `M${14 + i * 46} 398v50`).join('');
+const RIBS = Array.from({ length: 9 }, (_, i) => `M${464 + i * 46} 539v8`).join('');
+
+const BACKDROP =
+  `<rect x="-40" y="-600" width="980" height="1240" fill="#e2eaf0"/>` +
+  // вдали: тело полигона с уступами справа, холм слева, ангар сортировки, деревья
+  `<path d="M452 400C508 356 584 334 662 330L806 324C852 326 884 340 930 362V400Z" fill="#d6dfe6"/>` +
+  `<path d="M536 372C598 354 672 348 776 346M604 352C654 342 714 338 794 336" stroke="#cbd5dd" stroke-width="2" fill="none"/>` +
+  `<path d="M-20 400C34 370 112 358 182 364C232 368 266 384 296 400Z" fill="#d9e1e7"/>` +
+  `<rect x="150" y="352" width="148" height="48" fill="#d2dce3"/><path d="M144 354Q224 318 304 354Z" fill="#c8d3db"/>` +
+  `<rect x="176" y="368" width="22" height="32" rx="2" fill="#c9d4dc"/><rect x="214" y="370" width="64" height="12" rx="2" fill="#c9d4dc"/>` +
+  `<circle cx="342" cy="382" r="20" fill="#d2dce3"/><circle cx="372" cy="390" r="13" fill="#d6e0e6"/>` +
+  `<circle cx="866" cy="378" r="18" fill="#d2dce3"/>` +
+  // забор, дорога с разметкой, бордюр, тротуар
+  `<rect y="396" width="900" height="52" fill="#ccd6dd"/><path d="M0 407H900${POSTS}" stroke="#bac5cd" stroke-width="2"/>` +
+  `<rect y="448" width="900" height="120" fill="#c3ccd4"/>` +
+  `<path d="M0 492H900" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-dasharray="28 24"/>` +
+  `<rect y="566" width="900" height="8" fill="#aab5be"/><rect y="574" width="900" height="66" fill="#d1d9df"/>`;
+
+// Весы: стальной настил со светлой кромкой, рёбра на боковине, пандусы, фундамент
+const DECK =
+  `<rect x="412" y="548" width="472" height="7" rx="1.5" fill="#a3aeb7"/>` +
+  `<path d="M420 532 400 548H420ZM876 532 896 548H876Z" fill="#9aa6b0"/>` +
+  `<rect x="420" y="532" width="456" height="16" rx="2" fill="#8d99a4"/>` +
+  `<rect x="420" y="532" width="456" height="4" rx="1.5" fill="#b8c2ca"/>` +
+  `<path d="${RIBS}" stroke="#7d8a95" stroke-width="2"/>`;
+
+// Мачта за весами: внизу камера номеров (смотрит навстречу машине), наверху на вылете — обзорная камера над кузовом
+const MAST =
+  `<rect x="434" y="528" width="20" height="6" rx="2" fill="#6f7c88"/>` +
+  `<rect x="440" y="318" width="8" height="212" rx="3" fill="#6f7c88"/>` +
+  `<path d="M440 418h-8" stroke="#6f7c88" stroke-width="4"/>` +
+  `<rect x="404" y="410" width="30" height="15" rx="4" fill="#f4f6f9" stroke="#8d9aa5" stroke-width="1.5"/>` +
+  `<path d="M403 408.5h22" stroke="#8d9aa5" stroke-width="3" stroke-linecap="round"/>` +
+  `<circle cx="409" cy="417.5" r="3.6" fill="#006bff"/>` +
+  `<path d="M444 322H486" stroke="#6f7c88" stroke-width="5" stroke-linecap="round"/>` +
+  `<g transform="rotate(34 488 328)"><rect x="476" y="321" width="27" height="14" rx="4" fill="#f4f6f9" stroke="#8d9aa5" stroke-width="1.5"/>` +
+  `<path d="M478 319.5h22" stroke="#8d9aa5" stroke-width="3" stroke-linecap="round"/><circle cx="498" cy="328" r="3.4" fill="#006bff"/></g>`;
+
+// Мусоровоз сбоку, кабиной вправо (тот же рисунок, что на странице QODEX Tracker). Свои координаты:
+// задний борт — x 0, крыша кузова — y 0, низ колёс — y 172. У шлагбаума: translate(−8 360)
+const TRUCK =
+  `<path d="M60 2H38q-8 0-11 7L4 90q-3 8 0 15l3 10q2 5 8 5h45Z" fill="#8f9ca7"/>` +
+  `<path d="M33 16 12 88" stroke="#7f8c97" stroke-width="2"/>` +
+  `<path d="M45 24 39 80" stroke="#6f7c88" stroke-width="4" stroke-linecap="round"/>` +
+  `<path d="M6 98h24v22H14q-4 0-5-4l-4-11q-1-4 1-7Z" fill="#76838e"/>` +
+  `<rect x="11" y="72" width="5" height="11" rx="1.5" fill="#e5484d"/>` +
+  `<rect x="58" width="196" height="126" rx="12" fill="#eef2f5" stroke="#cdd5de" stroke-width="2"/>` +
+  `<path d="M104 10v106M150 10v106M196 10v106" stroke="#dce3e9" stroke-width="3"/>` +
+  `<rect x="59" y="78" width="194" height="13" fill="#a8ddd7"/>` +
+  `<path d="M254 128V42q0-16 16-16h48q9 0 13 7l21 37q4 7 4 15v43Z" fill="#f4f6f9" stroke="#cdd5de" stroke-width="2"/>` +
+  `<path d="M268 38h46q5 0 8 5l17 28q2 4-3 4h-68q-3 0-3-3V41q0-3 3-3Z" fill="#9fb3c6"/>` +
+  `<path d="M282 72 302 40h12l-20 32Z" fill="#fff" fill-opacity=".3"/>` +
+  `<path d="M300 84v38" stroke="#dbe2e8" stroke-width="2"/><rect x="306" y="90" width="12" height="3.5" rx="1.75" fill="#b9c4cc"/>` +
+  `<path d="M347 58h11" stroke="#6f7c88" stroke-width="3"/><rect x="356" y="46" width="5" height="24" rx="2" fill="#6f7c88"/>` +
+  `<rect x="350" y="98" width="8" height="12" rx="2" fill="#fff3c4"/>` +
+  `<rect x="6" y="122" width="350" height="14" rx="4" fill="#45505b"/>` +
+  `<rect x="186" y="128" width="46" height="18" rx="5" fill="#6f7c88"/>` +
+  `<path d="M67 150a27 27 0 0 1 54 0ZM119 150a27 27 0 0 1 54 0ZM279 150a27 27 0 0 1 54 0Z" fill="#45505b"/>` +
+  `<rect x="250" y="132" width="24" height="6" rx="2" fill="#6f7c88"/>` +
+  `<rect x="336" y="118" width="28" height="18" rx="4" fill="#57636e"/>`;
+
+const WHEELS = [94, 146, 306];
+
+// Красно-белая стрела шлагбаума: ось — точка (375, 495), длина 140
+const ARM_STRIPES = Array.from({ length: 6 }, (_, i) => `<rect x="${387 + i * 22}" y="491" width="11" height="8" fill="#e5484d"/>`).join('');
+
+// Кузов сверху — «фото кузова» с обзорной камеры (как в макете весовой на главной)
+const BODY =
+  `<rect width="120" height="80" fill="#9aa6b0"/><rect x="14" y="10" width="92" height="60" rx="6" fill="#55708a"/>` +
+  `<rect x="20" y="16" width="80" height="48" rx="4" fill="#6c7f74"/>` +
+  `<ellipse cx="40" cy="34" rx="16" ry="10" fill="#8a8f6e"/><ellipse cx="70" cy="44" rx="18" ry="11" fill="#a29373"/>` +
+  `<ellipse cx="62" cy="28" rx="11" ry="7" fill="#7f8c96"/><ellipse cx="86" cy="30" rx="9" ry="7" fill="#c2b28f"/>` +
+  `<ellipse cx="34" cy="52" rx="10" ry="6" fill="#5f6b5a"/>`;
+
+// Морда машины крупно — кадр камеры номеров (номер — отдельной табличкой поверх)
+const FRONT =
+  `<rect width="240" height="96" fill="#dfe6ec"/>` +
+  `<rect x="22" y="-10" width="196" height="56" rx="8" fill="#f4f6f9" stroke="#cdd5de" stroke-width="2"/>` +
+  `<rect x="72" y="2" width="96" height="30" rx="5" fill="#57636e"/><path d="M80 10h80M80 17h80M80 24h80" stroke="#76838e" stroke-width="2"/>` +
+  `<rect x="32" y="12" width="28" height="15" rx="5" fill="#fff3c4"/><rect x="180" y="12" width="28" height="15" rx="5" fill="#fff3c4"/>` +
+  `<rect x="10" y="48" width="220" height="30" rx="7" fill="#45505b"/>` +
+  `<rect y="84" width="240" height="12" fill="#c3ccd4"/>`;
+
+// Брутто растёт на табло весов: промежуточные числа, затем итог
+const RISE = ['6 240', '12 970', '17 860'];
 ---
 
 <section class="section" id="kak-eto-rabotaet" aria-labelledby="kak-eto-rabotaet-title">
   <div class="container">
-    <h2 id="kak-eto-rabotaet-title" class="t-h2">Как это работает</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Процесс" titleId="kak-eto-rabotaet-title">
+      Как это работает
+      <Fragment slot="lead">
+        Номер, фото и вес машины на весовой — без ручного ввода. Платите объекту только за реальный вес.
+      </Fragment>
+    </SectionIntro>
+
+    <div class="nhw" data-nhw data-idle>
+      {/* Шаги: вся плитка — кнопка (кнопка в заголовке растянута на плитку), текст шага виден всегда */}
+      <ol class="nhw-steps" data-nhw-list data-reveal style="--d:1">
+        {
+          STEPS.map((s, i) => (
+            <li class:list={['nhw-step', { 'is-on': i === 0 }]} style={`--ms:${s.ms}ms`}>
+              <span class="nhw-step__chip" aria-hidden="true">
+                <Icon name={s.icon} size={22} strokeWidth={1.9} />
+              </span>
+              <div class="nhw-step__body">
+                <h3 class="nhw-step__t">
+                  <button
+                    class="nhw-step__btn"
+                    type="button"
+                    aria-pressed={i === 0 ? 'true' : 'false'}
+                    aria-describedby={`nhw-d${i + 1}`}
+                  >
+                    {s.title}
+                  </button>
+                </h3>
+                <p class="nhw-step__d" id={`nhw-d${i + 1}`}>
+                  {s.text}
+                </p>
+              </div>
+              <span class="nhw-step__bar" aria-hidden="true">
+                <i data-nhw-bar />
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="nhw__visual" data-reveal style="--d:2">
+        <GradientVisual preset="teal" deco="none">
+          <div class="ui nhw-ui">
+            <div class="nhw-stage is-run" data-nhw-stage data-s="1">
+              <svg class="nhw-sc" viewBox="0 0 900 640" preserveAspectRatio="xMidYMax meet" focusable="false">
+                <g set:html={BACKDROP} />
+                <g set:html={DECK} />
+                {/* шаг 2: настил весов подсвечивается, пока идёт взвешивание */}
+                <rect class="nhw-glow" x="420" y="530" width="456" height="6" rx="3" fill="#5ddfd7" />
+                <g set:html={MAST} />
+
+                {/* шаг 2: обзорная камера снимает кузов — луч и вспышка */}
+                <path class="nhw-beam" d="M500 333 528 361H744Z" fill="#fff" fill-opacity=".55" />
+                <circle class="nhw-flash" cx="499" cy="333" r="22" />
+
+                {/* шаг 1: камера номеров «видит» морду машины (луч — под стрелой шлагбаума) */}
+                <path class="nhw-cone" d="M406 418 354 462V512Z" fill="#006bff" fill-opacity=".16" />
+
+                {/* шлагбаум у въезда на весы: стойка и стрела (поднята — итог шага 1) */}
+                <rect x="366" y="490" width="18" height="44" rx="3" fill="#4b5864" />
+                <rect x="363" y="485" width="24" height="8" rx="2.5" fill="#57636e" />
+                <g class="nhw-arm">
+                  <rect x="375" y="491" width="140" height="8" rx="3" fill="#fff" stroke="#a3aeb7" stroke-width="1" />
+                  <g set:html={ARM_STRIPES} />
+                  <circle cx="375" cy="495" r="5.5" fill="#2f3a44" />
+                </g>
+
+                {/* мусоровоз: у шлагбаума (шаг 1) или на весах (шаги 2–4), колёса крутятся в движении */}
+                <g transform="translate(-8 360)">
+                  <g class="nhw-truck">
+                    <g set:html={TRUCK} />
+                    {
+                      WHEELS.map((cx) => (
+                        <g transform={`translate(${cx} 150)`}>
+                          <g class="nhw-wheel">
+                            <circle r="22" fill="#222a31" />
+                            <circle r="10" fill="#8b97a2" />
+                            <path d="M0-6v12M-6 0h12" stroke="#5d6873" stroke-width="2.6" stroke-linecap="round" />
+                          </g>
+                        </g>
+                      ))
+                    }
+                  </g>
+                </g>
+
+                {/* шаг 4: подозрительное взвешивание — машина на весах обведена */}
+                <rect
+                  class="nhw-hl"
+                  x="454"
+                  y="346"
+                  width="390"
+                  height="198"
+                  rx="16"
+                  fill="#f29d38"
+                  fill-opacity=".07"
+                  stroke="#f29d38"
+                  stroke-width="2.5"
+                  stroke-dasharray="9 7"
+                />
+              </svg>
+
+              {/* Весовая — всегда в углу */}
+              <span class="nhw-loc">
+                <Icon name="scale" size={14} strokeWidth={2.2} />
+                <span>Весовая №{NB}1</span>
+                <span class="nhw-loc__t">09:41</span>
+              </span>
+
+              {/* Шаги 3–4: облако, куда уходит акт (значок слева — к нему летит акт, не задевая надпись) */}
+              <span class="nhw-cloud">
+                <span class="nhw-cloud__ico">
+                  <Icon name="cloud-upload" size={18} strokeWidth={2} />
+                  <span class="nhw-cloud__ok">
+                    <Icon name="check" size={10} strokeWidth={3.6} />
+                  </span>
+                </span>
+                <span class="nhw-cloud__txt">
+                  <b>в облаке</b>
+                  <small class="nhw-cloud__sub">{ACT}</small>
+                </span>
+              </span>
+
+              {/* Шаг 1: кадр камеры въезда — номер считывается, рамка, «Номер распознан» */}
+              <div class="nhw-card nhw-card--plate">
+                <p class="nhw-hd">
+                  <b class="nhw-hd__t">Камера въезда</b>
+                  <span class="nhw-pill nhw-pill--ok">
+                    <i class="nhw-live" />
+                    онлайн
+                  </span>
+                </p>
+                <div class="nhw-cam">
+                  <svg viewBox="0 0 240 96" preserveAspectRatio="xMidYMid slice" set:html={FRONT} />
+                  <span class="nhw-plate">
+                    <span class="nhw-plate__num">А{NB}983{NB}ВВ</span>
+                    <span class="nhw-plate__reg">102</span>
+                  </span>
+                  <span class="nhw-cam__box" />
+                  <span class="nhw-cam__scan" />
+                </div>
+                <p class="nhw-row nhw-res">
+                  <span class="nhw-okmark">
+                    <Icon name="check" size={13} strokeWidth={3} />
+                  </span>
+                  <span class="nhw-row__main">
+                    <small>Номер распознан</small>
+                    <b>{PLATE}</b>
+                  </span>
+                </p>
+              </div>
+
+              {/* Шаг 2: вес растёт до итога, обзорная камера снимает кузов */}
+              <div class="nhw-card nhw-card--weigh">
+                <p class="nhw-hd">
+                  <b class="nhw-hd__t">Взвешивание</b>
+                  <span class="nhw-sub">{PLATE}</span>
+                </p>
+                <div class="nhw-weigh">
+                  <div class="nhw-weigh__val">
+                    <small>Брутто</small>
+                    <span class="nhw-weigh__line">
+                      <span class="nhw-num">
+                        {RISE.map((v, k) => (
+                          <b class="nhw-a-blip" style={`--t:${(2.35 + k * 0.32).toFixed(2)}s; --dur:0.32s`}>
+                            {KG(v)}
+                          </b>
+                        ))}
+                        <b class="nhw-a-pop" style="--t:3.31s">
+                          {KG('18 420')}
+                        </b>
+                      </span>
+                      <span class="nhw-kg">кг</span>
+                    </span>
+                    <span class="nhw-pill nhw-pill--ok nhw-a-pop" style="--t:3.6s">
+                      <Icon name="check" size={11} strokeWidth={3} />
+                      стабильно
+                    </span>
+                  </div>
+                  <div class="nhw-photo nhw-a-in" style="--t:2.95s">
+                    <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" set:html={BODY} />
+                    <span class="nhw-photo__flash" />
+                    <span class="nhw-photo__tag">
+                      <Icon name="camera" size={11} strokeWidth={2.2} />
+                      Фото кузова
+                    </span>
+                  </div>
+                </div>
+                <p class="nhw-note nhw-a-in" style="--t:3.9s">
+                  <Icon name="check" size={13} strokeWidth={2.6} />
+                  Без ручного ввода
+                </p>
+              </div>
+
+              {/* Шаг 3: акт — брутто, тара, нетто; копия улетает в облако, акт закрыт для правок */}
+              <div class="nhw-card nhw-card--act">
+                <p class="nhw-hd">
+                  <span class="nhw-doc">
+                    <Icon name="file-text" size={16} strokeWidth={2} />
+                  </span>
+                  <span class="nhw-hd__two">
+                    <b class="nhw-hd__t">{ACT}</b>
+                    <small>{PLATE} · 09:42</small>
+                  </span>
+                </p>
+                <div class="nhw-stats">
+                  <span class="nhw-stat nhw-a-in" style="--t:0.45s">
+                    <small>Брутто, кг</small>
+                    <b>{KG('18 420')}</b>
+                  </span>
+                  <span class="nhw-stat nhw-a-in" style="--t:0.6s">
+                    <small>Тара, кг</small>
+                    <b>{KG('12 960')}</b>
+                  </span>
+                  <span class="nhw-stat nhw-stat--net nhw-a-in" style="--t:0.75s">
+                    <small>Нетто, кг</small>
+                    <b>{KG('5 460')}</b>
+                  </span>
+                </div>
+                <p class="nhw-act__foot">
+                  <span class="nhw-state">
+                    <span class="nhw-pill nhw-pill--info nhw-a-blip" style="--t:0.95s; --dur:1.45s">
+                      <Icon name="cloud-upload" size={12} strokeWidth={2.4} />
+                      отправка
+                    </span>
+                    <span class="nhw-pill nhw-pill--ok nhw-a-pop" style="--t:2.4s">
+                      <Icon name="cloud" size={12} strokeWidth={2.4} />
+                      в облаке
+                    </span>
+                  </span>
+                  <span class="nhw-ro nhw-a-in" style="--t:2.6s">
+                    <Icon name="lock" size={13} strokeWidth={2.2} />
+                    только чтение
+                  </span>
+                </p>
+              </div>
+              <span class="nhw-fly">
+                <Icon name="file-text" size={14} strokeWidth={2.2} />
+              </span>
+
+              {/* Шаг 4: уведомление о подозрительном взвешивании */}
+              <div class="nhw-card nhw-card--alert">
+                <span class="nhw-alert__ico">
+                  <span class="nhw-ring">
+                    <Icon name="bell-ring" size={18} strokeWidth={2} />
+                  </span>
+                  <i class="nhw-alert__dot" />
+                </span>
+                <span class="nhw-alert__txt">
+                  <b>Подозрительное взвешивание:</b>
+                  <span>вес ниже среднего для машины</span>
+                  <small>
+                    {PLATE} · {ACT}
+                  </small>
+                </span>
+              </div>
+            </div>
+          </div>
+        </GradientVisual>
+        <span class="tag tag--demo nhw__demo" aria-hidden="true">демо-данные</span>
+      </div>
+    </div>
+
+    {/* ── Часть 2: интеллектуальный контроль ── */}
+    <div class="nhw-perks">
+      <h3 class="t-h3 nhw-perks__title" data-reveal>Интеллектуальный контроль, который окупает себя</h3>
+      <ul class="nhw-perks__list bridged">
+        {
+          PERKS.map((p, i) => (
+            <li class="nhw-perk" data-reveal style={`--d:${i + 1}`}>
+              <span class="nhw-perk__chip" aria-hidden="true">
+                <Icon name={p.icon} size={24} />
+              </span>
+              <h4 class="nhw-perk__t">{p.title}</h4>
+              <p class="nhw-perk__d">{p.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <p class="nhw__cta" data-reveal>
+      <a href="#forma" class="btn btn--primary" data-interest="tonn" data-goal="pilot_click">
+        Подключить весовую
+        <Icon name="arrow-right" />
+      </a>
+    </p>
   </div>
 </section>
+
+<style>
+  /* ── Часть 1: шаги слева, сцена справа ───────────────── */
+  .nhw {
+    display: grid;
+    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+    align-items: center;
+    column-gap: clamp(32px, calc(var(--vw) * 4.4), 64px);
+  }
+
+  /* ── Шаги: плитки столбиком, пунктир между значками — путь машины ── */
+  .nhw-steps {
+    position: relative;
+    display: grid;
+    gap: 6px;
+  }
+
+  .nhw-steps::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 41px;
+    top: 40px;
+    bottom: 40px;
+    width: 2px;
+    background: repeating-linear-gradient(180deg, var(--line-2) 0 4px, transparent 4px 10px);
+  }
+
+  .nhw-step {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+    padding: 18px 20px 22px;
+    border-radius: calc(20px * var(--rk));
+    corner-shape: var(--corner);
+    transition: background-color 0.35s;
+  }
+
+  .nhw-step.is-on {
+    background: var(--panel);
+  }
+
+  .nhw-step__chip {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: calc(13px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+    transition:
+      background-color 0.35s,
+      color 0.35s;
+  }
+
+  /* у активного шага значок в цвете продукта */
+  .nhw-step.is-on .nhw-step__chip {
+    background: var(--c-tonn);
+    color: #fff;
+  }
+
+  .nhw-step__body {
+    padding-top: 2px;
+  }
+
+  .nhw-step__t {
+    font-size: 20px;
+    font-weight: 560;
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+  }
+
+  /* кнопка в заголовке растянута на всю плитку (::after) — нажать можно в любом месте */
+  .nhw-step__btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    letter-spacing: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.25s;
+  }
+
+  .nhw-step__btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    corner-shape: inherit;
+  }
+
+  .nhw-step__btn:focus-visible {
+    outline: none;
+  }
+
+  .nhw-step__btn:focus-visible::after {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+    border-radius: calc(20px * var(--rk));
+    corner-shape: var(--corner);
+  }
+
+  .nhw-step.is-on .nhw-step__btn {
+    color: var(--ink);
+    cursor: default;
+  }
+
+  @media (hover: hover) {
+    .nhw-step:not(.is-on):hover .nhw-step__btn {
+      color: var(--ink);
+    }
+
+    .nhw-step:not(.is-on):hover .nhw-step__chip {
+      background: var(--panel-2);
+    }
+  }
+
+  .nhw-step__d {
+    margin-top: 4px;
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* полоса шага внизу активной плитки: заполнилась — включается следующий шаг */
+  .nhw-step__bar {
+    position: absolute;
+    left: 80px;
+    right: 22px;
+    bottom: 11px;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(29 29 31 / 0.08);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .nhw-step__bar i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--c-tonn);
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+
+  .nhw-step.is-on .nhw-step__bar {
+    opacity: 1;
+  }
+
+  .nhw-step.is-on .nhw-step__bar i {
+    animation: nhw-progress var(--ms) linear both;
+  }
+
+  .nhw[data-paused] .nhw-step__bar i,
+  .nhw[data-idle] .nhw-step__bar i {
+    animation-play-state: paused;
+  }
+
+  @keyframes nhw-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  /* ── Сцена на градиенте ──────────────────────────────── */
+  .nhw__visual {
+    position: relative;
+    min-width: 0;
+  }
+
+  /* сверху полоса под «демо-данные» */
+  .nhw__visual :global(.gv) {
+    min-height: 0;
+    padding: 52px 30px 30px;
+  }
+
+  .nhw__demo {
+    position: absolute;
+    z-index: 1;
+    top: 14px;
+    left: 20px;
+    pointer-events: none;
+  }
+
+  .nhw-ui {
+    container: nhw-ui / inline-size;
+    width: 100%;
+    padding: 10px;
+    border-radius: 22px;
+  }
+
+  /* Кадр — окно на сцену 900×640: --sw единиц сцены по ширине, --k — высота кадра к ширине. Сцена прижата
+     к низу; кадр выше сцены — сверху остаётся небо под карточки. --pan — сдвиг окна (узкий кадр едет за
+     машиной на весы). --u — единица сцены в пикселях кадра. */
+  .nhw-stage {
+    --sw: 900;
+    --k: 0.7;
+    /* сколько единиц тротуара внизу сцены срезано */
+    --crop: 30;
+    --pan-on: 0;
+    --pan: 0;
+    --u: calc(100cqw / var(--sw));
+    --pad: clamp(10px, 2.4cqw, 16px);
+    --card-top: calc(var(--pad) + 40px);
+    --n-blue: #006bff;
+    --n-blue-soft: #e8f1ff;
+    --n-blue-ink: #0b56c4;
+    --n-ok: #0fa86f;
+    --n-ok-soft: #e1f5ec;
+    --n-ok-ink: #087a52;
+    --n-warn: #f29d38;
+    --n-warn-soft: #fff0da;
+    --n-row: #f5f6f8;
+    position: relative;
+    aspect-ratio: 1 / var(--k);
+    overflow: hidden;
+    isolation: isolate;
+    container-type: inline-size;
+    border-radius: 14px;
+    background: #e2eaf0;
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.3;
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .nhw-stage:not([data-s='1']) {
+    --pan: var(--pan-on);
+  }
+
+  .nhw-sc {
+    position: absolute;
+    left: 0;
+    bottom: calc(var(--crop) * var(--u) * -1);
+    width: calc(900 * var(--u));
+    max-width: none;
+    height: calc(640 * var(--u));
+    transform: translateX(calc(var(--pan) * var(--u) * -1));
+    transition: transform 2.2s cubic-bezier(0.45, 0, 0.25, 1) 0.2s;
+  }
+
+  /* к шагу 1 окно возвращается быстрее — машина уже въезжает слева */
+  .nhw-stage[data-s='1'] .nhw-sc {
+    transition-duration: 1.4s;
+    transition-delay: 0s;
+  }
+
+  /* ── Что видно на каждом шаге (переходы между шагами; движение — ниже) ── */
+  .nhw-card,
+  .nhw-cloud {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition:
+      opacity 0.3s var(--ease-out),
+      transform 0.45s var(--ease-out),
+      visibility 0s linear 0.3s;
+  }
+
+  .nhw-stage[data-s='1'] .nhw-card--plate,
+  .nhw-stage[data-s='2'] .nhw-card--weigh,
+  .nhw-stage[data-s='3'] .nhw-card--act,
+  .nhw-stage[data-s='4'] .nhw-card--alert,
+  .nhw-stage:is([data-s='3'], [data-s='4']) .nhw-cloud {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition-delay: 0s;
+  }
+
+  /* машина на весах; у шлагбаума — только в шаге 1 */
+  .nhw-truck {
+    transform: translateX(472px);
+  }
+
+  .nhw-stage[data-s='1'] .nhw-truck {
+    transform: none;
+  }
+
+  /* стрела поднята; закрыта она только в начале шага 1 */
+  .nhw-arm {
+    transform-box: view-box;
+    transform-origin: 375px 495px;
+    transform: rotate(-90deg);
+  }
+
+  .nhw-cone,
+  .nhw-glow,
+  .nhw-beam,
+  .nhw-flash,
+  .nhw-hl {
+    opacity: 0;
+    transition: opacity 0.35s;
+  }
+
+  .nhw-stage[data-s='1'] .nhw-cone,
+  .nhw-stage[data-s='2'] :is(.nhw-glow, .nhw-beam),
+  .nhw-stage[data-s='4'] .nhw-hl {
+    opacity: 1;
+  }
+
+  .nhw-wheel,
+  .nhw-flash,
+  .nhw-hl {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .nhw-flash {
+    fill: #fff;
+    stroke: #4f9bff;
+    stroke-width: 3;
+  }
+
+  /* ── Плашки поверх сцены ─────────────────────────────── */
+  .nhw-loc {
+    position: absolute;
+    z-index: 3;
+    left: var(--pad);
+    top: var(--pad);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 11px 0 9px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 6px 16px -10px rgb(29 29 31 / 0.45);
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .nhw-loc :global(svg) {
+    color: var(--c-tonn);
+  }
+
+  .nhw-loc__t {
+    font-weight: 500;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* облако: значок слева — к нему летит акт; ширина задана: по ней считается, куда летит акт */
+  .nhw-cloud {
+    --cw: 152px;
+    position: absolute;
+    z-index: 3;
+    right: var(--pad);
+    top: var(--pad);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: var(--cw);
+    padding: 7px 10px 7px 7px;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(29 29 31 / 0.04),
+      0 14px 28px -14px rgb(29 29 31 / 0.45);
+    white-space: nowrap;
+  }
+
+  .nhw-cloud__txt {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .nhw-cloud__txt b {
+    font-weight: 600;
+  }
+
+  .nhw-cloud__sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .nhw-cloud__ico {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 9px;
+    background: var(--n-blue-soft);
+    color: var(--n-blue);
+  }
+
+  .nhw-cloud__ok {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--n-ok);
+    color: #fff;
+  }
+
+  /* копия акта летит из шапки карточки акта (центр значка — pad + 27 px) к значку облака
+     (центр — 7 + 15 px от левого верхнего угла облака шириной --cw) */
+  .nhw-fly {
+    --cw: 152px;
+    --fx: calc(2 * var(--pad) + 27px + var(--cw) - 22px - 100cqw);
+    --fy: calc(var(--card-top) + 5px - var(--pad));
+    position: absolute;
+    z-index: 4;
+    left: calc(100cqw - var(--pad) - var(--cw) + 22px - 14px);
+    top: calc(var(--pad) + 8px);
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(0 107 255 / 0.25),
+      0 8px 18px -8px rgb(29 29 31 / 0.5);
+    color: var(--n-blue);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ── Карточки шагов ──────────────────────────────────── */
+  .nhw-card {
+    position: absolute;
+    z-index: 3;
+    left: var(--pad);
+    top: var(--card-top);
+    display: grid;
+    gap: 10px;
+    width: 300px;
+    padding: 12px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(29 29 31 / 0.04),
+      0 16px 32px -16px rgb(29 29 31 / 0.45);
+  }
+
+  /* в широком кадре номер читается у шлагбаума слева — карточка камеры справа, над весами */
+  .nhw-card--plate {
+    left: auto;
+    right: var(--pad);
+    top: var(--pad);
+    width: 270px;
+  }
+
+  .nhw-card--weigh {
+    width: 316px;
+  }
+
+  .nhw-card--alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 320px;
+    box-shadow:
+      0 0 0 1px rgb(242 157 56 / 0.4),
+      0 16px 32px -16px rgb(29 29 31 / 0.45);
+  }
+
+  .nhw-hd {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 24px;
+  }
+
+  .nhw-hd__t {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .nhw-hd__two {
+    display: grid;
+    gap: 1px;
+  }
+
+  .nhw-hd small,
+  .nhw-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .nhw-hd > :last-child:not(:first-child) {
+    margin-left: auto;
+  }
+
+  .nhw-hd > .nhw-hd__two:last-child {
+    margin-left: 0;
+  }
+
+  .nhw-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--n-row);
+    font-size: 11.5px;
+    font-weight: 560;
+    line-height: 1;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .nhw-pill--ok {
+    background: var(--n-ok-soft);
+    color: var(--n-ok-ink);
+  }
+
+  .nhw-pill--info {
+    background: var(--n-blue-soft);
+    color: var(--n-blue-ink);
+  }
+
+  .nhw-live {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .nhw-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: var(--n-row);
+  }
+
+  .nhw-row__main {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .nhw-row small,
+  .nhw-weigh small,
+  .nhw-stat small {
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .nhw-res {
+    background: var(--n-ok-soft);
+  }
+
+  .nhw-res b {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .nhw-okmark {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--n-ok);
+    color: #fff;
+  }
+
+  /* Кадр камеры въезда: морда машины, номер, рамка распознавания, полоса сканирования */
+  .nhw-cam {
+    position: relative;
+    aspect-ratio: 240 / 96;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #dfe6ec;
+    container-type: inline-size;
+  }
+
+  .nhw-cam svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .nhw-plate {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    display: inline-flex;
+    align-items: stretch;
+    height: 23%;
+    transform: translateX(-50%);
+    border: 1.5px solid #1b2229;
+    border-radius: 4px;
+    background: #fff;
+    color: #11171c;
+    font-size: clamp(10px, 5.4cqw, 14px);
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .nhw-plate__num,
+  .nhw-plate__reg {
+    display: grid;
+    place-items: center;
+  }
+
+  .nhw-plate__num {
+    padding: 0 6px;
+    letter-spacing: 0.02em;
+  }
+
+  .nhw-plate__reg {
+    padding: 0 4px;
+    border-left: 1.5px solid #1b2229;
+    font-size: 0.82em;
+  }
+
+  .nhw-cam__box {
+    position: absolute;
+    left: 26%;
+    top: 44%;
+    width: 48%;
+    height: 39%;
+    border: 2px solid var(--n-blue);
+    border-radius: 7px;
+    box-shadow: 0 0 0 4px rgb(0 107 255 / 0.16);
+  }
+
+  .nhw-cam__scan {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0 44%, rgb(0 107 255 / 0.2) 49%, rgb(0 107 255 / 0.55) 50%, transparent 51% 100%);
+    opacity: 0;
+  }
+
+  /* Вес и фото кузова */
+  .nhw-weigh {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
+    gap: 8px;
+  }
+
+  .nhw-weigh__val {
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: 5px;
+    padding: 10px 11px;
+    border-radius: 12px;
+    background: var(--n-row);
+  }
+
+  .nhw-weigh__line {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  /* числа сменяют друг друга в одной клетке; без движения виден итог */
+  .nhw-num {
+    display: inline-grid;
+    font-size: 27px;
+    font-weight: 600;
+    line-height: 1;
+    /* теснее нельзя: табличные «44», «48» слипаются (DESIGN.md) */
+    letter-spacing: -0.025em;
+  }
+
+  .nhw-num > b {
+    grid-area: 1 / 1;
+    font-weight: inherit;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nhw-kg {
+    font-size: 13px;
+    font-weight: 560;
+    color: var(--muted);
+  }
+
+  .nhw-photo {
+    position: relative;
+    min-height: 92px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #9aa6b0;
+  }
+
+  .nhw-photo svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .nhw-photo__flash {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+  }
+
+  .nhw-photo__tag {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: rgb(29 29 31 / 0.62);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .nhw-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 560;
+    color: var(--n-ok-ink);
+  }
+
+  /* Акт */
+  .nhw-doc {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 9px;
+    background: var(--n-blue-soft);
+    color: var(--n-blue);
+  }
+
+  .nhw-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .nhw-stat {
+    display: grid;
+    gap: 2px;
+    padding: 7px 9px 8px;
+    border-radius: 10px;
+    background: var(--n-row);
+  }
+
+  .nhw-stat b {
+    font-size: 15px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .nhw-stat--net {
+    background: var(--n-blue-soft);
+  }
+
+  .nhw-stat--net small,
+  .nhw-stat--net b {
+    color: var(--n-blue-ink);
+  }
+
+  .nhw-act__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .nhw-state {
+    display: grid;
+  }
+
+  .nhw-state > * {
+    grid-area: 1 / 1;
+    justify-self: start;
+  }
+
+  .nhw-ro {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Уведомление */
+  .nhw-alert__ico {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    border-radius: 11px;
+    background: var(--n-warn-soft);
+    color: #c66d00;
+  }
+
+  .nhw-ring {
+    display: grid;
+    transform-origin: 50% 10%;
+  }
+
+  .nhw-alert__dot {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #e5484d;
+  }
+
+  .nhw-alert__dot::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: #e5484d;
+    opacity: 0;
+  }
+
+  .nhw-alert__txt {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    padding-top: 1px;
+  }
+
+  .nhw-alert__txt b {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .nhw-alert__txt span {
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  .nhw-alert__txt small {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Промежуточное число видно только во время своей анимации; без движения — скрыто */
+  .nhw-a-blip {
+    opacity: 0;
+  }
+
+  /* ── Движение шага: идёт, пока у кадра класс is-run (скрипт снимает и ставит его при смене шага).
+       Без движения у каждого элемента виден итог шага. ── */
+
+  /* 1. Въезд: машина подъезжает к шлагбауму, камера читает номер, рамка, «распознан», стрела вверх */
+  .is-run[data-s='1'] .nhw-truck {
+    animation: nhw-drive-in 2.4s cubic-bezier(0.3, 0.55, 0.25, 1) 0.1s both;
+  }
+
+  .is-run[data-s='1'] .nhw-wheel {
+    animation: nhw-roll-in 2.4s cubic-bezier(0.3, 0.55, 0.25, 1) 0.1s both;
+  }
+
+  .is-run[data-s='1'] .nhw-arm {
+    animation: nhw-arm-up 0.9s cubic-bezier(0.5, 0, 0.2, 1) 4.1s both;
+  }
+
+  .is-run[data-s='1'] .nhw-cone {
+    animation: nhw-cone 1.6s ease 2.4s both;
+  }
+
+  .is-run[data-s='1'] .nhw-card--plate {
+    animation: nhw-in 0.5s var(--ease-out) 2.3s both;
+  }
+
+  .is-run[data-s='1'] .nhw-cam__scan {
+    animation: nhw-scan 1s ease-in-out 2.7s both;
+  }
+
+  .is-run[data-s='1'] .nhw-cam__box {
+    animation: nhw-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) 3.5s both;
+  }
+
+  .is-run[data-s='1'] .nhw-res {
+    animation: nhw-in 0.5s var(--ease-out) 3.7s both;
+  }
+
+  .is-run[data-s='1'] .nhw-live {
+    animation: nhw-blink 1.2s ease-in-out infinite;
+  }
+
+  /* 2. Взвешивание: машина заезжает на весы, вес растёт, обзорная камера снимает кузов */
+  .is-run[data-s='2'] .nhw-truck {
+    animation: nhw-drive-on 2.2s cubic-bezier(0.45, 0, 0.25, 1) 0.2s both;
+  }
+
+  .is-run[data-s='2'] .nhw-wheel {
+    animation: nhw-roll-on 2.2s cubic-bezier(0.45, 0, 0.25, 1) 0.2s both;
+  }
+
+  .is-run[data-s='2'] .nhw-glow {
+    animation: nhw-glow 1.6s ease 2.3s both;
+  }
+
+  .is-run[data-s='2'] .nhw-card--weigh {
+    animation: nhw-in 0.5s var(--ease-out) 2.1s both;
+  }
+
+  .is-run[data-s='2'] .nhw-beam {
+    animation: nhw-fade 0.5s ease 2.8s both;
+  }
+
+  .is-run[data-s='2'] .nhw-flash {
+    animation: nhw-flash 0.75s ease-out 2.9s both;
+  }
+
+  .is-run[data-s='2'] .nhw-photo__flash {
+    animation: nhw-photo-flash 0.6s ease-out 2.95s;
+  }
+
+  /* 3. Акт: появляется, строки по очереди; копия летит в облако; «отправка» → «в облаке» */
+  .is-run[data-s='3'] .nhw-card--act {
+    animation: nhw-in 0.5s var(--ease-out) 0.15s both;
+  }
+
+  .is-run[data-s='3'] .nhw-cloud {
+    animation: nhw-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) 0.8s both;
+  }
+
+  .is-run[data-s='3'] .nhw-cloud__sub {
+    animation: nhw-fade 0.35s ease 2.35s both;
+  }
+
+  .is-run[data-s='3'] .nhw-cloud__ok {
+    animation: nhw-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 2.3s both;
+  }
+
+  .is-run[data-s='3'] .nhw-fly {
+    animation: nhw-fly 1.1s cubic-bezier(0.45, 0, 0.3, 1) 1.3s both;
+  }
+
+  /* 4. Уведомление: машина на весах обведена, уведомление падает сверху, колокольчик звенит */
+  .is-run[data-s='4'] .nhw-hl {
+    animation: nhw-hl 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) 0.25s both;
+  }
+
+  .is-run[data-s='4'] .nhw-card--alert {
+    animation: nhw-drop 0.55s var(--ease-out) 0.6s both;
+  }
+
+  .is-run[data-s='4'] .nhw-ring {
+    animation: nhw-ring 0.9s ease-in-out 1.2s both;
+  }
+
+  .is-run[data-s='4'] .nhw-alert__dot::after {
+    animation: nhw-ping 1.2s ease-out 1.4s 2;
+  }
+
+  /* общие приёмы карточек: строки, «стабильно», числа на табло */
+  .is-run[data-s='2'] .nhw-card--weigh .nhw-a-in,
+  .is-run[data-s='3'] .nhw-card--act .nhw-a-in {
+    animation: nhw-in 0.45s var(--ease-out) both;
+    animation-delay: var(--t);
+  }
+
+  .is-run[data-s='2'] .nhw-card--weigh .nhw-a-pop,
+  .is-run[data-s='3'] .nhw-card--act .nhw-a-pop {
+    animation: nhw-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    animation-delay: var(--t);
+  }
+
+  .is-run[data-s='2'] .nhw-card--weigh .nhw-a-blip,
+  .is-run[data-s='3'] .nhw-card--act .nhw-a-blip {
+    animation: nhw-blip var(--dur) linear forwards;
+    animation-delay: var(--t);
+  }
+
+  /* старт — за левым краем кадра */
+  @keyframes nhw-drive-in {
+    from {
+      transform: translateX(-600px);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  /* 600 / (2π · 22) ≈ 4,34 оборота — колёса катятся, а не скользят */
+  @keyframes nhw-roll-in {
+    from {
+      transform: rotate(-1563deg);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes nhw-drive-on {
+    from {
+      transform: none;
+    }
+    to {
+      transform: translateX(472px);
+    }
+  }
+
+  @keyframes nhw-roll-on {
+    from {
+      transform: none;
+    }
+    to {
+      transform: rotate(1229deg);
+    }
+  }
+
+  @keyframes nhw-arm-up {
+    from {
+      transform: none;
+    }
+    to {
+      transform: rotate(-90deg);
+    }
+  }
+
+  @keyframes nhw-cone {
+    0% {
+      opacity: 0;
+    }
+    25% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+    75%,
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes nhw-scan {
+    0% {
+      opacity: 0;
+      transform: translateY(-48%);
+    }
+    20%,
+    80% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(48%);
+    }
+  }
+
+  @keyframes nhw-glow {
+    0% {
+      opacity: 0;
+    }
+    30% {
+      opacity: 1;
+    }
+    60% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes nhw-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes nhw-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-14px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes nhw-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes nhw-hl {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes nhw-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes nhw-flash {
+    0% {
+      opacity: 0;
+      transform: scale(0.25);
+    }
+    12% {
+      opacity: 0.95;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.6);
+    }
+  }
+
+  @keyframes nhw-photo-flash {
+    from {
+      opacity: 0.9;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes nhw-blink {
+    50% {
+      opacity: 0.3;
+    }
+  }
+
+  /* из шапки карточки акта — вверх и вправо к значку облака, там гаснет */
+  @keyframes nhw-fly {
+    0% {
+      opacity: 0;
+      transform: translate(var(--fx), var(--fy)) scale(0.8);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(var(--fx), var(--fy)) scale(1);
+    }
+    85% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  @keyframes nhw-blip {
+    0%,
+    99.9% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes nhw-ring {
+    0%,
+    100% {
+      transform: none;
+    }
+    15% {
+      transform: rotate(14deg);
+    }
+    30% {
+      transform: rotate(-12deg);
+    }
+    45% {
+      transform: rotate(9deg);
+    }
+    60% {
+      transform: rotate(-6deg);
+    }
+    75% {
+      transform: rotate(3deg);
+    }
+  }
+
+  @keyframes nhw-ping {
+    from {
+      opacity: 0.55;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(2.6);
+    }
+  }
+
+  /* за экраном и на скрытой вкладке движение стоит (data-idle снимает скрипт) */
+  .nhw[data-idle] .nhw-stage *,
+  .nhw[data-idle] .nhw-stage *::after {
+    animation-play-state: paused !important;
+  }
+
+  @media (scripting: none) {
+    .nhw[data-idle] .nhw-stage *,
+    .nhw[data-idle] .nhw-stage *::after,
+    .nhw[data-idle] .nhw-step__bar i {
+      animation-play-state: running !important;
+    }
+  }
+
+  /* Без движения: шаги переключаются только нажатием, сцена сразу показывает итог шага, полоса шага залита */
+  @media (prefers-reduced-motion: reduce) {
+    .nhw-stage *,
+    .nhw-stage *::after,
+    .nhw-step__bar i {
+      animation: none !important;
+    }
+
+    .nhw-sc {
+      transition: none;
+    }
+
+    .nhw-card,
+    .nhw-cloud {
+      transform: none;
+    }
+
+    .nhw-step.is-on .nhw-step__bar i {
+      transform: none;
+    }
+  }
+
+  /* ── Узкий кадр (телефон): окно 600 единиц едет за машиной, сверху больше неба под карточки;
+       карточки — во всю ширину кадра под строкой «Весовая» ── */
+  @container nhw-ui (max-width: 600px) {
+    .nhw-stage {
+      --sw: 600;
+      --k: 1.28;
+      --crop: 36;
+      --pan-on: 300;
+      --card-top: calc(var(--pad) + 44px);
+    }
+
+    /* облако в одну строку: значок меньше, номер акта прячем — о приходе акта говорит галочка */
+    .nhw-cloud {
+      --cw: 114px;
+      gap: 8px;
+      padding: 5px 10px 5px 5px;
+      border-radius: 13px;
+    }
+
+    .nhw-cloud__sub {
+      display: none;
+    }
+
+    .nhw-cloud__ico {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+    }
+
+    .nhw-fly {
+      --cw: 114px;
+      --fx: calc(2 * var(--pad) + 27px + var(--cw) - 18px - 100cqw);
+      --fy: calc(var(--card-top) + 9px - var(--pad));
+      left: calc(100cqw - var(--pad) - var(--cw) + 18px - 14px);
+      top: calc(var(--pad) + 4px);
+    }
+
+    /* кадр камеры ниже, строка «распознан» плотнее — карточка не закрывает машину */
+    .nhw-cam {
+      aspect-ratio: 240 / 72;
+    }
+
+    .nhw-plate {
+      top: 46%;
+      height: 30%;
+    }
+
+    .nhw-cam__box {
+      top: 36%;
+      height: 50%;
+    }
+
+    .nhw-res {
+      padding: 6px 9px;
+    }
+
+    .nhw-okmark {
+      width: 24px;
+      height: 24px;
+    }
+
+    .nhw-card,
+    .nhw-card--plate {
+      left: var(--pad);
+      right: var(--pad);
+      top: var(--card-top);
+      width: auto;
+      max-width: 360px;
+    }
+  }
+
+  /* на узком телефоне «Весовая» и облако в одну строку не помещаются целиком — время прячем */
+  @container nhw-ui (max-width: 300px) {
+    .nhw-loc__t {
+      display: none;
+    }
+
+    .nhw-num {
+      font-size: 24px;
+    }
+  }
+
+  /* ── Часть 2: «Интеллектуальный контроль» — бежевые плитки с мостиками ── */
+  .nhw-perks {
+    --pk-gap: clamp(14px, calc(var(--vw) * 1.8), 24px);
+    --pk-pad: clamp(20px, calc(var(--vw) * 2.2), 28px);
+    --pk-chip: 52px;
+    margin-top: clamp(72px, calc(var(--vw) * 8), 120px);
+  }
+
+  .nhw-perks__title {
+    max-width: 760px;
+    margin: 0 auto clamp(28px, calc(var(--vw) * 3.4), 44px);
+    text-align: center;
+  }
+
+  .nhw-perks__list {
+    --gap: var(--pk-gap);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--pk-gap);
+    isolation: isolate;
+  }
+
+  .nhw-perk {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: var(--pk-pad);
+    border-radius: calc(clamp(20px, calc(var(--vw) * 2), 26px) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  /* мостик к плитке слева — на высоте значка (маски — .bridged в global.css) */
+  .nhw-perk + .nhw-perk::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--pk-pad) + var(--pk-chip) / 2 - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  .nhw-perk__chip {
+    display: grid;
+    place-items: center;
+    width: var(--pk-chip);
+    height: var(--pk-chip);
+    flex: none;
+    border-radius: calc(15px * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+    color: var(--ink);
+    box-shadow:
+      0 1px 2px rgb(29 29 31 / 0.05),
+      0 10px 18px -12px rgb(29 29 31 / 0.22);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  /* при наведении приподнимается значок, а не плитка: стык с мостиком остаётся на месте */
+  .nhw-perk:hover .nhw-perk__chip {
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  .nhw-perk__t {
+    margin-top: 28px;
+    font-size: 1.25rem;
+    font-weight: 560;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .nhw-perk__d {
+    margin-top: 10px;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* ── Кнопка под разделом ─────────────────────────────── */
+  .nhw__cta {
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(32px, calc(var(--vw) * 3.4), 48px);
+  }
+
+  /* ── Уже 1200 px: сцена сверху во всю ширину, шаги под ней 2×2, плитки 2×2 ── */
+  @media (max-width: 1199.98px) {
+    .nhw {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 16px;
+    }
+
+    .nhw__visual {
+      order: -1;
+    }
+
+    .nhw__visual :global(.gv) {
+      padding: 52px clamp(14px, calc(var(--vw) * 3.4), 30px) clamp(14px, calc(var(--vw) * 3.4), 30px);
+    }
+
+    .nhw-steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .nhw-steps::before {
+      content: none;
+    }
+
+    .nhw-perks__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .nhw-perk + .nhw-perk:nth-child(2n + 1)::before {
+      content: none;
+    }
+  }
+
+  /* ── Телефон: шаги и плитки столбиком; мостики — к плитке сверху ── */
+  @media (max-width: 639.98px) {
+    .nhw-steps {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
+    }
+
+    .nhw-steps::before {
+      content: '';
+      left: 37px;
+      top: 36px;
+      bottom: 36px;
+    }
+
+    .nhw-step {
+      gap: 14px;
+      padding: 14px 16px 20px;
+    }
+
+    .nhw-step__chip {
+      width: 42px;
+      height: 42px;
+    }
+
+    .nhw-step__t {
+      font-size: 18px;
+    }
+
+    .nhw-step__d {
+      font-size: 15px;
+    }
+
+    .nhw-step__bar {
+      left: 72px;
+      right: 18px;
+      bottom: 9px;
+    }
+
+    .nhw__visual :global(.gv) {
+      padding: 46px 8px 8px;
+    }
+
+    .nhw__demo {
+      top: 12px;
+      left: 14px;
+    }
+
+    .nhw-ui {
+      padding: 6px;
+      border-radius: 18px;
+      box-shadow:
+        0 0 0 6px rgb(255 255 255 / 0.4),
+        var(--shadow-card);
+    }
+
+    .nhw-stage {
+      border-radius: 12px;
+    }
+
+    .nhw-perks {
+      --pk-chip: 46px;
+      --pk-pad: 20px;
+    }
+
+    .nhw-perks__list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .nhw-perk + .nhw-perk::before,
+    .nhw-perk + .nhw-perk:nth-child(2n + 1)::before {
+      content: '';
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--pk-pad) + var(--pk-chip) / 2 - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .nhw-perk__chip {
+      border-radius: calc(13px * var(--rk));
+    }
+
+    .nhw-perk__t {
+      margin-top: 18px;
+      font-size: 1.125rem;
+    }
+
+    .nhw-perk__d {
+      font-size: 15px;
+    }
+
+    .nhw__cta .btn {
+      width: 100%;
+      min-height: 56px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Шаги идут сами: следующий включается, когда полоса активного шага заполнилась.
+  // Полоса и сцена стоят, пока сцена за экраном или вкладка скрыта; полоса стоит, пока курсор над разделом
+  // (шаги или сцена) или фокус клавиатуры в шагах. Нажатый шаг сразу показывается в сцене; стрелки, Home
+  // и End переходят по шагам. При «уменьшить движение» шаги переключаются только нажатием.
+  const root = document.querySelector<HTMLElement>('[data-nhw]');
+  if (root) {
+    const stage = root.querySelector<HTMLElement>('[data-nhw-stage]')!;
+    const list = root.querySelector<HTMLElement>('[data-nhw-list]')!;
+    const items = [...list.querySelectorAll<HTMLElement>(':scope > li')];
+    const buttons = items.map((li) => li.querySelector<HTMLButtonElement>('button')!);
+    const bars = items.map((li) => li.querySelector<HTMLElement>('[data-nhw-bar]')!);
+    let index = 0;
+    let inView = false;
+    let hover = false;
+    let focus = false;
+
+    const show = (i: number) => {
+      index = (i + items.length) % items.length;
+      items.forEach((li, k) => li.classList.toggle('is-on', k === index));
+      buttons.forEach((btn, k) => btn.setAttribute('aria-pressed', String(k === index)));
+      // движение шага и полоса начинаются заново, даже если нажат тот же шаг
+      stage.classList.remove('is-run');
+      stage.dataset.s = String(index + 1);
+      bars[index].style.animation = 'none';
+      void stage.offsetWidth;
+      bars[index].style.animation = '';
+      stage.classList.add('is-run');
+    };
+
+    const sync = () => {
+      root.toggleAttribute('data-idle', !inView || document.hidden);
+      root.toggleAttribute('data-paused', hover || focus);
+    };
+
+    // фокус после щелчка мышью паузу не ставит — только переход с клавиатуры
+    const byKeyboard = (el: EventTarget | null) => {
+      try {
+        return el instanceof Element && el.matches(':focus-visible');
+      } catch {
+        return true;
+      }
+    };
+
+    // шаг нажат, а сцена (на планшете и телефоне она над шагами) ушла под шапку — подтягиваем её в окно
+    const visual = root.querySelector<HTMLElement>('.nhw__visual')!;
+    const header = document.querySelector<HTMLElement>('[data-hdr]');
+    const reveal = () => {
+      const top = header ? header.getBoundingClientRect().bottom : 0;
+      const r = stage.getBoundingClientRect();
+      if (r.top < top || r.bottom > innerHeight) visual.scrollIntoView({ block: 'nearest' });
+    };
+
+    buttons.forEach((btn, k) =>
+      btn.addEventListener('click', () => {
+        show(k);
+        reveal();
+      }),
+    );
+    list.addEventListener('keydown', (e) => {
+      const k = buttons.indexOf(e.target as HTMLButtonElement);
+      if (k < 0) return;
+      const to =
+        e.key === 'ArrowDown' || e.key === 'ArrowRight' ? k + 1
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? k - 1
+        : e.key === 'Home' ? 0
+        : e.key === 'End' ? items.length - 1
+        : null;
+      if (to === null) return;
+      e.preventDefault();
+      const next = (to + items.length) % items.length;
+      buttons[next].focus();
+      show(next);
+      reveal();
+    });
+    bars.forEach((bar) =>
+      bar.addEventListener('animationend', (e) => {
+        if (e.target === bar && !reducedMotion()) show(index + 1);
+      }),
+    );
+    root.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      hover = true;
+      sync();
+    });
+    root.addEventListener('pointerleave', () => {
+      hover = false;
+      sync();
+    });
+    list.addEventListener('focusin', (e) => {
+      focus = byKeyboard(e.target);
+      sync();
+    });
+    list.addEventListener('focusout', (e) => {
+      if (list.contains(e.relatedTarget as Node | null)) return;
+      focus = false;
+      sync();
+    });
+    document.addEventListener('visibilitychange', sync);
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting;
+          sync();
+        },
+        { threshold: 0.35 },
+      ).observe(stage);
+    } else {
+      inView = true;
+      sync();
+    }
+  }
+</script>

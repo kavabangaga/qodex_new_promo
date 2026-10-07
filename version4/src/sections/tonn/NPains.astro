@@ -1,10 +1,233 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Раздел 3 страницы «QODEX TONN» [#problemy] — «Знакомые проблемы?» (лендинг, блок B03). Бежевая панель.
+// Приём Calendly «интеграции»: четыре белые карточки со значками, соединённые «мостиками» (как плитки
+// «Безопасности» на главной и в РО-БОТе). Заголовки карточек — обычным регистром (на лендинге были капсом),
+// главная цифра «до 15%» выделена в тексте.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = ' ';
+
+// Тексты — с лендинга, дословно (кавычки — ёлочки, точки в конце восстановлены)
+const PAINS: { icon: IconName; title: string; text: string }[] = [
+  {
+    icon: 'wallet',
+    title: 'Хищения на весовой',
+    text: 'Занижение веса, подмена класса груза, сговор водителя с оператором. Весовщику проще «закрыть глаза», чем спорить с потоком машин.',
+  },
+  {
+    icon: 'touch-interaction',
+    title: 'Ручной ввод данных',
+    text: `Оператор вручную вводит номера и вес. Ошибки и умышленные искажения накапливаются незаметно. Потери — <b class="npn-key">до${NB}15%</b> от${NB}оборота.`,
+  },
+  {
+    icon: 'computer-phone-sync',
+    title: 'Нет контроля в реальном времени',
+    text: 'Руководство узнаёт о потерях постфактум — или не узнаёт вовсе. У весовщика все инструменты, чтобы скрыть следы.',
+  },
+  {
+    icon: 'sticky-note',
+    title: 'Сложная отчётность',
+    text: 'Данные в Excel, нет интеграции с 1С и отраслевыми системами учёта. Аналитика занимает часы, а отчётность перед регулятором — головная боль.',
+  },
+];
 ---
 
 <section class="section panel" id="problemy" aria-labelledby="problemy-title">
-  <div class="container">
-    <h2 id="problemy-title" class="t-h2">Знакомые проблемы?</h2>
-    <p class="t-body">Раздел в работе.</p>
+  <div class="container npn">
+    <SectionIntro eyebrow="Проблемы" titleId="problemy-title">
+      Знакомые проблемы?
+      <Fragment slot="lead">
+        80% предприятий с весовыми площадками сталкиваются с этими проблемами. QODEX TONN решает их комплексно.
+      </Fragment>
+    </SectionIntro>
+
+    <!-- Четыре проблемы: белые карточки с мостиками -->
+    <ul class="npn-cards bridged">
+      {
+        PAINS.map((p, i) => (
+          <li class="npn-card" data-reveal style={`--d:${i + 1}`}>
+            <span class="npn-ico" aria-hidden="true">
+              <Icon name={p.icon} size={24} />
+            </span>
+            <h3 class="npn-title">{p.title}</h3>
+            <p class="npn-text" set:html={p.text} />
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </section>
+
+<style>
+  .npn {
+    --npn-gap: clamp(14px, calc(var(--vw) * 1.4), 20px);
+    --npn-r: clamp(22px, calc(var(--vw) * 2), 28px);
+    --npn-pad: clamp(22px, calc(var(--vw) * 2.2), 28px);
+  }
+
+  /* ── Четыре карточки в ряд, соединённые мостиками ─────── */
+  .npn-cards {
+    --gap: var(--npn-gap);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--npn-gap);
+    isolation: isolate;
+  }
+
+  .npn-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    padding: var(--npn-pad);
+    border-radius: calc(var(--npn-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  /* мостик к соседней карточке: слева, на середине высоты (маски — .bridged в global.css) */
+  .npn-card::before,
+  .npn-card::after {
+    position: absolute;
+    background: var(--card);
+  }
+
+  .npn-card::before {
+    content: none;
+    top: calc(50% - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  /* мостик к карточке сверху (планшет и телефон) */
+  .npn-card::after {
+    content: none;
+    top: calc(var(--gap) * -1 - 1px);
+    left: calc(50% - (var(--gap) + 14px) / 2);
+    width: calc(var(--gap) + 14px);
+    height: calc(var(--gap) + 2px);
+    -webkit-mask: var(--bridge-mask-col);
+    mask: var(--bridge-mask-col);
+  }
+
+  .npn-card:not(:first-child)::before {
+    content: '';
+  }
+
+  .npn-ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  /* при наведении приподнимается значок, а не карточка: стыки с мостиками остаются на месте */
+  .npn-card:hover .npn-ico {
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  .npn-title {
+    margin-top: 24px;
+    font-size: clamp(1.125rem, calc(var(--vw) * 1.45), 1.25rem);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .npn-text {
+    margin-top: 10px;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* главная цифра карточки — цветом текста и плотнее */
+  .npn-text :global(.npn-key) {
+    font-weight: 650;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .npn-ico {
+      transition: none;
+    }
+  }
+
+  /* ── Планшет: два на два; мостики — к соседу слева и к карточке сверху ── */
+  @media (max-width: 1199.98px) {
+    .npn-cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .npn-card:not(:first-child)::before {
+      content: none;
+    }
+
+    .npn-card:nth-child(2n)::before,
+    .npn-card:nth-child(n + 3)::after {
+      content: '';
+    }
+  }
+
+  /* ── Телефон: один столбец, значок слева; мостики сверху — под значками ── */
+  @media (max-width: 699.98px) {
+    .npn-cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .npn-card {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      grid-template-areas:
+        'ico title'
+        'ico text';
+      align-content: start;
+      column-gap: 14px;
+      padding: 18px 20px 20px var(--npn-pad);
+    }
+
+    .npn-ico {
+      grid-area: ico;
+      width: 44px;
+      height: 44px;
+      border-radius: calc(13px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .npn-title {
+      grid-area: title;
+      margin-top: 0;
+      font-size: 1.0625rem;
+      text-wrap: pretty;
+    }
+
+    .npn-text {
+      grid-area: text;
+      margin-top: 4px;
+      font-size: 15px;
+    }
+
+    .npn-card:nth-child(2n)::before {
+      content: none;
+    }
+
+    .npn-card:not(:first-child)::after {
+      content: '';
+      left: calc(var(--npn-pad) + 22px - (var(--gap) + 14px) / 2);
+    }
+  }
+</style>

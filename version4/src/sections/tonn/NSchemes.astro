@@ -1,10 +1,1132 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Раздел страницы «QODEX TONN» — «Как воруют на вашей весовой» [#shemy]. Фон страницы.
+// 1. Четыре схемы хищений: бежевые карточки 2×2 с мостиками (на телефоне — столбиком). Над текстом каждой —
+//    маленький рисунок весовой: самосвал на платформе весов и что делают с цифрами. Цифры в рисунках
+//    сходятся с примерами из текста (20 т и 18 т, 15 т при среднем 20 т, «ошибка» на 50 кг).
+//    Рисунок «проигрывается» один раз, когда карточка на экране.
+// 2. Полоса «Посчитаем ваши потенциальные потери»: четыре исходные цифры, итог и ссылка на калькулятор.
+// 3. Строка для регоператора (как на главной) и графитовая полоса с кнопкой заявки.
+// Тексты — с лендинга tonn.qodex.tech (блоки B10 и B15) с правками заказчика.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+// неразрывный пробел (U+00A0)
+const NB = String.fromCharCode(160);
+
+type Art = 'collusion' | 'class' | 'axle' | 'manual';
+
+interface Scheme {
+  title: string;
+  text: string;
+  /** Пояснение — строка HTML (здесь же, без данных извне): «₽/т» не должно рваться по строкам. */
+  note: string;
+  noteIcon: IconName;
+  sum: string;
+  unit: string;
+  art: Art;
+}
+
+const SCHEMES: Scheme[] = [
+  {
+    title: 'Сговор водителя и оператора',
+    text: 'Оператор записывает вес меньше фактического. Разницу делят между собой.',
+    note: `Средняя машина везёт 20${NB}тонн. При занижении на 2${NB}тонны и цене <span class="nobr">1${NB}500${NB}₽/т</span> — потеря 3${NB}000${NB}₽ за${NB}рейс.`,
+    noteIcon: 'calculator',
+    sum: `−3${NB}000${NB}₽`,
+    unit: `за${NB}рейс`,
+    art: 'collusion',
+  },
+  {
+    title: 'Подмена класса отходов',
+    text: 'Груз с высоким тарифом оформляют по низкому. Разницу в цене за тонну делят с весовщиком.',
+    note: 'Работает в любой отрасли с разными классами и фракциями груза.',
+    noteIcon: 'layers',
+    sum: `−70${NB}000${NB}₽`,
+    unit: `за${NB}рейс`,
+    art: 'class',
+  },
+  {
+    title: 'Манипуляции с весами',
+    text: 'Машина не полностью заезжает на платформу или «подвешивается» на бордюр.',
+    note: 'Наша система выявляет аномалии среднего веса машины и оповещает об этом клиента.',
+    noteIcon: 'radar',
+    sum: `−7${NB}500${NB}₽`,
+    unit: `за${NB}рейс`,
+    art: 'axle',
+  },
+  {
+    title: 'Ручные корректировки',
+    text: 'Оператор «случайно» ошибается при вводе данных. Номер не тот, вес округлён вниз.',
+    note: `За 100${NB}машин в${NB}день «ошибки» на 50${NB}кг каждая${NB}= 5${NB}тонн потерь в${NB}день.`,
+    noteIcon: 'calculator',
+    sum: `−200${NB}000${NB}₽`,
+    unit: `в${NB}месяц`,
+    art: 'manual',
+  },
+];
+
+// Пример расчёта с лендинга: 100 машин × 20 т × 5% × 1 500 ₽/т × 30 дней = 4,5 млн ₽ в месяц
+const INPUTS = [
+  { value: '100', label: 'машин в день' },
+  { value: `20${NB}т`, label: 'средний вес' },
+  { value: '5%', label: 'типовые потери' },
+  { value: `1${NB}500${NB}₽`, label: 'цена за тонну' },
+];
+
+// ── Рисунки. Сцена 360×210: дорога (верх на y = 176), платформа весов вровень с дорогой,
+//    будка весовщика справа, самосвал едет вправо. Дорога рисуется далеко за края сцены —
+//    до краёв рисунка любой ширины.
+const INK = '#1d1d1f';
+
+/** Дорога и платформа весов от x0 до x1 с тремя датчиками под ней. */
+function ground(x0: number, x1: number): string {
+  const cells = [x0 + 24, (x0 + x1) / 2, x1 - 24]
+    .map((cx) => `<rect x="${cx - 8}" y="189" width="16" height="6" rx="1.5" fill="${INK}"/>`)
+    .join('');
+  return (
+    `<rect x="-420" y="176" width="1200" height="140" fill="#dfe7ec"/>` +
+    `<path d="M-420 176H780" stroke="#ccd7de" stroke-width="2"/>` +
+    `<rect x="${x0}" y="176" width="${x1 - x0}" height="11" rx="2.5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>` +
+    cells
+  );
+}
+
+const BOOTH =
+  `<rect x="302" y="120" width="40" height="56" rx="5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>` +
+  `<rect x="296" y="111" width="52" height="11" rx="4" fill="${INK}"/>` +
+  `<rect x="310" y="130" width="24" height="16" rx="3" fill="#cfe2ff" stroke="${INK}" stroke-width="2"/>`;
+
+// Самосвал с грузом: кузов 52…200, кабина 206…256, колёса стоят на y = 176
+const TRUCK =
+  `<rect x="52" y="145" width="202" height="7" rx="3" fill="${INK}"/>` +
+  `<path d="M58 99C76 84 98 81 118 87C140 77 168 80 194 99Z" fill="#eadfca" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>` +
+  `<path d="M52 98H200L196 145H58Z" fill="#fff" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>` +
+  `<path d="M96 104v35M136 104v35M176 104v35" stroke="${INK}" stroke-opacity=".2" stroke-width="2.5" stroke-linecap="round"/>` +
+  `<path d="M206 145V110a8 8 0 0 1 8-8h22a8 8 0 0 1 7 4l12 21a8 8 0 0 1 1 4V145Z" fill="#fff" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>` +
+  `<path d="M214 110h20l10 17h-30Z" fill="#cfe2ff" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>` +
+  `<rect x="249" y="133" width="6" height="6" rx="2" fill="#eef3a6" stroke="${INK}" stroke-width="1.75"/>` +
+  [70, 98, 230].map((cx) => `<circle cx="${cx}" cy="163" r="13" fill="${INK}"/><circle cx="${cx}" cy="163" r="5" fill="#fff"/>`).join('');
+
+// Рамка вокруг задней оси, которая стоит мимо платформы (пунктир — в SVG: так его одинаково рисуют все браузеры)
+const ZONE =
+  `<rect x="48" y="140" width="72" height="46" rx="14" fill="#d6293b" fill-opacity=".07" stroke="#d6293b" stroke-width="2" stroke-dasharray="5 5"/>`;
+
+// Платформа во всю длину машины; у «Манипуляций» она начинается за задней осью
+const SCENE: Record<Art, string> = {
+  collusion: ground(24, 284) + BOOTH,
+  class: ground(24, 284) + BOOTH,
+  axle: ground(124, 284) + BOOTH,
+  manual: ground(24, 284) + BOOTH,
+};
 ---
 
-<section class="section" id="shemy" aria-labelledby="shemy-title">
+<section class="section nsch" id="shemy" aria-labelledby="shemy-title">
   <div class="container">
-    <h2 id="shemy-title" class="t-h2">Как воруют на вашей весовой</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Схемы хищений" titleId="shemy-title">
+      Как воруют на&nbsp;вашей весовой
+      <Fragment slot="lead">
+        Эти схемы используются ежедневно на тысячах предприятий. Проверьте — возможно, это происходит и у вас.
+      </Fragment>
+    </SectionIntro>
+
+    <!-- ── 1. Четыре схемы ── -->
+    <ul class="nsch-grid bridged">
+      {
+        SCHEMES.map((s, i) => (
+          <li class="nsch-card" data-reveal style={`--d:${(i % 2) + 1}`}>
+            <div class:list={['nsch-art', `nsch-art--${s.art}`]} aria-hidden="true" data-nsch-art>
+              <span class="nsch-stage">
+                <svg class="nsch-scene" viewBox="0 0 360 210" set:html={SCENE[s.art]} />
+
+                {s.art === 'axle' && <svg class="nsch-zone" viewBox="0 0 360 210" set:html={ZONE} />}
+
+                <svg class="nsch-truck" viewBox="0 0 360 210" set:html={TRUCK} />
+
+                {/* 1. Весы показывают 20 т, в акт записано 18 т */}
+                {s.art === 'collusion' && (
+                  <span class="nsch-pair">
+                    <span class="nsch-chip nsch-chip--a">
+                      <small>Весы</small>
+                      <b>20,0{NB}т</b>
+                    </span>
+                    <span class="nsch-ne">
+                      <Icon name="equal-not" size={16} strokeWidth={2.4} />
+                    </span>
+                    <span class="nsch-chip nsch-chip--b">
+                      <small>В акте</small>
+                      <b class="nsch-bad">18,0{NB}т</b>
+                    </span>
+                  </span>
+                )}
+
+                {/* 2. На груз 4 класса клеят ярлык 5 класса */}
+                {s.art === 'class' && (
+                  <>
+                    <span class="nsch-sticker nsch-sticker--old">
+                      4{NB}класс
+                      <i class="nsch-strike" />
+                    </span>
+                    <span class="nsch-sticker nsch-sticker--new">5{NB}класс</span>
+                  </>
+                )}
+
+                {/* 3. Задняя ось мимо платформы: весы показывают 15 т вместо обычных 20 т */}
+                {s.art === 'axle' && (
+                  <span class="nsch-chip nsch-chip--axle">
+                    <small>Весы</small>
+                    <b>15,0{NB}т</b>
+                    <span class="nsch-alert">
+                      <Icon name="triangle-alert" size={13} strokeWidth={2.3} />
+                      ниже среднего
+                    </span>
+                  </span>
+                )}
+
+                {/* 4. Ручной ввод: одна цифра номера не та, 50 кг «округлены» */}
+                {s.art === 'manual' && (
+                  <span class="nsch-pair nsch-pair--manual">
+                    <span class="nsch-chip nsch-chip--plate">
+                      <small>
+                        <Icon name="pencil" size={11} strokeWidth={2.4} />
+                        Госномер
+                      </small>
+                      <b>
+                        А{NB}98<span class="nsch-old">3<i class="nsch-strike" /></span><span class="nsch-new">8</span>{NB}ВВ{NB}102
+                      </b>
+                    </span>
+                    <span class="nsch-chip nsch-chip--weight">
+                      <small>
+                        <Icon name="pencil" size={11} strokeWidth={2.4} />
+                        Нетто, кг
+                      </small>
+                      <b>
+                        20{NB}0<span class="nsch-old">50<i class="nsch-strike" /></span><span class="nsch-new">00</span><i class="nsch-caret" />
+                      </b>
+                    </span>
+                  </span>
+                )}
+              </span>
+            </div>
+
+            <div class="nsch-body">
+              <h3 class="nsch-title">{s.title}</h3>
+              <p class="nsch-text">{s.text}</p>
+              <p class="nsch-note">
+                <span class="nsch-note-ico" aria-hidden="true">
+                  <Icon name={s.noteIcon} size={16} strokeWidth={2} />
+                </span>
+                <span set:html={s.note} />
+              </p>
+              <p class="nsch-loss">
+                <span class="nsch-sum">{s.sum}</span> <span class="nsch-unit">{s.unit}</span>
+              </p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    <!-- ── 2. Пример расчёта потерь ── -->
+    <div class="nsch-calc" data-reveal>
+      <h3 class="nsch-calc-title">Посчитаем ваши потенциальные потери</h3>
+      <ul class="nsch-ins bridged">
+        {
+          INPUTS.map((f) => (
+            <li class="nsch-in">
+              <b class="nsch-in-v">{f.value}</b>
+              <span class="nsch-in-l">{f.label}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="nsch-res">
+        <p class="nsch-res-l">Потери в месяц:</p>
+        <p class="nsch-res-v">4,5{NB}млн{NB}₽</p>
+        <p class="nsch-res-y">или 54{NB}млн{NB}₽ в{NB}год</p>
+        <a href="#kalkulyator" class="link-arrow nsch-res-link">
+          Посчитать для своего объекта
+          <Icon name="arrow-right" />
+        </a>
+      </div>
+    </div>
+
+    <!-- ── 3. Для регоператора ── -->
+    <div class="nsch-ro" data-reveal>
+      <span class="nsch-ro-ico" aria-hidden="true">
+        <Icon name="file-text" size={20} />
+      </span>
+      <div class="nsch-ro-body">
+        <p class="nsch-ro-t">
+          <b>Для регоператора:</b> приписки в актах — до{NB}57% тоннажа, «бумажные» тонны
+        </p>
+        <p class="footnote">57% — март 2025 к{NB}марту 2024, 4{NB}района Башкортостана.</p>
+      </div>
+    </div>
+
+    <!-- ── 4. Графитовая полоса с кнопкой заявки ── -->
+    <div class="nsch-band dark" data-reveal>
+      <div class="nsch-band-text">
+        <p class="nsch-band-label">
+          <span class="nsch-band-dot" aria-hidden="true"></span>
+          1{NB}месяц бесплатно после запуска
+        </p>
+        <h3 class="nsch-band-title">Начните контролировать весовую уже через 3&nbsp;дня</h3>
+        <p class="nsch-band-p">Покажем ваши реальные потери и запустим систему без остановки работы предприятия.</p>
+      </div>
+      <a href="#forma" class="btn btn--light nsch-band-cta" data-interest="tonn" data-goal="pilot_click">
+        Узнайте, соответствует ли ваш объект
+        <Icon name="arrow-right" />
+      </a>
+    </div>
   </div>
 </section>
+
+<style>
+  .nsch {
+    --nsch-gap: clamp(14px, calc(var(--vw) * 1.4), 20px);
+    --nsch-r: clamp(22px, calc(var(--vw) * 2), 28px);
+    --nsch-in: 10px;
+    --nsch-art-h: 236px;
+    /* масштаб сцены рисунка: на широких карточках рисунок крупнее */
+    --nsch-k: 1;
+  }
+
+  /* ── 1. Карточки схем 2×2 с мостиками ─────────────────── */
+  .nsch-grid {
+    --gap: var(--nsch-gap);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--nsch-gap);
+    isolation: isolate;
+  }
+
+  .nsch-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-radius: calc(var(--nsch-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  /* мостик к карточке слева — на середине рисунка */
+  .nsch-card:nth-child(even)::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--nsch-in) + var(--nsch-art-h) / 2 - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  /* мостик к карточке сверху — посередине */
+  .nsch-card:nth-child(n + 3)::after {
+    content: '';
+    position: absolute;
+    top: calc(var(--gap) * -1 - 1px);
+    left: calc(50% - (var(--gap) + 14px) / 2);
+    width: calc(var(--gap) + 14px);
+    height: calc(var(--gap) + 2px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-col);
+    mask: var(--bridge-mask-col);
+  }
+
+  .nsch-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: clamp(20px, calc(var(--vw) * 2), 26px) clamp(20px, calc(var(--vw) * 2.4), 30px) clamp(22px, calc(var(--vw) * 2.2), 28px);
+  }
+
+  .nsch-title {
+    font-size: clamp(1.25rem, calc(var(--vw) * 1.7), 1.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.022em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .nsch-text {
+    max-width: 44ch;
+    margin-top: 10px;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* пример или пояснение — строка со значком */
+  .nsch-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    max-width: 48ch;
+    margin-top: 18px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  .nsch-note-ico {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    margin-top: -3px;
+    border-radius: calc(9px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    color: var(--ink);
+  }
+
+  /* сумма потерь — внизу карточки, у всех на одной линии */
+  .nsch-loss {
+    margin-top: auto;
+    padding-top: 22px;
+  }
+
+  .nsch-loss::before {
+    content: '';
+    display: block;
+    height: 1px;
+    margin-bottom: 18px;
+    background: var(--line-2);
+  }
+
+  .nsch-sum {
+    font-size: clamp(1.9rem, calc(var(--vw) * 2.7), 2.5rem);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    color: var(--danger);
+    white-space: nowrap;
+  }
+
+  .nsch-unit {
+    font-size: 1.0625rem;
+    font-weight: 500;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ── Рисунок: светлая «карточка» внутри карточки ───────── */
+  .nsch-art {
+    position: relative;
+    flex: none;
+    height: var(--nsch-art-h);
+    margin: var(--nsch-in) var(--nsch-in) 0;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: calc(calc(var(--nsch-r) - var(--nsch-in)) * var(--rk));
+    corner-shape: var(--corner);
+    background: #edf3f5;
+    color: var(--ink);
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* сцена постоянного размера по центру: рисунок не растягивается вместе с карточкой */
+  .nsch-stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 360px;
+    height: 210px;
+    margin: -105px 0 0 -180px;
+    transform: scale(var(--nsch-k));
+  }
+
+  .nsch-scene,
+  .nsch-zone,
+  .nsch-truck {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* плашки с цифрами над машиной */
+  .nsch-pair {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .nsch-chip {
+    display: grid;
+    gap: 1px;
+    padding: 7px 12px 8px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow:
+      0 0 0 4px rgb(255 255 255 / 0.45),
+      0 10px 24px -12px rgb(29 29 31 / 0.35);
+    white-space: nowrap;
+  }
+
+  .nsch-chip small {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    line-height: 1.3;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .nsch-chip b {
+    font-size: 18px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    font-weight: 650;
+    color: var(--ink);
+  }
+
+  .nsch-chip b.nsch-bad {
+    color: #b81f30;
+  }
+
+  .nsch-ne {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 6px 16px -8px rgb(29 29 31 / 0.4);
+    color: #b81f30;
+  }
+
+  /* 2. Ярлыки класса на кузове */
+  .nsch-sticker {
+    position: absolute;
+    top: 113px;
+    padding: 5px 10px;
+    border: 1.5px solid var(--ink);
+    border-radius: 7px;
+    background: #fff;
+    font-size: 13.5px;
+    line-height: 1.2;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .nsch-sticker--old {
+    left: 56px;
+  }
+
+  .nsch-sticker--new {
+    left: 126px;
+    top: 96px;
+    border-color: var(--danger);
+    background: #fff1f2;
+    color: #b81f30;
+    box-shadow: 0 8px 18px -10px rgb(29 29 31 / 0.45);
+    transform: rotate(-6deg);
+  }
+
+  /* зачёркивание: в рисунке 2 — прежний ярлык, в рисунке 4 — исправленные цифры */
+  .nsch-strike {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: calc(50% - 1px);
+    height: 2px;
+    border-radius: 1px;
+    background: var(--danger);
+    transform-origin: left center;
+  }
+
+  /* 3. Задняя ось мимо платформы */
+
+
+  .nsch-chip--axle {
+    position: absolute;
+    left: 132px;
+    top: 14px;
+    grid-template-columns: auto auto;
+    column-gap: 10px;
+    align-items: end;
+  }
+
+  .nsch-chip--axle small {
+    grid-column: 1 / -1;
+  }
+
+  .nsch-alert {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 2px;
+    padding: 3px 8px 3px 6px;
+    border-radius: 999px;
+    background: #fff0da;
+    font-size: 11.5px;
+    line-height: 1.2;
+    font-weight: 600;
+    color: #8a4f00;
+  }
+
+  /* 4. Ручной ввод: исправленные цифры */
+  .nsch-pair--manual {
+    gap: 12px;
+  }
+
+  .nsch-chip--plate b,
+  .nsch-chip--weight b {
+    font-size: 17px;
+  }
+
+  .nsch-old {
+    position: relative;
+    color: var(--muted);
+  }
+
+  .nsch-old .nsch-strike {
+    left: -1px;
+    right: -1px;
+  }
+
+  .nsch-new {
+    display: inline-block;
+    margin-left: 1px;
+    padding: 0 2px;
+    border-radius: 4px;
+    background: #ffe4e7;
+    color: #b81f30;
+  }
+
+  .nsch-caret {
+    display: inline-block;
+    width: 2px;
+    height: 17px;
+    margin-left: 2px;
+    vertical-align: -3px;
+    border-radius: 1px;
+    background: var(--ink);
+  }
+
+  /* ── Движение: один раз, когда рисунок на экране ──────────
+     Классы is-armed и is-live ставит скрипт; без них (нет скриптов, «уменьшить движение»)
+     сразу видно итоговое состояние. */
+  .nsch-art.is-armed:not(.is-live) .nsch-chip,
+  .nsch-art.is-armed:not(.is-live) .nsch-ne,
+  .nsch-art.is-armed:not(.is-live) .nsch-sticker--new,
+  .nsch-art.is-armed:not(.is-live) .nsch-zone,
+  .nsch-art.is-armed:not(.is-live) .nsch-alert,
+  .nsch-art.is-armed:not(.is-live) .nsch-new {
+    opacity: 0;
+  }
+
+  .nsch-art.is-armed:not(.is-live) .nsch-strike {
+    transform: scaleX(0);
+  }
+
+  /* 1 и 3: самосвал заезжает на весы */
+  .nsch-art--collusion.is-live .nsch-truck,
+  .nsch-art--axle.is-live .nsch-truck {
+    animation: nsch-drive 1.3s var(--ease-out) 0.1s both;
+  }
+
+  .nsch-art--collusion.is-live .nsch-chip--a {
+    animation: nsch-pop 0.5s var(--ease-out) 1.1s both;
+  }
+
+  .nsch-art--collusion.is-live .nsch-chip--b {
+    animation: nsch-pop 0.5s var(--ease-out) 1.55s both;
+  }
+
+  .nsch-art--collusion.is-live .nsch-ne {
+    animation: nsch-badge 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 2s both;
+  }
+
+  /* 2: поверх ярлыка 4 класса ложится ярлык 5 класса, прежний зачёркивается */
+  .nsch-art--class.is-live .nsch-sticker--new {
+    animation: nsch-stick 0.7s var(--ease-out) 0.6s both;
+  }
+
+  .nsch-art--class.is-live .nsch-strike {
+    animation: nsch-strike 0.45s var(--ease-out) 1.25s both;
+  }
+
+  /* 3: машина встала мимо платформы — рамка, вес и предупреждение */
+  .nsch-art--axle.is-live .nsch-zone {
+    animation: nsch-fade 0.5s ease-out 1.25s both;
+  }
+
+  .nsch-art--axle.is-live .nsch-chip {
+    animation: nsch-pop 0.5s var(--ease-out) 1.5s both;
+  }
+
+  .nsch-art--axle.is-live .nsch-alert {
+    animation: nsch-badge 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 2s both;
+  }
+
+  /* 4: плашки, зачёркивание и новые цифры по очереди, курсор мигает и остаётся */
+  .nsch-art--manual.is-live .nsch-chip--plate {
+    animation: nsch-pop 0.5s var(--ease-out) 0.2s both;
+  }
+
+  .nsch-art--manual.is-live .nsch-chip--weight {
+    animation: nsch-pop 0.5s var(--ease-out) 0.45s both;
+  }
+
+  .nsch-art--manual.is-live .nsch-chip--plate .nsch-strike {
+    animation: nsch-strike 0.35s var(--ease-out) 0.95s both;
+  }
+
+  .nsch-art--manual.is-live .nsch-chip--plate .nsch-new {
+    animation: nsch-pop 0.35s var(--ease-out) 1.25s both;
+  }
+
+  .nsch-art--manual.is-live .nsch-chip--weight .nsch-strike {
+    animation: nsch-strike 0.35s var(--ease-out) 1.6s both;
+  }
+
+  .nsch-art--manual.is-live .nsch-chip--weight .nsch-new {
+    animation: nsch-pop 0.35s var(--ease-out) 1.9s both;
+  }
+
+  .nsch-art--manual.is-live .nsch-caret {
+    animation: nsch-caret 0.9s steps(1) 2.2s 3;
+  }
+
+  @keyframes nsch-drive {
+    from {
+      opacity: 0;
+      transform: translateX(-120px);
+    }
+    35% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes nsch-pop {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  @keyframes nsch-badge {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  @keyframes nsch-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes nsch-stick {
+    from {
+      opacity: 0;
+      transform: translate(14px, -34px) rotate(10deg);
+    }
+  }
+
+  @keyframes nsch-strike {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes nsch-caret {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nsch-art *,
+    .nsch-art *::after {
+      animation: none !important;
+    }
+  }
+
+  /* ── 2. Пример расчёта ─────────────────────────────────── */
+  .nsch-calc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.48fr);
+    grid-template-areas:
+      'title res'
+      'ins res';
+    grid-template-rows: auto 1fr;
+    align-items: stretch;
+    gap: 22px clamp(16px, calc(var(--vw) * 1.6), 20px);
+    margin-top: clamp(40px, calc(var(--vw) * 4.4), 64px);
+    padding: clamp(20px, calc(var(--vw) * 2.6), 34px);
+    border-radius: calc(var(--nsch-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .nsch-calc-title {
+    grid-area: title;
+    font-size: clamp(1.4rem, calc(var(--vw) * 2), 1.75rem);
+    line-height: 1.15;
+    letter-spacing: -0.028em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .nsch-ins {
+    --gap: 12px;
+    grid-area: ins;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--gap);
+    isolation: isolate;
+  }
+
+  .nsch-in {
+    position: relative;
+    display: grid;
+    align-content: space-between;
+    gap: 14px;
+    min-width: 0;
+    padding: 20px 20px 18px;
+    border-radius: calc(16px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  .nsch-in + .nsch-in::before {
+    content: '';
+    position: absolute;
+    top: calc(50% - (var(--gap) + 12px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 12px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  .nsch-in-v {
+    font-size: clamp(1.6rem, calc(var(--vw) * 2.3), 2.25rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .nsch-in-l {
+    font-size: 0.875rem;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+
+  .nsch-res {
+    grid-area: res;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    padding: clamp(20px, calc(var(--vw) * 2), 26px) clamp(20px, calc(var(--vw) * 2.2), 28px);
+    border-radius: calc(20px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .nsch-res-l {
+    font-size: 0.95rem;
+    font-weight: 560;
+    line-height: 1.3;
+  }
+
+  .nsch-res-v {
+    margin-top: 8px;
+    font-size: clamp(2.4rem, calc(var(--vw) * 3.6), 3.25rem);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-weight: 600;
+    color: var(--danger);
+    white-space: nowrap;
+  }
+
+  .nsch-res-y {
+    margin-top: 8px;
+    margin-bottom: 16px;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .nsch-res-link {
+    margin-top: auto;
+    padding-top: 16px;
+  }
+
+  /* ── 3. Строка для регоператора ───────────────────────── */
+  .nsch-ro {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-top: clamp(28px, calc(var(--vw) * 3), 40px);
+    padding-inline: clamp(4px, calc(var(--vw) * 2.6), 34px);
+  }
+
+  .nsch-ro-ico {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex: none;
+    border-radius: calc(12px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .nsch-ro-body {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding-top: 2px;
+  }
+
+  .nsch-ro-t {
+    font-size: clamp(1.06rem, calc(var(--vw) * 1.3), 1.25rem);
+    line-height: 1.4;
+    letter-spacing: -0.012em;
+    font-weight: 500;
+    text-wrap: pretty;
+  }
+
+  .nsch-ro-t b {
+    font-weight: 600;
+  }
+
+  /* ── 4. Графитовая полоса ─────────────────────────────── */
+  .nsch-band {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px clamp(28px, calc(var(--vw) * 4), 64px);
+    margin-top: clamp(28px, calc(var(--vw) * 3), 40px);
+    padding: clamp(26px, calc(var(--vw) * 3), 42px) clamp(22px, calc(var(--vw) * 3.4), 48px);
+    border-radius: calc(var(--nsch-r) * var(--rk));
+    corner-shape: var(--corner);
+    background:
+      radial-gradient(60% 140% at 0% 0%, rgb(93 223 215 / 0.26) 0%, transparent 60%),
+      radial-gradient(45% 140% at 100% 100%, rgb(107 177 255 / 0.24) 0%, transparent 60%),
+      var(--ink);
+    overflow: hidden;
+  }
+
+  .nsch-band-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 560;
+    line-height: 1.3;
+    color: rgb(255 255 255 / 0.86);
+  }
+
+  .nsch-band-dot {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--g-teal);
+  }
+
+  .nsch-band-title {
+    max-width: 22em;
+    margin-top: 12px;
+    font-size: clamp(1.6rem, calc(var(--vw) * 2.5), 2.5rem);
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .nsch-band-p {
+    max-width: 40em;
+    margin-top: 12px;
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    color: rgb(255 255 255 / 0.74);
+    text-wrap: pretty;
+  }
+
+  /* ── Широкие карточки (раскладка 1200+): рисунок крупнее ── */
+  @media (min-width: 1200px) {
+    .nsch {
+      --nsch-art-h: 256px;
+      --nsch-k: 1.14;
+    }
+  }
+
+  /* ── Планшет ──────────────────────────────────────────── */
+  @media (max-width: 1199.98px) {
+    .nsch-calc {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'title'
+        'ins'
+        'res';
+      grid-template-rows: none;
+    }
+
+    /* итог: цифры слева, ссылка справа внизу */
+    .nsch-res {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        'l link'
+        'v link'
+        'y link';
+      align-items: end;
+      column-gap: 24px;
+    }
+
+    .nsch-res-l {
+      grid-area: l;
+    }
+
+    .nsch-res-v {
+      grid-area: v;
+    }
+
+    .nsch-res-y {
+      grid-area: y;
+      margin-bottom: 0;
+    }
+
+    .nsch-res-link {
+      grid-area: link;
+      margin-top: 0;
+      padding-top: 0;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .nsch-band {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .nsch-band-cta {
+      justify-self: start;
+    }
+  }
+
+  /* ── Телефон: карточки столбиком, мостики к карточке сверху ── */
+  @media (max-width: 719.98px) {
+    .nsch {
+      --nsch-art-h: 214px;
+    }
+
+    .nsch-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .nsch-card:nth-child(even)::before {
+      content: none;
+    }
+
+    .nsch-card + .nsch-card::after {
+      content: '';
+      position: absolute;
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(50% - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      background: var(--panel);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .nsch-ins {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* мостики только внутри ряда */
+    .nsch-in:nth-child(odd)::before {
+      content: none;
+    }
+
+    /* итог столбиком, ссылка под ним */
+    .nsch-res {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'l'
+        'v'
+        'y'
+        'link';
+      justify-items: start;
+    }
+
+    .nsch-res-link {
+      margin-top: 18px;
+    }
+
+    .nsch-ro {
+      padding-inline: 0;
+    }
+
+    /* надпись в две строки — по левому краю, стрелка справа */
+    .nsch-band-cta {
+      justify-self: stretch;
+      text-wrap: balance;
+      justify-content: space-between;
+      min-height: 56px;
+      padding-block: 12px;
+      line-height: 1.25;
+      white-space: normal;
+      text-align: left;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .nsch-in {
+      padding: 16px 14px 14px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Рисунки «проигрываются» один раз, когда карточка на экране; за экраном возвращаются в начало.
+  // При «уменьшить движение» классы не ставятся — видно итоговое состояние.
+  const arts = document.querySelectorAll<HTMLElement>('[data-nsch-art]');
+  if (arts.length && !reducedMotion() && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const el = entry.target as HTMLElement;
+          if (entry.intersectionRatio >= 0.45) el.classList.add('is-live');
+          else if (!entry.isIntersecting) el.classList.remove('is-live');
+        }
+      },
+      { threshold: [0, 0.45] },
+    );
+    arts.forEach((el) => {
+      el.classList.add('is-armed');
+      io.observe(el);
+    });
+  }
+</script>

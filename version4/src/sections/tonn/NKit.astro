@@ -1,10 +1,1013 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Раздел страницы «QODEX TONN» — «Как устроена ваша весовая» [#oborudovanie] (лендинг, блок B12).
+// Лендинг встраивал интерактивную схему: фото въезда на весовую и список оборудования, наведение на пункт
+// подсвечивало узел на фото. Здесь та же схема без встраивания: настоящее фото въезда на бирюзовой панели,
+// на нём точки узлов, а «лупа» в углу фото крупно показывает выбранный узел. Слева от списка — фото,
+// справа — семь пунктов-вкладок; пункт переключается сам, пока схема на экране и под ней нет курсора
+// или фокуса. Под схемой — три факта с лендинга: белые плитки с «мостиками».
+// Где узлы на фото — по встраиваемой схеме лендинга (solution-embed: кадрирование под каждый пункт).
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+import { withBase } from '../../config/site';
+
+const NB = '\u00a0';
+
+interface Node {
+  icon: IconName;
+  title: string;
+  qty: string;
+  text?: string;
+  /** Точка узла на фото, доли ширины и высоты. */
+  x: number;
+  y: number;
+  /** Что показывает лупа: центр (доли) и увеличение. */
+  lx?: number;
+  ly?: number;
+  z: number;
+}
+
+// Тексты — с лендинга (там капсом), обычным регистром
+const NODES: Node[] = [
+  { icon: 'cctv', title: 'Обзорная камера', qty: `1${NB}шт.`, text: 'Фотофиксация процесса на весах', x: 0.755, y: 0.541, z: 3.1 },
+  { icon: 'scan-line', title: 'Распознавание госномеров', qty: `2${NB}шт.`, text: 'На въезде и выезде', x: 0.825, y: 0.526, z: 3.1 },
+  { icon: 'camera', title: 'Дополнительные камеры', qty: `2${NB}шт.`, text: 'Фотофиксация наполнения кузова', x: 0.407, y: 0.426, z: 3.2 },
+  { icon: 'server', title: 'Шкаф управления', qty: `1${NB}шт.`, x: 0.512, y: 0.545, z: 2.5 },
+  { icon: 'traffic-light', title: 'Шлагбаум', qty: `2${NB}шт.`, text: 'На въезде и выезде', x: 0.25, y: 0.561, lx: 0.235, ly: 0.6, z: 1.5 },
+  { icon: 'radar', title: 'Фотоэлементы', qty: `2${NB}шт.`, text: 'На въезде и выезде', x: 0.73, y: 0.611, z: 2.7 },
+  { icon: 'magnet', title: 'Индукционная петля', qty: `2${NB}шт.`, text: 'На въезде и выезде', x: 0.215, y: 0.862, lx: 0.225, ly: 0.862, z: 1.05 },
+];
+
+const FACTS: { icon: IconName; text: string }[] = [
+  { icon: 'scale', text: 'Работает с любыми автовесами' },
+  { icon: 'calendar', text: `Монтаж от 3${NB}дней` },
+  { icon: 'video', text: 'Можем поставить весь комплект оборудования или использовать ваши IP-камеры' },
+];
+
+const photo = (w: number) => withBase(`/media/tonn/kit-solution-${w}.webp`);
+const SRCSET = `${photo(700)} 700w, ${photo(1200)} 1200w`;
+// ширина фото: телефон, планшет, компьютер (раскладка до 1760 px)
+const SIZES = '(max-width: 699.98px) min(calc(100vw - 72px), 424px), (max-width: 1199.98px) 320px, 424px';
+
+// Индукционная петля лежит под асфальтом — на фото её контур (по схеме лендинга), в пикселях фото 1200×1600
+const LOOP_POINTS = '0,1230 169,1190 529,1342 360,1576 0,1363';
+
+const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
 ---
 
-<section class="section panel" id="oborudovanie" aria-labelledby="oborudovanie-title">
+<section class="section panel nkit" id="oborudovanie" aria-labelledby="oborudovanie-title">
   <div class="container">
-    <h2 id="oborudovanie-title" class="t-h2">Как устроена ваша весовая с решениями QODEX</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Оборудование" titleId="oborudovanie-title">
+      Как устроена ваша весовая с решениями&nbsp;QODEX
+    </SectionIntro>
+
+    <div class="nkit-grid" data-nkit data-active="0">
+      <!-- Фото въезда на бирюзовой панели: точки узлов и лупа -->
+      <div class="gv gv--aqua nkit-stage" data-reveal data-nkit-stage>
+        <div
+          class="nkit-card"
+          role="tabpanel"
+          id="nkit-panel"
+          aria-labelledby="nkit-tab-0"
+          tabindex="0"
+        >
+          <div class="nkit-photo">
+            <img
+              class="nkit-img"
+              src={photo(1200)}
+              srcset={SRCSET}
+              sizes={SIZES}
+              width="1200"
+              height="1600"
+              alt="Въезд на автомобильные весы под навесом: шлагбаум, камеры на столбах, будка весовщика"
+              loading="lazy"
+              decoding="async"
+              draggable="false"
+            />
+
+            <svg class="nkit-loop" viewBox="0 0 1200 1600" preserveAspectRatio="none" aria-hidden="true">
+              <polygon points={LOOP_POINTS} />
+            </svg>
+
+            {/* точки узлов: нажатие выбирает пункт (для клавиатуры — список вкладок рядом) */}
+            <div class="nkit-dots" aria-hidden="true">
+              {
+                NODES.map((n, i) => (
+                  <span
+                    class:list={['nkit-dot', { 'is-on': i === 0 }]}
+                    style={`left:${pct(n.x)};top:${pct(n.y)}`}
+                    title={n.title}
+                    data-nkit-dot
+                  >
+                    <i />
+                  </span>
+                ))
+              }
+            </div>
+
+            {/* Лупа: то же фото крупно, переезжает к выбранному узлу (только transform) */}
+            <div class="nkit-lensbox" aria-hidden="true">
+              <div class="nkit-lens">
+                <div
+                  class="nkit-view"
+                  data-nkit-view
+                  style={`--x:${NODES[0].lx ?? NODES[0].x};--y:${NODES[0].ly ?? NODES[0].y};--z:${NODES[0].z}`}
+                >
+                  <img
+                    class="nkit-img"
+                    src={photo(1200)}
+                    srcset={SRCSET}
+                    sizes="1200px"
+                    width="1200"
+                    height="1600"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                  />
+                  <svg class="nkit-loop" viewBox="0 0 1200 1600" preserveAspectRatio="none">
+                    <polygon points={LOOP_POINTS} />
+                  </svg>
+                </div>
+              </div>
+              <span class="nkit-ring" />
+              {
+                NODES.map((n, i) => (
+                  <span class:list={['nkit-cap', { 'is-on': i === 0 }]} data-nkit-cap>
+                    <span class="nkit-cap__ico">
+                      <Icon name={n.icon} size={14} strokeWidth={2} />
+                    </span>
+                    {n.title}
+                  </span>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Оборудование: вкладки, выбранная управляет фото -->
+      <div
+        class="nkit-list"
+        role="tablist"
+        aria-orientation="vertical"
+        aria-label="Оборудование весовой"
+        data-reveal
+        style="--d:1"
+      >
+        {
+          NODES.map((n, i) => (
+            <button
+              class="nkit-tab"
+              type="button"
+              role="tab"
+              id={`nkit-tab-${i}`}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              aria-controls="nkit-panel"
+              tabindex={i === 0 ? 0 : -1}
+              data-x={n.lx ?? n.x}
+              data-y={n.ly ?? n.y}
+              data-z={n.z}
+              data-nkit-tab
+            >
+              <span class="nkit-chip" aria-hidden="true">
+                <Icon name={n.icon} size={21} strokeWidth={1.8} />
+              </span>
+              <span class="nkit-name">{n.title}</span>
+              <span class="nkit-qty">{n.qty}</span>
+              {n.text && <span class="nkit-text">{n.text}</span>}
+              <span class="nkit-bar" aria-hidden="true" />
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="nkit-cta" data-reveal style="--d:2">
+        <a href="#forma" class="btn btn--outline" data-interest="tonn" data-goal="pilot_click">
+          Получить демонстрацию системы <Icon name="arrow-right" />
+        </a>
+      </div>
+
+      <!-- Три факта: белые плитки, соединённые мостиками -->
+      <ul class="nkit-facts bridged">
+        {
+          FACTS.map((f, i) => (
+            <li class="nkit-fact" data-reveal style={`--d:${i + 1}`}>
+              <span class="nkit-fact__chip" aria-hidden="true">
+                <Icon name={f.icon} size={22} />
+              </span>
+              <h3 class="nkit-fact__text">{f.text}</h3>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
   </div>
 </section>
+
+<style>
+  .nkit {
+    --nkit-accent: var(--c-tonn);
+    --nkit-ms: 5200ms;
+  }
+
+  /* ── Сетка: фото слева, список и кнопка справа (по центру высоты фото), факты под ними ── */
+  .nkit-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 1fr auto auto 1fr auto;
+    grid-template-areas:
+      'vis .'
+      'vis list'
+      'vis cta'
+      'vis .'
+      'facts facts';
+    column-gap: clamp(32px, calc(var(--vw) * 4.4), 64px);
+  }
+
+  /* панель обнимает фото; если список выше (планшет), она стоит по центру его высоты */
+  .nkit-stage {
+    grid-area: vis;
+    align-self: center;
+  }
+
+  .nkit-list {
+    grid-area: list;
+  }
+
+  .nkit-cta {
+    grid-area: cta;
+  }
+
+  .nkit-facts {
+    grid-area: facts;
+  }
+
+  /* ── Бирюзовая панель с фото ───────────────────────────── */
+  /* overflow: clip — панель не становится прокручиваемой (размытый слой .gv::before выступает за край) */
+  .nkit-stage {
+    --gv-r: clamp(28px, calc(var(--vw) * 3), 44px);
+    min-height: 0;
+    padding: clamp(14px, calc(var(--vw) * 2.6), 40px);
+    overflow: hidden;
+    overflow: clip;
+  }
+
+  .nkit-card {
+    --nkit-card-r: clamp(20px, calc(var(--vw) * 2), 28px);
+    --nkit-card-pad: clamp(5px, calc(var(--vw) * 0.55), 8px);
+    width: min(100%, 440px);
+    padding: var(--nkit-card-pad);
+    border-radius: calc(var(--nkit-card-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card-warm);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* на градиенте синее кольцо фокуса теряется — графитовое */
+  .nkit-card:focus-visible {
+    outline-color: var(--ink);
+    outline-offset: 4px;
+  }
+
+  /* Фото 3:4. Обрезка clip-path — страховка для Safari: он не всегда обрезает движущиеся слои по скруглению */
+  .nkit-photo {
+    --nkit-pr: calc(var(--nkit-card-r) - var(--nkit-card-pad));
+    position: relative;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    container-type: inline-size;
+    border-radius: calc(var(--nkit-pr) * var(--rk));
+    corner-shape: var(--corner);
+    clip-path: inset(0 round calc(var(--nkit-pr) * var(--rclip)));
+    background: #cfd8dc;
+    isolation: isolate;
+  }
+
+  .nkit-img {
+    width: 100%;
+    height: auto;
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  /* контур индукционной петли на асфальте — виден, когда выбран этот пункт */
+  .nkit-loop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-out);
+    pointer-events: none;
+  }
+
+  .nkit-loop polygon {
+    fill: rgb(255 255 255 / 0.2);
+    stroke: #fff;
+    stroke-width: 2.5;
+    stroke-dasharray: 8 7;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .nkit-grid[data-active='6'] .nkit-loop {
+    opacity: 1;
+  }
+
+  /* ── Точки узлов ───────────────────────────────────────── */
+  .nkit-dots {
+    position: absolute;
+    inset: 0;
+  }
+
+  .nkit-dot {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    margin: -18px 0 0 -18px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* точка: белый кружок; у выбранной — зелёная сердцевина (цвет продукта) и мягкая волна */
+  .nkit-dot i {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(29 29 31 / 0.12),
+      0 2px 8px rgb(29 29 31 / 0.45);
+    transform: scale(0.62);
+    transition: transform 0.45s var(--ease-out);
+  }
+
+  .nkit-dot i::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    background: var(--nkit-accent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .nkit-dot i::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px #fff;
+    opacity: 0;
+  }
+
+  @media (hover: hover) {
+    .nkit-dot:hover i {
+      transform: scale(0.85);
+    }
+  }
+
+  .nkit-dot.is-on i {
+    transform: none;
+  }
+
+  .nkit-dot.is-on i::before {
+    opacity: 1;
+  }
+
+  /* волна идёт только у выбранной точки и только пока схема на экране */
+  .nkit-dot.is-on i::after {
+    animation: nkit-pulse 2.4s var(--ease-out) infinite;
+    animation-play-state: paused;
+  }
+
+  .nkit-grid.is-live .nkit-dot.is-on i::after {
+    animation-play-state: running;
+  }
+
+  @keyframes nkit-pulse {
+    0% {
+      opacity: 0.9;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(2.6);
+    }
+  }
+
+  /* ── Лупа ──────────────────────────────────────────────── */
+  .nkit-lensbox {
+    position: absolute;
+    right: 5%;
+    bottom: 7.5%;
+    width: 42%;
+    pointer-events: none;
+  }
+
+  .nkit-lens {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 50%;
+    clip-path: circle(50%);
+    background: #cfd8dc;
+  }
+
+  /* кольцо рисуем отдельным слоем: clip-path срезает тень самой лупы */
+  .nkit-lensbox::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 4px #fff,
+      0 18px 36px -10px rgb(29 29 31 / 0.6);
+  }
+
+  /* Фото внутри лупы шириной с основное фото (100cqw); узел (--x, --y) стоит в центре лупы,
+     увеличение --z. Переезд от узла к узлу — один transform. */
+  .nkit-view {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100cqw;
+    transform-origin: 0 0;
+    transform: scale(var(--z)) translate(calc(var(--x) * -100%), calc(var(--y) * -100%));
+    transition: transform 0.95s var(--ease-in-out);
+    will-change: transform;
+  }
+
+  /* кольцо в центре лупы — где узел; у шлагбаума и петли не нужно: они крупные */
+  .nkit-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 26%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow:
+      0 0 0 1px rgb(29 29 31 / 0.22),
+      inset 0 0 0 1px rgb(29 29 31 / 0.22);
+    transform: translate(-50%, -50%);
+    transition: opacity 0.35s var(--ease-out);
+  }
+
+  .nkit-grid[data-active='4'] .nkit-ring,
+  .nkit-grid[data-active='6'] .nkit-ring {
+    opacity: 0;
+  }
+
+  /* подпись лупы: белая пилюля на нижнем крае кольца, меняется плавной сменой прозрачности */
+  .nkit-cap {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px 0 10px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink);
+    font-size: 13.5px;
+    font-weight: 560;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px -8px rgb(29 29 31 / 0.5);
+    opacity: 0;
+    transform: translate(-50%, 55%) scale(0.96);
+    transition:
+      opacity 0.35s var(--ease-out),
+      transform 0.45s var(--ease-out);
+  }
+
+  .nkit-cap__ico {
+    display: grid;
+    flex: none;
+    width: 14px;
+    height: 14px;
+    color: var(--nkit-accent);
+  }
+
+  .nkit-cap.is-on {
+    opacity: 1;
+    transform: translate(-50%, 55%);
+    transition-delay: 0.25s;
+  }
+
+  /* ── Список оборудования ───────────────────────────────── */
+  .nkit-list {
+    display: grid;
+    gap: 4px;
+  }
+
+  .nkit-tab {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'chip name qty'
+      'chip text text';
+    align-items: center;
+    column-gap: 16px;
+    row-gap: 2px;
+    min-height: 74px;
+    width: 100%;
+    padding: 12px 18px 12px 14px;
+    border: 0;
+    border-radius: calc(18px * var(--rk));
+    corner-shape: var(--corner);
+    background: transparent;
+    color: var(--ink);
+    text-align: left;
+    transition:
+      background-color 0.35s var(--ease),
+      box-shadow 0.35s var(--ease);
+  }
+
+  /* у пункта без описания название стоит по центру строки */
+  .nkit-tab:not(:has(.nkit-text)) {
+    grid-template-areas: 'chip name qty';
+  }
+
+  @media (hover: hover) {
+    .nkit-tab:hover {
+      background: rgb(255 255 255 / 0.55);
+    }
+  }
+
+  .nkit-tab[aria-selected='true'] {
+    background: var(--card);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .nkit-chip {
+    grid-area: chip;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: calc(13px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    color: var(--ink);
+    box-shadow:
+      0 1px 2px rgb(29 29 31 / 0.05),
+      0 8px 16px -12px rgb(29 29 31 / 0.3);
+    transition:
+      background-color 0.35s var(--ease),
+      color 0.35s var(--ease);
+  }
+
+  /* выбранный пункт: плашка значка в цвете продукта */
+  .nkit-tab[aria-selected='true'] .nkit-chip {
+    background: var(--nkit-accent);
+    color: #fff;
+  }
+
+  .nkit-name {
+    grid-area: name;
+    font-size: 1.125rem;
+    font-weight: 560;
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+  }
+
+  .nkit-qty {
+    grid-area: qty;
+    justify-self: end;
+    padding: 4px 9px;
+    border-radius: calc(7px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel-2);
+    font-size: 13px;
+    font-weight: 560;
+    line-height: 1.2;
+    color: var(--ink-2);
+    white-space: nowrap;
+    transition: background-color 0.35s var(--ease);
+  }
+
+  .nkit-tab[aria-selected='true'] .nkit-qty {
+    background: var(--panel);
+  }
+
+  .nkit-text {
+    grid-area: text;
+    font-size: 0.94rem;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  /* полоса до смены пункта — снизу выбранной карточки; растёт через transform */
+  .nkit-bar {
+    position: absolute;
+    left: 74px;
+    right: 18px;
+    bottom: 7px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--nkit-accent);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    opacity: 0;
+  }
+
+  .nkit-grid.is-auto .nkit-tab[aria-selected='true'] .nkit-bar {
+    opacity: 1;
+    animation: nkit-progress var(--nkit-ms) linear forwards;
+  }
+
+  .nkit-grid[data-paused] .nkit-bar {
+    animation-play-state: paused !important;
+  }
+
+  @keyframes nkit-progress {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .nkit-cta {
+    margin-top: 28px;
+    padding-left: 14px;
+  }
+
+  /* ── Три факта ─────────────────────────────────────────── */
+  .nkit-facts {
+    --gap: clamp(14px, calc(var(--vw) * 1.6), 20px);
+    --nkit-pad: clamp(18px, calc(var(--vw) * 2), 24px);
+    --nkit-chip: 48px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--gap);
+    margin-top: clamp(20px, calc(var(--vw) * 2), 28px);
+    isolation: isolate;
+  }
+
+  .nkit-fact {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: var(--nkit-pad);
+    border-radius: calc(24px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  /* мостик к плитке слева — на высоте значка (маски — .bridged в global.css) */
+  .nkit-fact + .nkit-fact::before {
+    content: '';
+    position: absolute;
+    top: calc(50% - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  .nkit-fact__chip {
+    display: grid;
+    place-items: center;
+    width: var(--nkit-chip);
+    height: var(--nkit-chip);
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  /* при наведении приподнимается значок, а не плитка: стык с мостиком остаётся на месте */
+  @media (hover: hover) {
+    .nkit-fact:hover .nkit-fact__chip {
+      transform: translateY(-2px) scale(1.05);
+    }
+  }
+
+  .nkit-fact__text {
+    font-size: 1.125rem;
+    line-height: 1.32;
+    letter-spacing: -0.012em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  /* ── Планшет и узкий ноутбук (700–1199): две колонки поуже ── */
+  @media (max-width: 1199.98px) {
+    /* колонка уже: количество — в начале второй строки, название занимает всю ширину */
+    .nkit-tab,
+    .nkit-tab:not(:has(.nkit-text)) {
+      grid-template-columns: auto auto minmax(0, 1fr);
+      grid-template-areas:
+        'chip name name'
+        'chip qty text';
+      column-gap: 14px;
+      row-gap: 4px;
+      min-height: 68px;
+      padding: 11px 14px 11px 12px;
+    }
+
+    .nkit-qty {
+      justify-self: start;
+      align-self: start;
+      margin-right: -4px;
+      padding: 2px 7px;
+      font-size: 12.5px;
+    }
+
+    .nkit-text {
+      align-self: start;
+    }
+
+    .nkit-chip {
+      width: 42px;
+      height: 42px;
+    }
+
+    .nkit-name {
+      font-size: 1.0625rem;
+    }
+
+    .nkit-bar {
+      left: 68px;
+      right: 14px;
+    }
+
+    .nkit-fact {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .nkit-fact + .nkit-fact::before {
+      top: calc(var(--nkit-pad) + var(--nkit-chip) / 2 - (var(--gap) + 14px) / 2);
+    }
+
+    .nkit-fact__text {
+      font-size: 1.0625rem;
+    }
+  }
+
+  /* ── Уже 900 px: факты столбиком, мостики — к плитке сверху ── */
+  @media (max-width: 899.98px) {
+    .nkit-facts {
+      --nkit-chip: 44px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .nkit-fact {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .nkit-fact + .nkit-fact::before {
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--nkit-pad) + var(--nkit-chip) / 2 - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .nkit-fact__chip {
+      border-radius: calc(13px * var(--rk));
+      corner-shape: var(--corner);
+    }
+  }
+
+  /* ── Телефон: фото, под ним список, факты и кнопка — в один столбец ── */
+  @media (max-width: 699.98px) {
+    .nkit-grid {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: none;
+      grid-template-areas:
+        'vis'
+        'list'
+        'facts'
+        'cta';
+    }
+
+    .nkit-stage {
+      padding: 12px;
+    }
+
+    .nkit-card {
+      width: min(100%, 440px);
+    }
+
+    .nkit-cap {
+      height: 26px;
+      padding: 0 10px 0 8px;
+      font-size: 12px;
+    }
+
+    .nkit-list {
+      margin-top: 16px;
+    }
+
+    .nkit-tab,
+    .nkit-tab:not(:has(.nkit-text)) {
+      min-height: 64px;
+      column-gap: 12px;
+      padding: 10px 12px 10px 10px;
+    }
+
+    .nkit-chip {
+      width: 40px;
+      height: 40px;
+      border-radius: calc(12px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .nkit-name {
+      font-size: 1rem;
+    }
+
+    .nkit-text {
+      font-size: 0.875rem;
+    }
+
+    .nkit-bar {
+      left: 62px;
+      right: 12px;
+      bottom: 6px;
+    }
+
+    .nkit-cta {
+      justify-self: center;
+      margin-top: 24px;
+      padding-left: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nkit-dot.is-on i::after {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Вкладки оборудования: выбранная двигает лупу к узлу, зажигает его точку и подпись.
+  // Сами переключаются раз в 5,2 с, пока схема на экране, вкладка браузера видна,
+  // а курсора и фокуса клавиатуры над схемой нет. Клавиатура: стрелки, Home, End.
+  document.querySelectorAll<HTMLElement>('[data-nkit]').forEach((root) => {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-nkit-tab]')];
+    const dots = [...root.querySelectorAll<HTMLElement>('[data-nkit-dot]')];
+    const caps = [...root.querySelectorAll<HTMLElement>('[data-nkit-cap]')];
+    const view = root.querySelector<HTMLElement>('[data-nkit-view]');
+    const stage = root.querySelector<HTMLElement>('[data-nkit-stage]');
+    const panel = root.querySelector<HTMLElement>('[role="tabpanel"]');
+    if (!tabs.length || !view || !stage || !panel) return;
+
+    // время на пункт; полоса прогресса берёт его из --nkit-ms (сборка переписывает «5200ms» в «5.2s» — задаём отсюда)
+    const ms = 5200;
+    root.style.setProperty('--nkit-ms', `${ms}ms`);
+    const auto = !reducedMotion();
+    let index = 0;
+    let inView = false;
+    let hover = false;
+    let focus = false;
+
+    // таймер с паузой: после паузы продолжает с того же места, как полоса прогресса
+    let timer = 0;
+    let left = ms;
+    let startedAt = 0;
+    let running = false;
+    const pause = () => {
+      if (!running) return;
+      clearTimeout(timer);
+      left -= performance.now() - startedAt;
+      running = false;
+    };
+    const resume = () => {
+      if (running) return;
+      startedAt = performance.now();
+      running = true;
+      timer = window.setTimeout(() => {
+        running = false;
+        select(index + 1);
+      }, Math.max(0, left));
+    };
+
+    const sync = () => {
+      const live = inView && !document.hidden;
+      root.classList.toggle('is-live', live);
+      if (!auto) return;
+      if (live && !hover && !focus) {
+        delete root.dataset.paused;
+        resume();
+      } else {
+        root.dataset.paused = '';
+        pause();
+      }
+    };
+
+    function select(i: number, moveFocus = false) {
+      index = (i + tabs.length) % tabs.length;
+      tabs.forEach((tab, k) => {
+        const on = k === index;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+        // полоса прогресса начинается заново
+        if (on) {
+          const bar = tab.querySelector<HTMLElement>('.nkit-bar');
+          if (bar) {
+            bar.style.animation = 'none';
+            void bar.offsetWidth;
+            bar.style.animation = '';
+          }
+        }
+      });
+      dots.forEach((d, k) => d.classList.toggle('is-on', k === index));
+      caps.forEach((c, k) => c.classList.toggle('is-on', k === index));
+      const t = tabs[index];
+      view!.style.setProperty('--x', t.dataset.x ?? '0.5');
+      view!.style.setProperty('--y', t.dataset.y ?? '0.5');
+      view!.style.setProperty('--z', t.dataset.z ?? '1');
+      root.dataset.active = String(index);
+      panel!.setAttribute('aria-labelledby', t.id);
+      if (moveFocus) t.focus();
+      if (auto) {
+        clearTimeout(timer);
+        running = false;
+        left = ms;
+        sync();
+      }
+    }
+
+    tabs.forEach((tab, k) => tab.addEventListener('click', () => select(k)));
+    dots.forEach((dot, k) => dot.addEventListener('click', () => select(k)));
+
+    root.querySelector('[role="tablist"]')?.addEventListener('keydown', (e) => {
+      const ev = e as KeyboardEvent;
+      const map: Record<string, number> = {
+        ArrowDown: index + 1,
+        ArrowRight: index + 1,
+        ArrowUp: index - 1,
+        ArrowLeft: index - 1,
+        Home: 0,
+        End: tabs.length - 1,
+      };
+      if (!(ev.key in map)) return;
+      ev.preventDefault();
+      select(map[ev.key], true);
+    });
+
+    if (auto) root.classList.add('is-auto');
+
+    // пауза под курсором (список и фото) и пока внутри фокус клавиатуры
+    [root.querySelector<HTMLElement>('[role="tablist"]'), stage].forEach((el) => {
+      el?.addEventListener('pointerenter', (e) => {
+        if ((e as PointerEvent).pointerType !== 'mouse') return;
+        hover = true;
+        sync();
+      });
+      el?.addEventListener('pointerleave', () => {
+        hover = false;
+        sync();
+      });
+    });
+    root.addEventListener('focusin', () => {
+      focus = true;
+      sync();
+    });
+    root.addEventListener('focusout', (e) => {
+      if (root.contains(e.relatedTarget as Node | null)) return;
+      focus = false;
+      sync();
+    });
+    document.addEventListener('visibilitychange', sync);
+
+    // «на экране» — по фото: на телефоне список ниже, а смысл переключения — в фото
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting;
+          sync();
+        },
+        { threshold: 0.45 },
+      ).observe(stage);
+    } else {
+      inView = true;
+    }
+    select(0);
+  });
+</script>

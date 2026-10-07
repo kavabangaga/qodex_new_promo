@@ -1,10 +1,442 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Раздел страницы «QODEX TONN» — «Весовой контроль на объектах ТКО — теперь обязательно» [#zakon]. Бежевая панель.
+// 1. Три даты и цифры из блока главной «Почему этим стоит заняться в 2026 году» (Why2026) — один белый лист
+//    в три колонки, у каждой значок, крупная дата и пояснение; у «509 из 1100» — шкала подключённых объектов.
+// 2. Три белые карточки с мостиками: что требует закон, кого касается и ответ — QODEX TONN (значок в цвете продукта,
+//    карточка приподнята). Ниже — кнопка заявки. Только даты и нормы: без таймеров и запугивания.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+// неразрывный пробел (U+00A0)
+const NB = String.fromCharCode(160);
+
+interface Fact {
+  when: string;
+  of?: string;
+  text: string;
+  icon: IconName;
+  /** Норма уже действует — плашка «действует». */
+  active?: boolean;
+  /** Доля для шкалы (509 из 1100). */
+  share?: number;
+}
+
+const FACTS: Fact[] = [
+  {
+    when: `1${NB}января 2026`,
+    text: `Весовой контроль на объектах стал обязательным. РЭО запретил загружать данные во ФГИС${NB}УТКО файлом.`,
+    icon: 'scale',
+    active: true,
+  },
+  {
+    when: `1${NB}сентября 2026`,
+    text: `Действуют новые Единые требования к объектам — ПП №${NB}567. По п.${NB}36 объект оснащается системой весового контроля и автоматизированной системой учёта и передачи данных во ФГИС${NB}УТКО.`,
+    icon: 'file-check',
+    active: true,
+  },
+  {
+    when: '509',
+    of: `из${NB}1100`,
+    text: `Столько объектов подключили весовые посты к ФГИС${NB}УТКО на февраль 2026.`,
+    icon: 'chart-column',
+    share: 509 / 1100,
+  },
+];
+
+interface Card {
+  title: string;
+  text: string;
+  icon: IconName;
+  answer?: boolean;
+}
+
+const CARDS: Card[] = [
+  {
+    title: 'Что требует закон',
+    text: `Автоматизированная система весового контроля с передачей данных во ФГИС${NB}УТКО. Ручной ввод и бумажные журналы больше не считаются.`,
+    icon: 'gavel',
+  },
+  {
+    title: 'Кого касается',
+    text: 'Полигоны, МСК, объекты утилизации и обезвреживания ТКО.',
+    icon: 'factory',
+  },
+  {
+    title: `QODEX${NB}TONN закрывает требования`,
+    text: `Весовой контроль, фотофиксация, передача во ФГИС${NB}УТКО — из коробки. Соответствует п.${NB}36 ПП №${NB}567.`,
+    icon: 'check-check',
+    answer: true,
+  },
+];
 ---
 
-<section class="section panel" id="zakon" aria-labelledby="zakon-title">
+<section class="section panel nlaw" id="zakon" aria-labelledby="zakon-title">
   <div class="container">
-    <h2 id="zakon-title" class="t-h2">Что требует закон в 2026 году</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Требования" titleId="zakon-title">
+      Весовой контроль на&nbsp;объектах ТКО — теперь обязательно
+      <Fragment slot="lead">
+        С 1&nbsp;января 2026 года весовой контроль на объектах стал обязательным, а РЭО запретил загружать данные во&nbsp;ФГИС&nbsp;УТКО файлом.
+      </Fragment>
+    </SectionIntro>
+
+    <!-- ── 1. Даты и цифры ── -->
+    <div class="nlaw-facts">
+      <ul class="nlaw-sheet" data-reveal style="--d:2">
+        {
+          FACTS.map((f) => (
+            <li class="nlaw-fact">
+              <div class="nlaw-top">
+                <span class="nlaw-ico" aria-hidden="true">
+                  <Icon name={f.icon} size={19} />
+                </span>
+                {f.active && <span class="nlaw-status">действует</span>}
+              </div>
+              <p class="nlaw-date">
+                {f.when}
+                {f.of && <span class="nlaw-of">{` ${f.of}`}</span>}
+              </p>
+              {f.share !== undefined && (
+                <span class="nlaw-meter" aria-hidden="true" data-nlaw-meter>
+                  <i style={`--w:${f.share.toFixed(3)}`} />
+                </span>
+              )}
+              <p class="nlaw-text">{f.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="footnote nlaw-note">Нормативные данные актуальны на сентябрь 2026.</p>
+    </div>
+
+    <!-- ── 2. Требование, кого касается, ответ ── -->
+    <ul class="nlaw-cards bridged">
+      {
+        CARDS.map((c, i) => (
+          <li class:list={['nlaw-card', { 'nlaw-card--answer': c.answer }]} data-reveal style={`--d:${i + 1}`}>
+            <span class:list={['nlaw-card-ico', { 'p-tonn': c.answer }]} aria-hidden="true">
+              <Icon name={c.icon} size={c.answer ? 24 : 23} strokeWidth={c.answer ? 2.2 : 1.75} />
+            </span>
+            <h3 class="nlaw-card-t">{c.title}</h3>
+            <p class="nlaw-card-p">{c.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="nlaw-cta" data-reveal style="--d:2">
+      <a href="#forma" class="btn btn--outline" data-interest="tonn" data-goal="pilot_click">
+        Узнайте, соответствует ли ваш объект
+        <Icon name="arrow-right" />
+      </a>
+    </p>
   </div>
 </section>
+
+<style>
+  .nlaw {
+    --nlaw-r: clamp(22px, calc(var(--vw) * 2), 28px);
+    --nlaw-gap: clamp(14px, calc(var(--vw) * 1.4), 20px);
+  }
+
+  /* ── 1. Белый лист в три колонки ──────────────────────── */
+  .nlaw-sheet {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-radius: calc(var(--nlaw-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  .nlaw-fact {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    padding: clamp(22px, calc(var(--vw) * 2.4), 32px) clamp(20px, calc(var(--vw) * 2.4), 32px)
+      clamp(24px, calc(var(--vw) * 2.6), 34px);
+  }
+
+  .nlaw-fact + .nlaw-fact {
+    border-left: 1px solid var(--line);
+  }
+
+  .nlaw-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 40px;
+  }
+
+  .nlaw-ico {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: calc(12px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  /* «действует» — как у карточек-документов на главной */
+  .nlaw-status {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--ok) 13%, white);
+    font-size: 13px;
+    font-weight: 560;
+    line-height: 1.3;
+    color: #087a52;
+    white-space: nowrap;
+  }
+
+  .nlaw-date {
+    margin-top: 4px;
+    font-size: clamp(1.75rem, calc(var(--vw) * 2.4), 2.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .nlaw-of {
+    color: var(--subtle);
+  }
+
+  /* 509 из 1100: шкала подключённых объектов */
+  .nlaw-meter {
+    display: block;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--panel-2);
+    overflow: hidden;
+  }
+
+  .nlaw-meter i {
+    display: block;
+    height: 100%;
+    border-radius: 5px;
+    background: var(--ink);
+    transform: scaleX(var(--w));
+    transform-origin: left center;
+  }
+
+  .nlaw-meter.is-armed:not(.is-live) i {
+    transform: scaleX(0);
+  }
+
+  .nlaw-meter.is-live i {
+    transition: transform 1.2s var(--ease-out) 0.3s;
+  }
+
+  .nlaw-text {
+    max-width: 38ch;
+    font-size: 0.97rem;
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .nlaw-note {
+    margin-top: 14px;
+    padding-inline: 4px;
+  }
+
+  /* ── 2. Три карточки с мостиками ──────────────────────── */
+  .nlaw-cards {
+    --gap: var(--nlaw-gap);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--gap);
+    margin-top: clamp(36px, calc(var(--vw) * 4), 56px);
+    isolation: isolate;
+  }
+
+  .nlaw-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: clamp(22px, calc(var(--vw) * 2.4), 30px);
+    border-radius: calc(var(--nlaw-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  /* мостик к карточке слева — на высоте значка */
+  .nlaw-card + .nlaw-card::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: calc(clamp(22px, calc(var(--vw) * 2.4), 30px) + 24px - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  /* ответ — приподнят над остальными */
+  .nlaw-card--answer {
+    box-shadow: var(--shadow-card);
+  }
+
+  .nlaw-card-ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .nlaw-card-ico.p-tonn {
+    background: var(--pc);
+    color: #fff;
+  }
+
+  .nlaw-card-t {
+    margin-top: clamp(28px, calc(var(--vw) * 3), 40px);
+    font-size: clamp(1.2rem, calc(var(--vw) * 1.6), 1.375rem);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .nlaw-card-p {
+    margin-top: 10px;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .nlaw-cta {
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(32px, calc(var(--vw) * 3.4), 48px);
+  }
+
+  /* ── Планшет и телефон: колонки друг под другом ───────── */
+  @media (max-width: 899.98px) {
+    .nlaw-sheet {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .nlaw-fact + .nlaw-fact {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .nlaw-text {
+      max-width: 52ch;
+    }
+
+    .nlaw-cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .nlaw-card {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      column-gap: 18px;
+      align-items: start;
+    }
+
+    .nlaw-card-ico {
+      grid-row: 1 / span 2;
+    }
+
+    .nlaw-card-t {
+      margin-top: 10px;
+    }
+
+    /* мостик к карточке сверху — под значком */
+    .nlaw-card + .nlaw-card::before {
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(clamp(22px, calc(var(--vw) * 2.4), 30px) + 24px - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+  }
+
+  /* планшет: у каждой строки слева значок и дата, справа пояснение */
+  @media (min-width: 600px) and (max-width: 899.98px) {
+    .nlaw-fact {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr);
+      align-content: start;
+      gap: 14px clamp(24px, calc(var(--vw) * 4), 40px);
+    }
+
+    .nlaw-top,
+    .nlaw-date,
+    .nlaw-meter {
+      grid-column: 1;
+    }
+
+    .nlaw-text {
+      grid-column: 2;
+      grid-row: 1 / span 3;
+      align-self: center;
+    }
+  }
+
+  @media (max-width: 479.98px) {
+    .nlaw-card {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .nlaw-card-ico {
+      grid-row: auto;
+    }
+
+    .nlaw-card-t {
+      margin-top: 22px;
+    }
+
+    /* надпись в две строки — по левому краю, стрелка справа */
+    .nlaw-cta .btn {
+      width: 100%;
+      text-wrap: balance;
+      justify-content: space-between;
+      min-height: 56px;
+      padding-block: 12px;
+      line-height: 1.25;
+      white-space: normal;
+      text-align: left;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Шкала «509 из 1100» заполняется, когда видна; без скриптов и при «уменьшить движение» — сразу заполнена.
+  const meters = document.querySelectorAll<HTMLElement>('[data-nlaw-meter]');
+  if (meters.length && !reducedMotion() && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add('is-live');
+          io.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.6 },
+    );
+    meters.forEach((el) => {
+      el.classList.add('is-armed');
+      io.observe(el);
+    });
+  }
+</script>

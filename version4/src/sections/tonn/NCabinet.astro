@@ -1,10 +1,504 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Раздел страницы «QODEX TONN» [#kabinet] — «Возможности системы» (с лендинга tonn.qodex.tech, блоки B04 и B05).
+// Бежевая панель. Тур по четырём настоящим экранам кабинета (снимки 1000×750 из демо-доступа заказчика):
+// слева вступление и четыре белые карточки-пункта (FeatureAccordion), соединённые мостиками, как карточки
+// по всему сайту; справа на подложке dusk — снимок открытого пункта в рамке окна приложения.
+// Пункты переключаются сами (6 с) с полосой прогресса, снимок меняется вместе с ними ([data-acc-scope]).
+// Снимок не крупнее ~650 px: исходник 1000 px, на 2K (×1.45) он остаётся чётким.
+// Под туром — кнопки: заявка на демонстрацию и презентация (PDF, размер считается при сборке).
+// Уже 1200 px: вступление, снимок во всю ширину, под ним карточки, затем кнопки.
+// Подложка собрана классами .gv, а не компонентом GradientVisual: компонент прячет содержимое от скринридера,
+// а у снимков экрана есть смысловые подписи (alt), как в «Интерфейсе» РО-БОТа.
+import fs from 'node:fs';
+import path from 'node:path';
+import SectionIntro from '../../components/SectionIntro.astro';
+import FeatureAccordion, { type AccItem } from '../../components/FeatureAccordion.astro';
+import Icon from '../../components/Icon.astro';
+import { withBase } from '../../config/site';
+
+const NB = String.fromCharCode(160); // неразрывный пробел
+
+interface Screen extends AccItem {
+  file: string;
+  alt: string;
+}
+
+// Заголовки и тексты — с лендинга дословно
+const SCREENS: Screen[] = [
+  {
+    icon: 'chart-line',
+    title: `Аналитика в${NB}реальном времени`,
+    text: `Выручка, прогноз, отклонения${NB}— без${NB}бухгалтера и${NB}Excel`,
+    file: 'cab-analytica',
+    alt:
+      'Экран «Аналитика»: суммарный объём начислений площадкам на 18 февраля — 29 082 234 ₽, −11% к периоду ' +
+      'с 1 по 18 января; прогноз начислений на конец месяца — 44 684 312 ₽; выполнение терсхемы — 12 465 т ' +
+      'из 55 665 т; график тоннажа и начислений по дням',
+  },
+  {
+    icon: 'camera',
+    title: `Акты взвешивания с${NB}фото`,
+    text: `Электронный акт с${NB}фото за${NB}3${NB}секунды вместо журнала`,
+    file: 'cab-act',
+    alt:
+      'Экран «Акты»: тоннаж 288,23 т, 71 взвешивание; у каждого акта — фото машины с госномером, брутто, тара ' +
+      'и нетто, перевозчик, площадка и клиент; у раскрытого акта — кнопка «Оспорить акт» и дополнительные данные: ' +
+      'категория отходов, вид груза, объём кузова, пункт назначения',
+  },
+  {
+    icon: 'truck',
+    title: 'База транспорта',
+    text: `Знаете каждую машину, которая заезжала на${NB}весы`,
+    file: 'cab-auto',
+    alt:
+      'Экран «Транспорт»: карточки машин с фото, маркой, госномером, номером RFID-метки, перевозчиком, ' +
+      'районом обслуживания и объёмом кузова',
+  },
+  {
+    icon: 'warehouse',
+    title: 'Управление площадками',
+    text: `Единая панель для${NB}всех объектов: настроил тариф${NB}— работает везде`,
+    file: 'cab-contragents',
+    alt:
+      'Экран «Контрагенты»: площадки — полигоны и сортировки — с числом районов, тарифом в рублях за тонну ' +
+      'и переключателем; кнопка «Добавить»',
+  },
+];
+
+const items: AccItem[] = SCREENS.map(({ icon, title, text }) => ({ icon, title, text }));
+const src = (file: string, w: number) => withBase(`/media/tonn/${file}-${w}.webp`);
+
+// Презентация — с лендинга (решение заказчика: оставить). Размер — при сборке; нет файла — сборка останавливается.
+const DECK = 'system.pdf';
+const deckPath = path.join(process.cwd(), 'public', 'files', DECK);
+if (!fs.existsSync(deckPath)) throw new Error(`Нет файла презентации public/files/${DECK}`);
+const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).replace('.', ',')}${NB}МБ`;
 ---
 
-<section class="section panel" id="kabinet" aria-labelledby="kabinet-title">
+<section class="section panel ncab" id="kabinet" aria-labelledby="kabinet-title">
   <div class="container">
-    <h2 id="kabinet-title" class="t-h2">Возможности системы</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <div class="ncab__tour" data-acc-scope>
+      <div class="ncab__text">
+        <div class="ncab__intro">
+          <SectionIntro eyebrow="Кабинет" titleId="kabinet-title" align="left" serif>
+            Возможности системы
+            <Fragment slot="lead">Нажмите на{NB}карточку, чтобы увидеть функцию в{NB}действии</Fragment>
+          </SectionIntro>
+        </div>
+
+        <div class="ncab__steps bridged" data-reveal style="--d:2">
+          <FeatureAccordion id="tonn-cabinet" items={items} ms={6000} color="var(--g-blue)" />
+        </div>
+      </div>
+
+      <div class="ncab__visual" data-reveal style="--d:1">
+        <div class="gv gv--dusk ncab__gv">
+          <div class="ncab-panes" data-panes>
+            {
+              SCREENS.map((s, i) => (
+                <div class:list={['ncab-pane', { 'is-active': i === 0 }]} data-pane aria-hidden={i === 0 ? 'false' : 'true'}>
+                  <div class="ncab-win">
+                    <img
+                      class="ncab-win__img"
+                      src={src(s.file, 1000)}
+                      srcset={`${src(s.file, 600)} 600w, ${src(s.file, 1000)} 1000w`}
+                      sizes="(max-width: 1199.98px) min(calc(100vw - 48px), 680px), 660px"
+                      width="1000"
+                      height="750"
+                      alt={`Демо-данные. ${s.alt}`}
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
+                    />
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+        {/* скринридеру пометку читает начало alt каждого снимка: плашка вне панелей прозвучала бы после снимка */}
+        <span class="tag tag--demo ncab__demo" aria-hidden="true">демо-данные</span>
+      </div>
+    </div>
+
+    <div class="ncab__cta" data-reveal style="--d:3">
+      <a href="#forma" class="btn btn--primary" data-interest="tonn" data-goal="pilot_click">
+        Получить демонстрацию системы
+        <Icon name="arrow-right" />
+      </a>
+      <span class="ncab__deck">
+        <a
+          class="btn btn--outline"
+          href={withBase(`/files/${DECK}`)}
+          download="QODEX TONN Презентация.pdf"
+          aria-describedby="ncab-deck-meta"
+        >
+          <Icon name="download" />
+          Скачать презентацию
+        </a>
+        <span class="ncab__meta" id="ncab-deck-meta">{DECK_META}</span>
+      </span>
+    </div>
   </div>
 </section>
+
+<style>
+  /* ── Тур: текст и карточки слева, снимок справа ─────────── */
+  .ncab__tour {
+    display: grid;
+    grid-template-columns: minmax(0, 0.74fr) minmax(0, 1.26fr);
+    align-items: stretch;
+    column-gap: clamp(48px, calc(var(--vw) * 5.4), 80px);
+  }
+
+  .ncab__text {
+    min-width: 0;
+  }
+
+  .ncab__intro :global(.intro) {
+    margin-bottom: clamp(28px, calc(var(--vw) * 2.6), 40px);
+  }
+
+  .ncab__intro :global(.t-lead) {
+    max-width: 34ch;
+  }
+
+  /* ── Карточки-пункты: белые, соединены мостиками под значками ──
+     Разметка и поведение — FeatureAccordion (kit.ts); здесь только оформление. */
+  .ncab__steps {
+    --gap: 14px;
+    --ncab-pad: 22px;
+    --ncab-chip: 36px;
+  }
+
+  .ncab__steps :global(.acc) {
+    row-gap: var(--gap);
+    border-top: 0;
+  }
+
+  .ncab__steps :global(.acc__item) {
+    padding-inline: var(--ncab-pad);
+    border-bottom: 0;
+    border-radius: calc(18px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    transition: box-shadow 0.4s var(--ease-out);
+  }
+
+  .ncab__steps :global(.acc__item.is-open) {
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* мостик к карточке сверху — под значком */
+  .ncab__steps :global(.acc__item + .acc__item::before) {
+    content: '';
+    position: absolute;
+    top: calc(var(--gap) * -1 - 1px);
+    left: calc(var(--ncab-pad) + var(--ncab-chip) / 2 - (var(--gap) + 14px) / 2);
+    width: calc(var(--gap) + 14px);
+    height: calc(var(--gap) + 2px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-col);
+    mask: var(--bridge-mask-col);
+    pointer-events: none;
+  }
+
+  .ncab__steps :global(.acc__head) {
+    gap: 14px;
+    padding: 14px 0;
+    font-size: 1.1875rem;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+
+  .ncab__steps :global(.acc__head:hover),
+  .ncab__steps :global(.acc__item.is-open .acc__head) {
+    color: var(--ink);
+  }
+
+  /* фокус клавиатуры — рамкой вокруг всей карточки, а не прямоугольником вокруг строки заголовка */
+  @supports selector(:has(*)) {
+    .ncab__steps :global(.acc__head:focus-visible) {
+      outline: none;
+    }
+
+    .ncab__steps :global(.acc__item:has(.acc__head:focus-visible)) {
+      outline: 2px solid var(--blue);
+      outline-offset: 3px;
+    }
+  }
+
+  /* значок в плашке; у открытой карточки плашка цвета продукта */
+  .ncab__steps :global(.acc__head svg) {
+    width: var(--ncab-chip);
+    height: var(--ncab-chip);
+    padding: 9px;
+    border-radius: calc(10px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink-2);
+    transition:
+      background-color 0.3s,
+      color 0.3s;
+  }
+
+  .ncab__steps :global(.acc__item.is-open .acc__head svg) {
+    background: var(--c-tonn);
+    color: #fff;
+  }
+
+  /* текст — под заголовком, а не под значком */
+  .ncab__steps :global(.acc__inner > p) {
+    padding: 0 0 28px calc(var(--ncab-chip) + 14px);
+    font-size: 1rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  /* широкий экран: у открытой карточки место под две строки текста — высота колонки не меняется
+     при переключении, и подложка снимка рядом не прыгает */
+  @media (min-width: 1200px) {
+    .ncab__steps :global(.acc__inner > p) {
+      min-height: calc(3em + 28px);
+    }
+  }
+
+  /* полоса прогресса — тонкая шкала под текстом открытой карточки, не до краёв карточки.
+     Движется transform, а не шириной; дорожка под ней — ::after карточки */
+  .ncab__steps :global(.acc__progress) {
+    left: calc(var(--ncab-pad) + var(--ncab-chip) + 14px);
+    right: var(--ncab-pad);
+    bottom: 14px;
+    width: auto;
+    height: 2px;
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+
+  .ncab__steps :global(.acc__item.is-open .acc__progress) {
+    animation: ncab-progress var(--acc-ms, 6000ms) linear forwards;
+  }
+
+  .ncab__steps :global(.acc__item::after) {
+    content: '';
+    position: absolute;
+    left: calc(var(--ncab-pad) + var(--ncab-chip) + 14px);
+    right: var(--ncab-pad);
+    bottom: 14px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--line);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .ncab__steps :global(.acc__item.is-open::after) {
+    opacity: 1;
+  }
+
+  /* полоса над дорожкой */
+  .ncab__steps :global(.acc__progress) {
+    z-index: 1;
+  }
+
+  @keyframes ncab-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  /* без движения пункты не переключаются сами — шкала не нужна */
+  @media (prefers-reduced-motion: reduce) {
+    .ncab__steps :global(.acc__progress),
+    .ncab__steps :global(.acc__item::after) {
+      display: none;
+    }
+
+    .ncab__steps :global(.acc__inner > p) {
+      padding-bottom: 20px;
+    }
+  }
+
+  /* ── Снимок экрана в рамке окна на подложке ─────────────── */
+  .ncab__visual {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* подложка — во всю высоту колонки слева, снимок по центру;
+     верхнее поле не меньше 58 px — в нём плашка «демо-данные» */
+  .ncab__gv {
+    flex: 1;
+    min-height: 0;
+    padding: 58px clamp(28px, calc(var(--vw) * 2.4), 40px) clamp(28px, calc(var(--vw) * 2.4), 40px);
+  }
+
+  .ncab-panes {
+    width: 100%;
+  }
+
+  /* окно приложения: снимок в белой рамке, как карточки .ui на градиенте */
+  .ncab-win {
+    --win-r: 14px;
+    border-radius: var(--win-r);
+    background: #f4f4f4;
+    box-shadow:
+      0 0 0 8px rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+  }
+
+  /* скругляется сам снимок: обрезка на рамке срезала бы и её белое кольцо (тень);
+     clip-path — страховка для Safari на iPhone */
+  .ncab-win__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--win-r);
+    clip-path: inset(0 round var(--win-r));
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .ncab__demo {
+    position: absolute;
+    z-index: 1;
+    top: 18px;
+    left: 18px;
+    pointer-events: none;
+  }
+
+  /* ── Кнопки под туром ───────────────────────────────────── */
+  .ncab__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 16px;
+    margin-top: clamp(36px, calc(var(--vw) * 3.4), 52px);
+  }
+
+  .ncab__deck {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+  }
+
+  .ncab__meta {
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ── Уже 1200 px: вступление, снимок, карточки, кнопки — столбиком ── */
+  @media (max-width: 1199.98px) {
+    .ncab__tour {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .ncab__text {
+      display: contents;
+    }
+
+    .ncab__visual {
+      order: 1;
+    }
+
+    .ncab__steps {
+      order: 2;
+      margin-top: 24px;
+    }
+
+    .ncab__intro :global(.intro) {
+      margin-bottom: 28px;
+    }
+
+    .ncab__intro :global(.t-lead) {
+      max-width: none;
+    }
+
+    /* снимок не шире 680 px: исходник 1000 px, крупнее он размывается */
+    .ncab-panes {
+      width: min(100%, 680px);
+    }
+
+    .ncab__gv {
+      padding: 58px 28px 28px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .ncab__steps {
+      --ncab-pad: 16px;
+      --ncab-chip: 36px;
+    }
+
+    .ncab__steps :global(.acc__head) {
+      gap: 12px;
+      min-height: 64px;
+      padding: 14px 0;
+      font-size: 1.0625rem;
+    }
+
+    .ncab__steps :global(.acc__head svg) {
+      padding: 9px;
+    }
+
+    .ncab__steps :global(.acc__inner > p) {
+      padding-left: calc(var(--ncab-chip) + 12px);
+      font-size: 0.9375rem;
+    }
+
+    .ncab__steps :global(.acc__progress),
+    .ncab__steps :global(.acc__item::after) {
+      left: calc(var(--ncab-pad) + var(--ncab-chip) + 12px);
+    }
+
+    .ncab__gv {
+      padding: 52px 12px 12px;
+    }
+
+    .ncab-win {
+      --win-r: 10px;
+      box-shadow:
+        0 0 0 5px rgb(255 255 255 / 0.4),
+        var(--shadow-card);
+    }
+
+    .ncab__demo {
+      top: 14px;
+      left: 14px;
+    }
+
+    /* кнопки во всю ширину, размер файла — под кнопкой презентации */
+    .ncab__cta {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    /* на узких телефонах длинная надпись кнопки переносится, а не выходит за край */
+    .ncab__cta .btn {
+      min-width: 0;
+      white-space: normal;
+      text-align: center;
+    }
+
+    .ncab__deck {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .ncab__meta {
+      text-align: center;
+    }
+  }
+</style>

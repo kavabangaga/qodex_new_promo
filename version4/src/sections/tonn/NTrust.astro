@@ -1,10 +1,381 @@
 ---
-// Заготовка раздела страницы «QODEX TONN» — её заменит сборщик раздела.
+// Раздел страницы «QODEX TONN» — клиенты и документы [#klienty]. Бежевая панель, без градиента.
+// Заголовок по центру, под ним два факта о компании плашками; белые плитки с логотипами клиентов,
+// соединённые перемычками (как «Нам доверяют» на главной); ниже — карточки «Презентация» и «Документация ПО»
+// (как в разделе «Безопасность» страницы РО-БОТ). Размер презентации считается при сборке.
+import fs from 'node:fs';
+import path from 'node:path';
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon from '../../components/Icon.astro';
+import ClientLogo from '../../components/ClientLogo.astro';
+import { CLIENTS } from '../../data/clients';
+import { SKOLKOVO_URL, withBase } from '../../config/site';
+
+const NB = String.fromCharCode(160);
+
+// Названия продуктов и «РО «…»» не разрываем переносом (сами тексты — без изменений)
+const nb = (t: string) =>
+  t.replace(/(QODEX|Кодекс) (TONN|Tracker|ТКО)/g, `$1${NB}$2`).replace(/(^|\s)(РО|ООО) «/g, `$1$2${NB}«`);
+
+// Неполный последний ряд встаёт по центру (как в KTrust). Сетка вдвое мельче числа плиток в ряду —
+// плитка занимает две колонки, — поэтому ряд можно сдвинуть и на полплитки.
+const rowStart = (cols: number) => {
+  const rest = CLIENTS.length % cols;
+  return rest ? { index: CLIENTS.length - rest, col: 1 + cols - rest } : null;
+};
+const starts = { c5: rowStart(5), c4: rowStart(4), c2: rowStart(2) };
+const tileStyle = (i: number) =>
+  [
+    `--d:${i % 5}`,
+    ...Object.entries(starts)
+      .filter(([, s]) => s?.index === i)
+      .map(([name, s]) => `--${name}:${s!.col}`),
+  ].join(';');
+
+// Презентация «О системе» — та же, что в «Документах» (группа QODEX TONN); решение заказчика 2026-10-07 — оставить.
+// Размер файла — при сборке; нет файла — сборка останавливается (как в DocList).
+const DECK = 'system.pdf';
+const deckPath = path.join(process.cwd(), 'public', 'files', DECK);
+if (!fs.existsSync(deckPath)) throw new Error(`Нет файла презентации public/files/${DECK}`);
+const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).replace('.', ',')}${NB}МБ`;
 ---
 
 <section class="section panel" id="klienty" aria-labelledby="klienty-title">
   <div class="container">
-    <h2 id="klienty-title" class="t-h2">Работаем с предприятиями по всей России</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Клиенты" titleId="klienty-title" class="ntr-intro">
+      73&nbsp;клиента работают с продуктами QODEX
+      <ul class="ntr-facts" slot="cta">
+        <li>
+          <a class="ntr-fact ntr-fact--link" href={SKOLKOVO_URL} target="_blank" rel="noopener">
+            <span class="ntr-fact__ico" aria-hidden="true"><Icon name="rocket" size={18} strokeWidth={1.9} /></span>
+            <span>Резидент Сколково<span class="visually-hidden"> — открыть на сайте Сколково</span></span>
+            <span class="ntr-fact__arrow" aria-hidden="true"><Icon name="arrow-up-right" size={16} strokeWidth={2} /></span>
+          </a>
+        </li>
+        <li>
+          <span class="ntr-fact">
+            <span class="ntr-fact__ico" aria-hidden="true"><Icon name="badge-check" size={18} strokeWidth={1.9} /></span>
+            <span>Аккредитованная IT-компания</span>
+          </span>
+        </li>
+      </ul>
+    </SectionIntro>
+
+    <!-- Клиенты: белые плитки с перемычками -->
+    <ul class="ntr-logos bridged" aria-label="Клиенты и партнёры QODEX">
+      {
+        CLIENTS.map((c, i) => (
+          <li class="ntr-logo" style={tileStyle(i)} data-reveal>
+            {c.logo ? <ClientLogo file={c.logo} name={c.name} /> : <span class="ntr-logo__name">{nb(c.name)}</span>}
+            {c.partner && <span class="tag ntr-logo__tag">партнёр</span>}
+          </li>
+        ))
+      }
+    </ul>
+
+    <!-- Презентация и документация -->
+    <div class="ntr-docs">
+      <article class="ntr-doc" data-reveal style="--d:1">
+        <span class="ntr-doc__ico" aria-hidden="true"><Icon name="presentation" size={24} /></span>
+        <h3 class="ntr-doc__title">Презентация QODEX&nbsp;TONN</h3>
+        <p class="ntr-doc__text">О системе: возможности, оборудование и результаты — в&nbsp;одном PDF.</p>
+        <p class="ntr-doc__act">
+          <a
+            class="btn btn--outline ntr-doc__btn"
+            href={withBase(`/files/${DECK}`)}
+            download="QODEX TONN Презентация.pdf"
+            aria-describedby="ntr-deck-meta"
+          >
+            <Icon name="download" />
+            Скачать презентацию
+          </a>
+          <span class="ntr-doc__meta" id="ntr-deck-meta">{DECK_META}</span>
+        </p>
+      </article>
+
+      <article class="ntr-doc" data-reveal style="--d:2">
+        <span class="ntr-doc__ico" aria-hidden="true"><Icon name="file-text" size={24} /></span>
+        <h3 class="ntr-doc__title">Документация ПО QODEX&nbsp;TONN</h3>
+        <p class="ntr-doc__text">
+          Функциональные характеристики, руководства пользователя и администратора, жизненный цикл.
+        </p>
+        <p class="ntr-doc__act">
+          <a class="link-arrow ntr-doc__link" href={withBase('/documents/#dokumenty-tonn')}>
+            Открыть документы
+            <Icon name="arrow-right" />
+          </a>
+        </p>
+      </article>
+    </div>
   </div>
 </section>
+
+<style>
+  /* ── Два факта о компании — плашками под заголовком ──── */
+  .ntr-intro :global(.intro__cta) {
+    margin-top: 8px;
+  }
+
+  .ntr-facts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 12px;
+  }
+
+  .ntr-fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 6px 18px 6px 6px;
+    border-radius: 999px;
+    background: var(--card);
+    font-size: 15px;
+    font-weight: 560;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+
+  .ntr-fact__ico {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .ntr-fact--link {
+    padding-right: 14px;
+    transition: background-color 0.2s;
+  }
+
+  .ntr-fact--link:hover {
+    background: #fbfaf7;
+  }
+
+  .ntr-fact__arrow {
+    display: inline-flex;
+    margin-left: -2px;
+    color: var(--muted);
+    transition:
+      transform 0.3s var(--ease-out),
+      color 0.2s;
+  }
+
+  .ntr-fact--link:hover .ntr-fact__arrow {
+    color: var(--ink);
+    transform: translate(2px, -2px);
+  }
+
+  /* ── Клиенты: плитки с перемычками ────────────────────── */
+  .ntr-logos {
+    --lg-gap: clamp(12px, calc(var(--vw) * 1.6), 20px);
+    --gap: var(--lg-gap);
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: var(--lg-gap);
+    isolation: isolate;
+    text-align: center;
+  }
+
+  .ntr-logo {
+    position: relative;
+    grid-column: var(--c5, auto) / span 2;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 6px;
+    min-height: clamp(96px, calc(var(--vw) * 9), 120px);
+    padding: 14px 12px;
+    border-radius: calc(clamp(18px, calc(var(--vw) * 1.8), 24px) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  /* мостик к соседней плитке слева; у первой плитки ряда его нет */
+  .ntr-logo::before {
+    content: none;
+    position: absolute;
+    top: calc(50% - (var(--gap) + 12px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 12px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  .ntr-logo:not(:nth-child(5n + 1))::before {
+    content: '';
+  }
+
+  .ntr-logo__name {
+    font-size: clamp(14.5px, calc(var(--vw) * 1.25), 17px);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    color: var(--ink-2);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .ntr-logo__tag {
+    font-size: 12px;
+  }
+
+  /* ── Презентация и документация ───────────────────────── */
+  .ntr-docs {
+    --ntr-r: clamp(22px, calc(var(--vw) * 2), 28px);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(14px, calc(var(--vw) * 1.4), 20px);
+    margin-top: clamp(48px, calc(var(--vw) * 5), 72px);
+  }
+
+  .ntr-doc {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    padding: clamp(22px, calc(var(--vw) * 2.4), 32px);
+    border-radius: calc(var(--ntr-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  .ntr-doc__ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .ntr-doc__title {
+    margin-top: 24px;
+    font-size: clamp(1.3rem, calc(var(--vw) * 1.7), 1.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .ntr-doc__text {
+    max-width: 46ch;
+    margin-top: 10px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .ntr-doc__act {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 18px;
+    margin-top: auto;
+    padding-top: 24px;
+  }
+
+  .ntr-doc__meta {
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ссылка невысокая: область нажатия больше её самой — не меньше 44 px */
+  .ntr-doc__link {
+    position: relative;
+  }
+
+  .ntr-doc__link::after {
+    content: '';
+    position: absolute;
+    inset: -10px -8px -8px;
+  }
+
+  /* у второй карточки действие на той же высоте, что кнопка у первой */
+  .ntr-doc__act:has(.ntr-doc__link) {
+    min-height: calc(50px + 24px);
+  }
+
+  /* ── Планшет: четыре плитки в ряд ─────────────────────── */
+  /* в пять плиток ряд здесь тесен: самое длинное название без пробелов упирается в края плитки */
+  @media (max-width: 999.98px) {
+    .ntr-logos {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+    }
+
+    .ntr-logo {
+      grid-column: var(--c4, auto) / span 2;
+      padding-inline: 8px;
+    }
+
+    .ntr-logo:not(:nth-child(5n + 1))::before {
+      content: none;
+    }
+
+    .ntr-logo:not(:nth-child(4n + 1))::before {
+      content: '';
+    }
+  }
+
+  /* ── Телефон: две плитки в ряд, карточки столбиком ────── */
+  @media (max-width: 759.98px) {
+    .ntr-logos {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .ntr-logo {
+      grid-column: var(--c2, auto) / span 2;
+    }
+
+    .ntr-logo:not(:nth-child(4n + 1))::before {
+      content: none;
+    }
+
+    .ntr-logo:nth-child(2n)::before {
+      content: '';
+    }
+
+    .ntr-facts {
+      gap: 8px;
+    }
+
+    .ntr-fact {
+      font-size: 14.5px;
+    }
+
+    .ntr-docs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ntr-doc__act:has(.ntr-doc__link) {
+      min-height: 0;
+    }
+  }
+
+  @media (max-width: 719.98px) {
+    .ntr-doc__title {
+      margin-top: 18px;
+    }
+
+    .ntr-doc__act {
+      width: 100%;
+    }
+
+    .ntr-doc__btn {
+      flex: 1 1 auto;
+    }
+  }
+</style>
