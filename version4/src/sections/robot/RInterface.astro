@@ -1,7 +1,8 @@
 ---
 // Раздел страницы «РО-БОТ» [#interfeys] — «Интерфейс РО-БОТа». Тур по пяти настоящим экранам продукта
 // (снимки 1600×900 с прежнего лендинга romoney.qodex.tech, данные на них — демо).
-// Снимок экрана — главный в разделе, поэтому он широкий: на 2K и FHD мелкий текст интерфейса читается.
+// Снимок экрана — главный в разделе, поэтому он крупный, но не шире 920 px: вместе со шкалой над ним
+// помещается в окно под шапкой на 2K и FHD (переключение пункта видно рядом со снимком).
 // Над ним — пять пунктов в ряд (FeatureAccordion): полоса прогресса сверху, заголовок экрана и текст
 // открытого пункта, как шкала шагов над сценой в «Алгоритме работы» QODEX Tracker и как на лендинге
 // (подпись над экраном). Пункты переключаются сами (6 с), снимок меняется вместе с ними ([data-acc-scope]).
@@ -87,7 +88,7 @@ const cropStyle = ([x, y, w]: [number, number, number]) =>
 
 <section class="section rif" id="interfeys" aria-labelledby="interfeys-title">
   <div class="container">
-    <SectionIntro eyebrow="Интерфейс" titleId="interfeys-title">Интерфейс РО-БОТа</SectionIntro>
+    <SectionIntro eyebrow="Как это выглядит" titleId="interfeys-title">Интерфейс РО-БОТа</SectionIntro>
 
     <div class="rif__tour" data-acc-scope>
       <div class="rif__steps" data-reveal style="--d:2">
@@ -105,10 +106,10 @@ const cropStyle = ([x, y, w]: [number, number, number]) =>
                       class="rif-frame__img"
                       src={src(s.file, 1600)}
                       srcset={`${src(s.file, 800)} 800w, ${src(s.file, 1600)} 1600w`}
-                      sizes="(max-width: 620px) 200vw, (max-width: 1199.98px) calc(100vw - 48px), 1040px"
+                      sizes="(max-width: 620px) 200vw, (max-width: 1199.98px) calc(100vw - 48px), 920px"
                       width="1600"
                       height="900"
-                      alt={s.alt}
+                      alt={`Демо-данные. ${s.alt}`}
                       loading="lazy"
                       decoding="async"
                       draggable="false"
@@ -119,6 +120,7 @@ const cropStyle = ([x, y, w]: [number, number, number]) =>
             }
           </div>
         </div>
+        {/* скринридеру пометку читает начало alt каждого снимка: плашка вне панелей прозвучала бы после снимка */}
         <span class="tag tag--demo rif__demo" aria-hidden="true">демо-данные</span>
       </div>
     </div>
@@ -129,7 +131,7 @@ const cropStyle = ([x, y, w]: [number, number, number]) =>
   .rif__tour {
     display: flex;
     flex-direction: column;
-    gap: clamp(20px, calc(var(--vw) * 1.8), 26px);
+    gap: 20px;
   }
 
   .rif__visual {
@@ -137,14 +139,18 @@ const cropStyle = ([x, y, w]: [number, number, number]) =>
     min-width: 0;
   }
 
-  /* подложка по размеру снимка: поля одинаковые со всех сторон, сверху в поле — плашка «демо-данные» */
+  /* подложка по размеру снимка: верхнее поле выше остальных — в нём плашка «демо-данные»
+     и 8–12 px воздуха до белого кольца рамки */
   .rif__gv {
     min-height: 0;
-    padding: 46px clamp(14px, calc(var(--vw) * 3), 52px);
+    padding: clamp(14px, calc(var(--vw) * 3), 52px);
+    padding-top: 58px;
   }
 
+  /* 920 px: шкала и снимок с рамкой целиком помещаются в окно под шапкой — на 2K (800 px) и на FHD
+     (758 px раскладки; там за краем окна остаётся только часть нижнего поля подложки) */
   .rif-panes {
-    width: min(100%, 1040px);
+    width: min(100%, 920px);
   }
 
   /* снимок экрана в белой рамке, как карточки .ui на градиенте */
@@ -202,7 +208,7 @@ const cropStyle = ([x, y, w]: [number, number, number]) =>
     .rif__steps :global(.acc__head) {
       align-items: flex-start;
       gap: 10px;
-      padding: 18px 0 10px;
+      padding: 14px 0 6px;
       font-size: 1.125rem;
       line-height: 1.3;
       color: var(--muted);
@@ -248,7 +254,7 @@ const cropStyle = ([x, y, w]: [number, number, number]) =>
 
   @media (max-width: 620px) {
     .rif__gv {
-      padding: 46px 14px 14px;
+      padding: 52px 14px 14px;
     }
 
     .rif-frame {

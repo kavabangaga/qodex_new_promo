@@ -178,12 +178,13 @@ const PHONE_HREF = 'tel:+79375000665';
             </div>
             <p class="rdoc-file__text">{d.text}</p>
             <div class="rdoc-file__foot">
-              <a class="rdoc-file__dl" href={d.href} target="_blank" rel="noopener">
+              {/* подпись «Скачать PDF» — дословно с лендинга, поэтому файл скачивается (download), а не открывается во вкладке */}
+              <a class="rdoc-file__dl" href={d.href} download>
                 <Icon name="download" size={18} strokeWidth={2} />
                 Скачать PDF
                 <span class="visually-hidden">
                   {' '}
-                  «{d.title}», {d.size} (откроется в новой вкладке)
+                  «{d.title}», {d.size}
                 </span>
               </a>
               <span class="rdoc-file__meta" aria-hidden="true">
@@ -503,7 +504,7 @@ const PHONE_HREF = 'tel:+79375000665';
     margin-top: 4px;
   }
 
-  /* кнопка-ссылка на PDF: открывается в новой вкладке */
+  /* кнопка-ссылка на PDF: файл скачивается (атрибут download) */
   .rdoc-file .rdoc-file__dl {
     display: inline-flex;
     align-items: center;

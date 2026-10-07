@@ -15,16 +15,18 @@ const NB = String.fromCharCode(160);
 const SOURCES: { icon: IconName; name: string }[] = [
   { icon: 'house', name: `ГИС${NB}ЖКХ` },
   { icon: 'database', name: 'База начислений оператора' },
-  { icon: 'map-pin', name: 'Государственный адресный реестр (ФИАС/ГАР)' },
+  // после «/» строка не рвётся (U+2060, как в RObjects): «(ФИАС/ГАР)» переносится целиком
+  { icon: 'map-pin', name: 'Государственный адресный реестр (ФИАС/⁠ГАР)' },
 ];
 
-// ── Демо-данные: один дом, шесть квартир. Первая — «по счёту один, по ГИС ЖКХ четыре» из текста;
-// расхождение в четырёх квартирах из шести (итог внизу карточки) ──
+// ── Демо-данные: один дом, шесть квартир. Дом и квартира — те же, что в «Модулях» и «Как это работает»:
+// ул. Ленина, 12, кв. 4 — «по счёту один, по ГИС ЖКХ четыре» из текста; расхождение в четырёх квартирах
+// из шести (итог внизу карточки). Не «ул. Достоевского, д. 1»: этот дом на настоящем снимке в «Интерфейсе» ──
 const FLATS = [
-  { n: 1, ls: '5216 0384 7721', gis: 4, bill: 1 },
+  { n: 1, ls: '5216 0384 7721', gis: 3, bill: 3 },
   { n: 2, ls: '5216 0391 0458', gis: 2, bill: 2 },
   { n: 3, ls: '5216 0402 3316', gis: 5, bill: 3 },
-  { n: 4, ls: '5216 0415 8873', gis: 3, bill: 3 },
+  { n: 4, ls: '5216 0415 8873', gis: 4, bill: 1 },
   { n: 5, ls: '5216 0427 1290', gis: 3, bill: 2 },
   { n: 6, ls: '5216 0438 6634', gis: 2, bill: 0 },
 ].map((f) => ({ ...f, ls: f.ls.replace(/ /g, NB), d: f.gis - f.bill }));
@@ -62,14 +64,12 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
         </p>
 
         <div class="rgis__src" data-reveal style="--d:3">
-          <h3 class="rgis__sub">Источники данных</h3>
-          <ul class="rgis__chips">
+          <p class="rgis__sub" id="gis-src">Источники данных</p>
+          <ul class="rgis__chips" aria-labelledby="gis-src">
             {
               SOURCES.map((s) => (
                 <li class="rgis__chip">
-                  <span class="rgis__chip-ico" aria-hidden="true">
-                    <Icon name={s.icon} size={16} strokeWidth={2} />
-                  </span>
+                  <Icon name={s.icon} size={17} strokeWidth={1.9} />
                   <span>{s.name}</span>
                 </li>
               ))
@@ -82,12 +82,6 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
           <span>Сверка базы с&nbsp;ГИС&nbsp;ЖКХ и&nbsp;подсвечивание расхождений прямо в&nbsp;биллинге.</span>
         </p>
 
-        <div class="rgis__cta" data-reveal style="--d:5">
-          <a href="#forma" class="btn btn--primary" data-interest="robot" data-goal="pilot_click">
-            Запустить бесплатный пилот
-            <Icon name="arrow-right" />
-          </a>
-        </div>
       </div>
 
       <div class="rgis__visual" data-reveal style="--d:1">
@@ -99,8 +93,8 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
                   <Icon name="building-2" size={20} strokeWidth={1.9} />
                 </span>
                 <span class="rgis-head__text">
-                  <span class="rgis-title">МКД, д.{NB}1</span>
-                  <span class="rgis-sub">ул.{NB}Достоевского<span class="rgis-sub__n"> · {FLATS.length}{NB}квартир</span></span>
+                  <span class="rgis-title">МКД, д.{NB}12</span>
+                  <span class="rgis-sub">ул.{NB}Ленина<span class="rgis-sub__n"> · {FLATS.length}{NB}квартир</span></span>
                 </span>
                 <span class="rgis-pill">
                   ГИС{NB}ЖКХ<span class="rgis-pill__date">{NB}·{NB}30.09.2026</span>
@@ -109,12 +103,10 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
 
               <div class="rgis-cols">
                 <span>Кв.</span>
-                <span>Лицевой счёт</span>
+                <span class="rgis-ls-h">Лицевой счёт</span>
                 <span class="rgis-c">ГИС</span>
                 <span class="rgis-c">Биллинг</span>
-                <span class="rgis-c">
-                  <span class="rgis-l-long">Разница</span><span class="rgis-l-short">Δ</span>
-                </span>
+                <span class="rgis-c">Разница</span>
               </div>
 
               <ul class="rgis-rows">
@@ -168,11 +160,9 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
     min-width: 0;
   }
 
-  /* заголовок длинный — чуть мельче, чем у коротких заголовков продуктовых разделов */
+  /* кегль — общий .t-serif, как у заголовков модулей 02 и 03 */
   .rgis__title {
     margin-top: 18px;
-    font-size: clamp(1.8rem, calc(var(--vw) * 2.6), 2.5rem);
-    line-height: 1.1;
   }
 
   .rgis__lead {
@@ -190,7 +180,7 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
     color: var(--ink);
   }
 
-  /* ── Источники данных: спокойные плашки ─────────────────── */
+  /* ── Источники данных: плашки как в модулях 02 и 03 (.rob-chip) ─────────────────── */
   .rgis__src {
     margin-top: clamp(24px, calc(var(--vw) * 2.6), 34px);
   }
@@ -212,27 +202,21 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
   .rgis__chip {
     display: inline-flex;
     align-items: center;
-    gap: 9px;
-    min-height: 42px;
-    padding: 6px 15px 6px 7px;
-    border-radius: calc(13px * var(--rk));
+    gap: 8px;
+    min-height: 38px;
+    padding: 7px 14px 7px 11px;
+    border-radius: calc(12px * var(--rk));
     corner-shape: var(--corner);
     background: var(--card);
     box-shadow: inset 0 0 0 1px var(--line);
-    font-size: 15px;
+    font-size: 14.5px;
     font-weight: 500;
     line-height: 1.3;
     color: var(--ink);
   }
 
-  .rgis__chip-ico {
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
+  .rgis__chip :global(svg) {
     flex: none;
-    border-radius: 50%;
-    background: var(--panel);
     color: var(--ink-2);
   }
 
@@ -262,10 +246,6 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
     border-radius: 50%;
     background: #fff;
     color: var(--blue);
-  }
-
-  .rgis__cta {
-    margin-top: 28px;
   }
 
   .rgis__visual {
@@ -384,7 +364,7 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
 
   .rgis-cols {
     padding-bottom: 7px;
-    font-size: clamp(10.5px, 2.6cqi, 12px);
+    font-size: 12px;
     font-weight: 500;
     line-height: 1.2;
     color: var(--muted);
@@ -393,10 +373,6 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
 
   .rgis-c {
     text-align: center;
-  }
-
-  .rgis-l-short {
-    display: none;
   }
 
   .rgis-rows {
@@ -410,7 +386,7 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
     min-height: clamp(34px, 9cqi, 42px);
     border-radius: 11px;
     background: var(--u-row);
-    font-size: clamp(11.5px, 3cqi, 14px);
+    font-size: clamp(13px, 3cqi, 14px);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -478,7 +454,7 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
     border-radius: 7px;
     background: var(--u-blue);
     color: #fff;
-    font-size: clamp(11.5px, 2.9cqi, 13px);
+    font-size: clamp(12.5px, 2.9cqi, 13px);
     font-weight: 600;
   }
 
@@ -607,7 +583,8 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
     }
   }
 
-  /* ── Узкая картинка (телефон): дата выгрузки, число квартир и длинная подпись колонки убраны ── */
+  /* ── Узкая картинка (телефон): дата выгрузки, число квартир и колонка лицевых счетов убраны —
+     двенадцать цифр счёта при кегле от 12 px не помещаются, а обрезанный «5216 0384 7…» хуже, чем без него ── */
   @container (max-width: 340px) {
     .rgis-sub__n {
       display: none;
@@ -615,16 +592,15 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
   }
 
   @container (max-width: 380px) {
-    .rgis-pill__date {
-      display: none;
+    /* колонки: квартира, ГИС, биллинг, разница (на самом контейнере @container не срабатывает) */
+    .rgis-card {
+      --cols: repeat(4, minmax(0, 1fr));
     }
 
-    .rgis-l-long {
+    .rgis-pill__date,
+    .rgis-ls-h,
+    .rgis-ls {
       display: none;
-    }
-
-    .rgis-l-short {
-      display: inline;
     }
   }
 
@@ -659,10 +635,6 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
       order: 3;
     }
 
-    .rgis__cta {
-      order: 4;
-    }
-
     /* карточка интерфейса стоит ниже плашки «демо-данные» */
     .rgis__visual :global(.gv) {
       padding-block: 54px;
@@ -674,18 +646,8 @@ const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
       padding-block: 50px 20px;
     }
 
-    .rgis__chip {
-      font-size: 14.5px;
-    }
-
     .rgis__hl {
       font-size: 15.5px;
-    }
-  }
-
-  @media (max-width: 560px) {
-    .rgis__cta .btn {
-      width: 100%;
     }
   }
 

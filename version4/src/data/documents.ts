@@ -74,7 +74,6 @@ export const PRODUCT_DOCS: ProductDocs[] = [
         title: 'Описание процессов поддержания жизненного цикла ПО «Кодекс Ро-бот»',
         file: 'ro-bot/zhiznennyj-cikl-po.pdf',
       },
-      { title: 'РО-БОТ', file: 'ro-bot/ro-bot-presentation.pdf', kind: 'Презентация' },
     ],
   },
 ];

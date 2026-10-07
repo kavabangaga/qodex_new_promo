@@ -3,9 +3,10 @@
 // 1. Четыре белые плитки со значками, соединённые мостиками (как плитки «Безопасности» на главной),
 //    под ними строка о техническом описании для служб ИБ и ИТ.
 // 2. Широкая белая карточка «Нормализация базы по ФИАС/ГАР»: слева три пункта и кнопка, справа на бирюзовой
-//    подложке макет (демо-данные) — три записи одного адреса в разном написании сводятся в одну с кодом ГАР.
+//    подложке макет (демо-данные) — три записи одного адреса сводятся в одну с кодом ГАР: два написания-дубля
+//    зачёркиваются, запись, уже совпадающая с эталоном, отмечается галочкой.
 //    Макет «проигрывается» один раз, когда он на экране; за экраном возвращается в начало.
-// 3. Две карточки: презентация (PDF, размер считается при сборке) и документация ПО.
+// 3. Карточки: документация ПО и презентация (PDF, размер считается при сборке; сейчас снята — см. DECK_SHOWN).
 // Тексты — с лендинга продукта, дословно.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -46,7 +47,7 @@ const NOTES: { label: string; text: string; icon: IconName }[] = [
   { label: 'Сверка', text: 'без ложных расхождений', icon: 'check-check' },
 ];
 
-// Макет: одна квартира в трёх написаниях и эталонный адрес (демо-данные с лендинга)
+// Макет: три записи одной квартиры (третья уже в эталонном написании) и эталонный адрес (демо-данные с лендинга)
 const VARIANTS = [
   'г Уфа ул.Ленина д.1 кв5',
   'УФА, ЛЕНИНА 1-5',
@@ -59,12 +60,16 @@ const DEMO_LABEL =
   'и «Респ. Башкортостан, г. Уфа, ул. Ленина, д. 1, кв. 5» сводятся в один адрес ' +
   '«Респ. Башкортостан, г. Уфа, ул. Ленина, д. 1, кв. 5» с кодом ГАР 0f1a…c47e';
 
-// Презентация: размер файла — при сборке; если файла нет, сборка останавливается (как в DocList)
+// Презентация с лендинга пока снята: на обложке «КОДЕКС РО-БОТ», на слайде 19 «…окупают стоимость пилота»,
+// а пилот бесплатный (ТЗ главной). Когда заказчик пришлёт исправленную — положить в public/files/ro-bot/ и включить.
+const DECK_SHOWN = false;
+// Размер файла — при сборке; если презентация включена, а файла нет, сборка останавливается (как в DocList)
 const DECK = 'ro-bot/ro-bot-presentation.pdf';
 const deckPath = path.join(process.cwd(), 'public', 'files', DECK);
-if (!fs.existsSync(deckPath)) throw new Error(`Нет файла презентации public/files/${DECK}`);
-const deckMb = (fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).replace('.', ',');
-const DECK_META = `PDF, ${deckMb}${NB}МБ`;
+if (DECK_SHOWN && !fs.existsSync(deckPath)) throw new Error(`Нет файла презентации public/files/${DECK}`);
+const DECK_META = DECK_SHOWN
+  ? `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).replace('.', ',')}${NB}МБ`
+  : '';
 ---
 
 <section class="section panel" id="bezopasnost" aria-labelledby="bezopasnost-title">
@@ -132,17 +137,25 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
             </span>
           </div>
 
-          <!-- три написания одного адреса: в итоге зачёркнуты -->
+          <!-- три записи одного адреса: в итоге дубли зачёркнуты, запись в эталонном написании отмечена галочкой -->
           <ul class="rsec-addr__in">
             {
-              VARIANTS.map((v, i) => (
-                <li class="rsec-addr__row" style={`--i:${i}`}>
-                  <span class="rsec-addr__txt">
-                    <s class="rsec-addr__old">{v}</s>
-                    <span class="rsec-addr__raw">{v}</span>
-                  </span>
-                </li>
-              ))
+              VARIANTS.map((v, i) => {
+                const same = v === CANON;
+                return (
+                  <li class:list={['rsec-addr__row', { 'rsec-addr__row--same': same }]} style={`--i:${i}`}>
+                    <span class="rsec-addr__txt">
+                      {same ? <span class="rsec-addr__old">{v}</span> : <s class="rsec-addr__old">{v}</s>}
+                      <span class="rsec-addr__raw">{v}</span>
+                    </span>
+                    {same && (
+                      <span class="rsec-addr__same">
+                        <Icon name="check" size={11} strokeWidth={3} />
+                      </span>
+                    )}
+                  </li>
+                );
+              })
             }
           </ul>
 
@@ -171,7 +184,8 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
     </article>
 
     <!-- 3. Презентация и документация -->
-    <div class="rsec-docs">
+    <div class:list={['rsec-docs', { 'rsec-docs--single': !DECK_SHOWN }]}>
+      {DECK_SHOWN && (
       <article class="rsec-doc" data-reveal style="--d:1">
         <span class="rsec-doc__ico" aria-hidden="true"><Icon name="presentation" size={24} /></span>
         <h3 class="rsec-doc__title">Презентация РО-БОТ</h3>
@@ -189,6 +203,7 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
           <span class="rsec-doc__meta" id="rsec-deck-meta">{DECK_META}</span>
         </p>
       </article>
+      )}
 
       <article class="rsec-doc" data-reveal style="--d:2">
         <span class="rsec-doc__ico" aria-hidden="true"><Icon name="file-text" size={24} /></span>
@@ -227,7 +242,6 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
     display: flex;
     flex-direction: column;
     min-width: 0;
-    min-height: clamp(260px, calc(var(--vw) * 18), 300px);
     padding: var(--rsec-pad);
     border-radius: calc(var(--rsec-r) * var(--rk));
     corner-shape: var(--corner);
@@ -272,15 +286,15 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
     width: 48px;
     height: 48px;
     flex: none;
-    margin-bottom: auto;
     border-radius: calc(14px * var(--rk));
     corner-shape: var(--corner);
     background: var(--panel);
     color: var(--ink);
   }
 
+  /* содержимое от верха: заголовок сразу под значком, как в «Безопасности» на главной */
   .rsec-tile__title {
-    margin-top: 28px;
+    margin-top: 24px;
     font-size: clamp(1.125rem, calc(var(--vw) * 1.45), 1.25rem);
     line-height: 1.25;
     letter-spacing: -0.02em;
@@ -519,6 +533,34 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
     opacity: 0;
   }
 
+  /* запись уже в эталонном написании: остаётся, не зачёркивается — справа галочка */
+  .rsec-addr__row--same {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .rsec-addr__row--same .rsec-addr__txt {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rsec-addr__row--same .rsec-addr__old {
+    text-decoration: none;
+  }
+
+  .rsec-addr__same {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    margin-top: 1px;
+    border-radius: 50%;
+    background: #12a197;
+    color: #fff;
+  }
+
   /* линии слияния: окно открывает их сверху вниз, рисунок внутри окна стоит на месте */
   .rsec-addr__merge {
     position: relative;
@@ -622,10 +664,12 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
 
   /* ── Движение: один раз, когда макет на экране ──────────────
      Классы is-armed и is-live ставит скрипт; без них (нет скриптов, «уменьшить движение»)
-     сразу видно итоговое состояние: записи зачёркнуты, эталон с кодом ГАР, «Записей: 1».
+     сразу видно итоговое состояние: дубли зачёркнуты, у записи в эталонном написании галочка, эталон
+     с кодом ГАР, «Записей: 1».
      Расписание (с): записи появляются 0,15–0,9; линии сходятся 1,0–1,6; эталон — 1,55, код ГАР — 1,95,
-     кольцо у галочки — 2,05; записи-дубли зачёркиваются 2,4–3,05, счёт 3 → 1 — 2,8. */
+     кольцо у галочки — 2,05; записи-дубли зачёркиваются 2,4–2,95, у совпавшей — галочка 2,6, счёт 3 → 1 — 2,8. */
   .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__row,
+  .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__same,
   .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__knot,
   .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__out,
   .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__code,
@@ -652,6 +696,10 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
 
   .rsec-norm__vis.is-live .rsec-addr__raw {
     animation: rsec-fade 0.45s ease calc(2.4s + var(--i) * 0.1s) both;
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__same {
+    animation: rsec-pop 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) calc(2.4s + var(--i) * 0.1s) both;
   }
 
   .rsec-norm__vis.is-live .rsec-addr__win {
@@ -782,6 +830,11 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
     margin-top: var(--rsec-gap);
   }
 
+  /* одна карточка (презентация снята) — во всю ширину */
+  .rsec-docs--single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .rsec-doc {
     display: flex;
     flex-direction: column;
@@ -855,24 +908,45 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
     min-height: calc(50px + 24px);
   }
 
+  /* одна широкая карточка — в одну строку: значок, заголовок с текстом, ссылка справа */
+  @media (min-width: 760px) {
+    .rsec-docs--single .rsec-doc {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-areas: 'ico title act' 'ico text act';
+      column-gap: 24px;
+      align-items: center;
+    }
+
+    .rsec-docs--single .rsec-doc__ico {
+      grid-area: ico;
+    }
+
+    .rsec-docs--single .rsec-doc__title {
+      grid-area: title;
+      align-self: end;
+      margin-top: 0;
+    }
+
+    .rsec-docs--single .rsec-doc__text {
+      grid-area: text;
+      align-self: start;
+      margin-top: 6px;
+    }
+
+    .rsec-docs--single .rsec-doc__act {
+      grid-area: act;
+      min-height: 0;
+      margin: 0;
+      padding: 0 8px 0 0;
+    }
+  }
+
   /* ── Планшет ───────────────────────────────────────────── */
   @media (max-width: 1199.98px) {
     /* плитки 2 × 2: мостики в рядах и между рядами */
     .rsec-tiles {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    /* в ряду тексты разной длины: содержимое от верха, заголовки на одной высоте */
-    .rsec-tile {
-      min-height: 0;
-    }
-
-    .rsec-tile__ico {
-      margin-bottom: 0;
-    }
-
-    .rsec-tile__title {
-      margin-top: 24px;
     }
 
     .rsec-tile:not(:first-child)::before {
@@ -950,7 +1024,6 @@ const DECK_META = `PDF, ${deckMb}${NB}МБ`;
         'ico text';
       align-content: start;
       column-gap: 14px;
-      min-height: 0;
       padding: 18px 20px 20px var(--rsec-pad);
     }
 

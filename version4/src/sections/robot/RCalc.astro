@@ -1,9 +1,10 @@
 ---
 // Раздел страницы «РО-БОТ» — «Калькулятор» [#kalkulyator]. Настоящий калькулятор недосбора с прежнего лендинга
 // romoney.qodex.tech: формула и коэффициенты — оттуда без изменений (CALC). Слева бежевая карточка с тремя полями,
-// под ней, мостиком, — «Правила подсчёта»; справа графитовая карточка результата: три модуля с полосой доли
-// в итоге (полоса — transform: scaleX), итог вилкой, метка «прогноз» и кнопка пилота. Раздел на фоне страницы,
-// без градиента. Числа пересчитываются при вводе; вслух (aria-live) объявляется только итог.
+// под ней, мостиком, — «Правила подсчёта»; справа графитовая карточка результата: метка «прогноз», итог вилкой
+// сразу под заголовком (виден вместе с полями), под ним три модуля с полосой доли в итоге (полоса — transform:
+// scaleX), внизу кнопка пилота. Раздел на фоне страницы, без градиента. Числа пересчитываются при вводе; вслух
+// объявляется только итог — скрытой строкой, когда ввод затих, а не на каждую цифру.
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon from '../../components/Icon.astro';
 
@@ -29,13 +30,22 @@ interface Field {
   min: number;
   step?: number;
   mode: 'numeric' | 'decimal';
+  err: string; // подсказка под полем, когда значение неверное
 }
 
 // Поля и значения по умолчанию — как на лендинге. У тарифа бывают копейки, поэтому клавиатура с запятой.
 const FIELDS: Field[] = [
-  { key: 'homes', label: `Домов в${NB}зоне обслуживания`, value: 10000, min: 1, mode: 'numeric' },
-  { key: 'tariff', label: `Тариф, ₽ с${NB}человека в${NB}месяц`, value: 120, min: 1, step: 0.01, mode: 'decimal' },
-  { key: 'contracts', label: `Действующих договоров с${NB}юрлицами`, value: 1000, min: 0, mode: 'numeric' },
+  { key: 'homes', label: `Домов в${NB}зоне обслуживания`, value: 10000, min: 1, mode: 'numeric', err: `Укажите число от${NB}1` },
+  {
+    key: 'tariff',
+    label: `Тариф, ₽ с${NB}человека в${NB}месяц`,
+    value: 120,
+    min: 1,
+    step: 0.01,
+    mode: 'decimal',
+    err: `Укажите тариф от${NB}1${NB}₽`,
+  },
+  { key: 'contracts', label: `Действующих договоров с${NB}юрлицами`, value: 1000, min: 0, mode: 'numeric', err: `Укажите число от${NB}0` },
 ];
 
 // Та же формула, что в скрипте ниже: здесь — числа для страницы до запуска скрипта
@@ -81,16 +91,30 @@ const MODULES = [
                 value={f.value}
                 data-in={f.key}
               />
+              <p class="rcalc-err" id={`rcalc-${f.key}-err`} data-err={f.key} hidden>
+                {f.err}
+              </p>
             </div>
           ))
         }
       </div>
 
-      <!-- Результат: модули с долей в итоге, итог вилкой, кнопка пилота -->
+      <!-- Результат: итог вилкой сразу под заголовком, под ним модули с долей в итоге, внизу кнопка пилота -->
       <div class="rcalc-res dark" data-reveal style="--d:2" data-res>
         <div class="rcalc-head">
           <h3 class="rcalc-title">Недосбор в{NB}год по{NB}модулям</h3>
           <span class="tag tag--forecast rcalc-tag">прогноз</span>
+        </div>
+
+        <div class="rcalc-total">
+          <p class="rcalc-total-label">Итого недосбор в{NB}год</p>
+          <p class="rcalc-sum" data-sum>
+            <span class="rcalc-range">
+              <span class="rcalc-line"><span class="rcalc-word">от</span> <span class="rcalc-num" data-out="low">{money(low)}</span></span>
+              <span class="rcalc-line"><span class="rcalc-word">до</span> <span class="rcalc-num" data-out="total">{money(total)}</span><span class="rcalc-cur">{NB}₽</span></span>
+            </span>
+            <span class="rcalc-dash" data-dash hidden>—</span>
+          </p>
         </div>
 
         <dl class="rcalc-mods">
@@ -107,16 +131,8 @@ const MODULES = [
           }
         </dl>
 
-        <div class="rcalc-total" aria-live="polite" aria-atomic="true">
-          <p class="rcalc-total-label">Итого недосбор в{NB}год</p>
-          <p class="rcalc-sum" data-sum>
-            <span class="rcalc-range">
-              <span class="rcalc-line"><span class="rcalc-word">от</span> <span class="rcalc-num" data-out="low">{money(low)}</span></span>
-              <span class="rcalc-line"><span class="rcalc-word">до</span> <span class="rcalc-num" data-out="total">{money(total)}</span><span class="rcalc-cur">{NB}₽</span></span>
-            </span>
-            <span class="rcalc-dash" data-dash hidden>—</span>
-          </p>
-        </div>
+        <!-- Для программ чтения с экрана: итог одной фразой, когда ввод затих (заполняет скрипт) -->
+        <p class="visually-hidden" aria-live="polite" data-say></p>
 
         <a href="#forma" class="btn btn--light rcalc-cta" data-interest="robot" data-goal="pilot_click">
           Запустить бесплатный пилот <Icon name="arrow-right" />
@@ -230,6 +246,15 @@ const MODULES = [
     box-shadow: 0 0 0 4px rgb(214 41 59 / 0.12);
   }
 
+  /* подсказка под неверным полем — как в форме заявки (.lf__err); красный чуть темнее --danger:
+     на бежевой карточке чистый --danger даёт 4,47:1, меньше нормы 4,5:1 */
+  .rcalc-err {
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: color-mix(in oklab, var(--danger) 86%, black);
+  }
+
   /* ── Результат: графитовая карточка с мягким свечением палитры ── */
   .rcalc-res {
     --rcalc-line: rgb(255 255 255 / 0.14);
@@ -267,9 +292,10 @@ const MODULES = [
     color: rgb(255 255 255 / 0.86);
   }
 
+  /* под модулями — запас до кнопки; остальное свободное место карточки уходит над кнопкой (.rcalc-cta) */
   .rcalc-mods {
     display: grid;
-    margin: 10px 0 36px;
+    margin: 0 0 12px;
   }
 
   .rcalc-mod {
@@ -281,9 +307,9 @@ const MODULES = [
     padding-block: 24px;
   }
 
-  /* разделитель — полоска-псевдоэлемент: однопиксельную рамку при дробном масштабе Safari не рисует */
-  .rcalc-mod + .rcalc-mod::before,
-  .rcalc-total::before {
+  /* разделитель над каждым модулем (у первого — черта под итогом) — полоска-псевдоэлемент:
+     однопиксельную рамку при дробном масштабе Safari не рисует */
+  .rcalc-mod::before {
     content: '';
     position: absolute;
     inset: 0 0 auto;
@@ -344,9 +370,7 @@ const MODULES = [
 
   /* ── Итог вилкой: «от» и «до» мельче, числа крупно; две строки всегда — при вводе ничего не прыгает ── */
   .rcalc-total {
-    position: relative;
-    margin-top: auto;
-    padding-top: 26px;
+    padding-block: 30px 28px;
   }
 
   .rcalc-total-label {
@@ -413,9 +437,10 @@ const MODULES = [
     color: rgb(255 255 255 / 0.6);
   }
 
+  /* кнопка прижата к низу карточки: на широком экране карточка вытянута до высоты левого столбца */
   .rcalc-cta {
     align-self: flex-start;
-    margin-top: 30px;
+    margin-top: auto;
   }
 
   /* ── Правила подсчёта: вторая бежевая карточка под полями, соединена мостиком ── */
@@ -476,12 +501,33 @@ const MODULES = [
       padding-block: 20px;
     }
 
-    .rcalc-mods {
-      margin-bottom: 26px;
-    }
-
     .rcalc-sum {
       font-size: 3.5rem;
+    }
+  }
+
+  /* Планшет, поля в ряд: подписи, поля и подсказки об ошибке — каждые в своей строке общей сетки.
+     Поля стоят на одной линии и тогда, когда под одним из них появилась подсказка */
+  @media (min-width: 760px) and (max-width: 1199.98px) {
+    .rcalc-in {
+      grid-auto-flow: column;
+      row-gap: 10px;
+    }
+
+    .rcalc-field {
+      display: contents;
+    }
+
+    .rcalc-label {
+      grid-row: 1;
+    }
+
+    .rcalc-input {
+      grid-row: 2;
+    }
+
+    .rcalc-err {
+      grid-row: 3;
     }
   }
 
@@ -507,8 +553,8 @@ const MODULES = [
       text-align: left;
     }
 
-    .rcalc-mods {
-      margin: 12px 0 24px;
+    .rcalc-total {
+      padding-block: 24px;
     }
 
     .rcalc-sum {
@@ -517,7 +563,6 @@ const MODULES = [
 
     .rcalc-cta {
       align-self: stretch;
-      margin-top: 26px;
     }
   }
 </style>
@@ -551,19 +596,29 @@ const MODULES = [
     const contractsEl = input('contracts');
     const sum = root.querySelector<HTMLElement>('[data-sum]')!;
     const dash = root.querySelector<HTMLElement>('[data-dash]')!;
+    const say = root.querySelector<HTMLElement>('[data-say]')!;
+    let sayTimer = 0;
 
     // Число из поля. Пустое, нечисловое или меньше минимума — null: в расчёт идёт как 0, на месте суммы «—».
-    // Красная рамка — только у неверного значения, у пустого поля её нет.
+    // Красная рамка и подсказка под полем — только у неверного значения, у пустого поля их нет.
     const read = (el: HTMLInputElement): number | null => {
       const v = el.valueAsNumber;
       const ok = Number.isFinite(v) && v >= Number(el.min || 0);
       const bad = el.validity.badInput || (el.value !== '' && !ok);
-      if (bad) el.setAttribute('aria-invalid', 'true');
-      else el.removeAttribute('aria-invalid');
+      const err = root.querySelector<HTMLElement>(`[data-err="${el.dataset.in}"]`)!;
+      err.hidden = !bad;
+      if (bad) {
+        el.setAttribute('aria-invalid', 'true');
+        el.setAttribute('aria-describedby', err.id);
+      } else {
+        el.removeAttribute('aria-invalid');
+        el.removeAttribute('aria-describedby');
+      }
       return ok ? v : null;
     };
 
-    const update = () => {
+    // announce = false при первом расчёте: при загрузке страницы читать итог вслух незачем
+    const update = (announce = true) => {
       const homes = read(homesEl);
       const tariff = read(tariffEl);
       const contracts = read(contractsEl);
@@ -579,6 +634,8 @@ const MODULES = [
       const low = total * C.lowShare;
 
       const homesOk = homes !== null && tariff !== null;
+      // итог — только когда все три поля верны: иначе вместо суммы «—», а не её часть
+      const empty = !(homesOk && contracts !== null && total > 0);
       const rows: [string, number, boolean][] = [
         ['residents', residents, homesOk],
         ['newHomes', newHomes, homesOk],
@@ -586,10 +643,10 @@ const MODULES = [
       ];
       for (const [key, value, ok] of rows) {
         out(key).textContent = ok ? `${money(value)}${NB}₽` : '—';
-        fill(key).style.setProperty('--s', ok && total > 0 ? (value / total).toFixed(4) : '0');
+        // полоса — доля в итоге; без итога полос нет
+        fill(key).style.setProperty('--s', ok && !empty ? (value / total).toFixed(4) : '0');
       }
 
-      const empty = !(total > 0);
       sum.classList.toggle('is-empty', empty);
       dash.hidden = !empty;
       if (!empty) {
@@ -601,11 +658,20 @@ const MODULES = [
         if (len <= 10) delete sum.dataset.size;
         else sum.dataset.size = len <= 13 ? 'm' : len <= 16 ? 's' : 'xs';
       }
+
+      // вслух — одной фразой, когда ввод затих: на каждую цифру программа чтения выстроила бы очередь фраз
+      if (!announce) return;
+      window.clearTimeout(sayTimer);
+      sayTimer = window.setTimeout(() => {
+        say.textContent = empty
+          ? 'Итог не рассчитан: проверьте поля'
+          : `Итого недосбор в${NB}год: от ${money(low)} до ${money(total)}${NB}₽`;
+      }, 900);
     };
 
-    root.addEventListener('input', update);
+    root.addEventListener('input', () => update());
     // браузер мог вернуть в поля прежние значения (кнопка «Назад»)
-    update();
+    update(false);
 
     // полосы растут, когда карточка результата впервые на экране
     const res = root.querySelector<HTMLElement>('[data-res]');

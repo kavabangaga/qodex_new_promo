@@ -63,8 +63,10 @@ const FOUND: { icon: IconName; obj: string; what: string; src: string; date: str
   { icon: 'store', obj: 'ООО «Вектор»', what: `нет${NB}договора`, src: 'ФНС', date: '30.09.2026' },
 ];
 
-// Точки «стекаются» от каждого реестра к списку: сдвиг по горизонтали — в процентах ширины блока
-const DX = [37.5, 12.5, -12.5, -37.5];
+// Точки «стекаются» от каждого реестра к списку: сдвиг по горизонтали — в процентах ширины блока.
+// Начало — центр пилюли: колонки .rst-srcs по длине названий (1.1 : 1.25 : 0.9 : 0.75, зазор 6 px),
+// на ширинах блока 268–396 px центр уходит от этих долей меньше чем на 1 px
+const DX = [37, 7.4, -19.8, -41.15];
 ---
 
 <section class="section panel" id="kak-eto-rabotaet" aria-labelledby="kak-eto-rabotaet-title">
@@ -701,9 +703,11 @@ const DX = [37.5, 12.5, -12.5, -37.5];
     container-type: inline-size;
   }
 
+  /* колонки — по длине названий: «Росреестру» на узком телефоне хватает места до скруглённых концов
+     (доли согласованы с DX — точки и линии начинаются от центра пилюли) */
   .rst-srcs {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.25fr) minmax(0, 0.9fr) minmax(0, 0.75fr);
     gap: 6px;
   }
 
@@ -1254,6 +1258,11 @@ const DX = [37.5, 12.5, -12.5, -37.5];
       bottom: auto;
       width: min(340px, 100%);
       translate: none;
+    }
+
+    /* экран уже, чем в ряду, и адрес доходит до сообщения «Отправлено в биллинг» на углу: опускаем адрес под него */
+    .rst-addr {
+      padding-top: 12px;
     }
   }
 

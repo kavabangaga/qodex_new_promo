@@ -344,7 +344,15 @@ const shop =
 
   /* «Подробнее» — внизу карточки: у трёх карточек на одной линии */
   .rmod__more {
+    position: relative;
     margin-top: auto;
+  }
+
+  /* ссылка невысокая: область нажатия больше её самой — не меньше 44 px (как у .rsec-doc__link) */
+  .rmod__more::after {
+    content: '';
+    position: absolute;
+    inset: -10px -8px -8px;
   }
 
   /* ── Рисунок: светлая «карточка» внутри карточки ───────── */
@@ -554,16 +562,17 @@ const shop =
     letter-spacing: -0.01em;
   }
 
+  /* табличка на двери; привязана правым краем — с крупным кеглем растёт влево, на дверь */
   .rmod-open {
     position: absolute;
-    left: 202px;
+    right: 81px;
     top: 128px;
     padding: 2px 6px;
     border-radius: 5px;
     background: #e1f5ec;
     color: #08724d;
     box-shadow: 0 1px 2px rgb(29 29 31 / 0.12);
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-weight: 650;
     white-space: nowrap;
   }
@@ -735,6 +744,12 @@ const shop =
 
     .rmod__card + .rmod__card::before {
       left: calc(50% - (var(--gap) + 14px) / 2);
+    }
+
+    /* мелкие надписи в рисунках на телефоне — не меньше 12 px */
+    .rmod-plate,
+    .rmod-open {
+      font-size: 12px;
     }
   }
 </style>
