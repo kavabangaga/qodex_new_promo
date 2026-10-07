@@ -8,9 +8,9 @@ import Icon from './Icon.astro';
 import { CONTACTS } from '../config/site';
 
 // Тексты по умолчанию — главная страница; страница продукта передаёт свои.
+// Подзаголовка под заголовком нет (решение заказчика): только заголовок, контакт и строка внизу.
 interface Props {
   title?: string;
-  lead?: string;
   /** Подпись над именем контакта. */
   personLabel?: string;
   /** Строка с зелёной точкой внизу панели. */
@@ -19,7 +19,6 @@ interface Props {
 
 const {
   title = 'Покажем эффект в рублях на одном районе или одной весовой',
-  lead = 'Пилот РО-БОТа — бесплатно. Напишите или позвоните — пришлём NDA и запустим пилот.',
   personLabel = 'Ваш контакт по пилоту',
   proof = '73 клиента работают с продуктами QODEX',
 } = Astro.props;
@@ -33,7 +32,6 @@ const {
     <aside class="lm__side">
       <p class="t-eyebrow lm__eyebrow">Заявка</p>
       <h2 class="lm__title" id="lm-title">{title}</h2>
-      <p class="lm__lead">{lead}</p>
       <div class="lm__person">
         <span class="lm__avatar" aria-hidden="true">ДМ</span>
         <div class="lm__person-text">
@@ -206,14 +204,6 @@ const {
     text-wrap: balance;
   }
 
-  /* на цветном фоне серому тексту не хватает контраста — абзац и нижняя строка темнее обычного */
-  .lm__lead {
-    font-size: 16px;
-    line-height: 1.55;
-    color: var(--ink-2);
-    text-wrap: pretty;
-  }
-
   /* Контакт по пилоту — белая карточка */
   .lm__person {
     display: flex;
@@ -383,7 +373,6 @@ const {
       background: rgb(255 255 255 / 0.22);
     }
 
-    .lm__lead,
     .lm__person,
     .lm__proof {
       display: none;

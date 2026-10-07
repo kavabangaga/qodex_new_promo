@@ -66,14 +66,14 @@ const breadcrumbs = {
     <Contact title={leadTitle} lead={leadText} proof={leadProof} personLabel="Ваш контакт" />
   </main>
   <Footer />
-  <LeadModal title={leadTitle} lead={leadText} proof={leadProof} personLabel="Ваш контакт" />
+  <LeadModal title={leadTitle} proof={leadProof} personLabel="Ваш контакт" />
 </Base>
 
 <script>
   import { initReveal, initCounters } from '../scripts/motion';
   import { initAccordions, initChains } from '../scripts/kit';
   import { initGoals } from '../scripts/goals';
-  import { addInterest, initInterestLinks } from '../scripts/interest';
+  import { setInterest, initInterestLinks } from '../scripts/interest';
 
   initReveal();
   initCounters();
@@ -82,6 +82,6 @@ const breadcrumbs = {
   initGoals();
   initInterestLinks();
 
-  // на странице продукта он сразу отмечен в поле «Что интересно» формы заявки
-  addInterest(['kodeks']);
+  // на странице продукта в поле «Что интересно» формы заявки отмечен только он
+  setInterest(['kodeks']);
 </script>

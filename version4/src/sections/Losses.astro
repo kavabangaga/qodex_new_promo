@@ -1156,7 +1156,7 @@ const rows: Row[] = [
 
 <script>
   import { PRODUCT_ORDER, type ProductId } from '../config/site';
-  import { addInterest, removeInterest } from '../scripts/interest';
+  import { addInterest, removeInterest, setInterest } from '../scripts/interest';
 
   const chain = document.querySelector<HTMLElement>('[data-losses]');
   const result = document.querySelector<HTMLElement>('[data-result]');
@@ -1204,7 +1204,7 @@ const rows: Row[] = [
       });
     });
 
-    cta.addEventListener('click', () => addInterest(checkedProducts()));
+    cta.addEventListener('click', () => setInterest(checkedProducts()));
 
     // Лёгкие анимации иллюстраций идут, только пока цепочка на экране
     if ('IntersectionObserver' in window) {

@@ -46,11 +46,14 @@ export function setInterest(ids: ProductId[]): void {
   commit();
 }
 
-/** Клики по [data-interest="robot tonn"] добавляют продукты в форму. */
+/**
+ * Клик по [data-interest="robot tonn"] отмечает в форме ровно эти продукты: окно заявки открывается
+ * с продуктом той кнопки, которую нажали, а не со всем, что посетитель смотрел раньше.
+ */
 export function initInterestLinks(): void {
   document.addEventListener('click', (e) => {
     const el = (e.target as Element | null)?.closest<HTMLElement>('[data-interest]');
     if (!el?.dataset.interest) return;
-    addInterest(el.dataset.interest.split(' ') as ProductId[]);
+    setInterest(el.dataset.interest.split(' ') as ProductId[]);
   });
 }
