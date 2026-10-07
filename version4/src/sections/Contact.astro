@@ -18,6 +18,8 @@ interface Props {
   personLabel?: string;
   /** Заголовок меньше обычного (размер заголовка продуктового раздела) — для страниц, где заявка не главное. */
   compact?: boolean;
+  /** Шаги «как начать» над формой (страница продукта); последний — с галочкой. Без них блок как на главной. */
+  steps?: { title: string; text: string }[];
 }
 
 const {
@@ -26,6 +28,7 @@ const {
   proof = '73 клиента работают с продуктами QODEX',
   personLabel = 'Ваш контакт по пилоту',
   compact = false,
+  steps = [],
 } = Astro.props;
 
 // Высоты полос «звуковой волны» в центральной карточке
@@ -53,6 +56,23 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
             {proof}
           </p>
         </SectionIntro>
+      )
+    }
+
+    {
+      steps.length > 0 && (
+        <ol class="contact__steps" aria-label="Как начать">
+          {steps.map((st, i) => (
+            <li class:list={['contact__step', { 'is-last': i === steps.length - 1 }]} data-reveal style={`--d:${i + 1}`}>
+              <span class="contact__step-n">
+                {i === steps.length - 1 && <Icon name="circle-check" size={16} strokeWidth={2} />}
+                Шаг {i + 1}
+              </span>
+              <span class="contact__step-title">{st.title}</span>
+              <span class="contact__step-text">{st.text}</span>
+            </li>
+          ))}
+        </ol>
       )
     }
 
@@ -138,6 +158,61 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
     border-radius: 50%;
     background: var(--ok);
     box-shadow: 0 0 0 4px rgb(10 159 106 / 0.16);
+  }
+
+  /* Шаги «как начать» над формой (только на страницах продуктов) */
+  .contact__steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(10px, calc(var(--vw) * 1.2), 16px);
+    max-width: 1120px;
+    margin: 0 auto clamp(14px, calc(var(--vw) * 1.6), 20px);
+    padding: 0;
+    list-style: none;
+  }
+
+  .contact__step {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+    padding: 18px 20px 20px;
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .contact__step-n {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 560;
+    color: var(--muted);
+  }
+
+  .contact__step.is-last .contact__step-n {
+    color: var(--ok);
+  }
+
+  .contact__step-title {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .contact__step-text {
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  @media (max-width: 759.98px) {
+    .contact__steps {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   /* Горизонтальная форма на белой карточке */

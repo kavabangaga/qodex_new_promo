@@ -1,0 +1,104 @@
+---
+// Страница продукта «QODEX TONN» (этап 2): автоматизация весовой — номер, фото и вес машины без ручного ввода.
+// Содержание — с прежнего лендинга tonn.qodex.tech (и его варианта /tko для полигонов); где он расходится с главной —
+// как на главной (−57% и >60 млн ₽ «Эко-Сити», ПП № 567, «монтаж от 3 дней», «месяц бесплатно после запуска»,
+// «73 клиента», «Резидент Сколково»). Решения заказчика 2026-10-07: галерея кадров с камер остаётся (госномера
+// размыты), цифры лендинга и его окупаемости остаются, «бесплатный аудит» и уведомления в Telegram — нет, отрасли
+// кроме ТКО — «подходит». Оформление — дизайн-система v4. Документация ПО — группа QODEX TONN в «Документах».
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Floating from '../components/Floating.astro';
+import LeadModal from '../components/LeadModal.astro';
+import NHero from '../sections/tonn/NHero.astro';
+import NFit from '../sections/tonn/NFit.astro';
+import NPains from '../sections/tonn/NPains.astro';
+import NSchemes from '../sections/tonn/NSchemes.astro';
+import NLaw from '../sections/tonn/NLaw.astro';
+import NHow from '../sections/tonn/NHow.astro';
+import NKit from '../sections/tonn/NKit.astro';
+import NGallery from '../sections/tonn/NGallery.astro';
+import NCabinet from '../sections/tonn/NCabinet.astro';
+import NCalc from '../sections/tonn/NCalc.astro';
+import NResults from '../sections/tonn/NResults.astro';
+import NBoth from '../sections/tonn/NBoth.astro';
+import NTrust from '../sections/tonn/NTrust.astro';
+import Questions from '../sections/Questions.astro';
+import Contact from '../sections/Contact.astro';
+import { faqJsonLd } from '../data/faq';
+import { FAQ_TONN } from '../data/faq-tonn';
+import { SITE, withBase } from '../config/site';
+
+const NB = String.fromCharCode(160);
+
+const title = 'QODEX TONN — автоматизация весовой: номер, фото и вес без ручного ввода | QODEX';
+const description =
+  'Система автоматизации весовых для предприятий с тоннажным учётом: номер, фото и вес машины без ручного ввода, акт сразу в облаке, данные во ФГИС УТКО. Работает с любыми автовесами, монтаж от 3 дней, месяц бесплатно после запуска.';
+
+// Тексты формы заявки на этой странице (с лендинга; шаги — как у его формы, условия запуска — как на главной)
+const leadTitle = 'Перестаньте терять деньги';
+const leadText = `Мы поможем на любом этапе — от знакомства с системой до запуска на вашем${NB}объекте.`;
+const leadSteps = [
+  { title: 'Расчёт потерь', text: 'Узнайте, сколько вы теряете на весовой прямо сейчас' },
+  { title: 'Онлайн-демо', text: 'Покажем систему в работе на реальном объекте' },
+  { title: 'Тестовый запуск', text: `Монтаж от 3${NB}дней, 1${NB}месяц бесплатно после запуска` },
+];
+
+// Меню страницы: «Продукты» и главные разделы этой страницы (по порядку на странице)
+const nav = [
+  { href: '#komu-podhodit', label: 'Кому подходит' },
+  { href: '#kak-eto-rabotaet', label: 'Как это работает' },
+  { href: '#oborudovanie', label: 'Оборудование' },
+  { href: '#rezultaty', label: 'Результаты' },
+];
+
+const breadcrumbs = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'QODEX', item: new URL(withBase('/'), SITE.url).href },
+    { '@type': 'ListItem', position: 2, name: 'QODEX TONN', item: new URL(withBase('/tonn/'), SITE.url).href },
+  ],
+};
+---
+
+<Base title={title} description={description} jsonLd={[faqJsonLd(FAQ_TONN), breadcrumbs]}>
+  <Floating />
+  <Header home={false} cta="Подключить весовую" current="tonn" nav={nav} />
+  <main id="main">
+    <NHero />
+    <NFit />
+    <NPains />
+    <NSchemes />
+    <NLaw />
+    <NHow />
+    <NKit />
+    <NGallery />
+    <NCabinet />
+    <NCalc />
+    <NResults />
+    <NBoth />
+    <NTrust />
+    <Questions items={FAQ_TONN} />
+    <Contact title={leadTitle} lead={leadText} personLabel="Ваш контакт" steps={leadSteps} />
+  </main>
+  <Footer cta="Подключить весовую" />
+  <LeadModal title={leadTitle} lead={leadText} personLabel="Ваш контакт" />
+</Base>
+
+<script>
+  import { initReveal, initCounters } from '../scripts/motion';
+  import { initAccordions, initChains } from '../scripts/kit';
+  import { initGoals } from '../scripts/goals';
+  import { addInterest, initInterestLinks } from '../scripts/interest';
+
+  initReveal();
+  initCounters();
+  initAccordions();
+  initChains();
+  initGoals();
+  initInterestLinks();
+
+  // на странице продукта он сразу отмечен в поле «Что интересно» формы заявки
+  addInterest(['tonn']);
+</script>

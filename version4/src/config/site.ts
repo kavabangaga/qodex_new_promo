@@ -105,6 +105,7 @@ export const PRODUCTS: Record<ProductId, Product> = {
     name: 'QODEX TONN',
     url: 'https://tonn.qodex.tech',
     stage2Path: '/tonn',
+    onSite: true,
     color: '#12B886',
     glow: '#45E0AE',
   },
