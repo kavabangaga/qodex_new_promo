@@ -134,7 +134,49 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     <SectionIntro eyebrow="Как это работает" titleId="algoritm-title">Алгоритм работы</SectionIntro>
 
     <div class="tst__player" data-tst data-idle>
-      <div class="tst__visual" data-reveal style="--d:1">
+      {/* Шкала: отрезок на шаг, как главы ролика. Кнопка — отрезок с подписью; в aria-label сначала видимая подпись
+          («1 Прибытие» — её можно назвать голосом), затем полное название шага */}
+      <ol class="tst-tl" aria-label="Шаги алгоритма" data-tst-list data-reveal style="--d:1">
+        {
+          STEPS.map((s, i) => (
+            <li class:list={['tst-tl__item', { 'is-on': i === 0 }]} style={`--ms:${s.ms}ms`}>
+              <button
+                class="tst-tl__btn"
+                type="button"
+                aria-label={`${i + 1} ${s.short}. ${s.title}`}
+                aria-describedby={s.text ? `algoritm-d${i + 1}` : undefined}
+                aria-current={i === 0 ? 'step' : undefined}
+              >
+                <span class="tst-tl__track">
+                  <i data-tst-bar />
+                </span>
+                <span class="tst-tl__label">
+                  <span class="tst-tl__n">{i + 1}</span>
+                  <span class="tst-tl__t">{s.short}</span>
+                </span>
+              </button>
+            </li>
+          ))
+        }
+      </ol>
+
+      {/* Подпись активного шага. В разметке все шесть: тексты остаются на странице, высота — по самой длинной */}
+      <div class="tst-caps" data-reveal style="--d:2">
+        {
+          STEPS.map((s, i) => (
+            <div class:list={['tst-cap', { 'is-on': i === 0 }]} data-tst-cap>
+              <p class="tst-cap__n">{`Шаг${NB}${i + 1}`}</p>
+              <h3 class="tst-cap__t">{s.title}</h3>
+              {s.text && (
+                <p class="tst-cap__d" id={`algoritm-d${i + 1}`}>
+                  {s.text}
+                </p>
+              )}
+            </div>
+          ))
+        }
+      </div>
+      <div class="tst__visual" data-reveal style="--d:3">
         <GradientVisual preset="teal" deco="none">
           <div class="ui tst-ui">
             <div class="tst-stage is-run" data-tst-stage data-s="1">
@@ -370,49 +412,6 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
         </GradientVisual>
         <span class="tag tag--demo tst__demo" aria-hidden="true">демо-данные</span>
       </div>
-
-      {/* Шкала: отрезок на шаг, как главы ролика. Кнопка — отрезок с подписью; в aria-label сначала видимая подпись
-          («1 Прибытие» — её можно назвать голосом), затем полное название шага */}
-      <ol class="tst-tl" aria-label="Шаги алгоритма" data-tst-list data-reveal style="--d:2">
-        {
-          STEPS.map((s, i) => (
-            <li class:list={['tst-tl__item', { 'is-on': i === 0 }]} style={`--ms:${s.ms}ms`}>
-              <button
-                class="tst-tl__btn"
-                type="button"
-                aria-label={`${i + 1} ${s.short}. ${s.title}`}
-                aria-describedby={s.text ? `algoritm-d${i + 1}` : undefined}
-                aria-current={i === 0 ? 'step' : undefined}
-              >
-                <span class="tst-tl__track">
-                  <i data-tst-bar />
-                </span>
-                <span class="tst-tl__label">
-                  <span class="tst-tl__n">{i + 1}</span>
-                  <span class="tst-tl__t">{s.short}</span>
-                </span>
-              </button>
-            </li>
-          ))
-        }
-      </ol>
-
-      {/* Подпись активного шага. В разметке все шесть: тексты остаются на странице, высота — по самой длинной */}
-      <div class="tst-caps" data-reveal style="--d:3">
-        {
-          STEPS.map((s, i) => (
-            <div class:list={['tst-cap', { 'is-on': i === 0 }]} data-tst-cap>
-              <p class="tst-cap__n">{`Шаг${NB}${i + 1}`}</p>
-              <h3 class="tst-cap__t">{s.title}</h3>
-              {s.text && (
-                <p class="tst-cap__d" id={`algoritm-d${i + 1}`}>
-                  {s.text}
-                </p>
-              )}
-            </div>
-          ))
-        }
-      </div>
     </div>
 
     <p class="tst__cta" data-reveal>
@@ -425,9 +424,10 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
 </section>
 
 <style>
-  /* ── Плеер: широкая сцена, под ней шкала шагов и подпись ── */
+  /* ── Плеер: сверху шкала шагов и подпись активного шага, под ними широкая сцена ── */
   .tst__visual {
     position: relative;
+    margin-top: clamp(22px, calc(var(--vw) * 2.4), 36px);
   }
 
   /* сверху полоса под «демо-данные» */
@@ -451,7 +451,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     --tl-x: 5px;
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    margin: 14px calc(var(--tl-x) * -1) 0;
+    margin: 0 calc(var(--tl-x) * -1);
   }
 
   .tst-tl__btn {
@@ -1608,7 +1608,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     }
   }
 
-  /* ── Кнопка под подписью ───────────────────────────── */
+  /* ── Кнопка под сценой ─────────────────────────────── */
   .tst__cta {
     display: flex;
     justify-content: center;
@@ -1670,10 +1670,6 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
 
     .tst-stage {
       border-radius: 12px;
-    }
-
-    .tst-tl {
-      margin-top: 12px;
     }
 
     .tst-tl__btn {
@@ -1755,13 +1751,14 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
       }
     };
 
-    // шаг нажат, а верх сцены ушёл под шапку или за окно — подтягиваем сцену в окно (отступ под шапку даёт
-    // scroll-padding-top у html, плавность — scroll-behavior: при «уменьшить движение» сразу)
+    // шаг нажат, а сцена (она под шкалой) ушла под шапку или ниже края окна — подтягиваем её в окно
+    // (отступ под шапку даёт scroll-padding-top у html, плавность — scroll-behavior: при «уменьшить движение» сразу)
     const visual = root.querySelector<HTMLElement>('.tst__visual')!;
     const header = document.querySelector<HTMLElement>('[data-hdr]');
     const reveal = () => {
       const top = header ? header.getBoundingClientRect().bottom : 0;
-      if (stage.getBoundingClientRect().top < top) visual.scrollIntoView({ block: 'nearest' });
+      const r = stage.getBoundingClientRect();
+      if (r.top < top || r.bottom > innerHeight) visual.scrollIntoView({ block: 'nearest' });
     };
 
     buttons.forEach((btn, k) =>
