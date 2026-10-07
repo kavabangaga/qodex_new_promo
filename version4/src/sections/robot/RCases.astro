@@ -1,10 +1,367 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Раздел страницы «РО-БОТ» [#keysy] — «Реальные кейсы» модуля 01 (сверка с ГИС ЖКХ). Две белые карточки
+// на бежевой панели, соединённые мостиком; на телефоне — одна под другой. В карточке: заказчик, заголовок,
+// плашки с условиями проекта, главная цифра (досчитывается при появлении) и ещё четыре цифры сеткой 2×2.
+// Строки карточек выровнены между собой (subgrid): главные цифры и сетки начинаются на одной высоте.
+// Тексты и цифры — с лендинга romoney.qodex.tech дословно. Это разные проекты: цифры не складываем,
+// под карточками — сноска об этом.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = String.fromCharCode(160); // неразрывный пробел
+
+interface Fact {
+  /** Знак перед числом — не досчитывается. */
+  prefix?: string;
+  /** Число для досчёта (только у главной цифры) и его вид на странице. */
+  count?: number;
+  value: string;
+  /** Единицы после числа — того же размера. */
+  unit?: string;
+  text: string;
+}
+
+interface Case {
+  client: string;
+  title: string;
+  meta: { icon: IconName; text: string }[];
+  lead: Fact;
+  facts: Fact[];
+}
+
+const CASES: Case[] = [
+  {
+    client: `Региональный оператор${NB}ТКО`,
+    title: `+10% к${NB}базе начислений за${NB}один день`,
+    meta: [
+      { icon: 'map-pin', text: 'Регион не раскрывается' },
+      { icon: 'arrows-exchange', text: `Сверка ГИС${NB}ЖКХ с${NB}начислениями` },
+    ],
+    lead: {
+      prefix: '+',
+      count: 4548,
+      value: `4${NB}548`,
+      text: `недоучтённых жителей к${NB}базе начислений (≈44${NB}000 человек) — потенциальный прирост около 10%.`,
+    },
+    facts: [
+      { value: '97,2%', text: 'найденных расхождений — на сведениях, обновлённых МВД за последний год' },
+      {
+        value: `1${NB}день`,
+        text: `от запуска до готового реестра расхождений — без ручного перебора базы ГИС${NB}ЖКХ`,
+      },
+      {
+        value: '≈260',
+        text: `лицевых счетов числились как «0${NB}проживающих», хотя по${NB}ГИС${NB}ЖКХ там живут люди`,
+      },
+      {
+        value: `≈7,5${NB}млн${NB}₽`,
+        text: 'недоначисленной платы в год — консервативная оценка по действующему тарифу',
+      },
+    ],
+  },
+  {
+    client: `Крупный региональный оператор${NB}ТКО`,
+    title: `755${NB}576 помещений — за${NB}4${NB}дня вместо 21${NB}года`,
+    meta: [
+      { icon: 'map', text: '22 территории' },
+      { icon: 'building-2', text: `755${NB}576 помещений` },
+      { icon: 'calendar', text: `4${NB}рабочих дня` },
+    ],
+    lead: {
+      count: 4,
+      value: '4',
+      unit: `${NB}дня`,
+      text: `на выгрузку и проверку всей зоны оператора — 755${NB}576 помещений по${NB}22 муниципальным образованиям.`,
+    },
+    facts: [
+      {
+        value: `21${NB}год`,
+        text: `заняла бы та же работа у${NB}одного сотрудника вручную — ≈5${NB}400 человеко-дней`,
+      },
+      { value: `в${NB}1${NB}349 раз`, text: 'быстрее ручной обработки на одном полном проходе по базе' },
+      {
+        value: `86${NB}человек`,
+        text: 'понадобилось бы в штате, чтобы вручную актуализировать базу каждый квартал',
+      },
+      {
+        value: 'раз в квартал',
+        text: 'повторный проход по всей зоне — по регламенту, штатная операция вместо проекта на годы',
+      },
+    ],
+  },
+];
 ---
 
-<section class="section panel" id="keysy" aria-labelledby="keysy-title">
+<section class="section panel rcs" id="keysy" aria-labelledby="keysy-title">
   <div class="container">
-    <h2 id="keysy-title" class="t-h2">Реальные кейсы</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Модуль 01 · Два проекта" titleId="keysy-title">Реальные кейсы</SectionIntro>
+
+    <div class="rcs__grid bridged">
+      {
+        CASES.map((c, i) => (
+          <article class="rcs-card" aria-labelledby={`keysy-c${i + 1}`} data-reveal style={`--d:${i + 1}`}>
+            <p class="rcs-card__client">
+              <span class="rcs-card__ico" aria-hidden="true">
+                <Icon name="building-2" size={18} strokeWidth={2} />
+              </span>
+              <span>{c.client}</span>
+            </p>
+
+            <div class="rcs-card__head">
+              <h3 class="rcs-card__title" id={`keysy-c${i + 1}`}>{c.title}</h3>
+              <ul class="rcs-card__meta">
+                {c.meta.map((m) => (
+                  <li class="tag rcs-card__tag">
+                    <Icon name={m.icon} size={14} strokeWidth={2} />
+                    <span>{m.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* главная цифра: ширину числа держит невидимое итоговое значение, досчёт идёт поверх него */}
+            <div class="rcs-lead">
+              <p class="rcs-lead__num">
+                <span class="rcs-lead__fix" aria-hidden="true">{c.lead.prefix}{c.lead.value}{c.lead.unit}</span>
+                <span class="rcs-lead__live">{c.lead.prefix}<span data-count={c.lead.count}>{c.lead.value}</span>{c.lead.unit}</span>
+              </p>
+              <p class="rcs-lead__text">{c.lead.text}</p>
+            </div>
+
+            <ul class="rcs-facts">
+              {c.facts.map((f) => (
+                <li class="rcs-fact">
+                  <p class="rcs-fact__num">{f.value}</p>
+                  <p class="rcs-fact__text">{f.text}</p>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))
+      }
+    </div>
+
+    <p class="footnote rcs__note" data-reveal>
+      Кейсы РО-БОТа — разные проекты. Регионы и операторы не раскрываются по условиям соглашений.
+    </p>
   </div>
 </section>
+
+<style>
+  /* ── Две карточки рядом; строки карточек общие (subgrid) ── */
+  .rcs__grid {
+    --gap: clamp(16px, calc(var(--vw) * 1.6), 24px);
+    --rcs-pad: clamp(24px, calc(var(--vw) * 3), 44px);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(4, auto);
+    column-gap: var(--gap);
+    isolation: isolate;
+  }
+
+  .rcs-card {
+    position: relative;
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    row-gap: clamp(22px, calc(var(--vw) * 2.2), 32px);
+    align-content: start;
+    min-width: 0;
+    padding: var(--rcs-pad);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  /* мостик к карточке слева — на высоте строки заказчика (маски — .bridged в global.css) */
+  .rcs-card + .rcs-card::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--rcs-pad) + 16px - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  /* ── Заказчик, заголовок, условия ── */
+  .rcs-card__client {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 560;
+    line-height: 1.3;
+    color: var(--ink-2);
+  }
+
+  .rcs-card__ico {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: calc(9px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .rcs-card__head {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+  }
+
+  .rcs-card__title {
+    font-size: clamp(1.5rem, calc(var(--vw) * 2.2), 2rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  .rcs-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rcs-card__tag {
+    gap: 6px;
+    padding: 5px 10px;
+    background: var(--panel);
+    color: var(--ink-2);
+  }
+
+  .rcs-card__tag :global(svg) {
+    flex: none;
+    color: var(--muted);
+  }
+
+  /* ── Главная цифра ── */
+  .rcs-lead {
+    display: grid;
+    gap: 12px;
+    align-content: start;
+    padding-top: clamp(22px, calc(var(--vw) * 2.2), 32px);
+    border-top: 1px solid var(--line);
+  }
+
+  /* табличные цифры, чтобы ширина не прыгала при досчёте; в «4 548» есть пара 48 — разрядка не теснее −0,025em */
+  .rcs-lead__num {
+    position: relative;
+    font-size: clamp(3.75rem, calc(var(--vw) * 6.2), 5.75rem);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+
+  .rcs-lead__fix {
+    visibility: hidden;
+  }
+
+  .rcs-lead__live {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .rcs-lead__text {
+    max-width: 36ch;
+    font-size: clamp(1.03rem, calc(var(--vw) * 1.15), 1.125rem);
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  /* ── Ещё четыре цифры сеткой 2×2 ── */
+  .rcs-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(22px, calc(var(--vw) * 2), 28px) clamp(20px, calc(var(--vw) * 2.2), 32px);
+    align-content: start;
+  }
+
+  .rcs-fact {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    min-width: 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+
+  .rcs-fact__num {
+    font-size: clamp(1.6rem, calc(var(--vw) * 2.1), 2rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .rcs-fact__text {
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .rcs__note {
+    max-width: 760px;
+    margin: clamp(22px, calc(var(--vw) * 2.2), 32px) auto 0;
+    text-align: center;
+  }
+
+  /* ── Планшет и телефон: карточки одна под другой, мостик сверху ── */
+  @media (max-width: 960.98px) {
+    .rcs__grid {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: none;
+      row-gap: var(--gap);
+    }
+
+    .rcs-card {
+      grid-row: auto;
+      grid-template-rows: none;
+    }
+
+    .rcs-card + .rcs-card::before {
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--rcs-pad) + 16px - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+  }
+
+  /* планшет: карточка во всю ширину — текст главной цифры встаёт справа от числа */
+  @media (min-width: 621px) and (max-width: 960.98px) {
+    .rcs-lead {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: end;
+      column-gap: clamp(24px, calc(var(--vw) * 4), 40px);
+    }
+
+    .rcs-lead__text {
+      padding-bottom: 2px;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .rcs-facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rcs__note {
+      text-align: left;
+    }
+  }
+</style>

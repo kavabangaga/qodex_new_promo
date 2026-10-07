@@ -1,10 +1,1525 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Раздел страницы «РО-БОТ» — «Модуль 03 · Юрлица без договора» [#yurlica]. Фон страницы.
+// 1. Продуктовый ряд, зеркальный: слева лавандовая карточка с макетом «Юрлица без договора» (робот находит
+//    точки деятельности организаций, недействующую вычёркивает, у остальных — «без договора», счёт растёт
+//    до 247 — как в кейсе), справа метка модуля, заголовок, текст, источники данных и кнопка пилота.
+// 2. Реальный кейс «База уже полная» — бежевая карточка с плитками цифр, соединёнными мостиками.
+// 3. «Что получает региональный оператор»: три плитки и графитовая полоса «Доначисление за прошлые
+//    периоды» с выводом «Эти деньги уже принадлежат оператору…» и кнопкой.
+// 4. «Почему через нас»: заголовок слева, три пункта списком справа.
+// Тексты — с лендинга romoney.qodex.tech (кейс «9 из 247» — по формулировке заказчика: пилот бесплатный).
+import GradientVisual from '../../components/GradientVisual.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = ' ';
+
+// Источники данных модуля — с лендинга, дословно
+const SOURCES: { text: string; icon: IconName }[] = [
+  { text: 'Государственные реестры и открытые данные федеральных ведомств', icon: 'landmark' },
+  { text: 'Отраслевые государственные реестры', icon: 'stamp' },
+  { text: 'Коммерческие справочные и картографические сервисы', icon: 'map' },
+  { text: 'База договоров оператора', icon: 'database' },
+];
+
+// ── Демо-данные макета: организации по точкам деятельности (названия заведомо условные).
+// Одно юрлицо — две точки (магазин и склад): договор нужен по каждой. «Лютик» в реестрах есть, но не работает —
+// его робот вычёркивает. Счётчик доходит до 247 — столько юрлиц нашли в кейсе ниже.
+interface Org {
+  name: string;
+  kind: string;
+  addr: string;
+  icon: IconName;
+  off?: boolean;
+}
+
+const ORGS: Org[] = [
+  { name: 'ООО «Ромашка»', kind: 'магазин', addr: `ул.${NB}Мира,${NB}12`, icon: 'store' },
+  { name: 'ООО «Ромашка»', kind: 'склад', addr: `ул.${NB}Заводская,${NB}3`, icon: 'warehouse' },
+  { name: 'ООО «Лютик»', kind: 'офис', addr: `ул.${NB}Садовая,${NB}21`, icon: 'building-2', off: true },
+  { name: 'ООО «Вектор»', kind: 'цех', addr: `пр.${NB}Мира,${NB}7`, icon: 'factory' },
+  { name: 'ООО «Василёк»', kind: 'кафе', addr: `ул.${NB}Лесная,${NB}3`, icon: 'store' },
+];
+const FOUND = 247;
+
+// Источники сверки в макете — по одному на группу источников из текста рядом
+const CHECKS = ['ФНС', 'Реестры', 'Карты', 'Договоры'];
+
+// Расписание сцены, с: сначала отмечаются источники, потом появляются строки; через 0,7 с после появления
+// строки робот выносит решение. Счётчик (скрипт ниже) растёт с 0,8 до 2,6 с.
+const checkAt = (k: number) => 0.15 + k * 0.15;
+const rowAt = (k: number) => 0.75 + k * 0.28;
+const doneAt = (k: number) => rowAt(k) + 0.7;
+
+// ── Кейс: цифра крупно, слова при ней — мельче ──
+interface Fact {
+  /** Число для досчёта (data-count); у «1 неделя» и подобных — без досчёта. */
+  count?: number;
+  pre?: string;
+  num: string;
+  unit?: string;
+  text: string;
+}
+
+const FACTS: Fact[] = [
+  {
+    count: 247,
+    pre: '+',
+    num: '247',
+    text: `юрлиц к заключению договора сверх 966${NB}действующих — прирост базы на${NB}26%.`,
+  },
+  {
+    count: 950,
+    num: '950',
+    text: 'потенциальных точек образования отходов найдено за неделю — поле для проверки почти вдвое к текущей базе',
+  },
+  { num: '1', unit: 'неделя', text: 'от запуска до готового списка юрлиц к заключению договора' },
+  { num: '9', unit: `из${NB}247`, text: `Годовой платёж 9${NB}из${NB}247 найденных юрлиц окупает РО-БОТ.` },
+  { num: '10+', unit: 'источников', text: 'робот собирает и сверяет автоматически — вручную столько не отследить' },
+];
+
+// ── Что получает региональный оператор: три плитки + четвёртый пункт в графитовой полосе ──
+const GAINS: { title: string; text: string; icon: IconName }[] = [
+  {
+    title: 'Реестр действующих юрлиц без договора',
+    text: 'Наименование, ИНН, ОГРН, категория бизнеса. У каждого значения — источник и дата актуальности.',
+    icon: 'file-spreadsheet',
+  },
+  {
+    title: 'Учёт по точкам деятельности',
+    text: 'Договор нужен по каждому магазину, складу или филиалу — по фактическому адресу, а не по адресу регистрации.',
+    icon: 'map-pin',
+  },
+  {
+    title: 'Фильтрация «мёртвых душ»',
+    text: 'Организации, которые числятся в реестрах, но фактически не работают, отсеиваются по открытым данным ФНС.',
+    icon: 'filter',
+  },
+];
+
+// ── Почему через нас ──
+const WHY: { title: string; text: string; icon: IconName }[] = [
+  {
+    title: 'Оплата за результат',
+    text: 'Базовый принцип модуля: вознаграждение привязано к подтверждённым организациям, которых не было в базе оператора. Нет находок — нет оплаты за поиск.',
+    icon: 'wallet',
+  },
+  {
+    title: 'Только действующий бизнес',
+    text: 'Каскад из десятка источников вместо прямой выгрузки ЕГРЮЛ: остаются те, кому реально можно направить оферту.',
+    icon: 'badge-check',
+  },
+  {
+    title: 'Контроль у оператора',
+    text: 'Поиск и фильтрацию делает система. Ваш сотрудник только подтверждает организацию перед офертой.',
+    icon: 'user-check',
+  },
+];
 ---
 
-<section class="section" id="yurlica" aria-labelledby="yurlica-title">
+<section class="section rlg" id="yurlica" aria-labelledby="yurlica-title">
   <div class="container">
-    <h2 id="yurlica-title" class="t-h2">Поиск юридических лиц без договора</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <!-- ── 1. Продуктовый ряд: макет слева, текст справа ── -->
+    <div class="rlg-row">
+      <div class="rlg-text">
+        <div class="rlg-head">
+          <p class="rlg-label" data-reveal>
+            <span class="plabel plabel--lg p-robot">
+              <span class="plabel__ico" aria-hidden="true"><Icon name="building-2" strokeWidth={2} /></span>
+              Модуль 03 · Юрлица без договора
+            </span>
+          </p>
+          <h2 class="t-serif rlg-title" id="yurlica-title" data-reveal style="--d:1">
+            Поиск юридических лиц без договора на обращение с&nbsp;ТКО
+          </h2>
+          <p class="rlg-lead" data-reveal style="--d:2">
+            Выявление действующих организаций на территории регионального оператора, которые образуют отходы, но не платят
+          </p>
+        </div>
+
+        <div class="rlg-body">
+          <p class="rlg-p" data-reveal style="--d:2">
+            Юридические лица образуют отходы на каждой торговой точке, в каждом офисе и на каждом производстве — но платят
+            только те, с кем заключён договор. Модуль сопоставляет государственные реестры и справочные сервисы с базой
+            договоров оператора и выдаёт список действующих организаций, по которым договора нет.
+          </p>
+
+          <div class="rlg-src" data-reveal style="--d:3">
+            <p class="rlg-sub" id="yurlica-src">Источники данных</p>
+            <ul class="rlg-chips" aria-labelledby="yurlica-src">
+              {
+                SOURCES.map((s) => (
+                  <li class="rlg-chip">
+                    <Icon name={s.icon} size={17} strokeWidth={1.9} />
+                    <span>{s.text}</span>
+                  </li>
+                ))
+              }
+            </ul>
+            <p class="rlg-note">
+              <Icon name="shield-check" size={17} strokeWidth={1.9} />
+              <span>Используются только открытые государственные данные, а сведения о юрлицах не являются персональными данными.</span>
+            </p>
+          </div>
+
+          <div class="rlg-cta" data-reveal style="--d:4">
+            <a href="#forma" class="btn btn--primary" data-interest="robot" data-goal="pilot_click">
+              Запустить бесплатный пилот
+              <Icon name="arrow-right" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="rlg-visual" data-reveal style="--d:1">
+        <GradientVisual preset="lavender" deco="none" class="rlg-gv" data-rlg-scene>
+          <span class="tag tag--demo rlg-demo">демо-данные</span>
+          <div class="ui rlg-ui">
+            <div class="rlg-ui__head">
+              <span class="rlg-ui__ico">
+                <Icon name="building-2" size={19} strokeWidth={1.9} />
+              </span>
+              <span class="rlg-ui__ttl">
+                <b>Юрлица без договора</b>
+                <small>Сельский район</small>
+              </span>
+              <span class="rlg-ui__count">
+                <i class="rlg-ui__dot"></i>
+                Найдено:
+                <b data-rlg-count={FOUND}>{FOUND}</b>
+              </span>
+            </div>
+
+            <div class="rlg-ui__src">
+              <span class="rlg-ui__src-l">Источники</span>
+              {
+                CHECKS.map((c, k) => (
+                  <span class="rlg-check" style={`--s:${checkAt(k).toFixed(2)}s`}>
+                    <span class="rlg-check__ok">
+                      <Icon name="check" size={10} strokeWidth={3.4} />
+                    </span>
+                    {c}
+                  </span>
+                ))
+              }
+            </div>
+
+            <ul class="rlg-orgs">
+              {
+                ORGS.map((o, k) => (
+                  <li
+                    class:list={['rlg-org', { 'rlg-org--off': o.off }]}
+                    style={`--t:${rowAt(k).toFixed(2)}s; --r:${doneAt(k).toFixed(2)}s`}
+                  >
+                    <span class="rlg-org__ico">
+                      <Icon name={o.icon} size={16} strokeWidth={1.9} />
+                    </span>
+                    <span class="rlg-org__main">
+                      <b class="rlg-org__name">{o.name}{o.off && <i class="rlg-org__strike" />}</b>
+                      <small>{`${o.kind} · ${o.addr}`}</small>
+                    </span>
+                    <span class="rlg-org__state">
+                      <span class="rlg-org__spin">
+                        <Icon name="loader-circle" size={16} strokeWidth={2.2} />
+                      </span>
+                      <span class:list={['rlg-org__pill', { 'rlg-org__pill--off': o.off }]}>
+                        {o.off ? 'не работает' : 'без договора'}
+                      </span>
+                    </span>
+                  </li>
+                ))
+              }
+            </ul>
+
+            <div class="rlg-ui__foot">
+              <span class="rlg-ui__date">Обновлено 30.09.2026</span>
+              <span class="rlg-ui__btn">
+                <Icon name="download" size={15} strokeWidth={2.1} />
+                Выгрузить список
+              </span>
+            </div>
+          </div>
+        </GradientVisual>
+      </div>
+    </div>
+
+    <!-- ── 2. Реальный кейс ── -->
+    <div class="rlg-case-wrap">
+      <article class="rlg-case" aria-labelledby="yurlica-case-title" data-reveal>
+        <header class="rlg-case__head">
+          <p class="rlg-case__label">
+            <span class="tag__dot p-robot" aria-hidden="true"></span>
+            <span class="rlg-case__kind">Реальный кейс</span><span class="rlg-case__sep"> · </span>Модуль 03 · «База уже полная»
+          </p>
+          <h3 class="rlg-case__title" id="yurlica-case-title">
+            База считалась полной — а мы нашли +26% договоров с&nbsp;юрлицами
+          </h3>
+          <p class="rlg-case__meta">
+            <span class="rlg-meta">
+              <Icon name="map-pin" size={15} strokeWidth={2} />
+              Сельский район, не раскрывается
+            </span><span class="visually-hidden"> · </span><span class="rlg-meta">
+              <Icon name="search" size={15} strokeWidth={2} />
+              Поиск неохваченных юрлиц
+            </span>
+          </p>
+        </header>
+
+        <ul class="rlg-facts bridged">
+          {
+            FACTS.map((f, i) => (
+              <li class:list={['rlg-fact', { 'rlg-fact--lead': i === 0 }]} data-reveal style={`--d:${i + 1}`}>
+                <p class="rlg-fact__n">
+                  {f.count ? (
+                    <>
+                      <span class="rlg-fact__fix" aria-hidden="true">{(f.pre ?? '') + f.num}</span>
+                      <span class="rlg-fact__live">{f.pre}<span data-count={f.count}>{f.num}</span></span>
+                    </>
+                  ) : (
+                    <>
+                      {f.num}<span class="rlg-fact__u">{NB + f.unit}</span>
+                    </>
+                  )}
+                </p>
+                <p class="rlg-fact__t">{f.text}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+      <p class="footnote rlg-foot">Кейсы РО-БОТа — разные проекты. Регионы и операторы не раскрываются по условиям соглашений.</p>
+    </div>
+
+    <!-- ── 3. Что получает региональный оператор ── -->
+    <div class="rlg-gain">
+      <h3 class="t-h3 rlg-h3" data-reveal>Что получает региональный оператор</h3>
+      <ul class="rlg-gain__list bridged">
+        {
+          GAINS.map((g, i) => (
+            <li class="rlg-tile" data-reveal style={`--d:${i + 1}`}>
+              <span class="rlg-tile__ico" aria-hidden="true">
+                <Icon name={g.icon} size={23} />
+              </span>
+              <h4 class="rlg-tile__t">{g.title}</h4>
+              <p class="rlg-tile__p">{g.text}</p>
+            </li>
+          ))
+        }
+        <li class="rlg-band dark" data-reveal style="--d:4">
+          <div class="rlg-band__item">
+            <span class="rlg-band__ico" aria-hidden="true">
+              <Icon name="invoice" size={23} />
+            </span>
+            <h4 class="rlg-band__t">Доначисление за прошлые периоды</h4>
+            <p class="rlg-band__p">
+              Договор с юрлицом считается заключённым в силу закона — поэтому плату можно доначислить за прошедшие
+              3&nbsp;года (ст.&nbsp;196 ГК&nbsp;РФ).
+            </p>
+          </div>
+          <div class="rlg-band__claim">
+            <p class="rlg-band__st">Эти деньги уже принадлежат оператору — их осталось предъявить.</p>
+            <a href="#forma" class="btn btn--light rlg-band__cta" data-interest="robot" data-goal="pilot_click">
+              Запустить бесплатный пилот
+              <Icon name="arrow-right" />
+            </a>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── 4. Почему через нас ── -->
+    <div class="rlg-why">
+      <h3 class="t-h3 rlg-h3 rlg-why__title" data-reveal>Почему через нас</h3>
+      <ul class="rlg-why__list">
+        {
+          WHY.map((w, i) => (
+            <li class="rlg-why__item" data-reveal style={`--d:${i + 1}`}>
+              <span class="rlg-why__ico" aria-hidden="true">
+                <Icon name={w.icon} size={22} />
+              </span>
+              <div class="rlg-why__body">
+                <h4 class="rlg-why__t">{w.title}</h4>
+                <p class="rlg-why__p">{w.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
   </div>
 </section>
+
+<style>
+  .rlg {
+    --rlg-gap: clamp(12px, calc(var(--vw) * 1.4), 20px);
+    --rlg-block: clamp(72px, calc(var(--vw) * 8), 128px);
+  }
+
+  /* ── 1. Продуктовый ряд ─────────────────────────────────── */
+  .rlg-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.06fr) minmax(0, 1fr);
+    grid-template-areas: 'visual text';
+    align-items: center;
+    column-gap: clamp(40px, calc(var(--vw) * 6), 96px);
+  }
+
+  .rlg-text {
+    grid-area: text;
+    min-width: 0;
+  }
+
+  /* карточка с макетом — во всю высоту текста рядом */
+  .rlg-visual {
+    grid-area: visual;
+    position: relative;
+    display: grid;
+    align-self: stretch;
+    min-width: 0;
+  }
+
+  .rlg-title {
+    margin-top: 18px;
+  }
+
+  .rlg-lead {
+    max-width: 34em;
+    margin-top: 20px;
+    font-size: clamp(1.06rem, calc(var(--vw) * 1.25), 1.2rem);
+    line-height: 1.45;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+
+  .rlg-p {
+    max-width: 52ch;
+    margin-top: 16px;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .rlg-src {
+    margin-top: clamp(24px, calc(var(--vw) * 2.6), 34px);
+  }
+
+  .rlg-sub {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+
+  .rlg-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .rlg-chip {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+    max-width: 100%;
+    padding: 8px 14px 8px 11px;
+    border-radius: calc(12px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .rlg-chip :global(svg) {
+    flex: none;
+    margin-top: 1px;
+    color: var(--ink-2);
+  }
+
+  .rlg-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    max-width: 52ch;
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .rlg-note :global(svg) {
+    flex: none;
+    margin-top: 2px;
+    color: var(--ink-2);
+  }
+
+  .rlg-cta {
+    margin-top: clamp(26px, calc(var(--vw) * 2.6), 34px);
+  }
+
+  /* ── Лавандовая карточка с макетом ─────────────────────── */
+  /* сверху место под метку «демо-данные» */
+  .rlg-gv {
+    min-height: clamp(460px, calc(var(--vw) * 40), 640px);
+    padding: clamp(56px, calc(var(--vw) * 3.6), 64px) clamp(16px, calc(var(--vw) * 3), 48px)
+      clamp(28px, calc(var(--vw) * 3), 48px);
+  }
+
+  .rlg-demo {
+    position: absolute;
+    z-index: 1;
+    top: clamp(14px, calc(var(--vw) * 1.6), 22px);
+    left: clamp(14px, calc(var(--vw) * 1.6), 22px);
+  }
+
+  .rlg-ui {
+    --rlg-row: #f5f6f8;
+    --rlg-warn: #9a5800;
+    --rlg-warn-soft: #fff0da;
+    width: min(100%, 476px);
+    padding: clamp(16px, calc(var(--vw) * 1.6), 22px);
+    font-size: 14px;
+    line-height: 1.35;
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .rlg-ui__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  /* значок модуля — в цвете продукта */
+  .rlg-ui__ico {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    border-radius: 11px;
+    background: color-mix(in oklab, var(--c-robot) 12%, white);
+    color: var(--c-robot);
+  }
+
+  .rlg-ui__ttl {
+    display: grid;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rlg-ui__ttl b {
+    font-size: clamp(16px, calc(var(--vw) * 1.25), 18px);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+
+  .rlg-ui__ttl small,
+  .rlg-org__main small {
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .rlg-ui__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    height: 30px;
+    padding: 0 12px 0 10px;
+    border-radius: 999px;
+    background: var(--rlg-row);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--ink);
+    transform-origin: 100% 50%;
+  }
+
+  .rlg-ui__count b {
+    min-width: 3ch;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rlg-ui__btn :global(svg),
+  .rlg-org__ico :global(svg),
+  .rlg-ui__ico :global(svg) {
+    flex: none;
+  }
+
+  .rlg-ui__dot {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    border-radius: 50%;
+    background: #0fa86f;
+  }
+
+  /* источники сверки — строкой над списком */
+  .rlg-ui__src {
+    display: flex;
+    align-items: center;
+    gap: 6px 14px;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    box-shadow: inset 0 0 0 1px #eceef1;
+    font-size: 12.5px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .rlg-ui__src-l {
+    margin-right: auto;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .rlg-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .rlg-check__ok {
+    display: grid;
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    flex: none;
+    border-radius: 50%;
+    background: #0fa86f;
+    color: #fff;
+  }
+
+  .rlg-orgs {
+    display: grid;
+    gap: 8px;
+  }
+
+  .rlg-org {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 11px 10px 10px;
+    border-radius: 13px;
+    background: var(--rlg-row);
+  }
+
+  .rlg-org__ico {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: #fff;
+    color: var(--ink-2);
+  }
+
+  .rlg-org__main {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .rlg-org__name {
+    position: relative;
+    justify-self: start;
+    font-weight: 560;
+  }
+
+  /* недействующая организация вычеркнута */
+  .rlg-org__strike {
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    top: 54%;
+    height: 1.5px;
+    border-radius: 1px;
+    background: var(--ink);
+    transform-origin: 0 50%;
+  }
+
+  .rlg-org--off .rlg-org__ico,
+  .rlg-org--off .rlg-org__main {
+    opacity: 0.5;
+  }
+
+  .rlg-org__state {
+    display: grid;
+    justify-items: end;
+    align-items: center;
+  }
+
+  .rlg-org__spin,
+  .rlg-org__pill {
+    grid-area: 1 / 1;
+  }
+
+  .rlg-org__spin {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    color: var(--subtle);
+    opacity: 0;
+  }
+
+  .rlg-org__pill {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: var(--rlg-warn-soft);
+    color: var(--rlg-warn);
+    font-size: 12px;
+    font-weight: 560;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .rlg-org__pill--off {
+    background: #eceef1;
+    color: #575b62;
+  }
+
+  /* в узкой карточке дата уступает место кнопке */
+  .rlg-ui__date {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .rlg-ui__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 14px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .rlg-ui__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 13px;
+    border-radius: 9px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  /* Сцена — когда карточка на экране: строки появляются по одной, у каждой сначала крутится «поиск», потом
+     решение робота: «без договора» или — у недействующей — вычёркивание и «не работает»; счётчик растёт
+     до 247 (его ведёт скрипт), в конце — подвал со списком. Классы is-armed и is-live ставит скрипт; без них
+     (нет скриптов, «уменьшить движение») сразу видно итоговое состояние. */
+  .rlg-gv.is-armed:not(.is-live) .rlg-check__ok,
+  .rlg-gv.is-armed:not(.is-live) .rlg-org,
+  .rlg-gv.is-armed:not(.is-live) .rlg-ui__foot {
+    opacity: 0;
+  }
+
+  .rlg-gv.is-live .rlg-check__ok {
+    animation: rlg-pop 0.38s cubic-bezier(0.2, 1.5, 0.4, 1) var(--s) both;
+  }
+
+  .rlg-gv.is-live .rlg-org {
+    animation: rlg-row-in 0.45s var(--ease-out) var(--t) both;
+  }
+
+  .rlg-gv.is-live .rlg-org__spin {
+    animation: rlg-spin-out 0.2s linear var(--r) both;
+  }
+
+  .rlg-gv.is-live .rlg-org__spin :global(svg) {
+    animation: rlg-rot 0.8s linear 2;
+  }
+
+  .rlg-gv.is-live .rlg-org__pill {
+    animation: rlg-pop 0.42s cubic-bezier(0.2, 1.5, 0.4, 1) var(--r) both;
+  }
+
+  .rlg-gv.is-live .rlg-org__strike {
+    animation: rlg-strike 0.4s var(--ease-out) var(--r) both;
+  }
+
+  .rlg-gv.is-live .rlg-org--off .rlg-org__ico,
+  .rlg-gv.is-live .rlg-org--off .rlg-org__main {
+    animation: rlg-dim 0.4s ease var(--r) both;
+  }
+
+  .rlg-gv.is-live .rlg-ui__count {
+    animation: rlg-bump 0.32s linear 2.6s both;
+  }
+
+  .rlg-gv.is-live .rlg-ui__foot {
+    animation: rlg-row-in 0.45s var(--ease-out) 2.75s both;
+  }
+
+  @keyframes rlg-row-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  /* «поиск» виден с появления строки до решения */
+  @keyframes rlg-spin-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes rlg-rot {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes rlg-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  @keyframes rlg-strike {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes rlg-dim {
+    from {
+      opacity: 1;
+    }
+  }
+
+  @keyframes rlg-bump {
+    50% {
+      transform: scale(1.07);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rlg-gv * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* ── 2. Кейс ────────────────────────────────────────────── */
+  .rlg-case-wrap {
+    margin-top: var(--rlg-block);
+  }
+
+  .rlg-case {
+    --rlg-pad: clamp(22px, calc(var(--vw) * 2.2), 30px);
+    --rlg-num: clamp(2.5rem, calc(var(--vw) * 3.5), 3.25rem);
+    padding: clamp(20px, calc(var(--vw) * 3.4), 56px);
+    border-radius: calc(var(--r-xl) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .rlg-case__head {
+    max-width: 880px;
+    padding: clamp(4px, calc(var(--vw) * 0.6), 8px) clamp(2px, calc(var(--vw) * 0.4), 6px) 0;
+  }
+
+  .rlg-case__label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0;
+    row-gap: 4px;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+
+  .rlg-case__label .tag__dot {
+    width: 8px;
+    height: 8px;
+    margin-right: 9px;
+  }
+
+  .rlg-case__kind {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .rlg-case__sep {
+    white-space: pre;
+  }
+
+  .rlg-case__title {
+    max-width: 21em;
+    margin-top: 16px;
+    font-size: clamp(1.6rem, calc(var(--vw) * 2.6), 2.5rem);
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .rlg-case__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .rlg-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 6px 13px 6px 10px;
+    border-radius: calc(10px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  .rlg-meta :global(svg) {
+    flex: none;
+    color: var(--muted);
+  }
+
+  /* плитки: главная цифра в широкой плитке, рядом «950»; ниже три */
+  .rlg-facts {
+    --gap: var(--rlg-gap);
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--rlg-gap);
+    margin-top: clamp(28px, calc(var(--vw) * 3), 44px);
+    isolation: isolate;
+  }
+
+  .rlg-fact {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, calc(var(--vw) * 1.6), 22px);
+    grid-column: span 2;
+    min-width: 0;
+    padding: var(--rlg-pad);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  .rlg-fact--lead {
+    grid-column: span 4;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: clamp(24px, calc(var(--vw) * 3.4), 52px);
+  }
+
+  .rlg-fact__n {
+    position: relative;
+    font-size: var(--rlg-num);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.045em;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+
+  .rlg-fact--lead .rlg-fact__n {
+    font-size: clamp(4.5rem, calc(var(--vw) * 8), 7.5rem);
+    line-height: 0.84;
+    letter-spacing: -0.055em;
+  }
+
+  /* ширину числа держит невидимое итоговое значение, досчёт идёт поверх */
+  .rlg-fact__fix {
+    visibility: hidden;
+  }
+
+  .rlg-fact__live {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .rlg-fact__u {
+    font-size: 0.46em;
+    font-weight: 560;
+    letter-spacing: -0.02em;
+  }
+
+  .rlg-fact__t {
+    font-size: 15.5px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .rlg-fact--lead .rlg-fact__t {
+    max-width: 24em;
+    padding-bottom: 2px;
+    font-size: clamp(1.06rem, calc(var(--vw) * 1.3), 1.25rem);
+    line-height: 1.38;
+    font-weight: 500;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  /* мостики к плитке слева — на высоте цифры (маски — .bridged в global.css) */
+  .rlg-fact:nth-child(2)::before,
+  .rlg-fact:nth-child(n + 4)::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--rlg-pad) + var(--rlg-num) / 2 - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  .rlg-foot {
+    max-width: 72ch;
+    margin-top: 16px;
+    padding-inline: clamp(4px, calc(var(--vw) * 1), 14px);
+  }
+
+  /* ── 3. Что получает региональный оператор ───────────── */
+  .rlg-gain {
+    margin-top: var(--rlg-block);
+  }
+
+  .rlg-h3 {
+    font-weight: 600;
+    letter-spacing: -0.032em;
+  }
+
+  .rlg-gain__list {
+    --gap: var(--rlg-gap);
+    --rlg-pad: clamp(22px, calc(var(--vw) * 2.2), 30px);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--rlg-gap);
+    margin-top: clamp(26px, calc(var(--vw) * 3), 40px);
+    isolation: isolate;
+  }
+
+  .rlg-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: var(--rlg-pad);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .rlg-tile__ico,
+  .rlg-why__ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    color: var(--ink);
+  }
+
+  .rlg-tile__t {
+    margin-top: clamp(24px, calc(var(--vw) * 2.6), 36px);
+    font-size: clamp(1.125rem, calc(var(--vw) * 1.4), 1.25rem);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .rlg-tile__p {
+    margin-top: 10px;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* мостики между плитками — на высоте значка */
+  .rlg-tile + .rlg-tile::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--rlg-pad) + 24px - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  /* графитовая полоса: четвёртый пункт и вывод из него */
+  .rlg-band {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+    align-items: center;
+    gap: 28px clamp(32px, calc(var(--vw) * 5), 80px);
+    padding: clamp(26px, calc(var(--vw) * 3), 44px) clamp(22px, calc(var(--vw) * 3.4), 48px);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background:
+      radial-gradient(60% 150% at 0% 0%, rgb(184 159 250 / 0.3) 0%, transparent 60%),
+      radial-gradient(45% 140% at 100% 100%, rgb(72 144 227 / 0.22) 0%, transparent 60%),
+      var(--ink);
+    overflow: hidden;
+  }
+
+  .rlg-band__ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: rgb(255 255 255 / 0.1);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+    color: #fff;
+  }
+
+  .rlg-band__t {
+    margin-top: 22px;
+    font-size: clamp(1.125rem, calc(var(--vw) * 1.4), 1.25rem);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    font-weight: 560;
+  }
+
+  .rlg-band__p {
+    max-width: 46ch;
+    margin-top: 10px;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: rgb(255 255 255 / 0.74);
+    text-wrap: pretty;
+  }
+
+  /* вывод крупно, слева от него — тонкий разделитель (полоска: однопиксельную рамку Safari при дробном
+     масштабе не рисует) */
+  .rlg-band__claim {
+    position: relative;
+    padding-left: clamp(32px, calc(var(--vw) * 5), 80px);
+  }
+
+  .rlg-band__claim::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    width: 1px;
+    background: rgb(255 255 255 / 0.16);
+  }
+
+  .rlg-band__st {
+    font-size: clamp(1.5rem, calc(var(--vw) * 2.3), 2.25rem);
+    line-height: 1.16;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .rlg-band__cta {
+    margin-top: clamp(20px, calc(var(--vw) * 2), 28px);
+  }
+
+  /* ── 4. Почему через нас ─────────────────────────────── */
+  .rlg-why {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    align-items: start;
+    column-gap: clamp(40px, calc(var(--vw) * 6), 96px);
+    margin-top: var(--rlg-block);
+  }
+
+  .rlg-why__title {
+    padding-top: 22px;
+  }
+
+  .rlg-why__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 20px;
+    padding-block: 24px;
+  }
+
+  /* разделители — полоски-псевдоэлементы: однопиксельную рамку Safari при дробном масштабе не рисует */
+  .rlg-why__item::before,
+  .rlg-why__item:last-child::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .rlg-why__item::before {
+    top: 0;
+  }
+
+  .rlg-why__item:last-child::after {
+    bottom: 0;
+  }
+
+  .rlg-why__ico {
+    background: var(--panel);
+  }
+
+  .rlg-why__t {
+    padding-top: 2px;
+    font-size: clamp(1.125rem, calc(var(--vw) * 1.4), 1.25rem);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    font-weight: 560;
+  }
+
+  .rlg-why__p {
+    max-width: 60ch;
+    margin-top: 8px;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* ── Планшет: всё в один столбец; заголовок и подзаголовок — над картинкой, остальное — под ней ── */
+  @media (max-width: 1199.98px) {
+    .rlg-row {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: none;
+      row-gap: clamp(28px, calc(var(--vw) * 4), 40px);
+    }
+
+    .rlg-text {
+      display: contents;
+    }
+
+    .rlg-visual {
+      grid-area: auto;
+    }
+
+    .rlg-head {
+      order: 1;
+    }
+
+    .rlg-visual {
+      order: 2;
+    }
+
+    .rlg-body {
+      order: 3;
+    }
+
+    .rlg-p {
+      margin-top: 0;
+    }
+
+    .rlg-gv {
+      min-height: 0;
+      padding-top: 60px;
+    }
+
+    /* плитки кейса: главная во всю ширину, ниже по две */
+    .rlg-facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rlg-fact,
+    .rlg-fact--lead {
+      grid-column: span 1;
+    }
+
+    .rlg-fact--lead {
+      grid-column: 1 / -1;
+    }
+
+    .rlg-fact:nth-child(2)::before,
+    .rlg-fact:nth-child(n + 4)::before {
+      content: none;
+    }
+
+    .rlg-fact:nth-child(odd):not(:first-child)::before {
+      content: '';
+      position: absolute;
+      top: calc(var(--rlg-pad) + var(--rlg-num) / 2 - (var(--gap) + 14px) / 2);
+      left: calc(var(--gap) * -1 - 1px);
+      width: calc(var(--gap) + 2px);
+      height: calc(var(--gap) + 14px);
+      background: var(--card);
+      -webkit-mask: var(--bridge-mask-row);
+      mask: var(--bridge-mask-row);
+    }
+
+    /* плитки «что получает» — строками: значок слева, текст справа; мостики — к плитке сверху */
+    .rlg-gain__list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rlg-tile {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      column-gap: 20px;
+    }
+
+    .rlg-tile__ico {
+      grid-row: span 2;
+    }
+
+    .rlg-tile__t {
+      margin-top: 2px;
+    }
+
+    .rlg-tile + .rlg-tile::before {
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--rlg-pad) + 24px - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .rlg-why {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rlg-why__title {
+      padding-top: 0;
+      margin-bottom: clamp(18px, calc(var(--vw) * 2.4), 26px);
+    }
+  }
+
+  @media (max-width: 899.98px) {
+    .rlg-band {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rlg-band__claim {
+      padding: 26px 0 0;
+    }
+
+    .rlg-band__claim::before {
+      top: 0;
+      bottom: auto;
+      right: 0;
+      width: auto;
+      height: 1px;
+    }
+  }
+
+  /* ── Телефон: один столбец, мостики — к плитке сверху ── */
+  @media (max-width: 699.98px) {
+    .rlg-gv {
+      padding: 54px 12px 16px;
+    }
+
+    .rlg-demo {
+      top: 12px;
+      left: 12px;
+    }
+
+    .rlg-ui {
+      padding: 14px;
+    }
+
+    .rlg-ui__head {
+      gap: 9px;
+    }
+
+    /* значок модуля уступает место заголовку и счётчику */
+    .rlg-ui__ico,
+    .rlg-ui__src-l {
+      display: none;
+    }
+
+    .rlg-ui__src {
+      justify-content: space-between;
+      gap: 6px;
+      padding-inline: 10px;
+    }
+
+    .rlg-ui__ttl b {
+      font-size: 15.5px;
+    }
+
+    .rlg-ui__count {
+      gap: 5px;
+      padding: 0 10px 0 9px;
+      font-size: 12.5px;
+    }
+
+    .rlg-label .plabel--lg {
+      padding-right: 16px;
+      font-size: 16px;
+    }
+
+    .rlg-org {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      padding: 8px 9px 8px 11px;
+    }
+
+    .rlg-org__ico {
+      display: none;
+    }
+
+    .rlg-case {
+      padding: 18px 14px 14px;
+    }
+
+    .rlg-case__head {
+      padding: 4px 4px 0;
+    }
+
+    .rlg-facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rlg-fact--lead {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .rlg-fact:nth-child(odd):not(:first-child)::before {
+      content: none;
+    }
+
+    .rlg-fact + .rlg-fact::before {
+      content: '';
+      position: absolute;
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--rlg-pad) + 22px - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      background: var(--card);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .rlg-foot {
+      padding-inline: 4px;
+    }
+
+    .rlg-tile {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rlg-tile__ico {
+      grid-row: auto;
+      width: 44px;
+      height: 44px;
+    }
+
+    .rlg-tile__t {
+      margin-top: 18px;
+    }
+
+    .rlg-tile + .rlg-tile::before {
+      left: calc(var(--rlg-pad) + 22px - (var(--gap) + 14px) / 2);
+    }
+
+    .rlg-band__cta {
+      width: 100%;
+      white-space: normal;
+    }
+
+    .rlg-why__item {
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 16px;
+      padding-block: 20px;
+    }
+
+    .rlg-why__ico {
+      width: 44px;
+      height: 44px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Макет «Юрлица без договора»: сцена идёт, когда карточка на экране, и сбрасывается, когда она ушла целиком.
+  // Счётчик «Найдено» растёт от 0 до 247 вместе со строками. При «уменьшить движение» классы не ставятся —
+  // видно итоговое состояние.
+  if (!reducedMotion() && 'IntersectionObserver' in window) {
+    const scene = document.querySelector<HTMLElement>('[data-rlg-scene]');
+    const num = scene?.querySelector<HTMLElement>('[data-rlg-count]');
+    if (scene && num) {
+      const target = Number(num.dataset.rlgCount);
+      const T0 = 800;
+      const T1 = 2600;
+      let raf = 0;
+      const show = (v: number) => {
+        num.textContent = String(Math.round(v));
+      };
+      const run = () => {
+        const start = performance.now();
+        const tick = (now: number) => {
+          const t = Math.min(1, Math.max(0, (now - start - T0) / (T1 - T0)));
+          show(target * (1 - Math.pow(1 - t, 3)));
+          if (t < 1) raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+      };
+
+      scene.classList.add('is-armed');
+      show(0);
+      new IntersectionObserver(
+        ([entry]) => {
+          if (entry.intersectionRatio >= 0.45) {
+            if (scene.classList.contains('is-live')) return;
+            scene.classList.add('is-live');
+            run();
+          } else if (!entry.isIntersecting) {
+            cancelAnimationFrame(raf);
+            scene.classList.remove('is-live');
+            show(0);
+          }
+        },
+        { threshold: [0, 0.45] },
+      ).observe(scene);
+    }
+  }
+</script>

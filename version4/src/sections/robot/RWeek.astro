@@ -1,10 +1,457 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Раздел «Неделя пилота» страницы «РО-БОТ» [#pilot]. Приём «Цифр» главной и «Результатов пилота» Tracker:
+// крупные числа на белых плитках (досчитываются при появлении), плитки в ряду соединены мостиками.
+// Ниже — сравнение, как колонки-карточки «Сравнения» на главной: «Вручную» — белая карточка с расчётом
+// (основа расчёта — сноской внизу), «РО-БОТом» — графитовая, выигрывает. Сверху у каждой карточки — срок
+// до результата, крупно (тот же, что в заголовке раздела). Тексты — с лендинга дословно; градиента нет.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+import { PRODUCT_ICON } from '../../components/ProductLabel.astro';
+
+const NB = String.fromCharCode(160);
+
+interface Stat {
+  /** Число для досчёта и его вид на странице (с неразрывными пробелами). */
+  count?: number;
+  value: string;
+  unit?: string;
+  caption: string;
+}
+
+// Цифры недели пилота — с лендинга (число «жителей к проверке» не показываем по решению заказчика)
+const STATS: Stat[] = [
+  { count: 5, value: '5', unit: `${NB}дней`, caption: 'неделя пилота' },
+  { count: 22864, value: `22${NB}864`, caption: 'дома проверено в пилоте' },
+  { count: 145494, value: `145${NB}494`, caption: 'квартиры проверено за неделю пилота' },
+  { count: 3, value: '3', caption: 'города' },
+  { value: '5–20', unit: '%', caption: `расхождение базы РО с${NB}ГИС${NB}ЖКХ` },
+  { count: 287, value: '287', caption: `неучтённых жителей на каждые 100${NB}домов в${NB}зоне обслуживания` },
+];
+
+interface Row {
+  icon: IconName;
+  /** Число в начале пункта — выделено. */
+  num?: string;
+  text: string;
+}
+
+// «Вручную»: расчёт при норме 260 квартир в день; итог «2,3 года до результата» — крупно сверху карточки
+const MANUAL: Row[] = [
+  { icon: 'user', num: '~260', text: 'квартир в день на сотрудника' },
+  { icon: 'calendar', num: '~560', text: 'рабочих дней сверки' },
+  { icon: 'wallet', num: `~2,8${NB}млн${NB}₽`, text: 'фонда оплаты труда' },
+];
+
+// «РО-БОТом»: «5 дней на весь объём» — крупно сверху карточки
+const ROBOT: Row[] = [
+  { icon: 'user-check', text: 'Сотрудник только подтверждает найденное' },
+  {
+    icon: 'file-check',
+    text: `Документальное подтверждение из${NB}ГИС${NB}ЖКХ по${NB}каждому расхождению${NB}— с${NB}датой, источником и${NB}составом сведений`,
+  },
+  { icon: 'building-2', num: `14${NB}из${NB}100`, text: 'домов с расхождением' },
+];
 ---
 
 <section class="section panel" id="pilot" aria-labelledby="pilot-title">
   <div class="container">
-    <h2 id="pilot-title" class="t-h2">Неделя пилота</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Неделя пилота" titleId="pilot-title">
+      <span class="rwk-line">Ручная сверка&nbsp;— 2,3&nbsp;года.</span>{' '}
+      <span class="rwk-line">РО-БОТ&nbsp;— 5&nbsp;дней.</span>
+    </SectionIntro>
+
+    <!-- Цифры недели пилота: белые плитки, в ряду соединены мостиками -->
+    <ul class="rwk-stats bridged">
+      {
+        STATS.map((s, i) => (
+          <li class="rwk-stat" data-reveal style={`--d:${(i % 3) + 1}`}>
+            <p class="rwk-stat__num">
+              {s.count !== undefined ? <span data-count={s.count}>{s.value}</span> : <span>{s.value}</span>}
+              {s.unit}
+            </p>
+            <p class="rwk-stat__cap">{s.caption}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <!-- Сравнение: вручную и РО-БОТом -->
+    <div class="rwk-cmp">
+      <article class="rwk-card rwk-card--manual" aria-labelledby="pilot-manual" data-reveal style="--d:1">
+        <header class="rwk-card__head">
+          <h3 class="rwk-card__title" id="pilot-manual">
+            <span class="rwk-card__ico" aria-hidden="true"><Icon name="hourglass" size={17} strokeWidth={2} /></span>
+            <span>Вручную</span>
+          </h3>
+        </header>
+        <p class="rwk-card__big">
+          <span class="rwk-card__val"><span data-count="2.3" data-decimals="1">2,3</span>&nbsp;года</span>
+          <span class="rwk-card__cap">до результата</span>
+        </p>
+        <ul class="rwk-card__list">
+          {
+            MANUAL.map((r) => (
+              <li class="rwk-card__item">
+                <span class="rwk-card__dot" aria-hidden="true">
+                  <Icon name={r.icon} size={18} strokeWidth={1.9} />
+                </span>
+                <span>
+                  {r.num && <b>{r.num}</b>} {r.text}
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="rwk-card__note">расчёт при норме 260&nbsp;квартир в&nbsp;день на&nbsp;сотрудника</p>
+      </article>
+
+      <article class="rwk-card rwk-card--robot" aria-labelledby="pilot-robot" data-reveal style="--d:2">
+        <header class="rwk-card__head">
+          <h3 class="rwk-card__title" id="pilot-robot">
+            <span class="rwk-card__ico p-robot" aria-hidden="true">
+              <Icon name={PRODUCT_ICON.robot} size={17} strokeWidth={2} />
+            </span>
+            <span>РО-БОТом</span>
+          </h3>
+        </header>
+        <p class="rwk-card__big">
+          <span class="rwk-card__val"><span data-count="5">5</span>&nbsp;дней</span>
+          <span class="rwk-card__cap">на весь объём</span>
+        </p>
+        <ul class="rwk-card__list">
+          {
+            ROBOT.map((r) => (
+              <li class="rwk-card__item">
+                <span class="rwk-card__dot" aria-hidden="true">
+                  <Icon name={r.icon} size={18} strokeWidth={1.9} />
+                </span>
+                <span>
+                  {r.num && (
+                    <>
+                      <b>{r.num}</b>{' '}
+                    </>
+                  )}
+                  {r.text}
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+    </div>
   </div>
 </section>
+
+<style>
+  /* заголовок — две параллельные строки: вручную / РО-БОТ */
+  .rwk-line {
+    display: block;
+  }
+
+  /* ── Цифры: три в ряд, белые плитки на панели ───────────── */
+  .rwk-stats {
+    --gap: clamp(12px, calc(var(--vw) * 1.4), 20px);
+    --rwk-pad: clamp(22px, calc(var(--vw) * 2.4), 32px);
+    --rwk-num: clamp(2.4rem, calc(var(--vw) * 3.7), 3.5rem);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--gap);
+    isolation: isolate;
+  }
+
+  .rwk-stat {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    padding: var(--rwk-pad);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  /* Цифра: Geist 600 с плотной разрядкой, как в «Цифрах» на главной */
+  .rwk-stat__num {
+    font-size: var(--rwk-num);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+
+  .rwk-stat__cap {
+    max-width: 32ch;
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* мостик к плитке слева — на высоте цифры (маски — .bridged в global.css) */
+  .rwk-stat:not(:nth-child(3n + 1))::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--rwk-pad) + var(--rwk-num) / 2 - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  /* ── Сравнение: две карточки, строки выровнены по общей сетке (subgrid) ── */
+  .rwk-cmp {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(12px, calc(var(--vw) * 1.4), 20px);
+    row-gap: clamp(12px, calc(var(--vw) * 1.4), 20px);
+    margin-top: clamp(28px, calc(var(--vw) * 3.4), 48px);
+  }
+
+  .rwk-card {
+    --rwk-line: var(--line);
+    grid-row: span 4;
+    display: grid;
+    grid-template-rows: subgrid;
+    row-gap: clamp(20px, calc(var(--vw) * 2.2), 30px);
+    min-width: 0;
+    padding: clamp(24px, calc(var(--vw) * 3), 40px);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  /* РО-БОТом — графитовая карточка, выигрывает */
+  .rwk-card--robot {
+    --rwk-line: rgb(255 255 255 / 0.16);
+    background: var(--ink);
+    color: #fff;
+    box-shadow: 0 30px 60px -34px rgb(29 29 31 / 0.6);
+  }
+
+  .rwk-card__head {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+  }
+
+  .rwk-card__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: clamp(1.25rem, calc(var(--vw) * 1.6), 1.5rem);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .rwk-card__ico {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--panel);
+    color: var(--ink-2);
+  }
+
+  /* значок продукта — в цвете РО-БОТа */
+  .rwk-card__ico.p-robot {
+    background: var(--pc);
+    color: #fff;
+  }
+
+  /* основа расчёта — сноской внизу карточки */
+  .rwk-card__note {
+    align-self: end;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* срок до результата — крупно; под ним тонкая линия (полоской, а не рамкой: однопиксельную
+     рамку при дробном масштабе экрана Safari не рисует) */
+  .rwk-card__big {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 16px;
+    padding-bottom: clamp(20px, calc(var(--vw) * 2.2), 30px);
+  }
+
+  .rwk-card__big::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 1px;
+    background: var(--rwk-line);
+  }
+
+  .rwk-card__val {
+    font-size: clamp(3rem, calc(var(--vw) * 5), 4.75rem);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .rwk-card__cap {
+    font-size: clamp(1.06rem, calc(var(--vw) * 1.3), 1.25rem);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--muted);
+  }
+
+  .rwk-card--robot .rwk-card__cap {
+    color: rgb(255 255 255 / 0.72);
+  }
+
+  .rwk-card__list {
+    display: grid;
+    align-content: start;
+    gap: 16px;
+  }
+
+  /* у «РО-БОТом» сноски нет — список занимает и её строку, без пустого места внизу */
+  .rwk-card--robot .rwk-card__list {
+    grid-row: 3 / span 2;
+  }
+
+  .rwk-card__item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 16.5px;
+    line-height: 1.45;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  .rwk-card__item b {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .rwk-card__dot {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--panel);
+    color: var(--ink-2);
+  }
+
+  .rwk-card--robot .rwk-card__item {
+    color: rgb(255 255 255 / 0.86);
+  }
+
+  .rwk-card--robot .rwk-card__item b {
+    color: #fff;
+  }
+
+  .rwk-card--robot .rwk-card__dot {
+    background: rgb(255 255 255 / 0.1);
+    color: #fff;
+  }
+
+  /* ── Узкий планшет и телефон: «5 дней» и «3 города» (короткие подписи) — рядом, остальные цифры —
+     во всю ширину, чтобы длинные подписи не сжимались в узкую колонку. Мостики — к плитке слева
+     и к плитке сверху. ── */
+  @media (max-width: 759.98px) {
+    .rwk-stats {
+      --rwk-pad: 18px;
+      --rwk-num: clamp(2rem, calc(var(--vw) * 9), 2.6rem);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        'a b'
+        'c c'
+        'd d'
+        'e e'
+        'f f';
+    }
+
+    .rwk-stat:nth-child(1) {
+      grid-area: a;
+    }
+
+    .rwk-stat:nth-child(2) {
+      grid-area: c;
+    }
+
+    .rwk-stat:nth-child(3) {
+      grid-area: d;
+    }
+
+    .rwk-stat:nth-child(4) {
+      grid-area: b;
+    }
+
+    .rwk-stat:nth-child(5) {
+      grid-area: e;
+    }
+
+    .rwk-stat:nth-child(6) {
+      grid-area: f;
+    }
+
+    .rwk-stat {
+      gap: 8px;
+    }
+
+    .rwk-stat__cap {
+      max-width: none;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    /* «3 города» — мостик к «5 дней» слева */
+    .rwk-stat:nth-child(4)::before {
+      content: '';
+      position: absolute;
+      top: calc(var(--rwk-pad) + var(--rwk-num) / 2 - (var(--gap) + 12px) / 2);
+      left: calc(var(--gap) * -1 - 1px);
+      width: calc(var(--gap) + 2px);
+      height: calc(var(--gap) + 12px);
+      background: var(--card);
+      -webkit-mask: var(--bridge-mask-row);
+      mask: var(--bridge-mask-row);
+    }
+
+    /* остальные — мостик к плитке сверху */
+    .rwk-stat:is(:nth-child(2), :nth-child(3), :nth-child(5), :nth-child(6))::before {
+      content: '';
+      position: absolute;
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--rwk-pad) + 20px - (var(--gap) + 12px) / 2);
+      width: calc(var(--gap) + 12px);
+      height: calc(var(--gap) + 2px);
+      background: var(--card);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .rwk-cmp {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rwk-card__item {
+      font-size: 15.5px;
+    }
+
+    .rwk-card__dot {
+      width: 34px;
+      height: 34px;
+    }
+  }
+</style>

@@ -1,10 +1,625 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Раздел страницы «РО-БОТ» — «Калькулятор» [#kalkulyator]. Настоящий калькулятор недосбора с прежнего лендинга
+// romoney.qodex.tech: формула и коэффициенты — оттуда без изменений (CALC). Слева бежевая карточка с тремя полями,
+// под ней, мостиком, — «Правила подсчёта»; справа графитовая карточка результата: три модуля с полосой доли
+// в итоге (полоса — transform: scaleX), итог вилкой, метка «прогноз» и кнопка пилота. Раздел на фоне страницы,
+// без градиента. Числа пересчитываются при вводе; вслух (aria-live) объявляется только итог.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon from '../../components/Icon.astro';
+
+const NB = ' ';
+
+// Коэффициенты калькулятора лендинга. Меняются только вместе с текстом «Правил подсчёта» ниже.
+const CALC = {
+  residentsPerHome: 2.87, // 287 неучтённых жителей на 100 домов — реальный прогон
+  residentsBilled: 0.2, // доля подтверждаемых начислений
+  homesShare: 0.07, // около 7% жилфонда вне базы
+  confirmRate: 0.8, // часть найденных объектов отсеивается при проверке
+  homeResidents: 1.5, // проживающих в найденном доме
+  contractsConfirmed: 0.26, // 247 подтверждённых организаций на 966 договоров
+  contractPayment: 3600, // средний платёж юрлица, ₽/мес — данные действующего клиента
+  lowShare: 0.5, // нижняя граница вилки итога
+  months: 12,
+};
+
+interface Field {
+  key: 'homes' | 'tariff' | 'contracts';
+  label: string;
+  value: number;
+  min: number;
+  step?: number;
+  mode: 'numeric' | 'decimal';
+}
+
+// Поля и значения по умолчанию — как на лендинге. У тарифа бывают копейки, поэтому клавиатура с запятой.
+const FIELDS: Field[] = [
+  { key: 'homes', label: `Домов в${NB}зоне обслуживания`, value: 10000, min: 1, mode: 'numeric' },
+  { key: 'tariff', label: `Тариф, ₽ с${NB}человека в${NB}месяц`, value: 120, min: 1, step: 0.01, mode: 'decimal' },
+  { key: 'contracts', label: `Действующих договоров с${NB}юрлицами`, value: 1000, min: 0, mode: 'numeric' },
+];
+
+// Та же формула, что в скрипте ниже: здесь — числа для страницы до запуска скрипта
+const [homes, tariff, contracts] = FIELDS.map((f) => f.value);
+const residents = homes * CALC.residentsPerHome * CALC.residentsBilled * tariff * CALC.months;
+const newHomes = homes * CALC.homesShare * CALC.confirmRate * CALC.homeResidents * tariff * CALC.months;
+const urlica = contracts * CALC.contractsConfirmed * CALC.contractPayment * CALC.months;
+const total = residents + newHomes + urlica;
+const low = total * CALC.lowShare;
+
+const money = (n: number) =>
+  new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Math.round(n)).replace(/\s/g, NB);
+
+const MODULES = [
+  { key: 'residents', name: 'Неучтённые жильцы', value: residents, tone: 'sky' },
+  { key: 'newHomes', name: 'Дома вне базы', value: newHomes, tone: 'teal' },
+  { key: 'urlica', name: `Юрлица без${NB}договора`, value: urlica, tone: 'lav' },
+];
 ---
 
 <section class="section" id="kalkulyator" aria-labelledby="kalkulyator-title">
   <div class="container">
-    <h2 id="kalkulyator-title" class="t-h2">Сколько недосбора в вашей зоне?</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Калькулятор" titleId="kalkulyator-title">Сколько недосбора в{NB}вашей зоне?</SectionIntro>
+
+    <div class="rcalc bridged" data-rcalc data-calc={JSON.stringify(CALC)}>
+      <!-- Поля: три числа о зоне оператора -->
+      <div class="rcalc-in" data-reveal style="--d:1">
+        {
+          FIELDS.map((f) => (
+            <div class="rcalc-field">
+              <label class="rcalc-label" for={`rcalc-${f.key}`}>
+                {f.label}
+              </label>
+              <input
+                class="rcalc-input"
+                id={`rcalc-${f.key}`}
+                type="number"
+                inputmode={f.mode}
+                enterkeyhint="done"
+                autocomplete="off"
+                min={f.min}
+                step={f.step}
+                value={f.value}
+                data-in={f.key}
+              />
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Результат: модули с долей в итоге, итог вилкой, кнопка пилота -->
+      <div class="rcalc-res dark" data-reveal style="--d:2" data-res>
+        <div class="rcalc-head">
+          <h3 class="rcalc-title">Недосбор в{NB}год по{NB}модулям</h3>
+          <span class="tag tag--forecast rcalc-tag">прогноз</span>
+        </div>
+
+        <dl class="rcalc-mods">
+          {
+            MODULES.map((m) => (
+              <div class="rcalc-mod" data-tone={m.tone}>
+                <dt class="rcalc-name">{m.name}</dt>
+                <dd class="rcalc-val" data-out={m.key}>{`${money(m.value)}${NB}₽`}</dd>
+                <dd class="rcalc-bar" aria-hidden="true">
+                  <i class="rcalc-fill" data-fill={m.key} style={`--s:${(m.value / total).toFixed(4)}`} />
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <div class="rcalc-total" aria-live="polite" aria-atomic="true">
+          <p class="rcalc-total-label">Итого недосбор в{NB}год</p>
+          <p class="rcalc-sum" data-sum>
+            <span class="rcalc-range">
+              <span class="rcalc-line"><span class="rcalc-word">от</span> <span class="rcalc-num" data-out="low">{money(low)}</span></span>
+              <span class="rcalc-line"><span class="rcalc-word">до</span> <span class="rcalc-num" data-out="total">{money(total)}</span><span class="rcalc-cur">{NB}₽</span></span>
+            </span>
+            <span class="rcalc-dash" data-dash hidden>—</span>
+          </p>
+        </div>
+
+        <a href="#forma" class="btn btn--light rcalc-cta" data-interest="robot" data-goal="pilot_click">
+          Запустить бесплатный пилот <Icon name="arrow-right" />
+        </a>
+      </div>
+
+      <!-- Как считали: дословно с лендинга -->
+      <div class="rcalc-rules" data-reveal style="--d:3">
+        <h3 class="rcalc-rules-title">Правила подсчёта</h3>
+        <p class="rcalc-rules-text">
+          Оценка по статистике реальных прогонов и пилотных проектов: ≈2,87&nbsp;неучтённого жителя на дом, из них
+          в начисления попадает пятая часть; ≈7%&nbsp;жилфонда вне базы; 26%&nbsp;договоров с юрлицами подтверждается; средний
+          платёж юрлица 3&nbsp;600&nbsp;₽/мес по данным действующего клиента. По объектам вне базы применён коэффициент
+          подтверждения&nbsp;0,8: часть найденного отсеивается при проверке вашими сотрудниками. Итог показан вилкой: нижняя
+          граница — половина расчётной суммы. Фактический объём по вашей зоне покажем на демонстрации.
+        </p>
+      </div>
+    </div>
   </div>
 </section>
+
+<style>
+  /* ── Раскладка: слева поля и правила (столбиком, с мостиком), справа результат во всю высоту ── */
+  .rcalc {
+    --rcalc-gap: clamp(12px, calc(var(--vw) * 1.4), 20px);
+    --rcalc-pad: clamp(22px, calc(var(--vw) * 2.4), 36px);
+    --gap: var(--rcalc-gap);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'in res'
+      'rules res';
+    gap: var(--rcalc-gap);
+    isolation: isolate;
+  }
+
+  /* ── Поля ─────────────────────────────────────────────── */
+  .rcalc-in,
+  .rcalc-rules {
+    position: relative;
+    min-width: 0;
+    padding: var(--rcalc-pad);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .rcalc-in {
+    grid-area: in;
+    display: grid;
+    gap: 22px;
+  }
+
+  .rcalc-field {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .rcalc-label {
+    font-size: 15px;
+    font-weight: 560;
+    line-height: 1.35;
+    color: var(--ink-2);
+  }
+
+  /* Поле как в форме заявки: белое, рамка --line-2, фокус синий; цифры табличные — ширина не скачет */
+  .rcalc-input {
+    width: 100%;
+    min-height: 60px;
+    padding: 0 18px;
+    border: 1px solid var(--line-2);
+    border-radius: calc(12px * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+    color: var(--ink);
+    font-size: clamp(1.25rem, calc(var(--vw) * 1.45), 1.5rem);
+    font-weight: 560;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    appearance: textfield;
+    -moz-appearance: textfield;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+
+  /* стрелки браузера убраны: значение меняется клавиатурой (и стрелками ↑↓) */
+  .rcalc-input::-webkit-inner-spin-button,
+  .rcalc-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .rcalc-input:hover {
+    border-color: #b8b2a6;
+  }
+
+  .rcalc-input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgb(0 107 255 / 0.14);
+  }
+
+  .rcalc-input[aria-invalid='true'] {
+    border-color: var(--danger);
+  }
+
+  .rcalc-input[aria-invalid='true']:focus {
+    box-shadow: 0 0 0 4px rgb(214 41 59 / 0.12);
+  }
+
+  /* ── Результат: графитовая карточка с мягким свечением палитры ── */
+  .rcalc-res {
+    --rcalc-line: rgb(255 255 255 / 0.14);
+    grid-area: res;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: clamp(24px, calc(var(--vw) * 2.8), 44px);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background:
+      radial-gradient(80% 50% at 100% 0%, rgb(184 159 250 / 0.2) 0%, transparent 70%),
+      radial-gradient(75% 45% at 0% 100%, rgb(72 144 227 / 0.24) 0%, transparent 70%),
+      var(--ink);
+  }
+
+  .rcalc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .rcalc-title {
+    font-size: 1.0625rem;
+    line-height: 1.35;
+    font-weight: 560;
+    letter-spacing: -0.01em;
+  }
+
+  /* метка прогноза — та же пунктирная плашка, но для тёмного фона */
+  .rcalc-tag {
+    flex: none;
+    border-color: rgb(255 255 255 / 0.4);
+    color: rgb(255 255 255 / 0.86);
+  }
+
+  .rcalc-mods {
+    display: grid;
+    margin: 10px 0 36px;
+  }
+
+  .rcalc-mod {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: 16px;
+    padding-block: 24px;
+  }
+
+  /* разделитель — полоска-псевдоэлемент: однопиксельную рамку при дробном масштабе Safari не рисует */
+  .rcalc-mod + .rcalc-mod::before,
+  .rcalc-total::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: var(--rcalc-line);
+  }
+
+  .rcalc-name {
+    font-size: 15.5px;
+    line-height: 1.35;
+    color: rgb(255 255 255 / 0.76);
+  }
+
+  .rcalc-val {
+    font-size: clamp(1.125rem, calc(var(--vw) * 1.35), 1.3125rem);
+    line-height: 1.2;
+    font-weight: 560;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* полоса — доля модуля в итоге; растёт при появлении карточки и при каждом пересчёте */
+  .rcalc-bar {
+    grid-column: 1 / -1;
+    height: 6px;
+    margin-top: 12px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: rgb(255 255 255 / 0.1);
+  }
+
+  .rcalc-fill {
+    display: block;
+    height: 100%;
+    background: var(--rcalc-c, #fff);
+    transform: scaleX(var(--s, 0));
+    transform-origin: left center;
+    transition: transform 0.7s var(--ease-out);
+  }
+
+  .rcalc-mod[data-tone='sky'] {
+    --rcalc-c: var(--g-sky);
+  }
+
+  .rcalc-mod[data-tone='teal'] {
+    --rcalc-c: var(--g-teal);
+  }
+
+  .rcalc-mod[data-tone='lav'] {
+    --rcalc-c: var(--g-lav);
+  }
+
+  .rcalc[data-armed]:not(.is-shown) .rcalc-fill {
+    transform: scaleX(0);
+  }
+
+  /* ── Итог вилкой: «от» и «до» мельче, числа крупно; две строки всегда — при вводе ничего не прыгает ── */
+  .rcalc-total {
+    position: relative;
+    margin-top: auto;
+    padding-top: 26px;
+  }
+
+  .rcalc-total-label {
+    font-size: 15.5px;
+    line-height: 1.35;
+    color: rgb(255 255 255 / 0.76);
+  }
+
+  .rcalc-sum {
+    position: relative;
+    margin-top: 10px;
+    font-size: clamp(2.5rem, calc(var(--vw) * 4.3), 4.5rem);
+    line-height: 1.04;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    /* табличные цифры: не теснее −0,025em, иначе «88» и «44» слипаются */
+    letter-spacing: -0.025em;
+  }
+
+  .rcalc-line {
+    display: block;
+    overflow-wrap: anywhere;
+  }
+
+  .rcalc-word,
+  .rcalc-cur {
+    font-size: 0.42em;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: rgb(255 255 255 / 0.68);
+  }
+
+  .rcalc-word {
+    display: inline-block;
+    min-width: 1.6em;
+  }
+
+  .rcalc-cur {
+    font-size: 0.5em;
+  }
+
+  /* длинный итог (крупный оператор) мельче ступенями; высоту строки держит кегль блока — карточка не прыгает */
+  .rcalc-sum[data-size='m'] .rcalc-num {
+    font-size: 0.78em;
+  }
+
+  .rcalc-sum[data-size='s'] .rcalc-num {
+    font-size: 0.62em;
+  }
+
+  .rcalc-sum[data-size='xs'] .rcalc-num {
+    font-size: 0.5em;
+  }
+
+  /* пустое или неверное поле: вместо итога «—», место под числа сохраняется */
+  .rcalc-sum.is-empty .rcalc-range {
+    visibility: hidden;
+  }
+
+  .rcalc-dash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: rgb(255 255 255 / 0.6);
+  }
+
+  .rcalc-cta {
+    align-self: flex-start;
+    margin-top: 30px;
+  }
+
+  /* ── Правила подсчёта: вторая бежевая карточка под полями, соединена мостиком ── */
+  .rcalc-rules {
+    grid-area: rules;
+  }
+
+  .rcalc-rules::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--gap) * -1 - 1px);
+    left: calc(var(--rcalc-pad) + 18px - (var(--gap) + 14px) / 2);
+    width: calc(var(--gap) + 14px);
+    height: calc(var(--gap) + 2px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-col);
+    mask: var(--bridge-mask-col);
+  }
+
+  .rcalc-rules-title {
+    font-size: 1.0625rem;
+    line-height: 1.35;
+    font-weight: 560;
+    letter-spacing: -0.01em;
+  }
+
+  .rcalc-rules-text {
+    margin-top: 10px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* ── Планшет: поля в один ряд, под ними результат и правила во всю ширину ── */
+  @media (max-width: 1199.98px) {
+    .rcalc {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto;
+      grid-template-areas:
+        'in'
+        'res'
+        'rules';
+    }
+
+    /* подписи разной длины: поля выровнены по нижнему краю */
+    .rcalc-in {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: end;
+      column-gap: 16px;
+    }
+
+    .rcalc-rules::before {
+      content: none;
+    }
+
+    .rcalc-mod {
+      padding-block: 20px;
+    }
+
+    .rcalc-mods {
+      margin-bottom: 26px;
+    }
+
+    .rcalc-sum {
+      font-size: 3.5rem;
+    }
+  }
+
+  /* ── Телефон: поля → результат → правила, всё столбиком ── */
+  @media (max-width: 759.98px) {
+    .rcalc-in {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    .rcalc-input {
+      min-height: 56px;
+    }
+
+    /* сумма под названием модуля: строка не зависит от длины числа и не переносится при вводе */
+    .rcalc-mod {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 4px;
+      padding-block: 16px;
+    }
+
+    .rcalc-val {
+      text-align: left;
+    }
+
+    .rcalc-mods {
+      margin: 12px 0 24px;
+    }
+
+    .rcalc-sum {
+      font-size: clamp(2rem, calc(var(--vw) * 9.6), 2.75rem);
+    }
+
+    .rcalc-cta {
+      align-self: stretch;
+      margin-top: 26px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  interface Calc {
+    residentsPerHome: number;
+    residentsBilled: number;
+    homesShare: number;
+    confirmRate: number;
+    homeResidents: number;
+    contractsConfirmed: number;
+    contractPayment: number;
+    lowShare: number;
+    months: number;
+  }
+
+  const NB = ' ';
+  const money = (n: number) =>
+    new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Math.round(n)).replace(/\s/g, NB);
+
+  document.querySelectorAll<HTMLElement>('[data-rcalc]').forEach((root) => {
+    const C = JSON.parse(root.dataset.calc ?? '{}') as Calc;
+    const input = (k: string) => root.querySelector<HTMLInputElement>(`[data-in="${k}"]`)!;
+    const out = (k: string) => root.querySelector<HTMLElement>(`[data-out="${k}"]`)!;
+    const fill = (k: string) => root.querySelector<HTMLElement>(`[data-fill="${k}"]`)!;
+    const homesEl = input('homes');
+    const tariffEl = input('tariff');
+    const contractsEl = input('contracts');
+    const sum = root.querySelector<HTMLElement>('[data-sum]')!;
+    const dash = root.querySelector<HTMLElement>('[data-dash]')!;
+
+    // Число из поля. Пустое, нечисловое или меньше минимума — null: в расчёт идёт как 0, на месте суммы «—».
+    // Красная рамка — только у неверного значения, у пустого поля её нет.
+    const read = (el: HTMLInputElement): number | null => {
+      const v = el.valueAsNumber;
+      const ok = Number.isFinite(v) && v >= Number(el.min || 0);
+      const bad = el.validity.badInput || (el.value !== '' && !ok);
+      if (bad) el.setAttribute('aria-invalid', 'true');
+      else el.removeAttribute('aria-invalid');
+      return ok ? v : null;
+    };
+
+    const update = () => {
+      const homes = read(homesEl);
+      const tariff = read(tariffEl);
+      const contracts = read(contractsEl);
+      const h = homes ?? 0;
+      const t = tariff ?? 0;
+      const c = contracts ?? 0;
+
+      // формула лендинга
+      const residents = h * C.residentsPerHome * C.residentsBilled * t * C.months;
+      const newHomes = h * C.homesShare * C.confirmRate * C.homeResidents * t * C.months;
+      const urlica = c * C.contractsConfirmed * C.contractPayment * C.months;
+      const total = residents + newHomes + urlica;
+      const low = total * C.lowShare;
+
+      const homesOk = homes !== null && tariff !== null;
+      const rows: [string, number, boolean][] = [
+        ['residents', residents, homesOk],
+        ['newHomes', newHomes, homesOk],
+        ['urlica', urlica, contracts !== null],
+      ];
+      for (const [key, value, ok] of rows) {
+        out(key).textContent = ok ? `${money(value)}${NB}₽` : '—';
+        fill(key).style.setProperty('--s', ok && total > 0 ? (value / total).toFixed(4) : '0');
+      }
+
+      const empty = !(total > 0);
+      sum.classList.toggle('is-empty', empty);
+      dash.hidden = !empty;
+      if (!empty) {
+        const top = money(total);
+        out('low').textContent = money(low);
+        out('total').textContent = top;
+        // «20 707 200» — 10 знаков; длиннее — мельче, чтобы итог оставался в две строки
+        const len = top.length;
+        if (len <= 10) delete sum.dataset.size;
+        else sum.dataset.size = len <= 13 ? 'm' : len <= 16 ? 's' : 'xs';
+      }
+    };
+
+    root.addEventListener('input', update);
+    // браузер мог вернуть в поля прежние значения (кнопка «Назад»)
+    update();
+
+    // полосы растут, когда карточка результата впервые на экране
+    const res = root.querySelector<HTMLElement>('[data-res]');
+    if (res && !reducedMotion() && 'IntersectionObserver' in window) {
+      root.dataset.armed = '';
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return;
+          io.disconnect();
+          window.setTimeout(() => root.classList.add('is-shown'), 350);
+        },
+        { threshold: 0.35 },
+      );
+      io.observe(res);
+    }
+  });
+</script>

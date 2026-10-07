@@ -1,10 +1,271 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Раздел страницы «РО-БОТ» [#interfeys] — «Интерфейс РО-БОТа». Тур по пяти настоящим экранам продукта
+// (снимки 1600×900 с прежнего лендинга romoney.qodex.tech, данные на них — демо).
+// Снимок экрана — главный в разделе, поэтому он широкий: на 2K и FHD мелкий текст интерфейса читается.
+// Над ним — пять пунктов в ряд (FeatureAccordion): полоса прогресса сверху, заголовок экрана и текст
+// открытого пункта, как шкала шагов над сценой в «Алгоритме работы» QODEX Tracker и как на лендинге
+// (подпись над экраном). Пункты переключаются сами (6 с), снимок меняется вместе с ними ([data-acc-scope]).
+// Уже 1200 px: снимок сверху во всю ширину, под ним пункты обычным списком.
+// Подложка — пресет dusk, собрана классами .gv, а не компонентом GradientVisual: компонент прячет
+// содержимое от скринридера, а у настоящих снимков экрана есть смысловые подписи (alt).
+import SectionIntro from '../../components/SectionIntro.astro';
+import FeatureAccordion, { type AccItem } from '../../components/FeatureAccordion.astro';
+import { withBase } from '../../config/site';
+
+const NB = String.fromCharCode(160); // неразрывный пробел
+
+interface Screen extends AccItem {
+  file: string;
+  alt: string;
+  /** Телефон: участок снимка 4:3, который показываем крупнее, — левый край, верх и ширина в пикселях снимка 1600×900. */
+  crop: [number, number, number];
+}
+
+// Заголовки и тексты — с лендинга дословно
+const SCREENS: Screen[] = [
+  {
+    icon: 'banknote',
+    title: 'Видно, сколько денег приносит сверка',
+    text: 'Не отчёт ради отчёта — вы видите потенциал доначислений в рублях.',
+    file: 'shot-reports',
+    crop: [0, 0, 800],
+    alt:
+      'Экран «Отчёты и аналитика»: найдено 604 лицевых счёта с расхождениями, обработано оператором 392, ' +
+      'внесено в биллинг 305, отклонено 87; причины отклонений и динамика за период',
+  },
+  {
+    icon: 'map',
+    title: `Весь регион как на${NB}ладони`,
+    text: 'Сразу понятно, где работа идёт, а где встала.',
+    file: 'shot-regions',
+    crop: [540, 90, 800],
+    alt:
+      'Экран «ГИС ЖКХ» по Башкортостану: районы и города, число домов, квартир и жильцов по ГИС, ' +
+      'ход выгрузки, сверки и проверки по каждому городу',
+  },
+  {
+    icon: 'building-2',
+    title: `Разница в${NB}жильцах — до${NB}каждой квартиры`,
+    text: 'Точность, до которой вручную никто не доходит.',
+    file: 'shot-house',
+    crop: [540, 90, 800],
+    alt:
+      'Многоквартирный дом: по каждой квартире — лицевой счёт, жильцы по ГИС ЖКХ и по биллингу, ' +
+      'разница и даты обновления',
+  },
+  {
+    icon: 'table',
+    title: `Неделя ручной${NB}работы — за${NB}пару часов`,
+    text: `Сверка ГИС${NB}ЖКХ и вашего биллинга в${NB}одном месте, чтобы сразу увидеть разницу.`,
+    file: 'shot-workplace',
+    crop: [250, 225, 900],
+    alt:
+      'Экран «Рабочее место»: к обработке 47, повторно 4, обновлено 9, отклонено 5; адреса с лицевым счётом, ' +
+      'числом жильцов по ГИС и по биллингу, разницей и датами обновления',
+  },
+  {
+    icon: 'refresh',
+    title: `Одна кнопка — и${NB}биллинг обновлён`,
+    text: `Скриншот из${NB}ГИС прикладывается сам, как доказательство.`,
+    file: 'shot-card',
+    crop: [800, 0, 800],
+    alt:
+      'Карточка расхождения по квартире: по ГИС 5 жильцов, в биллинге 3, разница +2; кнопки «Отклонить» ' +
+      'и «Обновить в биллинге», отмечено автоматическое скачивание скриншота',
+  },
+];
+
+const items: AccItem[] = SCREENS.map(({ icon, title, text }) => ({ icon, title, text }));
+const src = (file: string, w: number) => withBase(`/media/robot/${file}-${w}.webp`);
+
+// На телефоне снимок целиком слишком мелкий: в рамке 4:3 виден участок экрана с его главными цифрами.
+// Ширина картинки и сдвиг — в долях рамки.
+const cropStyle = ([x, y, w]: [number, number, number]) =>
+  `--crop-w:${((1600 / w) * 100).toFixed(3)}%; --crop-x:${((-x / w) * 100).toFixed(3)}%; ` +
+  `--crop-y:${((-y / (w * 0.75)) * 100).toFixed(3)}%`;
 ---
 
-<section class="section" id="interfeys" aria-labelledby="interfeys-title">
+<section class="section rif" id="interfeys" aria-labelledby="interfeys-title">
   <div class="container">
-    <h2 id="interfeys-title" class="t-h2">Интерфейс РО-БОТа</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Интерфейс" titleId="interfeys-title">Интерфейс РО-БОТа</SectionIntro>
+
+    <div class="rif__tour" data-acc-scope>
+      <div class="rif__steps" data-reveal style="--d:2">
+        <FeatureAccordion id="robot-ui" items={items} ms={6000} color="var(--g-blue)" />
+      </div>
+
+      <div class="rif__visual" data-reveal style="--d:3">
+        <div class="gv gv--dusk rif__gv">
+          <div class="rif-panes" data-panes>
+            {
+              SCREENS.map((s, i) => (
+                <div class:list={['rif-pane', { 'is-active': i === 0 }]} data-pane aria-hidden={i === 0 ? 'false' : 'true'}>
+                  <div class="rif-frame" style={cropStyle(s.crop)}>
+                    <img
+                      class="rif-frame__img"
+                      src={src(s.file, 1600)}
+                      srcset={`${src(s.file, 800)} 800w, ${src(s.file, 1600)} 1600w`}
+                      sizes="(max-width: 620px) 200vw, (max-width: 1199.98px) calc(100vw - 48px), 1040px"
+                      width="1600"
+                      height="900"
+                      alt={s.alt}
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
+                    />
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+        <span class="tag tag--demo rif__demo" aria-hidden="true">демо-данные</span>
+      </div>
+    </div>
   </div>
 </section>
+
+<style>
+  .rif__tour {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(20px, calc(var(--vw) * 1.8), 26px);
+  }
+
+  .rif__visual {
+    position: relative;
+    min-width: 0;
+  }
+
+  /* подложка по размеру снимка: поля одинаковые со всех сторон, сверху в поле — плашка «демо-данные» */
+  .rif__gv {
+    min-height: 0;
+    padding: 46px clamp(14px, calc(var(--vw) * 3), 52px);
+  }
+
+  .rif-panes {
+    width: min(100%, 1040px);
+  }
+
+  /* снимок экрана в белой рамке, как карточки .ui на градиенте */
+  .rif-frame {
+    overflow: hidden;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow:
+      0 0 0 8px rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+  }
+
+  .rif-frame__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* заголовки пунктов без «висящего» последнего слова */
+  .rif__steps :global(.acc__head > span) {
+    text-wrap: balance;
+  }
+
+  .rif__demo {
+    position: absolute;
+    z-index: 1;
+    top: clamp(14px, calc(var(--vw) * 1.3), 18px);
+    left: clamp(14px, calc(var(--vw) * 1.3), 18px);
+    pointer-events: none;
+  }
+
+  /* ── Широкий экран: пять пунктов в ряд над снимком ─────────
+     Полоса прогресса — сверху пункта, как отрезок шкалы. Тексты закрытых пунктов не видны, но место
+     под ними оставлено: высота ряда не меняется при переключении, и снимок под ним не прыгает. */
+  @media (min-width: 1200px) {
+    .rif__steps :global(.acc) {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      column-gap: 24px;
+      border-top: 0;
+    }
+
+    .rif__steps :global(.acc__item) {
+      border-top: 2px solid var(--line-2);
+      border-bottom: 0;
+    }
+
+    .rif__steps :global(.acc__progress) {
+      top: -2px;
+      bottom: auto;
+      height: 2px;
+    }
+
+    .rif__steps :global(.acc__head) {
+      align-items: flex-start;
+      gap: 10px;
+      padding: 18px 0 10px;
+      font-size: 1.125rem;
+      line-height: 1.3;
+      color: var(--muted);
+    }
+
+    .rif__steps :global(.acc__head:hover),
+    .rif__steps :global(.acc__item.is-open .acc__head) {
+      color: var(--ink);
+    }
+
+    /* в узкой колонке значок отнимал бы место у заголовка — в ряду только текст, как на шкале шагов */
+    .rif__steps :global(.acc__head svg) {
+      display: none;
+    }
+
+    .rif__steps :global(.acc__body) {
+      grid-template-rows: 1fr;
+      opacity: 0;
+      transition:
+        opacity 0.4s var(--ease-out),
+        visibility 0s linear 0.4s;
+    }
+
+    .rif__steps :global(.acc__item.is-open .acc__body) {
+      opacity: 1;
+      transition-delay: 0s;
+    }
+
+    .rif__steps :global(.acc__inner > p) {
+      padding: 0 0 4px;
+      font-size: 15px;
+      line-height: 1.5;
+      text-wrap: pretty;
+    }
+  }
+
+  /* ── Уже 1200 px: снимок сверху во всю ширину, под ним пункты списком ── */
+  @media (max-width: 1199.98px) {
+    .rif__visual {
+      order: -1;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .rif__gv {
+      padding: 46px 14px 14px;
+    }
+
+    .rif-frame {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      border-radius: 12px;
+      box-shadow:
+        0 0 0 5px rgb(255 255 255 / 0.4),
+        var(--shadow-card);
+    }
+
+    .rif-frame__img {
+      position: absolute;
+      top: var(--crop-y);
+      left: var(--crop-x);
+      width: var(--crop-w);
+      max-width: none;
+    }
+  }
+</style>

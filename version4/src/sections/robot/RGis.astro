@@ -1,10 +1,726 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Раздел «Модуль 01 · Неучтённые жильцы» страницы «РО-БОТ» [#gis]. Продуктовый ряд, как «О системе»
+// у Tracker и «Импорт из Excel» у «Кодекса ТКО»: слева метка модуля, заголовок, текст, источники данных,
+// главная мысль модуля и кнопка; справа большая градиентная карточка (aqua) с нарисованным экраном дома:
+// квартиры, лицевые счета, жильцы по ГИС ЖКХ и по биллингу. Когда картинка на экране, сверка проходит
+// по квартирам сверху вниз и у квартир с расхождением по очереди загорается разница, в конце — итог.
+// Экран перерисован с настоящего экрана «МКД» РО-БОТа, данные — демо. Тексты — с лендинга дословно.
+// Картинку описывает текст рядом, поэтому для скринридера она скрыта (aria-hidden ставит GradientVisual).
+import GradientVisual from '../../components/GradientVisual.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = String.fromCharCode(160);
+
+// Источники данных — с лендинга (длинное название последним: короткие плашки встают в одну строку)
+const SOURCES: { icon: IconName; name: string }[] = [
+  { icon: 'house', name: `ГИС${NB}ЖКХ` },
+  { icon: 'database', name: 'База начислений оператора' },
+  { icon: 'map-pin', name: 'Государственный адресный реестр (ФИАС/ГАР)' },
+];
+
+// ── Демо-данные: один дом, шесть квартир. Первая — «по счёту один, по ГИС ЖКХ четыре» из текста;
+// расхождение в четырёх квартирах из шести (итог внизу карточки) ──
+const FLATS = [
+  { n: 1, ls: '5216 0384 7721', gis: 4, bill: 1 },
+  { n: 2, ls: '5216 0391 0458', gis: 2, bill: 2 },
+  { n: 3, ls: '5216 0402 3316', gis: 5, bill: 3 },
+  { n: 4, ls: '5216 0415 8873', gis: 3, bill: 3 },
+  { n: 5, ls: '5216 0427 1290', gis: 3, bill: 2 },
+  { n: 6, ls: '5216 0438 6634', gis: 2, bill: 0 },
+].map((f) => ({ ...f, ls: f.ls.replace(/ /g, NB), d: f.gis - f.bill }));
+
+const FOUND = FLATS.filter((f) => f.d > 0).length;
+
+// Ход сверки: строка за строкой, разница загорается чуть позже «прохода»
+const T0 = 0.45;
+const STEP = 0.42;
+const tRow = (k: number) => (T0 + k * STEP).toFixed(2);
+const T_SUM = (T0 + FLATS.length * STEP + 0.25).toFixed(2);
 ---
 
 <section class="section" id="gis" aria-labelledby="gis-title">
   <div class="container">
-    <h2 id="gis-title" class="t-h2">Сверка базы начислений с ГИС ЖКХ</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <div class="rgis__row">
+      <div class="rgis__text">
+        <p class="rgis__label" data-reveal>
+          <span class="plabel plabel--lg p-robot">
+            <span class="plabel__ico" aria-hidden="true"><Icon name="users" strokeWidth={2} /></span>
+            Модуль 01 · Неучтённые жильцы
+          </span>
+        </p>
+
+        <h2 class="t-serif rgis__title" id="gis-title" data-reveal style="--d:1">
+          Сверка базы начислений с&nbsp;ГИС&nbsp;ЖКХ: сколько жильцов на&nbsp;самом деле
+        </h2>
+
+        <p class="rgis__lead" data-reveal style="--d:2">
+          <span class="rgis__hook">По счёту&nbsp;— один, по&nbsp;ГИС&nbsp;ЖКХ&nbsp;— четыре.</span> Модуль сверяет вашу базу
+          начислений с&nbsp;государственной системой по&nbsp;каждому лицевому счёту и&nbsp;показывает расхождения до&nbsp;квартиры.
+          Вся чувствительная информация хранится внутри контура вашей организации. Запуск&nbsp;— за&nbsp;один день,
+          интеграция с&nbsp;биллингом не&nbsp;требуется. По&nbsp;каждому расхождению формируется документальное подтверждение
+          из&nbsp;ГИС&nbsp;ЖКХ&nbsp;— с&nbsp;датой, источником и&nbsp;составом сведений.
+        </p>
+
+        <div class="rgis__src" data-reveal style="--d:3">
+          <h3 class="rgis__sub">Источники данных</h3>
+          <ul class="rgis__chips">
+            {
+              SOURCES.map((s) => (
+                <li class="rgis__chip">
+                  <span class="rgis__chip-ico" aria-hidden="true">
+                    <Icon name={s.icon} size={16} strokeWidth={2} />
+                  </span>
+                  <span>{s.name}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <p class="rgis__hl" data-reveal style="--d:4">
+          <span class="rgis__hl-ico" aria-hidden="true"><Icon name="scan-search" size={18} strokeWidth={2} /></span>
+          <span>Сверка базы с&nbsp;ГИС&nbsp;ЖКХ и&nbsp;подсвечивание расхождений прямо в&nbsp;биллинге.</span>
+        </p>
+
+        <div class="rgis__cta" data-reveal style="--d:5">
+          <a href="#forma" class="btn btn--primary" data-interest="robot" data-goal="pilot_click">
+            Запустить бесплатный пилот
+            <Icon name="arrow-right" />
+          </a>
+        </div>
+      </div>
+
+      <div class="rgis__visual" data-reveal style="--d:1">
+        <GradientVisual preset="aqua" deco="none">
+          <div class="rgis-m" data-rgis data-idle>
+            <div class="ui rgis-card">
+              <div class="rgis-head">
+                <span class="rgis-ico">
+                  <Icon name="building-2" size={20} strokeWidth={1.9} />
+                </span>
+                <span class="rgis-head__text">
+                  <span class="rgis-title">МКД, д.{NB}1</span>
+                  <span class="rgis-sub">ул.{NB}Достоевского<span class="rgis-sub__n"> · {FLATS.length}{NB}квартир</span></span>
+                </span>
+                <span class="rgis-pill">
+                  ГИС{NB}ЖКХ<span class="rgis-pill__date">{NB}·{NB}30.09.2026</span>
+                </span>
+              </div>
+
+              <div class="rgis-cols">
+                <span>Кв.</span>
+                <span>Лицевой счёт</span>
+                <span class="rgis-c">ГИС</span>
+                <span class="rgis-c">Биллинг</span>
+                <span class="rgis-c">
+                  <span class="rgis-l-long">Разница</span><span class="rgis-l-short">Δ</span>
+                </span>
+              </div>
+
+              <ul class="rgis-rows">
+                {
+                  FLATS.map((f, k) => (
+                    <li class:list={['rgis-row', { 'is-diff': f.d > 0 }]} style={`--t:${tRow(k)}s`}>
+                      {f.d > 0 && <i class="rgis-row__tint rgis-a-tint" />}
+                      <i class="rgis-row__scan rgis-a-scan" />
+                      <span class="rgis-kv">кв.{NB}{f.n}</span>
+                      <span class="rgis-ls">{f.ls}</span>
+                      <span class="rgis-c rgis-gis">{f.gis}</span>
+                      <span class="rgis-c rgis-bill">{f.bill}</span>
+                      <span class="rgis-c rgis-d">
+                        <i class="rgis-skel rgis-a-gone" />
+                        {f.d > 0 ? <b class="rgis-delta rgis-a-lit">+{f.d}</b> : <span class="rgis-zero rgis-a-lit">0</span>}
+                      </span>
+                    </li>
+                  ))
+                }
+              </ul>
+
+              <div class="rgis-sum rgis-a-in" style={`--t:${T_SUM}s`}>
+                <span class="rgis-sum__ico">
+                  <Icon name="user-search" size={16} strokeWidth={2.1} />
+                </span>
+                <span>
+                  Найдено расхождений: <b>{FOUND}{NB}из{NB}{FLATS.length}{NB}квартир</b>
+                </span>
+              </div>
+            </div>
+          </div>
+        </GradientVisual>
+        <span class="tag tag--demo rgis__demo" aria-hidden="true">демо-данные</span>
+      </div>
+    </div>
   </div>
 </section>
+
+<style>
+  /* ── Ряд: текст слева, картинка справа ─────────────────── */
+  .rgis__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    grid-template-areas: 'text visual';
+    align-items: center;
+    column-gap: clamp(40px, calc(var(--vw) * 6), 96px);
+  }
+
+  .rgis__text {
+    grid-area: text;
+    min-width: 0;
+  }
+
+  /* заголовок длинный — чуть мельче, чем у коротких заголовков продуктовых разделов */
+  .rgis__title {
+    margin-top: 18px;
+    font-size: clamp(1.8rem, calc(var(--vw) * 2.6), 2.5rem);
+    line-height: 1.1;
+  }
+
+  .rgis__lead {
+    max-width: 54ch;
+    margin-top: 20px;
+    font-size: clamp(1.03rem, calc(var(--vw) * 1.2), 1.15rem);
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* первая фраза — суть модуля: тёмным */
+  .rgis__hook {
+    font-weight: 560;
+    color: var(--ink);
+  }
+
+  /* ── Источники данных: спокойные плашки ─────────────────── */
+  .rgis__src {
+    margin-top: clamp(24px, calc(var(--vw) * 2.6), 34px);
+  }
+
+  .rgis__sub {
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+
+  .rgis__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rgis__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 42px;
+    padding: 6px 15px 6px 7px;
+    border-radius: calc(13px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    box-shadow: inset 0 0 0 1px var(--line);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  .rgis__chip-ico {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--panel);
+    color: var(--ink-2);
+  }
+
+  /* главная мысль модуля — мягкой плашкой */
+  .rgis__hl {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 14px 20px 14px 14px;
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    font-size: 16px;
+    font-weight: 560;
+    line-height: 1.45;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+
+  .rgis__hl-ico {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--blue);
+  }
+
+  .rgis__cta {
+    margin-top: 28px;
+  }
+
+  .rgis__visual {
+    grid-area: visual;
+    position: relative;
+    min-width: 0;
+  }
+
+  /* поля градиентной карточки поменьше: таблице нужна ширина; сверху — место для «демо-данные» */
+  .rgis__visual :global(.gv) {
+    padding: clamp(14px, calc(var(--vw) * 2.6), 46px);
+    padding-top: clamp(54px, calc(var(--vw) * 3.4), 60px);
+  }
+
+  /* «демо-данные» в углу градиентной карточки */
+  .rgis__demo {
+    position: absolute;
+    z-index: 1;
+    top: clamp(14px, calc(var(--vw) * 1.6), 22px);
+    left: clamp(14px, calc(var(--vw) * 1.6), 22px);
+    pointer-events: none;
+  }
+
+  /* ── Иллюстрация: экран дома в РО-БОТе ─────────────────── */
+  .rgis-m {
+    --u-blue: #006bff;
+    --u-blue-ink: #0b56c4;
+    --u-blue-soft: #e8f1ff;
+    --u-row: #f5f6f8;
+    --u-tint: #eaf2ff;
+    /* колонки: квартира, лицевой счёт, ГИС, биллинг, разница — общие у подписей и строк */
+    --cols: clamp(36px, 12.4cqi, 58px) minmax(0, 1fr) clamp(28px, 9.4cqi, 44px) clamp(44px, 13.6cqi, 62px)
+      clamp(34px, 14.4cqi, 66px);
+    width: min(100%, 476px);
+    container-type: inline-size;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink);
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .rgis-card {
+    width: 100%;
+    padding: clamp(13px, 4.8cqi, 24px);
+    border-radius: clamp(18px, 5cqi, 24px);
+  }
+
+  /* шапка: дом, улица, источник и дата выгрузки */
+  .rgis-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: clamp(12px, 3.6cqi, 18px);
+  }
+
+  .rgis-ico {
+    display: grid;
+    place-items: center;
+    width: clamp(34px, 8.6cqi, 40px);
+    height: clamp(34px, 8.6cqi, 40px);
+    flex: none;
+    border-radius: 12px;
+    background: var(--u-blue-soft);
+    color: var(--u-blue);
+  }
+
+  .rgis-head__text {
+    display: grid;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rgis-title {
+    font-size: clamp(16px, 4.2cqi, 19px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .rgis-sub {
+    overflow: hidden;
+    font-size: 12.5px;
+    color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rgis-pill {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: var(--u-row);
+    font-size: 12px;
+    font-weight: 560;
+    line-height: 1;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* подписи колонок и строки квартир — одна сетка */
+  .rgis-cols,
+  .rgis-row {
+    display: grid;
+    grid-template-columns: var(--cols);
+    align-items: center;
+    column-gap: clamp(4px, 1.8cqi, 9px);
+    padding-inline: clamp(8px, 2.6cqi, 12px);
+  }
+
+  .rgis-cols {
+    padding-bottom: 7px;
+    font-size: clamp(10.5px, 2.6cqi, 12px);
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .rgis-c {
+    text-align: center;
+  }
+
+  .rgis-l-short {
+    display: none;
+  }
+
+  .rgis-rows {
+    display: grid;
+    gap: 4px;
+  }
+
+  .rgis-row {
+    position: relative;
+    isolation: isolate;
+    min-height: clamp(34px, 9cqi, 42px);
+    border-radius: 11px;
+    background: var(--u-row);
+    font-size: clamp(11.5px, 3cqi, 14px);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* подсветка квартиры с расхождением и «проход» сверки по строке */
+  .rgis-row__tint,
+  .rgis-row__scan {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+  }
+
+  .rgis-row__tint {
+    background: var(--u-tint);
+  }
+
+  .rgis-row__scan {
+    background: #dde9ff;
+    box-shadow: inset 0 0 0 1.5px rgb(0 107 255 / 0.35);
+    opacity: 0;
+  }
+
+  .rgis-kv {
+    font-weight: 560;
+  }
+
+  .rgis-ls {
+    overflow: hidden;
+    color: var(--ink-2);
+    text-overflow: ellipsis;
+  }
+
+  .rgis-gis {
+    font-weight: 600;
+  }
+
+  .rgis-bill {
+    color: var(--ink-2);
+  }
+
+  /* разница: сначала «ожидание», потом цифра */
+  .rgis-d {
+    display: grid;
+    place-items: center;
+  }
+
+  .rgis-d > * {
+    grid-area: 1 / 1;
+  }
+
+  .rgis-skel {
+    width: 18px;
+    height: 6px;
+    border-radius: 3px;
+    background: #dde2e8;
+  }
+
+  .rgis-delta {
+    display: inline-grid;
+    place-items: center;
+    min-width: clamp(28px, 8cqi, 34px);
+    height: clamp(20px, 5.2cqi, 24px);
+    padding: 0 6px;
+    border-radius: 7px;
+    background: var(--u-blue);
+    color: #fff;
+    font-size: clamp(11.5px, 2.9cqi, 13px);
+    font-weight: 600;
+  }
+
+  .rgis-zero {
+    color: var(--muted);
+  }
+
+  /* итог сверки */
+  .rgis-sum {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: clamp(10px, 3cqi, 14px);
+    padding: clamp(8px, 2.4cqi, 11px) 12px clamp(8px, 2.4cqi, 11px) clamp(8px, 2.4cqi, 11px);
+    border-radius: 14px;
+    background: var(--u-blue-soft);
+    color: var(--u-blue-ink);
+    font-size: clamp(12.5px, 3.1cqi, 14px);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .rgis-sum b {
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .rgis-sum__ico {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--u-blue);
+    color: #fff;
+  }
+
+  /* ── Анимации: один проход сверки, когда картинка на экране ──
+     Без анимации видно итоговое состояние: «ожидание» скрыто, разница горит. */
+  .rgis-a-gone {
+    opacity: 0;
+  }
+
+  .rgis-m .rgis-a-scan {
+    animation: rgis-scan 0.85s ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rgis-m .rgis-a-gone {
+    animation: rgis-gone 0.2s ease both;
+    animation-delay: calc(var(--t, 0s) + 0.28s);
+  }
+
+  .rgis-m .rgis-a-lit {
+    animation: rgis-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    animation-delay: calc(var(--t, 0s) + 0.3s);
+  }
+
+  .rgis-m .rgis-a-tint {
+    animation: rgis-fade 0.5s ease both;
+    animation-delay: calc(var(--t, 0s) + 0.3s);
+  }
+
+  .rgis-m .rgis-a-in {
+    animation: rgis-in 0.6s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  @keyframes rgis-scan {
+    0% {
+      opacity: 0;
+    }
+    30% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* «ожидание» видно до своей задержки, потом исчезает */
+  @keyframes rgis-gone {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes rgis-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  @keyframes rgis-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes rgis-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  /* за экраном и в скрытой вкладке анимации стоят: data-idle снимает скрипт ниже */
+  .rgis-m[data-idle] * {
+    animation-play-state: paused !important;
+  }
+
+  @media (scripting: none) {
+    .rgis-m[data-idle] * {
+      animation-play-state: running !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rgis-m * {
+      animation: none !important;
+    }
+  }
+
+  /* ── Узкая картинка (телефон): дата выгрузки, число квартир и длинная подпись колонки убраны ── */
+  @container (max-width: 340px) {
+    .rgis-sub__n {
+      display: none;
+    }
+  }
+
+  @container (max-width: 380px) {
+    .rgis-pill__date {
+      display: none;
+    }
+
+    .rgis-l-long {
+      display: none;
+    }
+
+    .rgis-l-short {
+      display: inline;
+    }
+  }
+
+  /* ── Планшет и телефон: столбиком — метка, заголовок, текст, картинка, источники, главная мысль, кнопка.
+     Обёртка текста «растворяется» (display: contents), чтобы картинка встала сразу после текста. ── */
+  @media (max-width: 900px) {
+    .rgis__row {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .rgis__text {
+      display: contents;
+    }
+
+    .rgis__lead {
+      max-width: 62ch;
+    }
+
+    .rgis__visual {
+      order: 1;
+      margin-top: 28px;
+    }
+
+    .rgis__src {
+      order: 2;
+      margin-top: 28px;
+    }
+
+    .rgis__hl {
+      order: 3;
+    }
+
+    .rgis__cta {
+      order: 4;
+    }
+
+    /* карточка интерфейса стоит ниже плашки «демо-данные» */
+    .rgis__visual :global(.gv) {
+      padding-block: 54px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .rgis__visual :global(.gv) {
+      padding-block: 50px 20px;
+    }
+
+    .rgis__chip {
+      font-size: 14.5px;
+    }
+
+    .rgis__hl {
+      font-size: 15.5px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .rgis__cta .btn {
+      width: 100%;
+    }
+  }
+
+  /* узкий телефон: метка модуля остаётся в одну строку */
+  @media (max-width: 400px) {
+    .rgis__label .plabel--lg {
+      gap: 8px;
+      padding-right: 14px;
+      font-size: 16px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Сверка на картинке идёт, только пока она на экране и вкладка открыта (в разметке анимации стоят:
+  // data-idle). При «уменьшить движение» анимации выключены в CSS — следить не нужно.
+  document.querySelectorAll<HTMLElement>('[data-rgis]').forEach((el) => {
+    if (reducedMotion()) return;
+    let inView = !('IntersectionObserver' in window);
+    const sync = () => {
+      if (inView && !document.hidden) delete el.dataset.idle;
+      else el.dataset.idle = '';
+    };
+    if (!inView) {
+      new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting;
+          sync();
+        },
+        { threshold: 0.35 },
+      ).observe(el);
+    }
+    document.addEventListener('visibilitychange', sync);
+    sync();
+  });
+</script>

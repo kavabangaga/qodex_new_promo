@@ -60,4 +60,21 @@ export const PRODUCT_DOCS: ProductDocs[] = [
     id: 'dokumenty-tracker',
     docs: [{ title: 'Tracker', file: 'tracker.pdf', kind: 'Презентация' }],
   },
+  {
+    // с лендинга romoney.qodex.tech: документация ПО (страница /docs и четыре PDF) и презентация;
+    // «Кодекс Ро-бот» — официальное название программы в документах, продукт на сайте — РО-БОТ
+    product: 'robot',
+    id: 'dokumenty-robot',
+    docs: [
+      { title: 'Документация ПО «Кодекс Ро-бот»', page: '/documents/ro-bot/' },
+      { title: 'Описание функциональных характеристик ПО «Кодекс Ро-бот»', file: 'ro-bot/funkcionalnye-harakteristiki.pdf' },
+      { title: 'Инструкция по установке ПО «Кодекс Ро-бот»', file: 'ro-bot/instrukciya-po-ustanovke.pdf' },
+      { title: 'Руководство пользователя ПО «Кодекс Ро-бот»', file: 'ro-bot/rukovodstvo-polzovatelya.pdf' },
+      {
+        title: 'Описание процессов поддержания жизненного цикла ПО «Кодекс Ро-бот»',
+        file: 'ro-bot/zhiznennyj-cikl-po.pdf',
+      },
+      { title: 'РО-БОТ', file: 'ro-bot/ro-bot-presentation.pdf', kind: 'Презентация' },
+    ],
+  },
 ];

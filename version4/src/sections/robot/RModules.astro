@@ -1,10 +1,764 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Раздел 2 страницы «РО-БОТ» [#moduli] — «Недосбор приходит с трёх сторон».
+// Приём Calendly «интеграции»: три бежевые карточки на фоне страницы, соединённые «мостиками».
+// Над текстом каждой — маленький рисунок (демо-данные): квартира, где по счёту один жилец, а по ГИС ЖКХ
+// четыре; дом на кадастровом участке без лицевого счёта; работающий магазин без договора.
+// Рисунок «проигрывается» один раз, когда карточка на экране; без анимации виден итог.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = ' ';
+
+// Тексты — с лендинга продукта, дословно (тире — длинные)
+const MODULES: { href: string; icon: IconName; tag: string; title: string; text: string; art: 'door' | 'plot' | 'shop' }[] = [
+  {
+    href: '#gis',
+    icon: 'users',
+    tag: `Модуль 01 · Жильцы`,
+    title: 'Неучтённые жильцы',
+    text: `По счёту — один, по ГИС${NB}ЖКХ — четыре. Модуль сверяет начисления с государственной системой и показывает разницу до каждой квартиры.`,
+    art: 'door',
+  },
+  {
+    href: '#obekty',
+    icon: 'house',
+    tag: `Модуль 02 · Объекты`,
+    title: 'Дома вне базы',
+    text: 'Объект построен, заселён, производит отходы — а лицевого счёта нет. Модуль находит неучтённый жилфонд по кадастру, адресным реестрам и картам.',
+    art: 'plot',
+  },
+  {
+    href: '#yurlica',
+    icon: 'store',
+    tag: `Модуль 03 · Юрлица`,
+    title: 'Юрлица без договора',
+    text: 'Бизнес работает и образует отходы, но не платит. Модуль находит действующие организации без договора — по точкам деятельности, с доначислением за прошлые периоды.',
+    art: 'shop',
+  },
+];
+
+// Человечек для счётчика жильцов (заливка — цветом текста): голова и плечи
+const HEAD = { cx: 6, cy: 3.5, r: 3 };
+const BODY = 'M.6 14c0-3.5 2.3-5.7 5.4-5.7s5.4 2.2 5.4 5.7Z';
+
+// 1. Лестничная площадка: стена, пол и входная дверь квартиры. Стена и пол уходят далеко за края
+//    сцены — до краёв рисунка любой ширины.
+const door =
+  `<rect x="-460" y="-300" width="1260" height="478" fill="#eef1f5"/>` +
+  `<rect x="-460" y="178" width="1260" height="320" fill="#dfe4ea"/>` +
+  `<path d="M-460 178H800" stroke="#cfd6de" stroke-width="3"/>` +
+  `<rect x="30" y="24" width="104" height="156" rx="6" fill="#fff"/>` +
+  `<rect x="40" y="34" width="84" height="146" rx="3" fill="#c9d3de"/>` +
+  `<rect x="51" y="46" width="52" height="54" rx="3" fill="none" stroke="#b5c1ce" stroke-width="2"/>` +
+  `<rect x="51" y="110" width="52" height="58" rx="3" fill="none" stroke="#b5c1ce" stroke-width="2"/>` +
+  `<rect x="109" y="104" width="9" height="16" rx="3" fill="#59656f"/>` +
+  `<rect x="36" y="184" width="92" height="8" rx="3" fill="#cbd2da"/>`;
+
+// 2. Кадастровая карта: дороги, участки с домами (вид сверху). Дороги через 164 по горизонтали
+//    (x = 56 + 164k) и одна поперёк (y = 136); в квартале — 2×2 участка над дорогой и ряд под ней.
+const roof = (x: number, y: number, w = 32, h = 24) =>
+  `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="#cdd6df"/>` +
+  `<rect x="${x}" y="${y + h / 2}" width="${w}" height="${h / 2}" rx="2" fill="#bcc7d2"/>`;
+const tree = (x: number, y: number, r = 9) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#cfe2d3"/>`;
+let plots = '';
+for (let k = -3; k <= 4; k++) {
+  const x0 = 63 + 164 * k;
+  // ряды участков: выше дороги — от края рисунка до неё, ниже — тоже до края
+  const rows = [
+    [-196, 64],
+    [-132, 64],
+    [-66, 64],
+    [-2, 64],
+    [62, 66],
+    [143, 70],
+    [213, 70],
+    [283, 70],
+  ];
+  const cells = rows.flatMap(([y, h]) => [
+    [x0, y, 75, h],
+    [x0 + 75, y, 75, h],
+  ]);
+  cells.forEach(([x, y, w, h], j) => {
+    plots += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#f1f4f0" stroke="#d3dbd5" stroke-width="1.5"/>`;
+    // участок с новым домом (k = 0, j = 9) рисуется отдельно, поверх
+    if (k === 0 && j === 9) return;
+    const seed = (k * 5 + j * 3 + 20) % 4;
+    if (seed === 3) plots += tree(x + 24, y + h / 2 - 6) + tree(x + 46, y + h / 2 + 8, 8);
+    else plots += roof(x + (seed === 1 ? 14 : 22), y + h / 2 - 12) + (seed === 2 ? tree(x + 62, y + 14, 6) : '');
+  });
+}
+const plot =
+  `<rect x="-460" y="-300" width="1260" height="700" fill="#e9eee9"/>` +
+  plots +
+  `<path d="M-460 136H800${Array.from({ length: 8 }, (_, k) => `M${56 + 164 * (k - 3)} -300V400`).join('')}" stroke="#fff" stroke-width="13"/>` +
+  // новый дом на участке: шире соседних, свежая кровля
+  `<rect x="156" y="81" width="40" height="28" rx="2" fill="#dbe2e9"/><rect x="156" y="95" width="40" height="14" rx="2" fill="#c9d2db"/>`;
+// пунктир вокруг найденного участка — отдельным слоем, он появляется после «прохода» по карте
+const plotMark = `<rect x="140" y="64" width="71" height="62" rx="4" fill="#f29d38" fill-opacity=".12" stroke="#e5891f" stroke-width="2.2" stroke-dasharray="6 5"/>`;
+
+// 3. Улица: магазин с маркизой, витриной и дверью; соседние дома — по краям.
+const stripes = Array.from({ length: 12 }, (_, k) =>
+  k % 2 ? '' : `<rect x="${58 + k * 19}" y="70" width="19" height="22" fill="#a9cdf3"/>`,
+).join('');
+const scallops = Array.from({ length: 12 }, (_, k) => `<circle cx="${67.5 + k * 19}" cy="92" r="9.5" fill="${k % 2 ? '#fff' : '#a9cdf3'}"/>`).join('');
+const shop =
+  `<rect x="-460" y="-300" width="1260" height="480" fill="#e8eff4"/>` +
+  `<rect x="-460" y="6" width="500" height="172" fill="#dfe6ec"/><rect x="300" y="26" width="500" height="152" fill="#e2e8ee"/>` +
+  `<path d="M-60 34h22v26h-22zM0 34h22v26H0zM-60 84h22v26h-22zM0 84h22v26H0zM-60 134h22v26h-22zM0 134h22v26H0zM318 50h22v26h-22zM378 50h22v26h-22zM318 104h22v26h-22zM378 104h22v26h-22z" fill="#cdd8e1"/>` +
+  `<rect x="48" y="16" width="244" height="162" fill="#f7f2ea"/><rect x="44" y="12" width="252" height="10" rx="2" fill="#ebe3d6"/>` +
+  `<rect x="58" y="70" width="228" height="22" fill="#fff"/>` +
+  stripes +
+  scallops +
+  `<rect x="54" y="66" width="236" height="6" rx="3" fill="#86b6ea"/>` +
+  `<rect x="66" y="110" width="110" height="66" rx="3" fill="#d4e2ec"/><path d="M80 176 118 110h18l-38 66Z" fill="#fff" fill-opacity=".45"/>` +
+  `<path d="M66 154h110" stroke="#c1d1dd" stroke-width="2"/>` +
+  `<rect x="192" y="108" width="62" height="70" rx="3" fill="#a9b8c6"/><rect x="200" y="116" width="46" height="40" rx="2" fill="#cddbe6"/>` +
+  `<rect x="240" y="146" width="4" height="16" rx="2" fill="#59656f"/>` +
+  `<rect x="-460" y="178" width="1260" height="320" fill="#d9e0e6"/><path d="M-460 179H800" stroke="#c7d0d8" stroke-width="3"/>`;
 ---
 
 <section class="section" id="moduli" aria-labelledby="moduli-title">
-  <div class="container">
-    <h2 id="moduli-title" class="t-h2">Недосбор приходит с трёх сторон</h2>
-    <p class="t-body">Раздел в работе.</p>
+  <div class="container rmod">
+    <SectionIntro eyebrow="Модули" titleId="moduli-title" class="rmod__intro">
+      Недосбор приходит с&nbsp;трёх сторон. <span class="rmod__line">РО-БОТ закрывает все&nbsp;три</span>
+    </SectionIntro>
+
+    <!-- Три модуля: бежевые карточки с мостиками -->
+    <ul class="rmod__cards bridged" data-reveal style="--d:2">
+      {
+        MODULES.map((m) => (
+          <li class="rmod__card">
+            <div class:list={['rmod__art', `rmod__art--${m.art}`]} aria-hidden="true" data-rmod-art>
+              {/* 1. Квартира: по счёту 1 жилец, по ГИС ЖКХ — 4 */}
+              {m.art === 'door' && (
+                <span class="rmod__stage">
+                  <svg class="rmod__scene" viewBox="0 0 340 200" set:html={door} />
+                  <span class="rmod-plate">кв.{NB}4</span>
+                  <span class="rmod-cmp">
+                    <span class="rmod-cmp__row">
+                      <small>по счёту</small>
+                      <span class="rmod-cmp__val">
+                        <span class="rmod-ppl">
+                          <svg class="rmod-person" viewBox="0 0 12 14">
+                            <circle {...HEAD} />
+                            <path d={BODY} />
+                          </svg>
+                        </span>
+                        <b>1</b>
+                      </span>
+                    </span>
+                    <span class="rmod-cmp__row rmod-cmp__row--gis">
+                      <small>по ГИС{NB}ЖКХ</small>
+                      <span class="rmod-cmp__val">
+                        <span class="rmod-ppl">
+                          <svg class="rmod-person" viewBox="0 0 12 14">
+                            <circle {...HEAD} />
+                            <path d={BODY} />
+                          </svg>
+                          {[0.55, 0.8, 1.05].map((t) => (
+                            <svg class="rmod-person rmod-person--new rmod-pop" viewBox="0 0 12 14" style={`--t:${t}s`}>
+                              <circle {...HEAD} />
+                              <path d={BODY} />
+                            </svg>
+                          ))}
+                        </span>
+                        <span class="rmod-delta rmod-pop" style="--t:1.35s">+3</span>
+                        <span class="rmod-num">
+                          <b class="rmod-blip rmod-num__start" style="--t:0s; --dur:0.55s">1</b>
+                          <b class="rmod-blip" style="--t:0.55s">2</b>
+                          <b class="rmod-blip" style="--t:0.8s">3</b>
+                          <b class="rmod-fade" style="--t:1.05s">4</b>
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </span>
+              )}
+
+              {/* 2. Кадастровая карта: проход по участкам, у нового дома нет лицевого счёта */}
+              {m.art === 'plot' && (
+                <>
+                  <span class="rmod__stage">
+                    <svg class="rmod__scene" viewBox="0 0 340 200" set:html={plot} />
+                    <svg class="rmod__scene rmod-mark rmod-pop" viewBox="0 0 340 200" style="--t:1.1s" set:html={plotMark} />
+                    <span class="rmod-scan" />
+                  </span>
+                  <span class="rmod-chip rmod-chip--warn rmod-in" style="--t:1.45s">
+                    <Icon name="file-search" size={15} strokeWidth={2} />
+                    нет лицевого счёта
+                  </span>
+                </>
+              )}
+
+              {/* 3. Улица: магазин открыт, а договора нет */}
+              {m.art === 'shop' && (
+                <>
+                  <span class="rmod__stage">
+                    <svg class="rmod__scene" viewBox="0 0 340 200" set:html={shop} />
+                    <span class="rmod-sign">Продукты</span>
+                    <span class="rmod-open rmod-pop" style="--t:0.5s">открыто</span>
+                  </span>
+                  <span class="rmod-chip rmod-chip--warn rmod-in" style="--t:1.1s">
+                    <Icon name="contract" size={15} strokeWidth={2} />
+                    нет договора
+                  </span>
+                </>
+              )}
+
+              <span class="tag tag--demo rmod__demo">демо-данные</span>
+            </div>
+
+            <div class="rmod__body">
+              <p class="rmod__head">
+                <span class="rmod__ico" aria-hidden="true">
+                  <Icon name={m.icon} size={22} strokeWidth={1.9} />
+                </span>
+                <span class="rmod__tag">{m.tag}</span>
+              </p>
+              <h3 class="rmod__title">{m.title}</h3>
+              <p class="rmod__text">{m.text}</p>
+              <a href={m.href} class="link-arrow rmod__more">
+                Подробнее<span class="visually-hidden">: {m.title.toLowerCase()}</span>
+                <Icon name="arrow-right" />
+              </a>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </section>
+
+<style>
+  .rmod {
+    --rmod-gap: clamp(14px, calc(var(--vw) * 1.4), 20px);
+    --rmod-r: clamp(22px, calc(var(--vw) * 2), 28px);
+    --rmod-in: 10px;
+    --rmod-art-h: 216px;
+    /* ширина рисунка, когда он слева от текста (планшет); проценты — от ширины карточки */
+    --rmod-art-w: clamp(300px, 44%, 360px);
+  }
+
+  /* ── Три карточки в ряд, соединённые мостиками ─────────── */
+  .rmod__cards {
+    --gap: var(--rmod-gap);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--rmod-gap);
+    isolation: isolate;
+  }
+
+  .rmod__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-radius: calc(var(--rmod-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  /* мостик к карточке слева — на середине рисунка (маски — .bridged в global.css) */
+  .rmod__card + .rmod__card::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--rmod-in) + var(--rmod-art-h) / 2 - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--panel);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  /* второе предложение заголовка — с новой строки */
+  .rmod__intro {
+    max-width: 1060px;
+  }
+
+  @media (min-width: 720px) {
+    .rmod__line {
+      display: block;
+    }
+  }
+
+  /* ── Текст карточки ────────────────────────────────────── */
+  .rmod__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 22px 26px 28px;
+  }
+
+  .rmod__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .rmod__ico {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: calc(13px * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+    color: var(--c-robot);
+    box-shadow:
+      0 1px 2px rgb(29 29 31 / 0.05),
+      0 10px 18px -12px rgb(29 29 31 / 0.22);
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  /* при наведении приподнимается значок, а не карточка: стык с мостиком остаётся на месте */
+  .rmod__card:hover .rmod__ico {
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  .rmod__tag {
+    font-size: 14px;
+    font-weight: 560;
+    line-height: 1.25;
+    color: var(--muted);
+  }
+
+  .rmod__title {
+    margin-top: 18px;
+    font-size: clamp(1.375rem, calc(var(--vw) * 1.7), 1.625rem);
+    line-height: 1.18;
+    letter-spacing: -0.022em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .rmod__text {
+    margin: 10px 0 22px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* «Подробнее» — внизу карточки: у трёх карточек на одной линии */
+  .rmod__more {
+    margin-top: auto;
+  }
+
+  /* ── Рисунок: светлая «карточка» внутри карточки ───────── */
+  .rmod__art {
+    position: relative;
+    flex: none;
+    height: var(--rmod-art-h);
+    margin: var(--rmod-in) var(--rmod-in) 0;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: calc(calc(var(--rmod-r) - var(--rmod-in)) * var(--rk));
+    corner-shape: var(--corner);
+    background: #eef1f5;
+    color: var(--ink);
+    font-size: 12.5px;
+    line-height: 1.3;
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .rmod__art--plot {
+    background: #e9eee9;
+  }
+
+  .rmod__art--shop {
+    background: #e8eff4;
+  }
+
+  /* сцена фиксированного размера по центру: рисунок не мельчает и не растягивается вместе с карточкой */
+  .rmod__stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 340px;
+    height: 200px;
+    margin: -100px 0 0 -170px;
+  }
+
+  .rmod__scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .rmod__demo {
+    position: absolute;
+    z-index: 3;
+    top: 12px;
+    right: 12px;
+    pointer-events: none;
+  }
+
+  /* ── 1. Квартира и счётчик жильцов ─────────────────────── */
+  .rmod-plate {
+    position: absolute;
+    left: 58px;
+    top: 58px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(29 29 31 / 0.12);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .rmod-cmp {
+    position: absolute;
+    left: 146px;
+    top: 44px;
+    display: grid;
+    gap: 6px;
+    width: 172px;
+    padding: 8px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow:
+      0 0 0 5px rgb(255 255 255 / 0.5),
+      0 14px 30px -12px rgb(29 29 31 / 0.3);
+  }
+
+  .rmod-cmp__row {
+    display: grid;
+    gap: 4px;
+    padding: 7px 10px 8px;
+    border-radius: 10px;
+    background: #f5f6f8;
+  }
+
+  .rmod-cmp__row small {
+    font-size: 12px;
+    line-height: 1.2;
+    color: var(--muted);
+  }
+
+  .rmod-cmp__row--gis {
+    background: #fff4e3;
+  }
+
+  .rmod-cmp__row--gis small {
+    color: #8a5000;
+  }
+
+  .rmod-cmp__val {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 22px;
+  }
+
+  .rmod-cmp__val b,
+  .rmod-num b {
+    font-size: 17px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .rmod-ppl {
+    display: flex;
+    gap: 3px;
+    color: #66717c;
+  }
+
+  .rmod-person {
+    display: block;
+    width: 14px;
+    height: 16px;
+    fill: currentColor;
+  }
+
+  .rmod-person--new {
+    color: #e5891f;
+  }
+
+  /* числа сменяют друг друга в одной клетке: «2» и «3» видны только во время своей анимации */
+  .rmod-num {
+    display: inline-grid;
+  }
+
+  .rmod-num b {
+    grid-area: 1 / 1;
+    text-align: right;
+  }
+
+  .rmod-blip {
+    opacity: 0;
+  }
+
+  /* до начала анимации по ГИС ЖКХ тоже «1» */
+  .rmod__art.is-armed:not(.is-live) .rmod-num__start {
+    opacity: 1;
+  }
+
+  /* разница с базой — белая плашка перед числом */
+  .rmod-delta {
+    display: grid;
+    place-items: center;
+    height: 20px;
+    margin-left: auto;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #fff;
+    color: #8a5000;
+    box-shadow: 0 0 0 1px rgb(229 137 31 / 0.35);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── 2. Кадастровая карта ──────────────────────────────── */
+  .rmod-mark {
+    transform-origin: 175px 95px;
+  }
+
+  /* проход по карте: тонкая линия со шлейфом едет слева направо */
+  .rmod-scan {
+    position: absolute;
+    left: 0;
+    top: -40px;
+    width: 46px;
+    height: 280px;
+    background: linear-gradient(90deg, rgb(0 107 255 / 0) 0%, rgb(0 107 255 / 0.14) 92%, rgb(0 107 255 / 0.55) 96%, rgb(0 107 255 / 0) 100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ── 3. Магазин ────────────────────────────────────────── */
+  .rmod-sign {
+    position: absolute;
+    left: 112px;
+    top: 30px;
+    display: grid;
+    place-items: center;
+    width: 116px;
+    height: 28px;
+    border-radius: 7px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(29 29 31 / 0.12);
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+
+  .rmod-open {
+    position: absolute;
+    left: 202px;
+    top: 128px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: #e1f5ec;
+    color: #08724d;
+    box-shadow: 0 1px 2px rgb(29 29 31 / 0.12);
+    font-size: 10.5px;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  /* ── Плашка с находкой: в левом нижнем углу рисунка ───── */
+  .rmod-chip {
+    position: absolute;
+    z-index: 2;
+    left: 12px;
+    bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px 0 9px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 6px 16px -8px rgb(29 29 31 / 0.35);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .rmod-chip--warn {
+    box-shadow:
+      0 0 0 1.5px rgb(229 137 31 / 0.45),
+      0 6px 16px -8px rgb(29 29 31 / 0.35);
+    color: #8a5000;
+  }
+
+  /* ── Движение: один раз, когда рисунок на экране ──────────
+     Классы is-armed и is-live ставит скрипт; без них (нет скриптов, «уменьшить движение»)
+     сразу видно итоговое состояние. */
+  .rmod__art.is-armed:not(.is-live) .rmod-pop,
+  .rmod__art.is-armed:not(.is-live) .rmod-in,
+  .rmod__art.is-armed:not(.is-live) .rmod-fade {
+    opacity: 0;
+  }
+
+  .rmod__art.is-live .rmod-pop {
+    animation: rmod-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) var(--t, 0s) both;
+  }
+
+  .rmod__art.is-live .rmod-in {
+    animation: rmod-in 0.6s var(--ease-out) var(--t, 0s) both;
+  }
+
+  .rmod__art.is-live .rmod-fade {
+    animation: rmod-fade 0.01s linear var(--t, 0s) both;
+  }
+
+  .rmod__art.is-live .rmod-blip {
+    animation: rmod-blip var(--dur, 0.25s) linear var(--t, 0s) forwards;
+  }
+
+  .rmod__art.is-live .rmod-scan {
+    animation: rmod-scan 1.5s var(--ease-in-out) 0.2s both;
+  }
+
+  @keyframes rmod-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  @keyframes rmod-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes rmod-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes rmod-blip {
+    0%,
+    99.9% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes rmod-scan {
+    0% {
+      opacity: 0;
+      transform: translateX(-60px);
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(380px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rmod__art *,
+    .rmod__art *::after {
+      animation: none !important;
+    }
+  }
+
+  /* ── Планшет: карточки столбиком, рисунок слева от текста; мостики — к карточке сверху ── */
+  @media (max-width: 1199.98px) {
+    .rmod__cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rmod__card {
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    .rmod__art {
+      width: var(--rmod-art-w);
+      height: auto;
+      min-height: var(--rmod-art-h);
+      margin: var(--rmod-in);
+    }
+
+    .rmod__body {
+      justify-content: center;
+      max-width: 34em;
+      padding: 24px clamp(20px, calc(var(--vw) * 4), 40px) 26px clamp(12px, calc(var(--vw) * 2), 22px);
+    }
+
+    .rmod__card + .rmod__card::before {
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--rmod-in) + var(--rmod-art-w) / 2 - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+  }
+
+  /* ── Телефон: рисунок над текстом, мостики посередине ── */
+  @media (max-width: 719.98px) {
+    .rmod__card {
+      flex-direction: column;
+    }
+
+    .rmod__art {
+      width: auto;
+      height: var(--rmod-art-h);
+      min-height: 0;
+      margin: var(--rmod-in) var(--rmod-in) 0;
+    }
+
+    .rmod__body {
+      max-width: none;
+      padding: 20px 20px 24px;
+    }
+
+    .rmod__title {
+      margin-top: 16px;
+      font-size: 1.375rem;
+    }
+
+    .rmod__card + .rmod__card::before {
+      left: calc(50% - (var(--gap) + 14px) / 2);
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Рисунки «проигрываются» один раз, когда заметная часть рисунка на экране.
+  // При «уменьшить движение» классы не ставятся — видно итоговое состояние.
+  const arts = document.querySelectorAll<HTMLElement>('[data-rmod-art]');
+  if (arts.length && !reducedMotion() && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.intersectionRatio < 0.5) continue;
+          entry.target.classList.add('is-live');
+          io.unobserve(entry.target);
+        }
+      },
+      { threshold: [0, 0.5] },
+    );
+    arts.forEach((el) => {
+      el.classList.add('is-armed');
+      io.observe(el);
+    });
+  }
+</script>

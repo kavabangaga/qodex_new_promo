@@ -1,10 +1,1084 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Раздел страницы «РО-БОТ» — «Ваши данные в безопасности» [#bezopasnost]. Бежевая панель.
+// 1. Четыре белые плитки со значками, соединённые мостиками (как плитки «Безопасности» на главной),
+//    под ними строка о техническом описании для служб ИБ и ИТ.
+// 2. Широкая белая карточка «Нормализация базы по ФИАС/ГАР»: слева три пункта и кнопка, справа на бирюзовой
+//    подложке макет (демо-данные) — три записи одного адреса в разном написании сводятся в одну с кодом ГАР.
+//    Макет «проигрывается» один раз, когда он на экране; за экраном возвращается в начало.
+// 3. Две карточки: презентация (PDF, размер считается при сборке) и документация ПО.
+// Тексты — с лендинга продукта, дословно.
+import fs from 'node:fs';
+import path from 'node:path';
+import SectionIntro from '../../components/SectionIntro.astro';
+import GradientVisual from '../../components/GradientVisual.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+import { withBase } from '../../config/site';
+
+const NB = ' ';
+
+const POINTS: { title: string; text: string; icon: IconName }[] = [
+  {
+    title: 'Учётные записи остаются у вас',
+    text: 'Мы не подключаемся к государственным системам вместо вашей организации.',
+    icon: 'key-round',
+  },
+  {
+    title: 'Персональные данные не храним',
+    text: 'Обработка и хранение закрываются NDA, проект направляем до начала работ.',
+    icon: 'user-x',
+  },
+  {
+    title: 'Инфраструктура в России',
+    text: 'Серверная инфраструктура размещена на территории Российской Федерации.',
+    icon: 'server',
+  },
+  {
+    title: 'Отдельный договор не нужен',
+    text: `Доступ к ГИС${NB}ЖКХ остаётся вашим — отдельный договор на доступ не требуется.`,
+    icon: 'contract',
+  },
+];
+
+// Нормализация: три пункта с лендинга
+const NOTES: { label: string; text: string; icon: IconName }[] = [
+  { label: 'Эталон', text: `код ФИАС/ГАР на${NB}каждый адрес`, icon: 'map-pin' },
+  { label: 'Дубли', text: 'три записи схлопываются в одну', icon: 'layers' },
+  { label: 'Сверка', text: 'без ложных расхождений', icon: 'check-check' },
+];
+
+// Макет: одна квартира в трёх написаниях и эталонный адрес (демо-данные с лендинга)
+const VARIANTS = [
+  'г Уфа ул.Ленина д.1 кв5',
+  'УФА, ЛЕНИНА 1-5',
+  `Респ. Башкортостан, г.${NB}Уфа, ул.${NB}Ленина, д.${NB}1, кв.${NB}5`,
+];
+const CANON = `Респ. Башкортостан, г.${NB}Уфа, ул.${NB}Ленина, д.${NB}1, кв.${NB}5`;
+const CODE = `код ГАР: 0f1a…c47e`;
+const DEMO_LABEL =
+  'Пример нормализации (демо-данные): записи «г Уфа ул.Ленина д.1 кв5», «УФА, ЛЕНИНА 1-5» ' +
+  'и «Респ. Башкортостан, г. Уфа, ул. Ленина, д. 1, кв. 5» сводятся в один адрес ' +
+  '«Респ. Башкортостан, г. Уфа, ул. Ленина, д. 1, кв. 5» с кодом ГАР 0f1a…c47e';
+
+// Презентация: размер файла — при сборке; если файла нет, сборка останавливается (как в DocList)
+const DECK = 'ro-bot/ro-bot-presentation.pdf';
+const deckPath = path.join(process.cwd(), 'public', 'files', DECK);
+if (!fs.existsSync(deckPath)) throw new Error(`Нет файла презентации public/files/${DECK}`);
+const deckMb = (fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).replace('.', ',');
+const DECK_META = `PDF, ${deckMb}${NB}МБ`;
 ---
 
 <section class="section panel" id="bezopasnost" aria-labelledby="bezopasnost-title">
-  <div class="container">
-    <h2 id="bezopasnost-title" class="t-h2">Ваши данные в безопасности</h2>
-    <p class="t-body">Раздел в работе.</p>
+  <div class="container rsec">
+    <SectionIntro eyebrow="Безопасность" titleId="bezopasnost-title">Ваши данные в&nbsp;безопасности</SectionIntro>
+
+    <!-- 1. Четыре плитки с мостиками -->
+    <ul class="rsec-tiles bridged">
+      {
+        POINTS.map((p, i) => (
+          <li class="rsec-tile" style={`--d:${i + 1}`} data-reveal>
+            <span class="rsec-tile__ico" aria-hidden="true">
+              <Icon name={p.icon} size={24} />
+            </span>
+            <h3 class="rsec-tile__title">{p.title}</h3>
+            <p class="rsec-tile__text">{p.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="rsec-note" data-reveal style="--d:2">
+      <span class="rsec-note__ico" aria-hidden="true"><Icon name="file-text" size={18} strokeWidth={1.9} /></span>
+      <span>Техническое описание для служб{NB}ИБ и{NB}ИТ направляем комплектом с{NB}NDA по{NB}запросу.</span>
+    </p>
+
+    <!-- 2. Нормализация базы по ФИАС/ГАР -->
+    <article class="rsec-norm" aria-labelledby="rsec-norm-title" data-reveal>
+      <div class="rsec-norm__text">
+        <h3 class="rsec-norm__title" id="rsec-norm-title">Нормализация базы по&nbsp;ФИАС/ГАР</h3>
+        <ul class="rsec-norm__notes">
+          {
+            NOTES.map((n) => (
+              <li class="rsec-norm__note">
+                <span class="rsec-norm__ico" aria-hidden="true">
+                  <Icon name={n.icon} size={20} />
+                </span>
+                <span class="rsec-norm__note-text">
+                  <span class="rsec-norm__label">{n.label}</span>
+                  <span class="rsec-norm__desc">{n.text}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="rsec-norm__cta">
+          <a href="#forma" class="btn btn--outline rsec-norm__btn" data-interest="robot" data-goal="pilot_click">
+            Обсудить
+            <Icon name="arrow-right" />
+          </a>
+        </p>
+      </div>
+
+      <GradientVisual preset="teal" deco="none" class="rsec-norm__vis" label={DEMO_LABEL} data-rsec-demo>
+        <span class="tag tag--demo rsec-norm__demo">демо-данные</span>
+        <div class="ui rsec-addr">
+          <div class="rsec-addr__head">
+            <span class="rsec-addr__src">
+              <span class="rsec-addr__src-ico"><Icon name="file-spreadsheet" size={15} strokeWidth={2} /></span>
+              <span>Адреса в базе</span>
+            </span>
+            <span class="rsec-addr__count">
+              Записей:
+              <span class="rsec-addr__num"><b>3</b><b>1</b></span>
+            </span>
+          </div>
+
+          <!-- три написания одного адреса: в итоге зачёркнуты -->
+          <ul class="rsec-addr__in">
+            {
+              VARIANTS.map((v, i) => (
+                <li class="rsec-addr__row" style={`--i:${i}`}>
+                  <span class="rsec-addr__txt">
+                    <s class="rsec-addr__old">{v}</s>
+                    <span class="rsec-addr__raw">{v}</span>
+                  </span>
+                </li>
+              ))
+            }
+          </ul>
+
+          <!-- три линии сходятся в одну -->
+          <div class="rsec-addr__merge">
+            <span class="rsec-addr__win">
+              <span class="rsec-addr__win-in">
+                <svg class="rsec-addr__lines" viewBox="0 0 300 48" preserveAspectRatio="none">
+                  <path d="M48 0C48 22 150 12 150 30M150 0V30M252 0C252 22 150 12 150 30M150 30V48" vector-effect="non-scaling-stroke"></path>
+                </svg>
+              </span>
+            </span>
+            <span class="rsec-addr__knot"><Icon name="arrow-down" size={13} strokeWidth={2.4} /></span>
+          </div>
+
+          <!-- эталонный адрес с кодом ГАР -->
+          <div class="rsec-addr__out">
+            <span class="rsec-addr__ok"><Icon name="check" size={13} strokeWidth={3} /></span>
+            <span class="rsec-addr__res">
+              <b>{CANON}</b>
+              <span class="rsec-addr__code">{CODE}</span>
+            </span>
+          </div>
+        </div>
+      </GradientVisual>
+    </article>
+
+    <!-- 3. Презентация и документация -->
+    <div class="rsec-docs">
+      <article class="rsec-doc" data-reveal style="--d:1">
+        <span class="rsec-doc__ico" aria-hidden="true"><Icon name="presentation" size={24} /></span>
+        <h3 class="rsec-doc__title">Презентация РО-БОТ</h3>
+        <p class="rsec-doc__text">Три модуля, реальные кейсы и расчёт эффекта — в&nbsp;одном PDF.</p>
+        <p class="rsec-doc__act">
+          <a
+            class="btn btn--outline rsec-doc__btn"
+            href={withBase(`/files/${DECK}`)}
+            download="ro-bot-presentation.pdf"
+            aria-describedby="rsec-deck-meta"
+          >
+            <Icon name="download" />
+            Скачать презентацию
+          </a>
+          <span class="rsec-doc__meta" id="rsec-deck-meta">{DECK_META}</span>
+        </p>
+      </article>
+
+      <article class="rsec-doc" data-reveal style="--d:2">
+        <span class="rsec-doc__ico" aria-hidden="true"><Icon name="file-text" size={24} /></span>
+        <h3 class="rsec-doc__title">Документация ПО «Кодекс Ро-бот»</h3>
+        <p class="rsec-doc__text">Функциональные характеристики, установка, эксплуатация и&nbsp;жизненный цикл.</p>
+        <p class="rsec-doc__act">
+          <a class="link-arrow rsec-doc__link" href={withBase('/documents/ro-bot/')}>
+            Открыть документацию
+            <Icon name="arrow-right" />
+          </a>
+        </p>
+      </article>
+    </div>
   </div>
 </section>
+
+<style>
+  .rsec {
+    --rsec-gap: clamp(14px, calc(var(--vw) * 1.4), 20px);
+    --rsec-r: clamp(22px, calc(var(--vw) * 2), 28px);
+    --rsec-in: 10px;
+    --rsec-pad: clamp(22px, calc(var(--vw) * 2.2), 28px);
+  }
+
+  /* ── 1. Плитки с мостиками ─────────────────────────────── */
+  .rsec-tiles {
+    --gap: var(--rsec-gap);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--rsec-gap);
+    isolation: isolate;
+  }
+
+  .rsec-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: clamp(260px, calc(var(--vw) * 18), 300px);
+    padding: var(--rsec-pad);
+    border-radius: calc(var(--rsec-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  /* мостик к соседней плитке: по умолчанию слева, на середине высоты (маски — .bridged в global.css) */
+  .rsec-tile::before,
+  .rsec-tile::after {
+    position: absolute;
+    background: var(--card);
+  }
+
+  .rsec-tile::before {
+    content: none;
+    top: calc(50% - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  /* мостик к плитке сверху (планшет и телефон) */
+  .rsec-tile::after {
+    content: none;
+    top: calc(var(--gap) * -1 - 1px);
+    left: calc(50% - (var(--gap) + 14px) / 2);
+    width: calc(var(--gap) + 14px);
+    height: calc(var(--gap) + 2px);
+    -webkit-mask: var(--bridge-mask-col);
+    mask: var(--bridge-mask-col);
+  }
+
+  .rsec-tile:not(:first-child)::before {
+    content: '';
+  }
+
+  .rsec-tile__ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    margin-bottom: auto;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .rsec-tile__title {
+    margin-top: 28px;
+    font-size: clamp(1.125rem, calc(var(--vw) * 1.45), 1.25rem);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .rsec-tile__text {
+    margin-top: 10px;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .rsec-note {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 760px;
+    margin: clamp(22px, calc(var(--vw) * 2.2), 30px) auto 0;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .rsec-note__ico {
+    display: inline-flex;
+    flex: none;
+    margin-top: 2px;
+    color: var(--ink);
+  }
+
+  /* ── 2. Нормализация: текст слева, макет на бирюзовой подложке справа ── */
+  .rsec-norm {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    margin-top: clamp(48px, calc(var(--vw) * 5), 72px);
+    padding: var(--rsec-in);
+    border-radius: calc(var(--rsec-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  .rsec-norm__text {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      'title'
+      'notes'
+      'cta';
+    align-content: start;
+    padding: clamp(16px, calc(var(--vw) * 2), 30px) clamp(16px, calc(var(--vw) * 2.6), 40px) clamp(16px, calc(var(--vw) * 2), 30px)
+      clamp(14px, calc(var(--vw) * 2), 30px);
+  }
+
+  .rsec-norm__title {
+    grid-area: title;
+    font-size: clamp(1.5rem, calc(var(--vw) * 2.2), 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .rsec-norm__notes {
+    grid-area: notes;
+    display: grid;
+    margin-top: clamp(20px, calc(var(--vw) * 2), 28px);
+    /* линии — тенью: рамку border при дробном масштабе экрана Safari не рисует */
+    box-shadow: inset 0 1px 0 var(--line);
+  }
+
+  .rsec-norm__note {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    box-shadow: inset 0 -1px 0 var(--line);
+  }
+
+  .rsec-norm__ico {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: calc(12px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .rsec-norm__note-text {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .rsec-norm__label {
+    font-size: 16.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  .rsec-norm__desc {
+    font-size: 15.5px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
+  .rsec-norm__cta {
+    grid-area: cta;
+    align-self: end;
+    padding-top: 24px;
+  }
+
+  /* подложка вписана в карточку с отступом: её скругление меньше на этот отступ */
+  .rsec-norm__vis {
+    --gv-r: calc(var(--rsec-r) - var(--rsec-in));
+    min-height: clamp(420px, calc(var(--vw) * 30), 470px);
+    padding: 58px clamp(16px, calc(var(--vw) * 3), 48px) 42px;
+  }
+
+  .rsec-norm__demo {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+  }
+
+  /* ── Макет: записи адреса и эталон ─────────────────────── */
+  .rsec-addr {
+    width: min(100%, 500px);
+    padding: clamp(14px, calc(var(--vw) * 1.3), 18px);
+    border-radius: 22px;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .rsec-addr__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 13.5px;
+  }
+
+  .rsec-addr__src {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-weight: 560;
+  }
+
+  .rsec-addr__src-ico {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    border-radius: 8px;
+    background: #f1f3f5;
+    color: var(--ink);
+  }
+
+  .rsec-addr__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: none;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #f1f3f5;
+    color: var(--muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* числа сменяют друг друга в одной клетке */
+  .rsec-addr__num {
+    display: inline-grid;
+  }
+
+  .rsec-addr__num > b {
+    grid-area: 1 / 1;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+
+  .rsec-addr__num > b:first-child {
+    opacity: 0;
+  }
+
+  .rsec-addr__in {
+    display: grid;
+    gap: 6px;
+  }
+
+  .rsec-addr__row {
+    padding: 9px 12px;
+    border-radius: 10px;
+    background: #f5f6f8;
+  }
+
+  /* зачёркнутая и обычная строка лежат в одной клетке: обычная сверху и гаснет */
+  .rsec-addr__txt {
+    display: grid;
+  }
+
+  .rsec-addr__old,
+  .rsec-addr__raw {
+    grid-area: 1 / 1;
+  }
+
+  .rsec-addr__old {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: rgb(99 102 108 / 0.75);
+  }
+
+  .rsec-addr__raw {
+    background: #f5f6f8;
+    color: var(--ink-2);
+    opacity: 0;
+  }
+
+  /* линии слияния: окно открывает их сверху вниз, рисунок внутри окна стоит на месте */
+  .rsec-addr__merge {
+    position: relative;
+    height: 48px;
+  }
+
+  .rsec-addr__win,
+  .rsec-addr__win-in {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .rsec-addr__lines {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: none;
+    stroke: #2bb3a9;
+    stroke-width: 1.75px;
+    stroke-linecap: round;
+  }
+
+  .rsec-addr__knot {
+    position: absolute;
+    left: 50%;
+    top: 30px;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border-radius: 50%;
+    background: #fff;
+    color: #0b6e67;
+    box-shadow:
+      inset 0 0 0 1.5px #8fded7,
+      0 4px 10px -4px rgb(29 29 31 / 0.25);
+  }
+
+  .rsec-addr__out {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #effbfa;
+    box-shadow: inset 0 0 0 1.5px #9fe3dd;
+  }
+
+  .rsec-addr__ok {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    flex: none;
+    border-radius: 50%;
+    background: #12a197;
+    color: #fff;
+  }
+
+  /* кольцо вокруг галочки — один раз, когда эталон найден */
+  .rsec-addr__ok::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border: 2px solid #2bb3a9;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .rsec-addr__res {
+    display: grid;
+    justify-items: start;
+    gap: 7px;
+    min-width: 0;
+  }
+
+  .rsec-addr__res > b {
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+
+  .rsec-addr__code {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: inset 0 0 0 1px #c5ece8;
+    color: #0b6e67;
+    font-size: 12.5px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  /* ── Движение: один раз, когда макет на экране ──────────────
+     Классы is-armed и is-live ставит скрипт; без них (нет скриптов, «уменьшить движение»)
+     сразу видно итоговое состояние: записи зачёркнуты, эталон с кодом ГАР, «Записей: 1».
+     Расписание (с): записи появляются 0,15–0,9; линии сходятся 1,0–1,6; эталон — 1,55, код ГАР — 1,95,
+     кольцо у галочки — 2,05; записи-дубли зачёркиваются 2,4–3,05, счёт 3 → 1 — 2,8. */
+  .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__row,
+  .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__knot,
+  .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__out,
+  .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__code,
+  .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__num > b:last-child {
+    opacity: 0;
+  }
+
+  .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__raw,
+  .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__num > b:first-child {
+    opacity: 1;
+  }
+
+  .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__win {
+    transform: translateY(-100%);
+  }
+
+  .rsec-norm__vis.is-armed:not(.is-live) .rsec-addr__win-in {
+    transform: translateY(100%);
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__row {
+    animation: rsec-rise 0.5s var(--ease-out) calc(0.15s + var(--i) * 0.12s) both;
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__raw {
+    animation: rsec-fade 0.45s ease calc(2.4s + var(--i) * 0.1s) both;
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__win {
+    animation: rsec-win 0.6s var(--ease-in-out) 1s both;
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__win-in {
+    animation: rsec-win-in 0.6s var(--ease-in-out) 1s both;
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__knot {
+    animation: rsec-pop 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) 1.3s both;
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__out {
+    animation: rsec-land 0.6s var(--ease-out) 1.55s both;
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__num > b:first-child {
+    animation: rsec-hold 2.8s linear both;
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__num > b:last-child {
+    animation: rsec-num 0.3s var(--ease-out) 2.8s both;
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__code {
+    animation: rsec-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 1.95s both;
+  }
+
+  .rsec-norm__vis.is-live .rsec-addr__ok::after {
+    animation: rsec-ring 1s ease-out 2.05s both;
+  }
+
+  /* вкладка скрыта — сцена ждёт */
+  .rsec-norm__vis.is-paused * {
+    animation-play-state: paused !important;
+  }
+
+  @keyframes rsec-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes rsec-fade {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes rsec-win {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes rsec-win-in {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes rsec-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  @keyframes rsec-land {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.97);
+    }
+  }
+
+  @keyframes rsec-hold {
+    0%,
+    99% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes rsec-num {
+    from {
+      opacity: 0;
+      transform: translateY(45%);
+    }
+  }
+
+  @keyframes rsec-ring {
+    from {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.8);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rsec-addr *,
+    .rsec-addr *::after {
+      animation: none !important;
+    }
+  }
+
+  /* ── 3. Презентация и документация ─────────────────────── */
+  .rsec-docs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--rsec-gap);
+    margin-top: var(--rsec-gap);
+  }
+
+  .rsec-doc {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    padding: clamp(22px, calc(var(--vw) * 2.4), 32px);
+    border-radius: calc(var(--rsec-r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  .rsec-doc__ico {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .rsec-doc__title {
+    margin-top: 24px;
+    font-size: clamp(1.3rem, calc(var(--vw) * 1.7), 1.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  .rsec-doc__text {
+    max-width: 46ch;
+    margin-top: 10px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .rsec-doc__act {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 18px;
+    margin-top: auto;
+    padding-top: 24px;
+  }
+
+  .rsec-doc__meta {
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ссылка невысокая: область нажатия больше её самой — не меньше 44 px */
+  .rsec-doc__link {
+    position: relative;
+  }
+
+  .rsec-doc__link::after {
+    content: '';
+    position: absolute;
+    inset: -10px -8px -8px;
+  }
+
+  /* у второй карточки действие на той же высоте, что кнопка у первой */
+  .rsec-doc__act:has(.rsec-doc__link) {
+    min-height: calc(50px + 24px);
+  }
+
+  /* ── Планшет ───────────────────────────────────────────── */
+  @media (max-width: 1199.98px) {
+    /* плитки 2 × 2: мостики в рядах и между рядами */
+    .rsec-tiles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* в ряду тексты разной длины: содержимое от верха, заголовки на одной высоте */
+    .rsec-tile {
+      min-height: 0;
+    }
+
+    .rsec-tile__ico {
+      margin-bottom: 0;
+    }
+
+    .rsec-tile__title {
+      margin-top: 24px;
+    }
+
+    .rsec-tile:not(:first-child)::before {
+      content: none;
+    }
+
+    .rsec-tile:nth-child(2n)::before,
+    .rsec-tile:nth-child(n + 3)::after {
+      content: '';
+    }
+
+    /* нормализация: текст над макетом, заголовок и кнопка в одну строку, пункты — в три колонки */
+    .rsec-norm {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rsec-norm__text {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-rows: auto auto;
+      grid-template-areas:
+        'title cta'
+        'notes notes';
+      align-items: center;
+      column-gap: 24px;
+      padding: clamp(16px, calc(var(--vw) * 2.4), 24px) clamp(14px, calc(var(--vw) * 2.4), 24px) 22px;
+    }
+
+    .rsec-norm__cta {
+      align-self: center;
+      padding-top: 0;
+    }
+
+    .rsec-norm__notes {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0 22px;
+      box-shadow: none;
+    }
+
+    .rsec-norm__note {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+      align-content: start;
+      gap: 12px;
+      padding: 18px 0 0;
+      box-shadow: inset 0 1px 0 var(--line);
+    }
+  }
+
+  @media (max-width: 759.98px) {
+    .rsec-docs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rsec-doc__act:has(.rsec-doc__link) {
+      min-height: 0;
+    }
+  }
+
+  /* ── Телефон: один столбец ─────────────────────────────── */
+  @media (max-width: 719.98px) {
+    .rsec {
+      --rsec-pad: 18px;
+    }
+
+    .rsec-tiles {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* значок слева, заголовок и текст справа; мостики сверху — под значками */
+    .rsec-tile {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      grid-template-areas:
+        'ico title'
+        'ico text';
+      align-content: start;
+      column-gap: 14px;
+      min-height: 0;
+      padding: 18px 20px 20px var(--rsec-pad);
+    }
+
+    .rsec-tile__ico {
+      grid-area: ico;
+      width: 44px;
+      height: 44px;
+      margin: 0;
+      border-radius: calc(13px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .rsec-tile__title {
+      grid-area: title;
+      margin-top: 0;
+      font-size: 1.0625rem;
+      text-wrap: pretty;
+    }
+
+    .rsec-tile__text {
+      grid-area: text;
+      margin-top: 4px;
+      font-size: 15px;
+    }
+
+    .rsec-tile:nth-child(2n)::before {
+      content: none;
+    }
+
+    .rsec-tile:not(:first-child)::after {
+      content: '';
+      left: calc(var(--rsec-pad) + 22px - (var(--gap) + 14px) / 2);
+    }
+
+    .rsec-note {
+      justify-content: flex-start;
+      text-align: left;
+      font-size: 15px;
+    }
+
+    .rsec-norm__text {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'title'
+        'notes'
+        'cta';
+      padding: 16px 12px 22px;
+    }
+
+    .rsec-norm__notes {
+      grid-template-columns: minmax(0, 1fr);
+      margin-top: 18px;
+      box-shadow: inset 0 1px 0 var(--line);
+    }
+
+    .rsec-norm__note {
+      grid-template-columns: 40px minmax(0, 1fr);
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      box-shadow: inset 0 -1px 0 var(--line);
+    }
+
+    .rsec-norm__cta {
+      padding-top: 20px;
+    }
+
+    .rsec-norm__btn {
+      width: 100%;
+    }
+
+    .rsec-norm__vis {
+      min-height: 0;
+      padding: 52px 12px 14px;
+    }
+
+    .rsec-norm__demo {
+      top: 12px;
+      left: 12px;
+    }
+
+    .rsec-addr {
+      padding: 12px;
+      font-size: 13.5px;
+    }
+
+    .rsec-addr__head {
+      font-size: 13px;
+    }
+
+    .rsec-addr__row {
+      padding: 8px 11px;
+    }
+
+    .rsec-addr__out {
+      padding: 11px 12px;
+    }
+
+    .rsec-doc__title {
+      margin-top: 18px;
+    }
+
+    .rsec-doc__act {
+      width: 100%;
+    }
+
+    .rsec-doc__btn {
+      flex: 1 1 auto;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Макет нормализации «проигрывается» один раз, когда заметная его часть на экране; ушёл с экрана —
+  // возвращается в начало. Пока вкладка скрыта, сцена стоит. При «уменьшить движение» классы
+  // не ставятся — видно итоговое состояние.
+  const demo = document.querySelector<HTMLElement>('[data-rsec-demo]');
+  if (demo && !reducedMotion() && 'IntersectionObserver' in window) {
+    demo.classList.add('is-armed');
+    new IntersectionObserver(
+      ([entry]) => {
+        if (entry.intersectionRatio >= 0.45) demo.classList.add('is-live');
+        else if (!entry.isIntersecting) demo.classList.remove('is-live');
+      },
+      { threshold: [0, 0.45] },
+    ).observe(demo);
+    document.addEventListener('visibilitychange', () => demo.classList.toggle('is-paused', document.hidden));
+  }
+</script>

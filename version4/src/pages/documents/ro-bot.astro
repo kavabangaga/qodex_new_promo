@@ -1,0 +1,688 @@
+---
+// Документация ПО «Кодекс Ро-бот» (официальное название программы — так и пишем на этой странице; продукт
+// на сайте — РО-БОТ). Перенесена с лендинга romoney.qodex.tech/docs дословно: вступление, четыре документа,
+// разделы 1–3 со списками и таблицами. Изменено только то, что разрешено: строка о правообладателе собрана
+// из COMPANY (config/site.ts; ОГРН и ИНН совпадают с лендингом), «–» стали «—». Страницу и PDF проверяет
+// Минцифры: тексты не сокращать и не переписывать. PDF лежат в public/files/ro-bot/ и не меняются ни на байт.
+import fs from 'node:fs';
+import path from 'node:path';
+import Legal from '../../layouts/Legal.astro';
+import Icon from '../../components/Icon.astro';
+import { COMPANY, nbName, withBase } from '../../config/site';
+
+const NB = String.fromCharCode(160);
+
+// Размер файла считается при сборке, как в DocList; нет файла — сборка останавливается
+const DIR = path.join(process.cwd(), 'public', 'files', 'ro-bot');
+function size(file: string): string {
+  const p = path.join(DIR, file);
+  if (!fs.existsSync(p)) throw new Error(`Нет файла документа public/files/ro-bot/${file}`);
+  const bytes = fs.statSync(p).size;
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))}${NB}КБ`;
+  return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')}${NB}МБ`;
+}
+
+const FILES = [
+  {
+    file: 'funkcionalnye-harakteristiki.pdf',
+    title: 'Функциональные характеристики',
+    text: 'Назначение, состав и функциональные возможности программного обеспечения.',
+  },
+  {
+    file: 'instrukciya-po-ustanovke.pdf',
+    title: 'Инструкция по установке',
+    text: 'Модель поставки, требования к рабочему месту, порядок подключения, установка модуля сбора данных.',
+  },
+  {
+    file: 'rukovodstvo-polzovatelya.pdf',
+    title: 'Руководство пользователя',
+    text: 'Порядок эксплуатации: вход, разделы системы, сверка, обработка расхождений, выгрузка результатов.',
+  },
+  {
+    file: 'zhiznennyj-cikl-po.pdf',
+    title: 'Описание жизненного цикла',
+    text: 'Процессы поддержания жизненного цикла ПО, устранение неисправностей, совершенствование, персонал.',
+  },
+].map((d) => ({ ...d, href: withBase(`/files/ro-bot/${d.file}`), size: size(d.file) }));
+
+// Таблицы: первая колонка — заголовок строки
+const COMPOSITION = [
+  [
+    'Серверная часть',
+    'Хранение и обработка данных, выполнение сверки, программный интерфейс (API). Развёрнута на инфраструктуре правообладателя на территории Российской Федерации.',
+  ],
+  [
+    'Личный кабинет оператора',
+    'Веб-приложение для работы пользователей: настройка территории, просмотр данных, обработка расхождений, отчётность.',
+  ],
+  [
+    'Модуль сбора данных (агент)',
+    'Программа, устанавливаемая на рабочее место сотрудника организации. Выполняет выгрузку сведений из ГИС ЖКХ под учётной записью сотрудника организации. Управление агентами ведётся из личного кабинета.',
+  ],
+];
+
+const SERVER = [
+  ['Операционная система', 'Linux. Подтверждена работоспособность на российских операционных системах Astra Linux и РЕД ОС'],
+  ['Среда выполнения', 'Python 3.11 и выше'],
+  ['СУБД', 'PostgreSQL 14 и выше'],
+  ['Веб-сервер', 'nginx с поддержкой TLS'],
+];
+
+const SECTIONS = [
+  [
+    'Отчёты и аналитика',
+    'Сводные показатели по территории: объём проверенных объектов, выявленные расхождения, оценка потенциальных доначислений по тарифу из настроек, динамика за период, разбивка по причинам отклонения и охват по территориям.',
+  ],
+  [
+    'ГИС ЖКХ',
+    'Просмотр данных по территории в виде иерархии: субъект, населённый пункт, улица, дом. В карточке дома отображаются число помещений и проживающих, идентификатор дома и дата последней выгрузки. Доступны выгрузка сведений, сверка с биллингом и экспорт результата в файл электронной таблицы. По каждому помещению выводятся число проживающих по данным ГИС ЖКХ и биллинга, разница между ними и даты обновления сведений.',
+  ],
+  [
+    'Рабочее место',
+    'Основной раздел работы с выявленными расхождениями. Оператор принимает решение по каждой позиции: обновить запись в биллинге или отклонить с указанием причины из справочника. Если источник данных биллинга ещё не подключён, раздел предлагает подключить его загрузкой файла или по API.',
+  ],
+  [
+    'Настройки',
+    'Параметры рабочего пространства и управление организацией: территория работы, тариф, справочник причин отклонения, источник данных биллинга, агенты, организации, баланс и счета, смена пароля.',
+  ],
+];
+
+// Функциональные возможности (раздел 1): подзаголовок и пункты
+const FEATURES: { title: string; items: string[] }[] = [
+  {
+    title: 'Личный кабинет оператора',
+    items: [
+      'Регистрация организации по ИНН с подтверждением адреса электронной почты.',
+      'Разграничение доступа по ролям: администратор и сотрудник.',
+      'Настройка территории обслуживания и тарифа, используемого при расчёте показателей.',
+    ],
+  },
+  {
+    title: 'Сбор и хранение данных',
+    items: [
+      'Сбор сведений о домах, помещениях и числе проживающих по выбранной территории из ГИС ЖКХ.',
+      'Дедупликация и хранение реестра объектов жилищного фонда.',
+      'Просмотр данных по территории в виде иерархии: регион, населённый пункт, улица, дом, помещения.',
+      'Управление модулями сбора данных: статус, создание, получение установщика, команды.',
+    ],
+  },
+  {
+    title: 'Сверка с расчётной системой',
+    items: [
+      'Автоматическое сопоставление числа проживающих по данным ГИС ЖКХ и расчётной системы.',
+      'Выявление расхождений по лицевым счетам с расчётом разницы.',
+      'Ведение списков расхождений «К обработке» и «Обработанные».',
+      'Контроль актуальности: более свежие сведения расчётной системы не перезаписываются устаревшими.',
+    ],
+  },
+  {
+    title: 'Обработка расхождений',
+    items: [
+      'Внесение изменений в биллинг по решению оператора.',
+      'Отклонение расхождения с указанием причины из справочника.',
+      'Массовая обработка выбранных позиций и отмена ранее принятых решений.',
+    ],
+  },
+  {
+    title: 'Отчётность и аналитика',
+    items: [
+      'Ключевые показатели: объём проверенных объектов, выявленные расхождения, оценка потенциала доначислений.',
+      'Динамика за период, разбивка по причинам отклонения, охват по территориям.',
+      'Выгрузка результатов сверки файлом в формате электронной таблицы.',
+    ],
+  },
+  {
+    title: 'Информационная безопасность',
+    items: [
+      'Учётные записи сотрудников для работы с государственными системами остаются у организации.',
+      'Персональные данные за пределы контура обработки не передаются.',
+      'Серверная инфраструктура размещена на территории Российской Федерации.',
+      'По запросу заключается соглашение о неразглашении (NDA); техническое описание для служб ИБ и ИТ направляется комплектом с NDA.',
+    ],
+  },
+];
+
+// Контакты из текста документации — как на лендинге и в PDF
+const MAIL = 'info@qodex.tech';
+const MAIL_HREF = `mailto:${MAIL}`;
+const PHONE = '+7 937 500 06 65';
+const PHONE_HREF = 'tel:+79375000665';
+---
+
+<Legal
+  title="Документация программного обеспечения «Кодекс Ро-бот»"
+  subtitle="Функциональные характеристики, установка, эксплуатация"
+  description="Документация ПО «Кодекс Ро-бот»: описание функциональных характеристик, инструкция по установке, руководство пользователя и описание процессов поддержания жизненного цикла."
+  path="/documents/ro-bot/"
+>
+  <div class="legal__intro">
+    <p>
+      На этой странице размещена документация, содержащая описание функциональных характеристик программного
+      обеспечения «Кодекс{NB}Ро-бот» и информацию, необходимую для установки и эксплуатации программного обеспечения.
+      Правообладатель — {nbName(COMPANY.shortName)} (ОГРН{NB}{COMPANY.ogrn}, ИНН{NB}{COMPANY.inn}).
+    </p>
+  </div>
+
+  <!-- Документы: четыре PDF -->
+  <section class="rdoc-sec" id="dokumenty" aria-labelledby="rdoc-files-title">
+    <h2 id="rdoc-files-title">Документы</h2>
+    <ul class="legal__points rdoc-files">
+      {
+        FILES.map((d) => (
+          <li class="rdoc-file">
+            <div class="rdoc-file__head">
+              <span class="rdoc-file__ico" aria-hidden="true">
+                <Icon name="file-pdf" size={20} />
+              </span>
+              <h3 class="rdoc-file__title">{d.title}</h3>
+            </div>
+            <p class="rdoc-file__text">{d.text}</p>
+            <div class="rdoc-file__foot">
+              <a class="rdoc-file__dl" href={d.href} target="_blank" rel="noopener">
+                <Icon name="download" size={18} strokeWidth={2} />
+                Скачать PDF
+                <span class="visually-hidden">
+                  {' '}
+                  «{d.title}», {d.size} (откроется в новой вкладке)
+                </span>
+              </a>
+              <span class="rdoc-file__meta" aria-hidden="true">
+                PDF · {d.size}
+              </span>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- Раздел 1 -->
+  <section class="rdoc-sec" id="funkcionalnye-harakteristiki" aria-labelledby="rdoc-s1-title">
+    <h2 id="rdoc-s1-title">
+      <span class="rdoc-kicker">Раздел 1</span>{' '}
+      Описание функциональных характеристик программного обеспечения
+    </h2>
+    <p>
+      «Кодекс{NB}Ро-бот» — программная платформа для сбора, дедупликации и сверки данных о жилом фонде из государственной
+      информационной системы жилищно-коммунального хозяйства (ГИС{NB}ЖКХ) с расчётной (биллинговой) системой организации.
+      Система выявляет расхождения в числе проживающих, помогает оператору обработать их через личный кабинет и формирует
+      отчётность.
+    </p>
+    <p>
+      Назначение — выявление ранее не учтённых плательщиков и повышение полноты начислений за коммунальные услуги. Область
+      применения: региональные операторы по обращению с ТКО, ресурсоснабжающие и управляющие организации, расчётно-кассовые
+      центры.
+    </p>
+
+    <h3>Состав программного обеспечения</h3>
+    <div class="table-wrap rdoc-table">
+      <table class="table" role="table">
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Компонент</th>
+            <th scope="col" role="columnheader">Назначение</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          {
+            COMPOSITION.map(([k, v]) => (
+              <tr role="row">
+                <th scope="row" role="rowheader">{k}</th>
+                <td role="cell">{v}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    {
+      FEATURES.map((g) => (
+        <>
+          <h3>{g.title}</h3>
+          <ul>
+            {g.items.map((it) => (
+              <li>{it}</li>
+            ))}
+          </ul>
+        </>
+      ))
+    }
+  </section>
+
+  <!-- Раздел 2 -->
+  <section class="rdoc-sec" id="ustanovka" aria-labelledby="rdoc-s2-title">
+    <h2 id="rdoc-s2-title">
+      <span class="rdoc-kicker">Раздел 2</span>{' '}
+      Информация, необходимая для установки программного обеспечения
+    </h2>
+
+    <h3>Модель поставки</h3>
+    <p>
+      «Кодекс{NB}Ро-бот» предоставляется как интернет-сервис (SaaS). Установка серверной части на оборудование пользователя
+      не требуется: работа ведётся через веб-браузер, серверная часть развёрнута на инфраструктуре правообладателя на
+      территории Российской Федерации. Для выгрузки сведений из ГИС{NB}ЖКХ по решению организации на рабочее место
+      сотрудника устанавливается модуль сбора данных (агент).
+    </p>
+
+    <h3>Требования к рабочему месту пользователя</h3>
+    <ul>
+      <li>Персональный компьютер с доступом в сеть Интернет.</li>
+      <li>Веб-браузер актуальной версии: Яндекс Браузер, Google Chrome, Mozilla Firefox или совместимый.</li>
+      <li>Разрешение экрана от 1280{NB}×{NB}720.</li>
+      <li>Дополнительное программное обеспечение для работы в личном кабинете не требуется.</li>
+    </ul>
+
+    <h3>Порядок подключения организации</h3>
+    <ol class="rdoc-steps">
+      <li>
+        Направить заявку через <a href="#forma" data-interest="robot">форму на сайте</a> или по адресу{' '}
+        <a href={MAIL_HREF}>{MAIL}</a>.
+      </li>
+      <li>Подписать соглашение о неразглашении (NDA). Проект соглашения направляется в день обращения.</li>
+      <li>Зарегистрировать организацию в личном кабинете: указать ИНН и подтвердить адрес электронной почты.</li>
+      <li>Дождаться подтверждения регистрации организации правообладателем.</li>
+      <li>Пригласить сотрудников и назначить им роли: администратор или сотрудник.</li>
+      <li>Указать территорию обслуживания и тариф в разделе «Настройки».</li>
+    </ol>
+
+    <h3>Установка модуля сбора данных (агента)</h3>
+    <p>
+      Требования к рабочему месту: ОС Microsoft Windows 10 или 11 (64-разрядная), оперативная память от 8 ГБ, свободное
+      место на диске от 10 ГБ, канал доступа в Интернет от 10 Мбит/с.
+    </p>
+    <ol class="rdoc-steps">
+      <li>Войти в личный кабинет под учётной записью администратора организации.</li>
+      <li>Открыть раздел «Настройки»{NB}→ «Агенты» и создать агента.</li>
+      <li>Скачать установщик агента на рабочее место сотрудника.</li>
+      <li>Запустить установщик и следовать указаниям мастера установки.</li>
+      <li>После установки запустить агент: статус отобразится в разделе «Агенты» личного кабинета.</li>
+    </ol>
+    <p>
+      Удаление агента выполняется штатными средствами операционной системы. Учётные записи для работы с государственными
+      системами остаются у организации и правообладателю не передаются.
+    </p>
+
+    <h3>Системные требования серверной части</h3>
+    <p>Приводятся справочно: серверная часть разворачивается и обслуживается правообладателем.</p>
+    <div class="table-wrap rdoc-table">
+      <table class="table" role="table">
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Компонент</th>
+            <th scope="col" role="columnheader">Требование</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          {
+            SERVER.map(([k, v]) => (
+              <tr role="row">
+                <th scope="row" role="rowheader">{k}</th>
+                <td role="cell">{v}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Обновление</h3>
+    <p>
+      Обновления серверной части и личного кабинета устанавливаются централизованно, действий пользователя не требуется.
+      При выпуске новой версии модуля сбора данных обновлённый установщик доступен в личном кабинете. По вопросам
+      подключения: <a href={MAIL_HREF}>{MAIL}</a>, <a href={PHONE_HREF}><span class="nobr">{PHONE}</span></a>.
+    </p>
+  </section>
+
+  <!-- Раздел 3 -->
+  <section class="rdoc-sec" id="ekspluataciya" aria-labelledby="rdoc-s3-title">
+    <h2 id="rdoc-s3-title">
+      <span class="rdoc-kicker">Раздел 3</span>{' '}
+      Информация, необходимая для эксплуатации программного обеспечения
+    </h2>
+
+    <h3>Начало работы</h3>
+    <p>
+      Открыть адрес сервиса в браузере, ввести логин и пароль учётной записи и нажать «Вход в систему». После авторизации
+      открывается личный кабинет оператора. Навигация по разделам — в меню слева.
+    </p>
+
+    <h3>Разделы системы</h3>
+    <div class="table-wrap rdoc-table">
+      <table class="table" role="table">
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Раздел</th>
+            <th scope="col" role="columnheader">Порядок работы</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          {
+            SECTIONS.map(([k, v]) => (
+              <tr role="row">
+                <th scope="row" role="rowheader">{k}</th>
+                <td role="cell">{v}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Подключение источника данных биллинга</h3>
+    <ul>
+      <li>
+        <b>Загрузка файлом.</b> Скачать шаблон электронной таблицы, заполнить его выгрузкой из своей учётной системы и загрузить.
+        Система проверяет файл и показывает ошибки.
+      </li>
+      <li>
+        <b>Подключение по API.</b> Учётная система обменивается данными автоматически: передаёт лицевые счета и получает
+        решения операторов. Токен и инструкция выдаются правообладателем.
+      </li>
+    </ul>
+
+    <h3>Типовой сценарий работы</h3>
+    <ol class="rdoc-steps">
+      <li>Указать территорию обслуживания и тариф в разделе «Настройки».</li>
+      <li>Подключить источник данных биллинга: файлом или по API.</li>
+      <li>В разделе «ГИС ЖКХ» выполнить выгрузку сведений по территории.</li>
+      <li>Запустить сверку с биллингом: система сформирует список расхождений по лицевым счетам.</li>
+      <li>
+        Обработать расхождения в «Рабочем месте»: обновить запись в биллинге или отклонить с указанием причины. Доступны
+        массовая обработка и отмена решений.
+      </li>
+      <li>Проконтролировать показатели в разделе «Отчёты и аналитика» и выгрузить результат файлом электронной таблицы.</li>
+    </ol>
+
+    <h3>Завершение работы и поддержка</h3>
+    <p>
+      Выход выполняется командой выхода из системы в интерфейсе личного кабинета; отдельных действий по остановке сервиса
+      не требуется. Обращения в техническую поддержку принимаются по адресу <a href={MAIL_HREF}>{MAIL}</a> и по телефону{' '}
+      <a href={PHONE_HREF}><span class="nobr">{PHONE}</span></a> в рабочие дни с 9:00 до 18:00 (UTC+5). Техническая поддержка,
+      устранение неисправностей и развитие продукта осуществляются правообладателем.
+    </p>
+  </section>
+</Legal>
+
+<style>
+  /* Заголовок раздела крупнее, чем в соглашениях: внутри разделов есть подзаголовки */
+  .rdoc-sec h2 {
+    margin-bottom: 14px;
+    font-size: clamp(1.3rem, calc(var(--vw) * 1.6), 1.5rem);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* «Раздел 1» — номер раздела документа, обычный текст над заголовком */
+  .rdoc-kicker {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
+
+  /* первый подзаголовок сразу под заголовком раздела — без линии сверху */
+  .rdoc-sec h2 + h3 {
+    margin-top: 22px;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .rdoc-sec p + ol,
+  .rdoc-sec ol + p {
+    margin-top: 12px;
+  }
+
+  .rdoc-sec b {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ── Документы ─────────────────────────────────────── */
+  .rdoc-sec .rdoc-files {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .rdoc-files .rdoc-file {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 10px;
+    padding: 18px 18px 16px;
+    border-radius: calc(16px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .rdoc-file__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .rdoc-file__ico {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: calc(12px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    color: var(--ink);
+  }
+
+  .rdoc-file h3.rdoc-file__title {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 16.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .rdoc-file p.rdoc-file__text {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .rdoc-file__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin-top: 4px;
+  }
+
+  /* кнопка-ссылка на PDF: открывается в новой вкладке */
+  .rdoc-file .rdoc-file__dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px 0 14px;
+    border-radius: calc(10px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    font-size: 15px;
+    font-weight: 560;
+    line-height: 1;
+    color: var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .rdoc-file .rdoc-file__dl:hover {
+    background: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink);
+    color: #fff;
+  }
+
+  .rdoc-file__dl :global(svg) {
+    flex: none;
+    transition: transform 0.3s var(--ease-out);
+  }
+
+  .rdoc-file__dl:hover :global(svg) {
+    transform: translateY(1px);
+  }
+
+  .rdoc-file__meta {
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ── Таблицы ───────────────────────────────────────── */
+  .rdoc-table {
+    margin-top: 12px;
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .rdoc-table + h3 {
+    margin-top: 28px;
+  }
+
+  .rdoc-table .table {
+    font-size: 15px;
+  }
+
+  .rdoc-table th,
+  .rdoc-table td {
+    padding: 14px 18px;
+    line-height: 1.55;
+  }
+
+  .rdoc-table thead th {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .rdoc-table tbody th {
+    width: 34%;
+    font-weight: 560;
+    color: var(--ink);
+  }
+
+  .rdoc-table td {
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  /* ── Нумерованные шаги ─────────────────────────────── */
+  .rdoc-steps {
+    display: grid;
+    gap: 8px;
+    counter-reset: rdoc-step;
+  }
+
+  .rdoc-sec .rdoc-steps li {
+    position: relative;
+    padding-left: 36px;
+    counter-increment: rdoc-step;
+  }
+
+  .rdoc-sec .rdoc-steps li::before {
+    content: counter(rdoc-step);
+    position: absolute;
+    left: 0;
+    top: 0.1em;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--panel);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  /* ── Телефон ───────────────────────────────────────── */
+  @media (max-width: 599px) {
+    .rdoc-sec .rdoc-files {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* раздел на телефоне бежевый (Legal) — плитки и таблицы белые */
+    .rdoc-files .rdoc-file {
+      padding: 16px 14px 14px;
+      background: var(--card);
+    }
+
+    .rdoc-file__ico {
+      background: var(--panel);
+    }
+
+    .rdoc-sec .rdoc-steps li::before {
+      background: var(--card);
+    }
+
+    /* таблица складывается в карточки строк: название — сверху, описание — под ним */
+    .rdoc-table,
+    .rdoc-table .table,
+    .rdoc-table tbody,
+    .rdoc-table tr,
+    .rdoc-table th,
+    .rdoc-table td {
+      display: block;
+    }
+
+    .rdoc-table {
+      box-shadow: none;
+    }
+
+    .rdoc-table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .rdoc-table tbody tr {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .rdoc-table tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    .rdoc-table tbody th,
+    .rdoc-table td {
+      width: auto;
+      padding: 0;
+      border-bottom: 0;
+    }
+
+    .rdoc-table tbody th {
+      margin-bottom: 4px;
+    }
+  }
+
+  @media print {
+    .rdoc-files .rdoc-file {
+      break-inside: avoid;
+    }
+  }
+</style>

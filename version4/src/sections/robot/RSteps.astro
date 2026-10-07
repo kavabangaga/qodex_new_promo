@@ -1,10 +1,1411 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Раздел 3 страницы «РО-БОТ» [#kak-eto-rabotaet] — «Как это работает».
+// Приём Calendly «Book → Prep → Capture → Follow up»: цепочка из четырёх карточек, одна раскрыта.
+// Закрытая карточка — значок, «Шаг N», заголовок шага и бледная пастельная форма внизу;
+// раскрытая — ещё текст шага, итог шага на плашке и маленький экран РО-БОТа на градиенте
+// (демо-данные те же, что в рисунках раздела «Модули»: ул. Ленина, 12, кв. 4 — по счёту 1, по ГИС ЖКХ 4).
+// Экран «проигрывается» один раз, когда карточка раскрылась и видна; без анимации виден итог шага.
+import SectionIntro from '../../components/SectionIntro.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = ' ';
+
+type Art = 'upload' | 'match' | 'list' | 'confirm';
+
+// Тексты — с лендинга продукта, дословно (тире — длинные)
+const STEPS: { title: string; text: string; note: string; icon: IconName; noteIcon: IconName; art: Art }[] = [
+  {
+    title: 'Загрузка базы',
+    text: 'Выгрузка начислений и договоров в Excel — интеграция с биллингом не требуется.',
+    note: 'Запуск за один день',
+    icon: 'cloud-upload',
+    noteIcon: 'zap',
+    art: 'upload',
+  },
+  {
+    title: 'Сверка',
+    text: `Система сопоставляет вашу базу с ГИС${NB}ЖКХ, кадастром, адресными и ведомственными реестрами.`,
+    note: 'Дальше система работает сама',
+    icon: 'arrows-exchange',
+    noteIcon: 'refresh',
+    art: 'match',
+  },
+  {
+    title: 'Результат',
+    text: 'Список неучтённых жильцов, объектов и юрлиц — с источником и датой по каждому значению.',
+    note: 'Последнее слово — за вами',
+    icon: 'list-checks',
+    noteIcon: 'user-check',
+    art: 'list',
+  },
+  {
+    title: 'Подтверждение',
+    text: 'Ваш сотрудник проверяет найденное и отправляет в начисления: файл выгружается для биллинга.',
+    note: 'Результат в вашей базе',
+    icon: 'badge-check',
+    noteIcon: 'database',
+    art: 'confirm',
+  },
+];
+
+// Реестры, с которыми сверяется база (как на экране «Сверка базы» на главной)
+const SOURCES: { name: string; icon: IconName }[] = [
+  { name: `ГИС${NB}ЖКХ`, icon: 'house' },
+  { name: 'Росреестр', icon: 'landmark' },
+  { name: 'ФИАС', icon: 'map-pin' },
+  { name: 'ФНС', icon: 'receipt' },
+];
+
+// Найденное — по одной строке на модуль: жильцы, объект, юрлицо
+const FOUND: { icon: IconName; obj: string; what: string; src: string; date: string }[] = [
+  { icon: 'users', obj: `ул.${NB}Ленина, 12, кв.${NB}4`, what: `+3${NB}жильца`, src: `ГИС${NB}ЖКХ`, date: '30.09.2026' },
+  { icon: 'house', obj: `ул.${NB}Полевая, 8`, what: `дом вне${NB}базы`, src: 'Росреестр', date: '29.09.2026' },
+  { icon: 'store', obj: 'ООО «Вектор»', what: `нет${NB}договора`, src: 'ФНС', date: '30.09.2026' },
+];
+
+// Точки «стекаются» от каждого реестра к списку: сдвиг по горизонтали — в процентах ширины блока
+const DX = [37.5, 12.5, -12.5, -37.5];
 ---
 
 <section class="section panel" id="kak-eto-rabotaet" aria-labelledby="kak-eto-rabotaet-title">
   <div class="container">
-    <h2 id="kak-eto-rabotaet-title" class="t-h2">Как это работает</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <SectionIntro eyebrow="Процесс" titleId="kak-eto-rabotaet-title">
+      Как это работает
+      <Fragment slot="lead">
+        РО-БОТ запускается за день, сверяет вашу базу с государственными реестрами и отдаёт готовый список расхождений
+      </Fragment>
+    </SectionIntro>
+
+    <ol class="chain rst-chain" data-chain data-chain-ms="6000" data-chain-narrow="1199" data-rst data-reveal style="--d:2">
+      {
+        STEPS.map((s, i) => (
+          <li class:list={['chain__card', 'rst-card', `rst-card--${i + 1}`, { 'is-open': i === 0 }]}>
+            <div class="rst-card__in">
+              <div class="rst-card__text">
+                <p class="rst-card__head">
+                  <span class="rst-card__chip" aria-hidden="true">
+                    <Icon name={s.icon} size={22} strokeWidth={1.9} />
+                  </span>
+                  <span class="rst-card__step">{`Шаг${NB}${i + 1}`}</span>
+                </p>
+                <h3 class="rst-card__title">
+                  <button
+                    class="rst-card__btn"
+                    type="button"
+                    aria-expanded={i === 0 ? 'true' : 'false'}
+                    aria-disabled={i === 0 ? 'true' : undefined}
+                    aria-controls={`rst-d${i + 1}`}
+                  >
+                    {s.title}
+                  </button>
+                </h3>
+                <div class="rst-card__more" id={`rst-d${i + 1}`}>
+                  <p class="rst-card__desc">{s.text}</p>
+                  <p class="rst-card__note">
+                    <span class="rst-card__note-i">
+                      <Icon name={s.noteIcon} size={16} strokeWidth={2} />
+                    </span>
+                    <span>{s.note}</span>
+                  </p>
+                </div>
+              </div>
+
+              <span class="rst-card__deco" aria-hidden="true" />
+
+              <div class="rst-card__art" aria-hidden="true">
+                <div class="rst-scene">
+                  {/* 1. Выгрузка из биллинга ложится в окно загрузки, колонки распознаны */}
+                  {s.art === 'upload' && (
+                    <div class="ui rst-ui">
+                      <div class="rst-hd">
+                        <b class="rst-hd__t">Загрузка базы</b>
+                        <span class="rst-pill">Excel</span>
+                      </div>
+                      <div class="rst-drop">
+                        <div class="rst-file rst-a-drop" style="--t:0.4s">
+                          <span class="rst-xls">
+                            <Icon name="file-spreadsheet" size={19} strokeWidth={1.9} />
+                          </span>
+                          <span class="rst-file__name">
+                            <b>База начислений.xlsx</b>
+                            <small>18{NB}240 строк</small>
+                          </span>
+                          <span class="rst-ok rst-a-pop" style="--t:2s">
+                            <Icon name="check" size={12} strokeWidth={3.2} />
+                          </span>
+                        </div>
+                        <span class="rst-bar">
+                          <i class="rst-a-fill" style="--t:0.85s; --dur:1.1s" />
+                        </span>
+                      </div>
+                      <div class="rst-chips">
+                        {['Лицевой счёт', 'Адрес', 'Жильцов', 'Договор'].map((c, k) => (
+                          <span class="rst-chip rst-a-pop" style={`--t:${(2.2 + k * 0.12).toFixed(2)}s`}>
+                            <Icon name="check" size={11} strokeWidth={3} />
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2. Реестры «стекаются» в один список расхождений */}
+                  {s.art === 'match' && (
+                    <div class="rst-flow">
+                      <ul class="rst-srcs">
+                        {SOURCES.map((src, k) => (
+                          <li class="rst-src rst-a-pop" style={`--t:${(0.35 + k * 0.15).toFixed(2)}s`}>
+                            <span class="rst-src__i">
+                              <Icon name={src.icon} size={13} strokeWidth={2.1} />
+                            </span>
+                            <span>{src.name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <span class="rst-lanes">
+                        <svg class="rst-lines" viewBox="0 0 100 26" preserveAspectRatio="none">
+                          {DX.map((dx) => (
+                            <path d={`M${50 - dx} 0 50 26`} />
+                          ))}
+                        </svg>
+                        {DX.map((dx, k) => (
+                          <i class="rst-dot" style={`--x:${50 - dx}%; --dx:${dx}; --t:${(0.8 + k * 0.16).toFixed(2)}s`} />
+                        ))}
+                      </span>
+                      <div class="ui rst-ui rst-ui--list">
+                        <div class="rst-hd">
+                          <b class="rst-hd__t">Расхождения</b>
+                          <span class="rst-sub">Кировский район</span>
+                        </div>
+                        <ul class="rst-mini">
+                          {FOUND.map((f, k) => (
+                            <li class="rst-mini__row rst-a-in" style={`--t:${(1.35 + k * 0.2).toFixed(2)}s`}>
+                              <span class="rst-av">
+                                <Icon name={f.icon} size={14} strokeWidth={2} />
+                              </span>
+                              <b>{f.obj}</b>
+                              <span class="rst-src-tag">{f.src}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. Список: что найдено, источник и дата у каждого значения */}
+                  {s.art === 'list' && (
+                    <div class="ui rst-ui">
+                      <div class="rst-hd">
+                        <b class="rst-hd__t">Найдено</b>
+                        <span class="rst-sub">Кировский район</span>
+                      </div>
+                      <ul class="rst-rows">
+                        {FOUND.map((f, k) => (
+                          <li class="rst-row rst-a-in" style={`--t:${(0.35 + k * 0.3).toFixed(2)}s`}>
+                            <span class="rst-av">
+                              <Icon name={f.icon} size={15} strokeWidth={2} />
+                            </span>
+                            <span class="rst-row__main">
+                              <span class="rst-row__top">
+                                <b>{f.obj}</b>
+                                <span class="rst-pill rst-pill--warn">{f.what}</span>
+                              </span>
+                              <span class="rst-meta rst-a-fade" style={`--t:${(0.7 + k * 0.3).toFixed(2)}s; --dur:0.4s`}>
+                                <span>
+                                  источник <b>{f.src}</b>
+                                </span>
+                                <span>
+                                  дата <b>{f.date}</b>
+                                </span>
+                              </span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* 4. Карточка расхождения: сотрудник нажимает «Обновить в биллинге» */}
+                  {s.art === 'confirm' && (
+                    <div class="ui rst-ui">
+                      <div class="rst-addr">
+                        <b>ул.{NB}Ленина, 12, кв.{NB}4</b>
+                        <small>МКД · Кировский район</small>
+                      </div>
+                      <div class="rst-stats">
+                        <span class="rst-stat">
+                          <small>ГИС{NB}ЖКХ</small>
+                          <b>4</b>
+                        </span>
+                        <span class="rst-stat">
+                          <small>биллинг</small>
+                          <b>1</b>
+                        </span>
+                        <span class="rst-stat rst-stat--d">
+                          <small>разница</small>
+                          <b>+3</b>
+                        </span>
+                      </div>
+                      <div class="rst-acts">
+                        <span class="rst-btn rst-btn--ghost">Отклонить</span>
+                        <span class="rst-push">
+                          <span class="rst-btn rst-btn--ink rst-a-press" style="--t:1.7s">
+                            Обновить в биллинге
+                          </span>
+                          <span class="rst-push__halo rst-a-fade" style="--t:1.85s" />
+                          <span class="rst-cur rst-a-cur" style="--t:0.9s">
+                            <span class="rst-a-press" style="--t:1.7s">
+                              <svg width="20" height="20" viewBox="0 0 20 20">
+                                <path
+                                  d="M4.2 2.4v13.4l3.5-3 2.3 5 2.5-1.1-2.3-5h4.7z"
+                                  fill="#fff"
+                                  stroke="#1d1d1f"
+                                  stroke-width="1.4"
+                                  stroke-linejoin="round"
+                                />
+                              </svg>
+                            </span>
+                          </span>
+                        </span>
+                      </div>
+                      <span class="rst-toast rst-a-pop" style="--t:2.15s">
+                        <span class="rst-toast__i">
+                          <Icon name="check" size={11} strokeWidth={3.4} />
+                        </span>
+                        Отправлено в биллинг
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <span class="tag tag--demo rst-card__demo">демо-данные</span>
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="rst__cta" data-reveal>
+      <a href="#forma" class="btn btn--primary" data-interest="robot" data-goal="pilot_click">
+        Запустить бесплатный пилот
+        <Icon name="arrow-right" />
+      </a>
+    </p>
   </div>
 </section>
+
+<style>
+  /* ── Цепочка из четырёх шагов ─────────────────────────────
+     От 1200 px карточки стоят в ряд, одна раскрыта; уже — столбиком и все раскрыты. */
+  .rst-chain {
+    --chain-gap: 20px;
+    --bridge-y: 30px;
+    --rst-grow: 2;
+    --rst-pad: 22px;
+    --rst-h: 516px;
+    --rst-art-h: 310px;
+    --rst-deco-h: 216px;
+    /* ширина раскрытой карточки: её содержимое не перестраивается, пока карточка растёт */
+    --rst-open: calc((100cqi - 3 * var(--chain-gap)) * var(--rst-grow) / (3 + var(--rst-grow)));
+    container-type: inline-size;
+  }
+
+  .rst-card {
+    height: var(--rst-h);
+  }
+
+  .rst-card.is-open {
+    flex-grow: var(--rst-grow);
+  }
+
+  /* Палитра каждой карточки: d — бледная форма закрытой, a — градиент под экраном раскрытой */
+  .rst-card--1 {
+    --d1: color-mix(in oklab, var(--g-lime) 36%, white);
+    --d2: color-mix(in oklab, var(--g-sky) 18%, white);
+    --a1: var(--g-sky);
+    --a2: var(--g-teal);
+    --a3: var(--g-teal-soft);
+  }
+
+  .rst-card--2 {
+    --d1: color-mix(in oklab, var(--g-lav-soft) 60%, white);
+    --d2: color-mix(in oklab, var(--g-pink-soft) 32%, white);
+    --a1: var(--g-lav);
+    --a2: var(--g-pink-soft);
+    --a3: var(--g-lav-2);
+  }
+
+  .rst-card--3 {
+    --d1: color-mix(in oklab, var(--g-teal-soft) 42%, white);
+    --d2: color-mix(in oklab, var(--g-lime) 36%, white);
+    --a1: var(--g-teal);
+    --a2: var(--g-lime);
+    --a3: var(--g-teal-soft);
+  }
+
+  .rst-card--4 {
+    --d1: color-mix(in oklab, var(--g-lime) 36%, white);
+    --d2: color-mix(in oklab, var(--g-lav-soft) 60%, white);
+    --a1: var(--g-lav);
+    --a2: var(--g-sky);
+    --a3: var(--g-lav-2);
+  }
+
+  .rst-card__in {
+    position: relative;
+    height: 100%;
+    border-radius: inherit;
+    corner-shape: inherit;
+    overflow: clip;
+  }
+
+  .rst-card__text {
+    position: relative;
+    z-index: 1;
+    padding: 24px var(--rst-pad) 0;
+  }
+
+  /* значок и «Шаг N» — на высоте мостика между карточками */
+  .rst-card__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .rst-card__chip {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: calc(13px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+    transition:
+      background-color 0.35s,
+      color 0.35s;
+  }
+
+  /* у раскрытого шага значок в цвете продукта */
+  .rst-card.is-open .rst-card__chip {
+    background: var(--c-robot);
+    color: #fff;
+  }
+
+  .rst-card__step {
+    font-size: 14px;
+    font-weight: 560;
+    line-height: 1.2;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .rst-card__title {
+    margin-top: 16px;
+    font-size: 21px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    font-weight: 560;
+    text-wrap: balance;
+  }
+
+  /* заголовок — кнопка: с клавиатуры шаг раскрывается фокусом, как под курсором */
+  .rst-card__btn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    letter-spacing: inherit;
+    text-align: left;
+    cursor: inherit;
+  }
+
+  /* текст и итог шага — только в раскрытой карточке (ширина зафиксирована, чтобы текст не прыгал) */
+  .rst-card__more {
+    width: calc(var(--rst-open) - 2 * var(--rst-pad));
+    transition: opacity 0.45s var(--ease-out) 0.2s;
+  }
+
+  .rst-card__desc {
+    margin-top: 8px;
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* итог шага — плашка под текстом */
+  .rst-card__note {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 14px;
+    padding: 6px 12px 6px 10px;
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 14px;
+    font-weight: 560;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+
+  .rst-card__note-i {
+    display: grid;
+    flex: none;
+    color: var(--c-robot);
+  }
+
+  /* Бледная пастельная форма внизу закрытой карточки (дуга и «уголок», как у Calendly) */
+  .rst-card__deco {
+    position: absolute;
+    inset: auto 0 0;
+    height: var(--rst-deco-h);
+    background: linear-gradient(180deg, var(--d1) 0%, var(--d2) 100%);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 260' preserveAspectRatio='none'%3E%3Cpath d='M0 0A140 138 0 0 1 140 138H62V260H0Z'/%3E%3Cpath d='M160 0H190V260H82V158H160Z'/%3E%3C/svg%3E")
+      left bottom / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 260' preserveAspectRatio='none'%3E%3Cpath d='M0 0A140 138 0 0 1 140 138H62V260H0Z'/%3E%3Cpath d='M160 0H190V260H82V158H160Z'/%3E%3C/svg%3E")
+      left bottom / 100% 100% no-repeat;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  /* Градиент с экраном РО-БОТа внизу раскрытой карточки */
+  .rst-card__art {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: var(--rst-open);
+    height: var(--rst-art-h);
+    background:
+      radial-gradient(65% 85% at 10% 100%, var(--a1) 0%, transparent 72%),
+      radial-gradient(65% 85% at 92% 100%, var(--a2) 0%, transparent 72%),
+      linear-gradient(180deg, rgb(255 255 255 / 0) 0%, var(--a3) 82%);
+    transition: opacity 0.5s var(--ease-out) 0.15s;
+  }
+
+  /* «демо-данные» — под экраном, на насыщенной части градиента */
+  .rst-card__demo {
+    position: absolute;
+    left: var(--rst-pad);
+    bottom: 14px;
+    pointer-events: none;
+  }
+
+  /* Экран (или экран со «стекающимися» реестрами) — по центру над «демо-данными» */
+  .rst-scene {
+    position: absolute;
+    left: 50%;
+    bottom: 52px;
+    width: calc(100% - 2 * var(--rst-pad) - 16px);
+    translate: -50% 0;
+    transition:
+      transform 0.6s var(--ease-out) 0.22s,
+      opacity 0.5s 0.22s;
+  }
+
+  /* ── Экраны РО-БОТа (демо-данные). Цвета — как у экранов РО-БОТа на главной ── */
+  .rst-ui,
+  .rst-flow {
+    --r-row: #f5f6f8;
+    --r-line: #dfe3e8;
+    --r-blue: #006bff;
+    --r-blue-soft: #e8f1ff;
+    --r-blue-ink: #0b56c4;
+    --r-ok: #0fa86f;
+    --r-ok-soft: #e1f5ec;
+    --r-ok-ink: #087a52;
+    --r-warn-soft: #fff0da;
+    --r-warn-ink: #8a5000;
+  }
+
+  .rst-ui {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 18px;
+    font-size: 13px;
+    line-height: 1.3;
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .rst-hd {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+  }
+
+  .rst-hd__t {
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .rst-sub {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .rst-pill {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 11.5px;
+    font-weight: 560;
+    line-height: 1;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .rst-hd .rst-pill {
+    margin-left: auto;
+  }
+
+  .rst-pill--warn {
+    background: var(--r-warn-soft);
+    color: var(--r-warn-ink);
+  }
+
+  /* зелёная галочка в кружке */
+  .rst-ok {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    margin-left: auto;
+    border-radius: 50%;
+    background: var(--r-ok);
+    color: #fff;
+  }
+
+  /* круглый значок строки: жильцы, дом, организация */
+  .rst-av {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--r-blue-soft);
+    color: var(--r-blue-ink);
+  }
+
+  /* ── 1. Загрузка базы ──────────────────────────────────── */
+  .rst-drop {
+    display: grid;
+    gap: 10px;
+    padding: 10px 10px 12px;
+    border: 1.5px dashed #c6cfd9;
+    border-radius: 14px;
+    background: #fafbfc;
+  }
+
+  .rst-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px 8px 8px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px var(--r-line),
+      0 8px 18px -12px rgb(29 29 31 / 0.35);
+  }
+
+  .rst-xls {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 10px;
+    background: #1d8f55;
+    color: #fff;
+  }
+
+  .rst-file__name {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .rst-file__name b {
+    overflow: hidden;
+    font-size: 13.5px;
+    font-weight: 560;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rst-file__name small,
+  .rst-addr small {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .rst-bar {
+    position: relative;
+    display: block;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e6eaef;
+  }
+
+  .rst-bar i {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--r-blue);
+    transform-origin: left center;
+  }
+
+  .rst-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .rst-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 9px 0 7px;
+    border-radius: 999px;
+    background: var(--r-blue-soft);
+    color: var(--r-blue-ink);
+    font-size: 12px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  /* ── 2. Сверка: реестры стекаются в один список ────────── */
+  .rst-flow {
+    position: relative;
+    display: grid;
+    container-type: inline-size;
+  }
+
+  .rst-srcs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .rst-src {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 30px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 6px 16px -8px rgb(29 29 31 / 0.35);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .rst-src__i {
+    display: grid;
+    flex: none;
+    color: var(--r-blue-ink);
+  }
+
+  /* на узком экране — только названия */
+  @container (max-width: 340px) {
+    .rst-src__i {
+      display: none;
+    }
+
+    .rst-src {
+      padding: 0 4px;
+      font-size: 11.5px;
+    }
+  }
+
+  /* линии от реестров к списку и точки, которые по ним «стекают» */
+  .rst-lanes {
+    position: relative;
+    display: block;
+    height: 26px;
+  }
+
+  .rst-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .rst-lines path {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2;
+    stroke-dasharray: 3 4;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .rst-dot {
+    position: absolute;
+    left: var(--x);
+    top: 0;
+    width: 9px;
+    height: 9px;
+    margin: -4.5px 0 0 -4.5px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--r-blue);
+    opacity: 0;
+  }
+
+  .rst-ui--list {
+    gap: 8px;
+  }
+
+  .rst-mini {
+    display: grid;
+    gap: 5px;
+  }
+
+  .rst-mini__row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    height: 34px;
+    padding: 0 8px 0 4px;
+    border-radius: 10px;
+    background: var(--r-row);
+  }
+
+  .rst-mini__row .rst-av {
+    width: 26px;
+    height: 26px;
+  }
+
+  .rst-mini__row b {
+    overflow: hidden;
+    font-weight: 560;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rst-src-tag {
+    margin-left: auto;
+    flex: none;
+    font-size: 11.5px;
+    font-weight: 560;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ── 3. Список найденного ──────────────────────────────── */
+  .rst-rows {
+    display: grid;
+    gap: 6px;
+  }
+
+  .rst-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 7px 10px 7px 7px;
+    border-radius: 12px;
+    background: var(--r-row);
+  }
+
+  .rst-row__main {
+    display: grid;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rst-row__top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .rst-row__top b {
+    overflow: hidden;
+    font-weight: 560;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rst-row__top .rst-pill {
+    height: 20px;
+    margin-left: auto;
+    padding: 0 7px;
+    font-size: 11px;
+  }
+
+  /* «источник» и «дата» у каждого значения */
+  .rst-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 10px;
+    font-size: 11.5px;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+
+  .rst-meta b {
+    font-weight: 560;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── 4. Карточка расхождения и «Обновить в биллинге» ──── */
+  .rst-addr {
+    display: grid;
+    gap: 2px;
+  }
+
+  .rst-addr b {
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .rst-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .rst-stat {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 7px 4px 8px;
+    border-radius: 11px;
+    background: var(--r-row);
+  }
+
+  .rst-stat small {
+    font-size: 11.5px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .rst-stat b {
+    font-size: 19px;
+    font-weight: 650;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rst-stat--d {
+    background: var(--r-blue-soft);
+  }
+
+  .rst-stat--d small,
+  .rst-stat--d b {
+    color: var(--r-blue-ink);
+  }
+
+  .rst-acts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
+    gap: 6px;
+  }
+
+  .rst-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 10px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .rst-btn--ghost {
+    box-shadow: inset 0 0 0 1.5px var(--r-line);
+    color: var(--ink-2);
+  }
+
+  .rst-btn--ink {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .rst-push {
+    position: relative;
+    display: grid;
+  }
+
+  /* кнопка нажата: мягкое кольцо вокруг и курсор на ней */
+  .rst-push__halo {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    box-shadow: 0 0 0 4px rgb(0 107 255 / 0.22);
+    pointer-events: none;
+  }
+
+  .rst-cur {
+    position: absolute;
+    right: 26px;
+    bottom: -8px;
+    display: grid;
+  }
+
+  .rst-cur > span {
+    display: grid;
+    transform-origin: 20% 10%;
+  }
+
+  /* сообщение об отправке — на углу карточки, поверх её края */
+  .rst-toast {
+    position: absolute;
+    z-index: 1;
+    top: -15px;
+    right: -5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 13px 0 7px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgb(15 168 111 / 0.3),
+      0 10px 22px -12px rgb(29 29 31 / 0.4);
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
+  .rst-toast__i {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--r-ok);
+    color: #fff;
+  }
+
+  /* ── Движение: один проход, когда карточка раскрыта (.is-open) и её экран виден (.is-live) ──
+     Без анимации — итог шага. */
+  .rst-card.is-open.is-live .rst-a-in {
+    animation: rst-in 0.55s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rst-card.is-open.is-live .rst-a-pop {
+    animation: rst-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rst-card.is-open.is-live .rst-a-fade {
+    animation: rst-fade var(--dur, 0.3s) ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rst-card.is-open.is-live .rst-a-drop {
+    animation: rst-drop 0.7s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rst-card.is-open.is-live .rst-a-fill {
+    animation: rst-fill var(--dur, 1s) var(--ease-in-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rst-card.is-open.is-live .rst-a-press {
+    animation: rst-press 0.4s ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rst-card.is-open.is-live .rst-a-cur {
+    animation: rst-cur 0.75s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rst-card.is-open.is-live .rst-dot {
+    animation: rst-flow 0.6s var(--ease-in-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  @keyframes rst-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  @keyframes rst-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  @keyframes rst-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* файл «падает» в окно загрузки */
+  @keyframes rst-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-22px) scale(0.96);
+    }
+  }
+
+  @keyframes rst-fill {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes rst-press {
+    50% {
+      transform: scale(0.955);
+    }
+  }
+
+  @keyframes rst-cur {
+    from {
+      opacity: 0;
+      transform: translate(30px, 26px);
+    }
+    30% {
+      opacity: 1;
+    }
+  }
+
+  /* точка идёт от реестра к середине списка и гаснет */
+  @keyframes rst-flow {
+    0% {
+      opacity: 0;
+      transform: none;
+    }
+    20% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(calc(var(--dx) * 1cqi), 26px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rst-card * {
+      animation: none !important;
+    }
+  }
+
+  /* ── Раскрытие на широком экране ─────────────────────────── */
+  @media (min-width: 1200px) {
+    .rst-card:not(.is-open) {
+      cursor: pointer;
+    }
+
+    .rst-card:not(.is-open) .rst-card__more {
+      opacity: 0;
+      transition-duration: 0.2s;
+      transition-delay: 0s;
+    }
+
+    .rst-card:not(.is-open) .rst-card__art {
+      opacity: 0;
+      transition-duration: 0.25s;
+      transition-delay: 0s;
+    }
+
+    .rst-card:not(.is-open) .rst-card__deco {
+      opacity: 1;
+      transition-delay: 0.2s;
+    }
+
+    .rst-card:not(.is-open) .rst-scene {
+      opacity: 0;
+      transform: translateY(16px);
+      transition-delay: 0s;
+    }
+  }
+
+  /* без скрипта автомасштаба ряд на 1200–1359 px уже: поля карточки чуть меньше */
+  @media (min-width: 1200px) and (max-width: 1359px) {
+    :global(html:not(.is-autoscale)) .rst-chain {
+      --rst-pad: 18px;
+    }
+  }
+
+  /* ── Планшет: карточки столбиком, все раскрыты; текст слева, экран справа ── */
+  @media (max-width: 1199.98px) {
+    .rst-chain {
+      --chain-gap: 18px;
+      flex-direction: column;
+    }
+
+    .rst-card {
+      flex: none;
+      height: auto;
+    }
+
+    .rst-card.is-open {
+      box-shadow: none;
+    }
+
+    /* карточки друг под другом — мостик к карточке сверху, под значком */
+    .rst-card + .rst-card::before {
+      top: calc(var(--gap) * -1 - 1px);
+      left: 32px;
+      width: calc(var(--gap) + var(--bridge, 14px));
+      height: calc(var(--gap) + 2px);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .rst-card__in {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .rst-card__text {
+      padding: 26px 24px 28px 26px;
+    }
+
+    /* раскрыты все шаги — выделять значком нечего */
+    .rst-card.is-open .rst-card__chip {
+      background: var(--panel);
+      color: var(--ink);
+    }
+
+    .rst-card__title {
+      font-size: 22px;
+    }
+
+    .rst-card__btn {
+      cursor: default;
+    }
+
+    .rst-card__more {
+      width: auto;
+    }
+
+    .rst-card__desc {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .rst-card__deco {
+      display: none;
+    }
+
+    .rst-card__art {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: auto;
+      height: auto;
+      margin: 10px;
+      padding: 50px 16px 22px;
+      border-radius: calc(14px * var(--rk));
+      corner-shape: var(--corner);
+      background:
+        radial-gradient(70% 80% at 8% 100%, var(--a1) 0%, transparent 72%),
+        radial-gradient(70% 80% at 95% 95%, var(--a2) 0%, transparent 72%),
+        linear-gradient(180deg, color-mix(in oklab, var(--a3) 40%, white) 0%, var(--a3) 100%);
+    }
+
+    .rst-card__demo {
+      top: 12px;
+      bottom: auto;
+      left: 12px;
+    }
+
+    .rst-scene {
+      position: relative;
+      left: auto;
+      bottom: auto;
+      width: min(340px, 100%);
+      translate: none;
+    }
+  }
+
+  /* ── Узкий планшет и телефон: текст над экраном ─────────── */
+  @media (max-width: 760px) {
+    .rst-chain {
+      --chain-gap: 16px;
+    }
+
+    .rst-card__in {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rst-card__text {
+      padding: 22px 22px 8px;
+    }
+
+    .rst-card + .rst-card::before {
+      left: 29px;
+    }
+
+    .rst-card__title {
+      font-size: 21px;
+    }
+
+    .rst-card__art {
+      margin: 8px;
+      padding: 48px 14px 20px;
+    }
+  }
+
+  /* узкий телефон: имя файла и строки списка помещаются без обрезки */
+  @media (max-width: 420px) {
+    .rst-drop {
+      padding: 8px 8px 10px;
+    }
+
+    .rst-file {
+      gap: 8px;
+    }
+
+    .rst-xls {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+    }
+
+    .rst-file__name b {
+      white-space: normal;
+    }
+
+    /* в строках найденного — без круглого значка: адрес и находка в одну строку */
+    .rst-row {
+      padding: 7px 8px 7px 10px;
+    }
+
+    .rst-row .rst-av {
+      display: none;
+    }
+
+    .rst-meta {
+      column-gap: 8px;
+    }
+
+    .rst-acts {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
+    }
+
+    .rst-btn {
+      padding: 0 6px;
+      font-size: 12.5px;
+    }
+
+    /* «демо-данные» над экраном не встречается с сообщением на его углу */
+    .rst-card__art {
+      padding-top: 58px;
+    }
+  }
+
+  /* ── Кнопка под цепочкой ─────────────────────────────────── */
+  .rst__cta {
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(28px, calc(var(--vw) * 3.4), 44px);
+  }
+
+  @media (max-width: 560px) {
+    .rst__cta .btn {
+      width: 100%;
+      min-height: 56px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  document.querySelectorAll<HTMLElement>('[data-rst]').forEach((chain) => {
+    const cards = [...chain.querySelectorAll<HTMLElement>(':scope > .chain__card')];
+
+    // Экран шага «проигрывается», только пока он виден (у раскрытой карточки).
+    // При «уменьшить движение» анимации выключены в CSS — следить не нужно.
+    if (!reducedMotion()) {
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries)
+              entry.target.closest('.chain__card')?.classList.toggle('is-live', entry.isIntersecting);
+          },
+          { threshold: 0.4 },
+        );
+        cards.forEach((card) => {
+          const art = card.querySelector('.rst-card__art');
+          if (art) io.observe(art);
+        });
+      } else {
+        cards.forEach((card) => card.classList.add('is-live'));
+      }
+    }
+
+    // Заголовки шагов — кнопки. В ряду раскрыт один шаг: кнопка сообщает, какой (aria-expanded),
+    // раскрытый свернуть нельзя (aria-disabled). Столбиком раскрыты все шаги и переключать нечего:
+    // там заголовок — обычный текст, без кнопки.
+    const titles = cards.map((card) => card.querySelector<HTMLElement>('.rst-card__title')!);
+    const buttons = titles.map((title) => title.querySelector<HTMLButtonElement>('.rst-card__btn')!);
+    const narrow = window.matchMedia('(max-width: 1199.98px)');
+
+    const sync = () => {
+      cards.forEach((card, k) => {
+        const open = card.classList.contains('is-open');
+        buttons[k].setAttribute('aria-expanded', String(open));
+        if (open) buttons[k].setAttribute('aria-disabled', 'true');
+        else buttons[k].removeAttribute('aria-disabled');
+      });
+    };
+
+    const mode = () => {
+      titles.forEach((title, k) => {
+        const btn = buttons[k];
+        if (narrow.matches && btn.isConnected) {
+          btn.replaceWith(...btn.childNodes);
+        } else if (!narrow.matches && !btn.isConnected) {
+          btn.append(...title.childNodes);
+          title.append(btn);
+        }
+      });
+      sync();
+    };
+
+    // раскрытую карточку переключает initChains() (scripts/kit.ts) и отмечает её номер в data-active
+    new MutationObserver(sync).observe(chain, { attributes: true, attributeFilter: ['data-active'] });
+    narrow.addEventListener('change', mode);
+    mode();
+  });
+</script>

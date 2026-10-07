@@ -1,10 +1,704 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Первый экран страницы «РО-БОТ» [#ro-bot]. Устроен как первые экраны «Кодекса ТКО» и QODEX Tracker:
+// большая тёплая панель, по центру — метка продукта, заголовок, подзаголовок, две кнопки, условия пилота
+// и три цифры модулей (каждая ведёт к своему разделу).
+// Ниже в той же панели — градиентная карточка с настоящим снимком экрана «Рабочее место» (сверка жильцов
+// по ГИС ЖКХ с биллингом) и три выноски на нём: источник, дата, решение за сотрудником. Поверх угла —
+// карточка расхождения той же квартиры, что в первой строке таблицы (ГИС 5 · биллинг 3 · Δ +2).
+import Icon from '../../components/Icon.astro';
+import ProductLabel from '../../components/ProductLabel.astro';
+import GradientVisual from '../../components/GradientVisual.astro';
+import { withBase } from '../../config/site';
+
+const NB = ' ';
+
+// Цифры модулей (тексты с лендинга). Число досчитывается от нуля (data-count), знаки — вне счётчика.
+const FIGS = [
+  { href: '#gis', pre: '+', num: 10, suf: '%', text: `жильцов в${NB}базе за${NB}один день сверки`, mod: `Модуль${NB}01 · Жильцы` },
+  { href: '#obekty', pre: '', num: 480, suf: '', text: `домов вне базы найдено в${NB}одном сельском районе`, mod: `Модуль${NB}02 · Объекты` },
+  { href: '#yurlica', pre: '+', num: 26, suf: '%', text: `к${NB}базе договоров с${NB}юрлицами за${NB}одну итерацию`, mod: `Модуль${NB}03 · Юрлица` },
+];
+
+const shot = (name: string) => ({
+  src: withBase(`/media/robot/${name}-1600.webp`),
+  srcset: `${withBase(`/media/robot/${name}-800.webp`)} 800w, ${withBase(`/media/robot/${name}-1600.webp`)} 1600w`,
+});
+const WORK = shot('shot-workplace');
+const CARD = shot('shot-card');
+
+// Выноски: рамка вокруг ячеек снимка, координаты — в пикселях снимка 1600×900.
+// Идут лесенкой (строки 1, 3, 5), чтобы подписи под рамками не налезали друг на друга.
+const MARKS = [
+  { text: 'источник', x: 910, y: 467, w: 124, h: 38, end: false }, // ГИС 5 и биллинг 3 в первой строке
+  { text: 'дата', x: 1171, y: 590, w: 252, h: 38, end: false }, // даты обновления ФМС и биллинга, третья строка
+  { text: 'решение принимает сотрудник', x: 1461, y: 711, w: 90, h: 40, end: true }, // «Открыть», пятая строка
+];
 ---
 
-<section class="section panel" id="ro-bot" aria-labelledby="ro-bot-title">
-  <div class="container">
-    <h1 id="ro-bot-title" class="t-h2">РО-БОТ увеличивает начисления и сбор регионального оператора ТКО</h1>
-    <p class="t-body">Раздел в работе.</p>
+<section class="section panel rh" id="ro-bot" aria-labelledby="ro-bot-title">
+  <div class="rh__intro container">
+    <div class="rh__label" data-reveal>
+      <ProductLabel id="robot" size="lg" />
+    </div>
+    <h1 class="t-display rh__title" id="ro-bot-title" data-reveal style="--d:1">
+      РО-БОТ увеличивает начисления и&nbsp;сбор регионального оператора&nbsp;ТКО
+    </h1>
+    <p class="t-lead rh__sub" data-reveal style="--d:2">
+      Три модуля находят то, что не попало в&nbsp;вашу базу: неучтённых жильцов, объекты жилфонда и&nbsp;юрлица без
+      договора. Рост начислений&nbsp;— без роста тарифа и&nbsp;без нагрузки на&nbsp;штат.
+    </p>
+    <div class="rh__cta" data-reveal style="--d:3">
+      <a href="#forma" class="btn btn--primary" data-interest="robot" data-goal="pilot_click">
+        Запустить бесплатный пилот
+        <Icon name="arrow-right" />
+      </a>
+      <a href="#kak-eto-rabotaet" class="btn btn--outline">
+        Как это работает
+        <Icon name="arrow-down" />
+      </a>
+    </div>
+    <p class="rh__note" data-reveal style="--d:3">
+      <span>Бесплатно сверим один район в&nbsp;качестве теста</span><span class="rh__note-sep"> · </span><span>Работаем после подписания NDA</span>
+    </p>
+
+    <ul class="rh-figs" data-reveal style="--d:4">
+      {
+        FIGS.map((f) => (
+          <li class="rh-figs__item">
+            <a class="rh-fig" href={f.href}>
+              <span class="rh-fig__num">{f.pre}<span data-count={f.num}>{f.num}</span>{f.suf}</span>
+              <span class="rh-fig__text">{f.text}</span>
+              <span class="rh-fig__mod">
+                <i class="rh-fig__dot" aria-hidden="true" />
+                {f.mod}
+                <span class="rh-fig__arrow" aria-hidden="true">
+                  <Icon name="arrow-down" size={14} strokeWidth={2.2} />
+                </span>
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <div class="container rh__stage">
+    <div class="rh__vis" data-rh-vis data-rh-wait>
+      <GradientVisual
+        preset="sky"
+        deco="bars"
+        class="rh__gv"
+        label="Рабочее место РО-БОТ: сверка числа жильцов в ГИС ЖКХ с данными биллинга. По каждой квартире видны число жильцов по ГИС и по биллингу, разница, даты обновления и кнопка «Открыть»; решение по расхождению принимает сотрудник. Карточка квартиры: ГИС 5, биллинг 3, дельта +2, кнопки «Отклонить» и «Обновить в биллинге»."
+      >
+        <div class="rh-win">
+          <!-- окно приложения: снимок и выноски поверх него -->
+          <div class="rh-win__screen">
+            <div class="rh-win__clip">
+              <img
+                class="rh-win__img"
+                src={WORK.src}
+                srcset={WORK.srcset}
+                sizes="(max-width: 640px) 800px, 1040px"
+                width="1600"
+                height="900"
+                alt="Экран «Рабочее место» РО-БОТ: к обработке 47, повторно 4, обновлено 9, отклонено 5; таблица квартир с адресом, лицевым счётом, числом жильцов по ГИС и биллингу, разницей, датами обновления и кнопкой «Открыть»"
+                loading="eager"
+                decoding="async"
+                draggable="false"
+              />
+            </div>
+            <div class="rh-marks" aria-hidden="true">
+              {
+                MARKS.map((m, i) => (
+                  <span
+                    class:list={['rh-mark', { 'rh-mark--end': m.end }]}
+                    style={`--x:${m.x};--y:${m.y};--w:${m.w};--h:${m.h};--i:${i}`}
+                  >
+                    <span class="rh-mark__ring" />
+                    <span class="rh-mark__caret" />
+                    <span class="rh-mark__tip">{m.text}</span>
+                  </span>
+                ))
+              }
+            </div>
+          </div>
+
+          <!-- карточка расхождения: правая панель снимка «Карточка», та же квартира, что в первой строке -->
+          <div class="rh-card">
+            <div class="rh-card__clip">
+              <img
+                class="rh-card__img"
+                src={CARD.src}
+                srcset={CARD.srcset}
+                sizes="1240px"
+                width="1600"
+                height="900"
+                alt="Карточка расхождения: г. Салават, ул. Чернышевского, д. 5, кв. 35 — ГИС 5, биллинг 3, дельта +2; кнопки «Отклонить» и «Обновить в биллинге», автоматическое скачивание скриншота"
+                loading="lazy"
+                decoding="async"
+                draggable="false"
+              />
+            </div>
+          </div>
+        </div>
+      </GradientVisual>
+      <span class="tag tag--demo rh__demo" aria-hidden="true">демо-данные</span>
+    </div>
   </div>
 </section>
+
+<style>
+  /* Отступы панели — как у первых экранов «Кодекса ТКО» и Tracker */
+  .rh.panel {
+    padding-top: clamp(48px, calc(var(--vw) * 7), 104px);
+    padding-bottom: clamp(8px, calc(var(--vw) * 4.2), 72px);
+  }
+
+  .rh__intro {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .rh__label {
+    margin-bottom: 22px;
+  }
+
+  /* заголовок длиннее, чем у соседних страниц: на компьютере кегль чуть меньше — две строки, и весь первый
+     экран (с цифрами модулей) помещается в окно 1766×880 */
+  .rh__title {
+    max-width: 1200px;
+    font-size: clamp(2.4rem, calc(var(--vw) * 4.4), 4rem);
+  }
+
+  .rh__sub {
+    max-width: 860px;
+    margin-top: 24px;
+    text-wrap: balance;
+  }
+
+  .rh__cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 36px;
+  }
+
+  /* условия пилота — тихая строка под кнопками */
+  .rh__note {
+    margin-top: 18px;
+    font-size: 14.5px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: balance;
+  }
+
+  .rh__note-sep {
+    padding-inline: 4px;
+    white-space: pre;
+  }
+
+  /* ── Три цифры модулей: число, подпись, модуль; каждая — ссылка на раздел модуля ── */
+  .rh-figs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: min(100%, 1000px);
+    margin-top: 40px;
+  }
+
+  .rh-figs__item {
+    position: relative;
+    display: flex;
+  }
+
+  /* тонкий разделитель между цифрами */
+  .rh-figs__item + .rh-figs__item::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 0;
+    width: 1px;
+    background: var(--line-2);
+  }
+
+  /* модуль — по нижнему краю: подписи бывают в две и в три строки */
+  .rh-fig {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    justify-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 28px 10px;
+    border-radius: calc(16px * var(--rk));
+    corner-shape: var(--corner);
+    text-align: center;
+  }
+
+  .rh-fig__num {
+    font-size: clamp(2.4rem, calc(var(--vw) * 3), 3rem);
+    font-weight: 600;
+    line-height: 1;
+    /* не теснее −0,025em: у табличных «48» в «480» иначе слипаются (DESIGN.md) */
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .rh-fig__text {
+    max-width: 250px;
+    font-size: 15px;
+    line-height: 1.42;
+    color: var(--ink-2);
+    text-wrap: balance;
+  }
+
+  .rh-fig__mod {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 2px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--muted);
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+
+  /* точка цвета продукта */
+  .rh-fig__dot {
+    width: 7px;
+    height: 7px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--c-robot);
+  }
+
+  .rh-fig__arrow {
+    display: grid;
+    transition: transform 0.25s var(--ease-out);
+  }
+
+  .rh-fig:hover .rh-fig__mod {
+    color: var(--ink);
+  }
+
+  .rh-fig:hover .rh-fig__arrow {
+    transform: translateY(2px);
+  }
+
+  /* ── Градиентная карточка со снимком «Рабочего места» ─────── */
+  .rh__stage {
+    margin-top: clamp(32px, calc(var(--vw) * 3), 48px);
+    animation: rh-in 0.9s var(--ease-out) 0.4s backwards;
+  }
+
+  /* карточка стоит у первого экрана, поэтому появляется сразу при загрузке, а не по прокрутке */
+  @keyframes rh-in {
+    from {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+  }
+
+  .rh__vis {
+    position: relative;
+  }
+
+  /* снизу и слева — место для карточки расхождения, которая выходит за угол снимка */
+  .rh__gv {
+    min-height: 0;
+    padding: 64px 48px 88px;
+  }
+
+  /* «демо-данные» в углу градиентной карточки */
+  .rh__demo {
+    position: absolute;
+    z-index: 1;
+    top: 20px;
+    left: 22px;
+    pointer-events: none;
+  }
+
+  /* ── Окно приложения: снимок 1600×900 целиком (на телефоне — кадр таблицы, см. ниже).
+     --x0, --y0, --cw, --ch — какая часть снимка видна, в его пикселях; выноски считают место от них же. ── */
+  .rh-win {
+    --x0: 0;
+    --y0: 0;
+    --cw: 1600;
+    --ch: 900;
+    --win-r: 18px;
+    position: relative;
+    width: min(100%, 1040px);
+  }
+
+  .rh-win__screen {
+    position: relative;
+    aspect-ratio: var(--cw) / var(--ch);
+    border-radius: var(--win-r);
+    background: #fff;
+    box-shadow:
+      0 0 0 8px rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+  }
+
+  .rh-win__clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    /* страховка для Safari на iPhone: скругление обрезает и слой снимка */
+    clip-path: inset(0 round var(--win-r));
+  }
+
+  .rh-win__img {
+    position: absolute;
+    top: calc(var(--y0) / var(--ch) * -100%);
+    left: calc(var(--x0) / var(--cw) * -100%);
+    width: calc(1600 / var(--cw) * 100%);
+    max-width: none;
+    height: auto;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Выноски: рамка вокруг ячеек и тёмная подпись под ней */
+  .rh-marks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .rh-mark {
+    --tip-x: -50%;
+    position: absolute;
+    left: calc((var(--x) - var(--x0)) / var(--cw) * 100%);
+    top: calc((var(--y) - var(--y0)) / var(--ch) * 100%);
+    width: calc(var(--w) / var(--cw) * 100%);
+    height: calc(var(--h) / var(--ch) * 100%);
+  }
+
+  .rh-mark__ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: rgb(29 29 31 / 0.035);
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+
+  .rh-mark__caret {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 50%;
+    width: 10px;
+    height: 6px;
+    margin-left: -5px;
+    background: var(--ink);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  .rh-mark__tip {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    display: block;
+    padding: 6px 11px 7px;
+    border-radius: 9px;
+    background: var(--ink);
+    box-shadow: 0 8px 20px -10px rgb(29 29 31 / 0.6);
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 560;
+    line-height: 1.2;
+    white-space: nowrap;
+    transform: translateX(var(--tip-x));
+  }
+
+  /* у правого края снимка подпись прижата к правому краю рамки */
+  .rh-mark--end {
+    --tip-x: 0;
+  }
+
+  .rh-mark--end .rh-mark__tip {
+    left: auto;
+    right: -2px;
+  }
+
+  /* Карточка расхождения — правая панель снимка «Карточка» (x 1168–1600, y 0–436) */
+  .rh-card {
+    position: absolute;
+    z-index: 1;
+    left: -58px;
+    bottom: -52px;
+    width: 330px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow:
+      0 0 0 6px rgb(255 255 255 / 0.5),
+      var(--shadow-float);
+  }
+
+  .rh-card__clip {
+    position: relative;
+    aspect-ratio: 432 / 436;
+    overflow: hidden;
+    border-radius: inherit;
+    clip-path: inset(0 round 16px);
+  }
+
+  .rh-card__img {
+    position: absolute;
+    top: 0;
+    left: calc(1168 / 432 * -100%);
+    width: calc(1600 / 432 * 100%);
+    max-width: none;
+    height: auto;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* ── Движение: когда снимок на экране, выноски появляются по одной (0; 0,7; 1,4 с),
+     затем снизу выезжает карточка расхождения. Один раз; без анимации всё видно сразу. ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .rh-mark__ring {
+      transition:
+        opacity 0.5s ease,
+        transform 0.7s var(--ease-out);
+      transition-delay: calc(var(--i) * 0.7s);
+    }
+
+    .rh-mark__caret,
+    .rh-mark__tip {
+      transition:
+        opacity 0.5s ease,
+        transform 0.6s var(--ease-out);
+      transition-delay: calc(var(--i) * 0.7s + 0.2s);
+    }
+
+    .rh-card {
+      transition:
+        opacity 0.7s ease,
+        transform 0.9s var(--ease-out);
+      transition-delay: 2.2s;
+    }
+
+    /* до показа: data-rh-wait снимает скрипт ниже */
+    .rh__vis[data-rh-wait] .rh-mark__ring {
+      opacity: 0;
+      transform: scale(1.18);
+    }
+
+    .rh__vis[data-rh-wait] .rh-mark__caret {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    .rh__vis[data-rh-wait] .rh-mark__tip {
+      opacity: 0;
+      transform: translate(var(--tip-x), 6px);
+    }
+
+    .rh__vis[data-rh-wait] .rh-card {
+      opacity: 0;
+      transform: translateY(28px) scale(0.98);
+    }
+  }
+
+  @media (scripting: none) {
+    .rh__vis[data-rh-wait] .rh-mark__ring,
+    .rh__vis[data-rh-wait] .rh-mark__caret,
+    .rh__vis[data-rh-wait] .rh-mark__tip,
+    .rh__vis[data-rh-wait] .rh-card {
+      opacity: 1;
+      transform: none;
+    }
+
+    .rh__vis[data-rh-wait] .rh-mark__tip {
+      transform: translateX(var(--tip-x));
+    }
+  }
+
+  /* ── Планшет и телефон: карточка расхождения — под снимком, с заходом на его нижний край ── */
+  @media (max-width: 1199.98px) {
+    .rh-figs {
+      margin-top: 36px;
+    }
+
+    .rh-fig {
+      padding-inline: 18px;
+    }
+
+    .rh__gv {
+      padding: 64px clamp(10px, calc(var(--vw) * 3), 40px) clamp(18px, calc(var(--vw) * 3.6), 40px);
+    }
+
+    .rh-card {
+      position: relative;
+      left: auto;
+      bottom: auto;
+      width: min(320px, 56%);
+      margin: -40px 0 0 -12px;
+    }
+  }
+
+  @media (max-width: 760px) {
+    /* цифры столбиком: число слева, подпись и модуль справа */
+    .rh-figs {
+      grid-template-columns: minmax(0, 1fr);
+      width: min(100%, 460px);
+      margin-top: 32px;
+      border-top: 1px solid var(--line-2);
+    }
+
+    .rh-figs__item {
+      border-bottom: 1px solid var(--line-2);
+    }
+
+    .rh-figs__item + .rh-figs__item::before {
+      display: none;
+    }
+
+    .rh-fig {
+      grid-template-columns: 104px minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      justify-items: start;
+      align-items: center;
+      gap: 4px 16px;
+      padding: 16px 4px;
+      text-align: left;
+    }
+
+    .rh-fig__num {
+      grid-row: span 2;
+      font-size: 2.25rem;
+    }
+
+    .rh-fig__text {
+      max-width: none;
+      text-wrap: pretty;
+    }
+
+    .rh-fig__mod {
+      margin-top: 0;
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .rh__title {
+      font-size: clamp(2.05rem, calc(var(--vw) * 9), 2.6rem);
+    }
+
+    .rh__cta {
+      display: grid;
+      width: 100%;
+    }
+
+    /* условия — две строки без точки */
+    .rh__note {
+      display: grid;
+      gap: 2px;
+      font-size: 14px;
+    }
+
+    .rh__note-sep {
+      display: none;
+    }
+
+    .rh__stage {
+      padding-inline: 8px;
+    }
+
+    .rh__gv {
+      --gv-r: 22px;
+      padding: 54px 10px 18px;
+    }
+
+    .rh__demo {
+      top: 14px;
+      left: 14px;
+    }
+
+    /* на телефоне виден кадр таблицы: от столбца «ГИС» до «Открыть», с заголовка до седьмой строки */
+    .rh-win {
+      --x0: 880;
+      --y0: 414;
+      --cw: 690;
+      --ch: 470;
+      --win-r: 14px;
+    }
+
+    .rh-win__screen {
+      box-shadow:
+        0 0 0 6px rgb(255 255 255 / 0.4),
+        var(--shadow-card);
+    }
+
+    .rh-mark__ring {
+      border-radius: 7px;
+    }
+
+    .rh-mark__caret {
+      top: calc(100% + 3px);
+      width: 8px;
+      height: 5px;
+      margin-left: -4px;
+    }
+
+    .rh-mark__tip {
+      top: calc(100% + 8px);
+      padding: 4px 8px 5px;
+      border-radius: 7px;
+      font-size: 11.5px;
+    }
+
+    .rh-card {
+      width: 88%;
+      margin: -26px 0 0 -4px;
+      border-radius: 14px;
+      box-shadow:
+        0 0 0 5px rgb(255 255 255 / 0.5),
+        var(--shadow-float);
+    }
+
+    .rh-card__clip {
+      clip-path: inset(0 round 14px);
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Выноски на снимке появляются по одной, когда он на экране (один раз). Первый показ — после того,
+  // как карточка проявилась при загрузке (1,3 с). При «уменьшить движение» всё видно сразу.
+  const vis = document.querySelector<HTMLElement>('[data-rh-vis]');
+  if (vis) {
+    if (reducedMotion() || !('IntersectionObserver' in window)) {
+      delete vis.dataset.rhWait;
+    } else {
+      let ready = false;
+      let seen = false;
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          seen = entry.isIntersecting;
+          start();
+        },
+        { threshold: 0.45 },
+      );
+      const start = () => {
+        if (!ready || !seen || document.hidden) return;
+        delete vis.dataset.rhWait;
+        io.disconnect();
+        document.removeEventListener('visibilitychange', start);
+      };
+      io.observe(vis);
+      document.addEventListener('visibilitychange', start);
+      window.setTimeout(() => {
+        ready = true;
+        start();
+      }, 1300);
+    }
+  }
+</script>

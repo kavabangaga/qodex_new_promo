@@ -1,10 +1,1291 @@
 ---
-// Заготовка раздела страницы «РО-БОТ» — её заменит сборщик раздела.
+// Раздел страницы «РО-БОТ» — Модуль 02, «Поиск новых объектов жилищного фонда» [#obekty].
+// Продуктовый ряд, как KExcel и ProductHow: слева метка модуля, заголовок, текст, источники данных,
+// оговорка про ЕГРН и кнопка; справа градиентная карточка (mint) с рисунком «Разбор территории
+// по кварталам»: план посёлка из шести кадастровых кварталов, сканер проходит его слева направо,
+// кварталы получают отметку «проверен», дома вне базы загораются по одному и попадают в реестр.
+// Ниже — реальный кейс модуля (крупные цифры на белых плитках) и «Что получает региональный оператор».
+// Тексты — с лендинга romoney.qodex.tech дословно. Рисунок описывает текст рядом, поэтому для
+// скринридера он скрыт (aria-hidden ставит GradientVisual).
+import GradientVisual from '../../components/GradientVisual.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+
+const NB = ' ';
+
+// ── Источники данных (с лендинга) ──
+const SOURCES: { text: string; icon: IconName }[] = [
+  { text: 'Кадастровый план территории (КПТ) Росреестра', icon: 'landmark' },
+  { text: `ГИС${NB}ЖКХ`, icon: 'house' },
+  { text: 'Карты', icon: 'map' },
+  // после «/» строка не рвётся (U+2060): «(ФИАС/ГАР)» переносится целиком
+  { text: 'Государственный адресный реестр (ФИАС/⁠ГАР)', icon: 'map-pin' },
+  { text: 'База начислений оператора', icon: 'database' },
+];
+
+// ── Что получает региональный оператор (с лендинга) ──
+const GAINS: { title: string; text: string; icon: IconName }[] = [
+  {
+    title: 'Реестр неучтённых объектов',
+    text: 'Адрес, кадастровый номер, тип помещения, площадь, назначение, категория собственника.',
+    icon: 'file-spreadsheet',
+  },
+  {
+    title: 'Разбор территории по кварталам',
+    text: `Регион${NB}→ район${NB}→ город: по каждому кадастровому кварталу виден статус данных.`,
+    icon: 'layers',
+  },
+  {
+    title: 'Проверка по картам',
+    text: 'Наличие строения подтверждается до заказа платных сведений.',
+    icon: 'map',
+  },
+  {
+    title: `Готовый список для${NB}ЕГРН`,
+    text: 'Выписки заказываются только по расхождениям, а не по всей территории.',
+    icon: 'list-checks',
+  },
+  {
+    title: 'Источник и дата у значения',
+    text: 'Основание для начисления перед потребителем и контролирующими органами.',
+    icon: 'stamp',
+  },
+];
+
+// ── Реальный кейс модуля ──
+interface Fact {
+  prefix?: string;
+  count: number;
+  value: string;
+  suffix?: string;
+  /** Хвост значения — мельче, в той же строке. */
+  tail?: string;
+  caption: string;
+}
+
+const FACTS: Fact[] = [
+  { count: 480, value: '480', caption: 'жилых домов, которых нет в базе начислений' },
+  { prefix: '≈', count: 7, value: '7', suffix: '%', caption: 'жилфонда района — каждый четырнадцатый дом' },
+  { prefix: '≈', count: 860, value: '860', tail: `тыс.${NB}₽`, caption: 'потенциал доначислений в год' },
+];
+
+// ── Демо-данные рисунка: посёлок из шести кадастровых кварталов ──
+// План 440×250: улицы по горизонтали (y = 22, 126, 230) и по вертикали (x = 150, 300), между ними кварталы.
+// В жилом квартале два ряда участков: верхний выходит на улицу сверху, нижний — на улицу снизу.
+const MW = 440;
+const MH = 250;
+const ROADS_Y = [22, 126, 230];
+const ROADS_X = [150, 300];
+const T0 = 0.5; // когда сканер выходит на карту, с
+const SWEEP = 3; // сколько он идёт через всю карту, с
+
+interface Quarter {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** Сколько участков в ряду жилые (дальше — поле); 0 — квартал целиком поле. */
+  res: number;
+}
+
+const QUARTERS: Quarter[] = [
+  { x: 10, y: 29, w: 133, h: 90, res: 6 },
+  { x: 157, y: 29, w: 136, h: 90, res: 6 },
+  { x: 307, y: 29, w: 123, h: 90, res: 3 },
+  { x: 10, y: 133, w: 133, h: 90, res: 6 },
+  { x: 157, y: 133, w: 136, h: 90, res: 6 },
+  { x: 307, y: 133, w: 123, h: 90, res: 0 },
+];
+
+// Дома вне базы: [квартал, ряд, участок] — по одному в трёх кварталах. Порядок — слева направо, как идёт сканер.
+const LIT: [number, number, number][] = [
+  [3, 0, 2],
+  [1, 0, 3],
+  [2, 0, 1],
+];
+
+// Реестр: те же три дома, в том же порядке (улица сверху квартала 040104 — Центральная, 040102 и 040103 — Луговая)
+const REGISTRY = [
+  { addr: `ул.${NB}Центральная,${NB}14`, cad: '02:12:040104:318', area: `86${NB}м²` },
+  { addr: `ул.${NB}Луговая,${NB}9`, cad: '02:12:040102:154', area: `112${NB}м²` },
+  { addr: `ул.${NB}Луговая,${NB}27`, cad: '02:12:040103:62', area: `64${NB}м²` },
+];
+
+// детерминированный «случай»: план одинаков при каждой сборке
+const rnd = (n: number) => (Math.imul(n + 0x9e37, 2654435761) >>> 0) / 4294967296;
+const r1 = (v: number) => Math.round(v * 10) / 10;
+
+interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+const houses: (Rect & { lit?: number })[] = [];
+const sheds: Rect[] = [];
+const trees: { cx: number; cy: number; r: number }[] = [];
+const fields: Rect[] = [];
+let lots = ''; // границы участков
+
+QUARTERS.forEach((q, qi) => {
+  const pw = q.w / 6;
+  const resW = q.res * pw;
+  // поле: справа от жилых участков (вдоль края — ряд деревьев) или во весь квартал (снизу — деревья)
+  if (q.res && q.res < 6) fields.push({ x: r1(q.x + resW + 4), y: q.y + 5, w: r1(q.w - resW - 20), h: q.h - 10 });
+  else if (!q.res) fields.push({ x: q.x + 5, y: q.y + 5, w: q.w - 10, h: q.h - 28 });
+  if (!q.res) return;
+  lots += `M${q.x} ${q.y + q.h / 2}h${r1(resW)}`;
+  for (let i = 1; i <= q.res; i++) {
+    if (i < 6) lots += `M${r1(q.x + i * pw)} ${q.y}v${q.h}`;
+  }
+  for (let row = 0; row < 2; row++) {
+    for (let i = 0; i < q.res; i++) {
+      const n = qi * 31 + row * 7 + i * 3;
+      const px = q.x + i * pw;
+      const lit = LIT.findIndex(([a, b, c]) => a === qi && b === row && c === i);
+      if (lit < 0 && rnd(n) < 0.13) {
+        // пустой участок — пара деревьев
+        trees.push({ cx: r1(px + pw / 2 - 3), cy: r1(q.y + (row ? q.h - 16 : 16)), r: 4.5 });
+        trees.push({ cx: r1(px + pw / 2 + 4), cy: r1(q.y + (row ? q.h - 24 : 24)), r: 3.6 });
+        continue;
+      }
+      // дом бывает повёрнут к улице торцом
+      const long = 11 + Math.floor(rnd(n + 1) * 4);
+      const short = 8 + Math.floor(rnd(n + 2) * 3);
+      const turned = lit < 0 && rnd(n + 7) < 0.3;
+      const w = turned ? short : long;
+      const h = turned ? long : short;
+      const x = r1(px + 3 + rnd(n + 3) * (pw - w - 6));
+      const y = r1(row ? q.y + q.h - 4 - h - rnd(n + 4) * 3 : q.y + 4 + rnd(n + 4) * 3);
+      houses.push({ x, y, w, h, lit: lit < 0 ? undefined : lit });
+      if (rnd(n + 5) < 0.5) {
+        sheds.push({ x: r1(px + 4 + rnd(n + 6) * (pw - 14)), y: r1(row ? q.y + q.h / 2 + 8 : q.y + q.h / 2 - 15), w: 6, h: 5 });
+      }
+    }
+  }
+});
+
+// Двускатная крыша сверху: один скат темнее — половина дома вдоль длинной стороны
+const slope = (h: Rect): Rect =>
+  h.w >= h.h ? { x: h.x, y: r1(h.y + h.h / 2), w: h.w, h: r1(h.h / 2) } : { x: r1(h.x + h.w / 2), y: h.y, w: r1(h.w / 2), h: h.h };
+const slopes = houses.map((h) => {
+  const s = slope(h);
+  return `M${s.x} ${s.y}h${s.w}v${s.h}h${-s.w}Z`;
+}).join('');
+
+// Когда сканер доходит до точки x
+const at = (x: number) => T0 + (SWEEP * x) / MW;
+const sec = (t: number) => `${t.toFixed(2)}s`;
+
+const lit = houses
+  .filter((h) => h.lit !== undefined)
+  .sort((a, b) => a.lit! - b.lit!)
+  .map((h) => ({ ...h, s: slope(h), t: at(h.x + h.w / 2) + 0.1 }));
+
+// отметка «квартал проверен» — в правом верхнем углу квартала, когда сканер его прошёл
+const checks = QUARTERS.map((q) => ({ cx: q.x + q.w, cy: q.y, t: at(q.x + q.w) + 0.05 }));
+
+// Деревья вдоль полей
+for (let k = 0; k < 6; k++) trees.push({ cx: 421.5, cy: 38 + k * 15.4, r: 4.4 - (k % 2) * 0.8 });
+for (let k = 0; k < 9; k++) trees.push({ cx: 318 + k * 13, cy: 212 - (k % 2) * 3, r: 4.4 - (k % 2) * 0.8 });
+
+// Полосы пашни на полях
+const furrows = fields
+  .map((f) => {
+    let d = '';
+    for (let y = f.y + 6; y < f.y + f.h - 3; y += 7) d += `M${f.x + 5} ${y}h${r1(f.w - 10)}`;
+    return d;
+  })
+  .join('');
+
+// Тринадцать домов и один — «каждый четырнадцатый»
+const FOURTEEN = Array.from({ length: 14 }, (_, k) => k === 13);
 ---
 
 <section class="section" id="obekty" aria-labelledby="obekty-title">
   <div class="container">
-    <h2 id="obekty-title" class="t-h2">Поиск новых объектов жилищного фонда</h2>
-    <p class="t-body">Раздел в работе.</p>
+    <!-- ── Продуктовый ряд: текст слева, рисунок справа ── -->
+    <div class="rob-row">
+      <div class="rob-text">
+        <p class="rob-label" data-reveal>
+          <span class="plabel plabel--lg p-robot">
+            <span class="plabel__ico" aria-hidden="true"><Icon name="house" strokeWidth={2} /></span>
+            Модуль 02 · Новые объекты жилфонда
+          </span>
+        </p>
+
+        <h2 class="t-serif rob-title" id="obekty-title" data-reveal style="--d:1">
+          Поиск новых объектов жилищного фонда
+        </h2>
+
+        <p class="rob-copy" data-reveal style="--d:2">
+          Часть домов на территории оператора не участвует в начислениях: объекты построены, заселены, производят
+          отходы&nbsp;— а лицевых счетов по ним нет. Модуль сверяет государственные реестры с базой начислений и выдаёт
+          готовый список объектов для заведения лицевых счетов.
+        </p>
+
+        <div class="rob-src" data-reveal style="--d:3">
+          <p class="rob-src__label" id="obekty-src">Источники данных</p>
+          <ul class="rob-src__list" aria-labelledby="obekty-src">
+            {
+              SOURCES.map((s) => (
+                <li class="rob-chip">
+                  <Icon name={s.icon} size={17} strokeWidth={1.9} />
+                  <span>{s.text}</span>
+                </li>
+              ))
+            }
+          </ul>
+          <p class="rob-note">
+            <Icon name="shield-check" size={18} strokeWidth={1.9} />
+            <span>
+              Только официальные каналы Росреестра и Роскадастра. Сведения ЕГРН региональный оператор приобретает
+              сам&nbsp;— под своей учётной записью и своим ключом доступа.
+            </span>
+          </p>
+        </div>
+
+        <div class="rob-cta" data-reveal style="--d:4">
+          <a href="#forma" class="btn btn--primary" data-interest="robot" data-goal="pilot_click">
+            Проверить свою территорию
+            <Icon name="arrow-right" />
+          </a>
+        </div>
+      </div>
+
+      <div class="rob-visual" data-reveal style="--d:1">
+        <GradientVisual preset="mint" deco="none">
+          <div class="rob-viz" data-rob-viz data-idle>
+            <div class="rob-stage">
+              <!-- План посёлка по кадастровым кварталам -->
+              <div class="ui rob-map">
+                <div class="rob-map__head">
+                  <span class="rob-map__title">Разбор территории по кварталам</span>
+                  <span class="rob-map__sub">Кировский район · 6 кварталов</span>
+                </div>
+                <div class="rob-legend">
+                  <span class="rob-legend__item"><i class="rob-sw rob-sw--in"></i>в базе</span>
+                  <span class="rob-legend__item"><i class="rob-sw rob-sw--out"></i>вне базы</span>
+                  <span class="rob-legend__item">
+                    <i class="rob-sw rob-sw--ok"><Icon name="check" size={9} strokeWidth={4} /></i>квартал проверен
+                  </span>
+                </div>
+                <div class="rob-plan">
+                  <svg class="rob-plan__svg" viewBox={`0 0 ${MW} ${MH}`}>
+                    <rect width={MW} height={MH} fill="#e4ebe6"></rect>
+                    {QUARTERS.map((q) => <rect x={q.x} y={q.y} width={q.w} height={q.h} rx="5" fill="#f6f8f5"></rect>)}
+                    {fields.map((f) => <rect x={f.x} y={f.y} width={f.w} height={f.h} rx="4" fill="#e2eed8"></rect>)}
+                    <path d={furrows} stroke="#d2e4c6" stroke-width="2" stroke-linecap="round"></path>
+                    <ellipse cx="392" cy="176" rx="24" ry="14" fill="#cfe3f1"></ellipse>
+                    <path d={lots} stroke="#e7ece9" stroke-width="1"></path>
+                    <path d={ROADS_Y.map((y) => `M0 ${y}H${MW}`).join('') + ROADS_X.map((x) => `M${x} 0V${MH}`).join('')} stroke="#fff" stroke-width="8"></path>
+                    <path d={`M0 ${ROADS_Y[1]}H${MW}`} stroke="#fff" stroke-width="11"></path>
+                    {
+                      QUARTERS.map((q) => (
+                        <rect
+                          x={q.x}
+                          y={q.y}
+                          width={q.w}
+                          height={q.h}
+                          rx="5"
+                          fill="none"
+                          stroke="#a9bac4"
+                          stroke-width="1.2"
+                          stroke-dasharray="3.5 3"
+                        />
+                      ))
+                    }
+                    {trees.map((t) => <circle cx={t.cx} cy={t.cy} r={t.r} fill="#d2e6cf"></circle>)}
+                    {sheds.map((s) => <rect x={s.x} y={s.y} width={s.w} height={s.h} rx="1" fill="#d3dbe0"></rect>)}
+                    {houses.map((h) => <rect x={h.x} y={h.y} width={h.w} height={h.h} rx="1.6" fill="#b8c4cd"></rect>)}
+                    <path d={slopes} fill="#a8b5bf"></path>
+                    {
+                      lit.map((h) => (
+                        <g style={`--t:${sec(h.t)}`}>
+                          <rect
+                            class="rob-halo"
+                            x={h.x - 4.5}
+                            y={h.y - 4.5}
+                            width={h.w + 9}
+                            height={h.h + 9}
+                            rx="5"
+                            fill="#f08a24"
+                            fill-opacity=".16"
+                            stroke="#f08a24"
+                            stroke-opacity=".55"
+                            stroke-width="1.4"
+                          />
+                          <g class="rob-lit">
+                            <rect x={h.x} y={h.y} width={h.w} height={h.h} rx="1.6" fill="#f08a24" />
+                            <rect x={h.s.x} y={h.s.y} width={h.s.w} height={h.s.h} fill="#dc7212" />
+                          </g>
+                        </g>
+                      ))
+                    }
+                    {
+                      checks.map((c) => (
+                        <g class="rob-ok" style={`--t:${sec(c.t)}`}>
+                          <circle cx={c.cx} cy={c.cy} r="7" fill="#0fa86f" stroke="#fff" stroke-width="2"></circle>
+                          <path
+                            d={`M${c.cx - 3} ${c.cy + 0.2}l2 2 4-4.2`}
+                            fill="none"
+                            stroke="#fff"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          ></path>
+                        </g>
+                      ))
+                    }
+                  </svg>
+                  <span class="rob-sweep" style={`--t:${sec(T0)}; --dur:${SWEEP}s`}></span>
+                </div>
+              </div>
+
+              <!-- Реестр неучтённых объектов: строки появляются вслед за домами на плане -->
+              <div class="ui ui--plain rob-reg">
+                <div class="rob-reg__head">
+                  <span class="rob-reg__title">Реестр неучтённых объектов</span>
+                  <span class="rob-reg__count rob-a-pop" style={`--t:${sec(lit[lit.length - 1].t + 0.45)}`}>
+                    {REGISTRY.length}
+                  </span>
+                </div>
+                <ul class="rob-reg__list">
+                  {
+                    REGISTRY.map((r, k) => (
+                      <li class="rob-reg__row" style={`--t:${sec(lit[k].t + 0.3)}`}>
+                        <span class="rob-reg__ico rob-a-pop">
+                          <Icon name="house" size={15} strokeWidth={2} />
+                        </span>
+                        <span class="rob-reg__main rob-a-in">
+                          <b>{r.addr}</b>
+                          <small>{r.cad}</small>
+                        </span>
+                        <span class="rob-reg__meta rob-a-in">
+                          <b>{r.area}</b>
+                          <small>жилой дом</small>
+                        </span>
+                      </li>
+                    ))
+                  }
+                </ul>
+              </div>
+            </div>
+          </div>
+        </GradientVisual>
+        <span class="tag tag--demo rob-demo" aria-hidden="true">демо-данные</span>
+      </div>
+    </div>
+
+    <!-- ── Реальный кейс модуля ── -->
+    <article class="rob-case" aria-labelledby="obekty-case-title" data-reveal>
+      <div class="rob-case__head">
+        <span class="tag rob-case__tag p-robot"><span class="tag__dot"></span>Реальный кейс · Модуль{NB}02</span>
+        <h3 class="rob-case__title" id="obekty-case-title">Каждый четырнадцатый дом района не платил вовсе</h3>
+        <p class="rob-case__meta">
+          <Icon name="map-pin" size={18} strokeWidth={1.9} />
+          <span>Сельский район, Приволжский{NB}ФО</span>
+        </p>
+      </div>
+
+      <ul class="rob-facts bridged">
+        {
+          FACTS.map((f, i) => (
+            <li class:list={['rob-fact', { 'rob-fact--lead': i === 0 }]}>
+              <p class="rob-fact__num">
+                <span class="rob-fact__fix" aria-hidden="true">{f.prefix}{f.value}{f.suffix}</span>
+                <span class="rob-fact__live">{f.prefix}<span data-count={f.count}>{f.value}</span>{f.suffix}</span>
+                {f.tail && <span class="rob-fact__tail">{NB + f.tail}</span>}
+              </p>
+              <div class="rob-fact__text">
+                <p class="rob-fact__cap">{f.caption}</p>
+                {i === 1 && (
+                  <span class="rob-14" aria-hidden="true">
+                    {FOURTEEN.map((on) => (
+                      <svg class:list={['rob-14__house', { 'is-on': on }]} viewBox="0 0 16 16">
+                        <path d="M2 7.2 8 2.2l6 5V14a.8.8 0 0 1-.8.8H2.8A.8.8 0 0 1 2 14Z" />
+                      </svg>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </article>
+    <p class="footnote rob-foot" data-reveal>
+      Кейсы РО-БОТа — разные проекты. Регионы и операторы не раскрываются по условиям соглашений.
+    </p>
+
+    <!-- ── Что получает региональный оператор ── -->
+    <div class="rob-gain">
+      <h3 class="rob-gain__title" data-reveal>Что получает региональный оператор</h3>
+      <ul class="rob-gain__list">
+        {
+          GAINS.map((g, i) => (
+            <li class="rob-gain__item" data-reveal style={`--d:${i + 1}`}>
+              <span class="rob-gain__ico" aria-hidden="true">
+                <Icon name={g.icon} size={22} />
+              </span>
+              <h4 class="rob-gain__name">{g.title}</h4>
+              <p class="rob-gain__text">{g.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
   </div>
 </section>
+
+<style>
+  /* ── Ряд: текст слева, рисунок справа ─────────────────── */
+  .rob-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    grid-template-areas: 'text visual';
+    align-items: center;
+    column-gap: clamp(40px, calc(var(--vw) * 6), 96px);
+  }
+
+  .rob-text {
+    grid-area: text;
+    min-width: 0;
+  }
+
+  .rob-title {
+    margin-top: 18px;
+  }
+
+  .rob-copy {
+    max-width: 52ch;
+    margin-top: 20px;
+    font-size: clamp(1.03rem, calc(var(--vw) * 1.2), 1.15rem);
+    line-height: 1.55;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* источники данных — плашки со значками */
+  .rob-src {
+    margin-top: clamp(26px, calc(var(--vw) * 2.8), 36px);
+  }
+
+  .rob-src__label {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--muted);
+  }
+
+  .rob-src__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .rob-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 7px 14px 7px 11px;
+    border-radius: calc(12px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+    box-shadow: inset 0 0 0 1px var(--line);
+    font-size: 14.5px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  .rob-chip :global(svg) {
+    flex: none;
+    color: var(--ink-2);
+  }
+
+  .rob-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 56ch;
+    margin-top: 16px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .rob-note :global(svg) {
+    flex: none;
+    margin-top: 1px;
+  }
+
+  .rob-cta {
+    margin-top: 30px;
+  }
+
+  .rob-visual {
+    grid-area: visual;
+    position: relative;
+    min-width: 0;
+  }
+
+  /* сверху поле побольше: план стоит ниже плашки «демо-данные» */
+  .rob-visual :global(.gv) {
+    padding: clamp(14px, calc(var(--vw) * 2.6), 44px);
+    padding-top: clamp(52px, calc(var(--vw) * 3.6), 64px);
+  }
+
+  /* «демо-данные» в углу градиентной карточки */
+  .rob-demo {
+    position: absolute;
+    z-index: 1;
+    top: clamp(14px, calc(var(--vw) * 1.6), 22px);
+    left: clamp(14px, calc(var(--vw) * 1.6), 22px);
+    pointer-events: none;
+  }
+
+  /* ── Рисунок: план кварталов и реестр ──────────────────── */
+  .rob-viz {
+    --rob-out: #f08a24;
+    --rob-out-ink: #a24e00;
+    --rob-out-soft: #fdeedf;
+    --rob-ok: #0fa86f;
+    --rob-row: #f5f6f8;
+    width: min(100%, 500px);
+    container-type: inline-size;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink);
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* сцена: план и реестр, который заходит на его правый нижний угол */
+  .rob-stage {
+    position: relative;
+    padding-bottom: 128px;
+  }
+
+  .rob-map {
+    width: 100%;
+    padding: clamp(12px, 3.6cqi, 18px);
+    border-radius: 22px;
+  }
+
+  .rob-map__head {
+    display: grid;
+    gap: 2px;
+    padding-inline: 2px;
+  }
+
+  .rob-map__title {
+    font-size: clamp(15px, 3.9cqi, 18px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .rob-map__sub {
+    font-size: clamp(12px, 2.8cqi, 13px);
+    color: var(--muted);
+  }
+
+  .rob-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 10px 2px 10px;
+    font-size: clamp(11.5px, 2.7cqi, 12.5px);
+    color: var(--ink-2);
+  }
+
+  .rob-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .rob-sw {
+    display: grid;
+    place-items: center;
+    width: 12px;
+    height: 10px;
+    flex: none;
+    border-radius: 2px;
+  }
+
+  .rob-sw--in {
+    background: #b8c4cd;
+  }
+
+  .rob-sw--out {
+    background: var(--rob-out);
+  }
+
+  .rob-sw--ok {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--rob-ok);
+    color: #fff;
+  }
+
+  .rob-plan {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+  }
+
+  .rob-plan__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* сканер: полупрозрачная полоса с тонкой линией на переднем крае; в итоговом состоянии скрыт */
+  .rob-sweep {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: linear-gradient(90deg, rgb(0 107 255 / 0) 72%, rgb(0 107 255 / 0.13));
+    pointer-events: none;
+  }
+
+  .rob-sweep::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 2px;
+    background: rgb(0 107 255 / 0.6);
+  }
+
+  /* реестр поверх правого нижнего угла плана */
+  .rob-reg {
+    position: absolute;
+    right: -14px;
+    bottom: 0;
+    width: min(300px, 70%);
+    padding: 14px;
+    border-radius: 18px;
+    box-shadow:
+      0 0 0 1px rgb(29 29 31 / 0.06),
+      0 18px 44px -16px rgb(29 29 31 / 0.42);
+  }
+
+  .rob-reg__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .rob-reg__title {
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+
+  .rob-reg__count {
+    display: grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--rob-out-soft);
+    color: var(--rob-out-ink);
+    font-size: 12.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rob-reg__list {
+    display: grid;
+    gap: 6px;
+  }
+
+  .rob-reg__row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px 8px 8px;
+    border-radius: 12px;
+    background: var(--rob-row);
+  }
+
+  .rob-reg__ico {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--rob-out-soft);
+    color: var(--rob-out-ink);
+  }
+
+  .rob-reg__main,
+  .rob-reg__meta {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  .rob-reg__main b,
+  .rob-reg__meta b {
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 560;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rob-reg__main small,
+  .rob-reg__meta small {
+    font-size: 11.5px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .rob-reg__main small {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rob-reg__meta {
+    justify-items: end;
+    text-align: right;
+  }
+
+  /* ── Анимация рисунка: один проход, когда рисунок на экране ──
+     Без анимации видно итоговое состояние: все кварталы проверены, дома вне базы горят, реестр заполнен. */
+  .rob-sweep {
+    animation: rob-sweep var(--dur, 3s) var(--ease-in-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rob-lit {
+    animation: rob-fade 0.5s ease both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rob-halo,
+  .rob-ok {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .rob-halo {
+    animation: rob-ping 0.9s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rob-ok,
+  .rob-a-pop {
+    animation: rob-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  .rob-a-in {
+    animation: rob-in 0.55s var(--ease-out) both;
+    animation-delay: var(--t, 0s);
+  }
+
+  @keyframes rob-sweep {
+    0% {
+      opacity: 1;
+      transform: translateX(-100%);
+    }
+    92% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes rob-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes rob-ping {
+    0% {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+    55% {
+      opacity: 1;
+      transform: scale(1.35);
+    }
+  }
+
+  @keyframes rob-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+  }
+
+  @keyframes rob-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  /* за экраном и в скрытой вкладке анимации стоят: data-idle снимает скрипт ниже */
+  .rob-viz[data-idle] * {
+    animation-play-state: paused !important;
+  }
+
+  @media (scripting: none) {
+    .rob-viz[data-idle] * {
+      animation-play-state: running !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rob-viz * {
+      animation: none !important;
+    }
+  }
+
+  /* узкий рисунок (телефон): реестр не перекрывает план, а стоит под ним с небольшим заходом */
+  @container (max-width: 420px) {
+    .rob-stage {
+      padding-bottom: 0;
+    }
+
+    .rob-reg {
+      position: relative;
+      right: auto;
+      width: 92%;
+      margin: -18px 0 0 auto;
+    }
+  }
+
+  /* самые узкие телефоны (360 px): реестру — вся ширина, чтобы адрес не обрезался */
+  @container (max-width: 330px) {
+    .rob-reg {
+      width: 100%;
+      padding: 12px;
+    }
+
+    .rob-reg__row {
+      gap: 8px;
+    }
+  }
+
+  /* ── Реальный кейс ─────────────────────────────────────── */
+  .rob-case {
+    --rob-gap: clamp(12px, calc(var(--vw) * 1.2), 16px);
+    --rob-pad: clamp(22px, calc(var(--vw) * 2.2), 30px);
+    --rob-num: clamp(2.4rem, calc(var(--vw) * 3.1), 2.875rem);
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr);
+    align-items: center;
+    gap: 32px clamp(32px, calc(var(--vw) * 4.4), 72px);
+    margin-top: clamp(64px, calc(var(--vw) * 8), 112px);
+    padding: clamp(22px, calc(var(--vw) * 3), 48px);
+    border-radius: calc(var(--r-xl) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .rob-case__head {
+    min-width: 0;
+  }
+
+  .rob-case__tag {
+    padding: 6px 12px 6px 10px;
+    background: var(--card);
+    font-size: 14px;
+    font-weight: 560;
+    color: var(--ink);
+  }
+
+  .rob-case__title {
+    margin-top: 20px;
+    font-size: clamp(1.6rem, calc(var(--vw) * 2.1), 2rem);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .rob-case__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 18px;
+    font-size: 15.5px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .rob-case__meta :global(svg) {
+    flex: none;
+  }
+
+  .rob-facts {
+    --gap: var(--rob-gap);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--rob-gap);
+    min-width: 0;
+    isolation: isolate;
+  }
+
+  .rob-fact {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    padding: var(--rob-pad);
+    border-radius: calc(var(--r-lg) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card);
+  }
+
+  /* Цифра, как в «Цифрах» главной: Geist 600 с плотной разрядкой */
+  .rob-fact__num {
+    position: relative;
+    font-size: var(--rob-num);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+
+  /* ширину числа задаёт невидимое итоговое значение, досчёт идёт поверх — текст рядом не ездит */
+  .rob-fact__fix {
+    visibility: hidden;
+  }
+
+  .rob-fact__live {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  /* перед «тыс. ₽» — неразрывный пробел: зазор и для копирования, и для диктора */
+  .rob-fact__tail {
+    font-size: 0.5em;
+    font-weight: 560;
+    letter-spacing: -0.02em;
+    color: var(--ink-2);
+  }
+
+  .rob-fact__text {
+    display: grid;
+    gap: 14px;
+  }
+
+  .rob-fact__cap {
+    font-size: 15.5px;
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* главная цифра — во всю ширину: число крупно слева, подпись справа */
+  .rob-fact--lead {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: clamp(24px, calc(var(--vw) * 3), 44px);
+  }
+
+  .rob-fact--lead .rob-fact__num {
+    font-size: clamp(4.5rem, calc(var(--vw) * 7.4), 7rem);
+    line-height: 0.82;
+    letter-spacing: -0.06em;
+  }
+
+  .rob-fact--lead .rob-fact__cap {
+    max-width: 18em;
+    padding-bottom: 2px;
+    font-size: clamp(1.125rem, calc(var(--vw) * 1.5), 1.375rem);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    font-weight: 500;
+    color: var(--ink-2);
+    text-wrap: balance;
+  }
+
+  /* мостик между нижними плитками — на высоте цифры (маски — .bridged в global.css) */
+  .rob-fact:nth-child(3)::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--rob-pad) + var(--rob-num) / 2 - (var(--gap) + 14px) / 2);
+    left: calc(var(--gap) * -1 - 1px);
+    width: calc(var(--gap) + 2px);
+    height: calc(var(--gap) + 14px);
+    background: var(--card);
+    -webkit-mask: var(--bridge-mask-row);
+    mask: var(--bridge-mask-row);
+  }
+
+  /* «каждый четырнадцатый дом»: тринадцать серых домиков и один оранжевый */
+  .rob-14 {
+    display: grid;
+    grid-template-columns: repeat(14, minmax(0, 15px));
+    gap: 4px;
+  }
+
+  .rob-14__house {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    fill: #c3ccd4;
+  }
+
+  .rob-14__house.is-on {
+    fill: #f08a24;
+  }
+
+  .rob-foot {
+    margin-top: 16px;
+    padding-inline: 4px;
+  }
+
+  /* ── Что получает региональный оператор ───────────────── */
+  .rob-gain {
+    margin-top: clamp(64px, calc(var(--vw) * 8), 112px);
+  }
+
+  .rob-gain__title {
+    font-size: clamp(1.5rem, calc(var(--vw) * 2.1), 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .rob-gain__list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 28px clamp(20px, calc(var(--vw) * 2.2), 32px);
+    margin-top: clamp(24px, calc(var(--vw) * 2.6), 36px);
+  }
+
+  .rob-gain__item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    padding-top: 22px;
+  }
+
+  /* линия над пунктом — полоска-псевдоэлемент: однопиксельную рамку при дробном масштабе экрана
+     Safari не рисует */
+  .rob-gain__item::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: var(--line-2);
+  }
+
+  .rob-gain__ico {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    flex: none;
+    border-radius: calc(14px * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .rob-gain__name {
+    margin-top: 18px;
+    font-size: 1.0625rem;
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .rob-gain__text {
+    margin-top: 8px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* ── Планшет ───────────────────────────────────────────── */
+  @media (max-width: 1199.98px) {
+    .rob-case {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rob-case__title {
+      max-width: 22em;
+    }
+
+    .rob-gain__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* ── Планшет и телефон: столбиком — метка, заголовок, текст, рисунок, источники, кнопка.
+     Обёртка текста «растворяется» (display: contents), чтобы рисунок встал после текста. */
+  @media (max-width: 900px) {
+    .rob-row {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .rob-text {
+      display: contents;
+    }
+
+    .rob-copy {
+      max-width: none;
+    }
+
+    .rob-visual {
+      order: 1;
+      margin-top: 28px;
+    }
+
+    .rob-src {
+      order: 2;
+      margin-top: 30px;
+    }
+
+    .rob-cta {
+      order: 3;
+      margin-top: 28px;
+    }
+
+    /* карточка плана стоит ниже плашки «демо-данные» */
+    .rob-visual :global(.gv) {
+      padding-block: 56px 36px;
+    }
+  }
+
+  /* ── Телефон ───────────────────────────────────────────── */
+  @media (max-width: 759.98px) {
+    .rob-facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rob-fact--lead {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .rob-fact--lead .rob-fact__num {
+      font-size: clamp(4.25rem, calc(var(--vw) * 21), 5.5rem);
+    }
+
+    /* мостики — к плитке сверху */
+    .rob-fact:nth-child(n + 2)::before {
+      content: '';
+      position: absolute;
+      top: calc(var(--gap) * -1 - 1px);
+      left: calc(var(--rob-pad) + 22px - (var(--gap) + 14px) / 2);
+      width: calc(var(--gap) + 14px);
+      height: calc(var(--gap) + 2px);
+      background: var(--card);
+      -webkit-mask: var(--bridge-mask-col);
+      mask: var(--bridge-mask-col);
+    }
+
+    .rob-gain__list {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    /* пункты строками: значок слева, заголовок и текст справа */
+    .rob-gain__item {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      column-gap: 16px;
+      padding-block: 18px;
+    }
+
+    .rob-gain__ico {
+      grid-row: 1 / span 2;
+      width: 44px;
+      height: 44px;
+      border-radius: calc(13px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .rob-gain__name {
+      margin-top: 0;
+    }
+
+    .rob-gain__text {
+      margin-top: 4px;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .rob-label .plabel--lg {
+      font-size: clamp(13.5px, calc(var(--vw) * 3.95), 18px);
+      white-space: nowrap;
+    }
+
+    .rob-visual :global(.gv) {
+      padding-block: 52px 16px;
+    }
+
+    .rob-cta .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Рисунок «проигрывается», только пока он на экране и вкладка открыта (в разметке стоит data-idle).
+  // При «уменьшить движение» анимации выключены в CSS — следить не нужно.
+  const views = document.querySelectorAll<HTMLElement>('[data-rob-viz]');
+  if (!reducedMotion()) {
+    if (!('IntersectionObserver' in window)) {
+      views.forEach((el) => delete el.dataset.idle);
+    } else {
+      const seen = new WeakMap<HTMLElement, boolean>();
+      const sync = (el: HTMLElement) => {
+        if (seen.get(el) && !document.hidden) delete el.dataset.idle;
+        else el.dataset.idle = '';
+      };
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const el = entry.target as HTMLElement;
+            seen.set(el, entry.isIntersecting);
+            sync(el);
+          }
+        },
+        { threshold: 0.35 },
+      );
+      views.forEach((el) => io.observe(el));
+      document.addEventListener('visibilitychange', () => views.forEach(sync));
+    }
+  }
+</script>
