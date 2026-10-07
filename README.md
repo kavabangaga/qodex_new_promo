@@ -1,35 +1,29 @@
-# QODEX — главная страница qodex.tech (предварительная версия)
+# QODEX — сайт qodex.tech (предварительная версия)
 
-Главная страница сайта QODEX: автоматизация учёта отходов для региональных операторов ТКО.
-Статический сайт на [Astro](https://astro.build).
+Сайт QODEX: автоматизация учёта отходов для региональных операторов ТКО.
+Статический сайт на [Astro](https://astro.build), код — в папке `version4/`.
 
-- `version2_wide/` — версия на всю ширину экрана: https://kavabangaga.github.io/qodex_new_promo/
-- `version 2/` — та же страница с контентом по центру: https://kavabangaga.github.io/qodex_new_promo/v2/
-- проба шрифта заголовков — широкая версия, заголовки шрифтом Lebowski: https://kavabangaga.github.io/qodex_new_promo/v3/
-  (собирается из `version2_wide/` с переменной `HEADING_FONT=lebowski`)
-- `version4/` — отдельный редизайн по мотивам calendly.com: https://kavabangaga.github.io/qodex_new_promo/v4/
-  (свой код; описание дизайн-системы — `version4/DESIGN.md`)
+- сайт: https://kavabangaga.github.io/qodex_new_promo/v4/
+- описание дизайн-системы и правила страниц — `version4/DESIGN.md`
 
-Код у обеих версий общий, отличается только файл `src/config/layout.ts`.
+Прежние версии (`version 2`, `version2_wide`, пробная /v3/) удалены 7 октября 2026 года — они остались в истории git.
+Корень сайта и адреса /v2/, /v3/ перенаправляют на /v4/.
 
 ## Запуск на своём компьютере
 
 ```bash
-cd version2_wide
+cd version4
 npm install
 npm run dev
 ```
 
 ## Шрифты и иконки
 
-Lebowski by Pragmatica (версия /v3/) — бесплатный шрифт студии Pragmatica,
-авторы Tamara Arkatova, Tanya Cherkiz, Olga Pankova: https://www.pragmatica.design/lebowski
+Шрифт — Geist (свободная лицензия OFL, пакет Fontsource).
 
-Шрифт v4 — Geist (свободная лицензия OFL, пакет Fontsource).
-
-Иконки v4 — Hugeicons Free, стиль Stroke Rounded (лицензия MIT): https://hugeicons.com
+Иконки — Hugeicons Free, стиль Stroke Rounded (лицензия MIT): https://hugeicons.com
 
 ## Публикация
 
-При каждой отправке в ветку `main` GitHub сам собирает обе версии и выкладывает их на GitHub Pages
+При каждой отправке в ветку `main` GitHub сам собирает сайт и выкладывает его на GitHub Pages
 (`.github/workflows/deploy.yml`). Предварительная версия закрыта от поисковиков.

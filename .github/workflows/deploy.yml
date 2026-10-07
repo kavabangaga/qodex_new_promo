@@ -1,7 +1,6 @@
 # Публикация на GitHub Pages при каждой отправке в ветку main.
-# Главная ссылка — версия на всю ширину (version2_wide), по адресу /v2/ — версия по центру (version 2),
-# по адресу /v3/ — та же широкая версия с пробным шрифтом заголовков Lebowski,
-# по адресу /v4/ — отдельный редизайн по мотивам calendly.com (version4).
+# Сайт — только version4, по адресу /v4/. Прежние версии удалены (2026-10-07): корень и /v2/, /v3/
+# перенаправляют на /v4/, чтобы старые ссылки не вели в пустоту; неизвестные адреса — страница 404 из v4.
 name: Публикация сайта
 
 on:
@@ -28,28 +27,42 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: |
-            version2_wide/package-lock.json
-            version 2/package-lock.json
-            version4/package-lock.json
+          cache-dependency-path: version4/package-lock.json
 
       - name: Установка зависимостей
-        run: |
-          npm ci --prefix version2_wide
-          npm ci --prefix "version 2"
-          npm ci --prefix version4
+        run: npm ci --prefix version4
 
-      - name: Сборка версий
+      - name: Сборка
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER,,}"
           REPO="${{ github.event.repository.name }}"
           export SITE_URL="https://${OWNER}.github.io"
           # репозиторий вида логин.github.io открывается с корня домена
           if [[ "$REPO" == *.github.io ]]; then BASE="/"; else BASE="/${REPO}/"; fi
-          (cd version2_wide && SITE_BASE="$BASE" npx astro build --outDir ../_site)
-          (cd "version 2" && SITE_BASE="${BASE}v2/" npx astro build --outDir ../_site/v2)
-          (cd version2_wide && SITE_BASE="${BASE}v3/" HEADING_FONT=lebowski npx astro build --outDir ../_site/v3)
           (cd version4 && SITE_BASE="${BASE}v4/" npx astro build --outDir ../_site/v4)
+
+          # корень и адреса прежних версий — переход на /v4/ (с сохранением #якоря)
+          TO="${BASE}v4/"
+          for dir in _site _site/v2 _site/v3; do
+            mkdir -p "$dir"
+            cat > "$dir/index.html" <<HTML
+          <!doctype html>
+          <html lang="ru">
+          <head>
+          <meta charset="utf-8">
+          <meta name="robots" content="noindex">
+          <meta http-equiv="refresh" content="0; url=${TO}">
+          <link rel="canonical" href="${TO}">
+          <title>QODEX</title>
+          <script>location.replace('${TO}' + location.hash);</script>
+          </head>
+          <body><a href="${TO}">QODEX</a></body>
+          </html>
+          HTML
+          done
+
+          # GitHub Pages показывает 404.html из корня сайта
+          cp _site/v4/404.html _site/404.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
