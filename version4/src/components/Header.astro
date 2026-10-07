@@ -10,6 +10,8 @@ interface Props {
   home?: boolean;
   /** Надпись на кнопке справа (ведёт к форме заявки #forma — она есть на каждой странице). */
   cta?: string;
+  /** Короткая надпись той же кнопки на телефонах (≤ 720 px), если длинная не помещается рядом с меню. */
+  ctaShort?: string;
   /** Продукт, на странице которого стоит шапка: его пункт в меню отмечен как текущий. */
   current?: ProductId;
   /**
@@ -19,7 +21,7 @@ interface Props {
   nav?: { href: string; label: string }[];
 }
 
-const { home = true, cta = 'Запустить пилот', current, nav } = Astro.props;
+const { home = true, cta = 'Запустить пилот', ctaShort, current, nav } = Astro.props;
 
 // Раздел главной: на самой главной — якорь, на внутренней странице — ссылка на главную с якорем
 const toHome = (hash: string) => (home ? hash : homeHref(hash));
@@ -99,7 +101,9 @@ const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined
         <span class="hdr__phone-text">{CONTACTS.phone}</span>
         <span class="visually-hidden">Позвонить {CONTACTS.phone}</span>
       </a>
-      <a href="#forma" class="btn btn--primary hdr__cta" data-interest={current} data-goal="pilot_click">{cta}</a>
+      <a href="#forma" class="btn btn--primary hdr__cta" data-interest={current} data-goal="pilot_click"
+        >{ctaShort ? <><span class="hdr__cta-full">{cta}</span><span class="hdr__cta-short">{ctaShort}</span></> : cta}</a
+      >
       <button class="hdr__burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Меню" data-burger>
         <Icon name="menu" size={22} class="i-open" />
         <Icon name="x" size={22} class="i-close" />
@@ -380,6 +384,10 @@ const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined
     min-height: 48px;
   }
 
+  .hdr__cta-short {
+    display: none;
+  }
+
   .hdr__burger {
     display: none;
     place-items: center;
@@ -504,6 +512,14 @@ const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined
     .hdr.is-open .hdr__bar {
       gap: 12px;
       padding-inline: 12px 6px;
+    }
+
+    .hdr__cta-full {
+      display: none;
+    }
+
+    .hdr__cta-short {
+      display: inline;
     }
 
     .hdr__cta {
