@@ -856,8 +856,9 @@ button {
   pointer-events: none;
 }
 
-/* Декор: пиксельный растр — белые квадратики, плотность плавно меняется (рисует скрипт GradientVisual.astro) */
-.gv__dither {
+/* Декор: переливающийся шёлк — шейдер WebGL на всю подложку (рисует скрипт GradientVisual.astro).
+   Пробный вариант на одной плашке (Кодекс ТКО, «Загрузка Excel»); без WebGL под ним виден обычный градиент. */
+.gv__silk {
   position: absolute;
   inset: 0;
   z-index: -1;
