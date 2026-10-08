@@ -771,50 +771,56 @@ button {
 
 /* Пресеты палитры Calendly */
 .gv--sky {
-  --gv-mesh: radial-gradient(60% 45% at 50% 0%, #6bb1ff 0%, transparent 70%),
+  --gv-spots: radial-gradient(60% 45% at 50% 0%, #6bb1ff 0%, transparent 70%),
     radial-gradient(70% 40% at 50% 48%, #d3f4f6 0%, transparent 72%),
-    radial-gradient(80% 45% at 50% 100%, #133f78 0%, transparent 75%),
-    linear-gradient(180deg, #5aa5f7 0%, #a9d6ff 34%, #c8f1f2 52%, #4a90e2 76%, #12386c 100%);
+    radial-gradient(80% 45% at 50% 100%, #133f78 0%, transparent 75%);
+  --gv-base: linear-gradient(180deg, #5aa5f7 0%, #a9d6ff 34%, #c8f1f2 52%, #4a90e2 76%, #12386c 100%);
+  --gv-mesh: var(--gv-spots), var(--gv-base);
   background: #6fb0f5;
 }
 
 .gv--aqua {
-  --gv-mesh: radial-gradient(55% 40% at 50% 0%, #c7dcfb 0%, transparent 70%),
+  --gv-spots: radial-gradient(55% 40% at 50% 0%, #c7dcfb 0%, transparent 70%),
     radial-gradient(45% 35% at 92% 58%, #f3eb8f 0%, transparent 70%),
-    radial-gradient(60% 40% at 15% 55%, #7fe3da 0%, transparent 70%),
-    linear-gradient(180deg, #cfe1fb 0%, #bfe8f3 30%, #8fe2d8 55%, #3f8f97 78%, #1c3f5a 100%);
+    radial-gradient(60% 40% at 15% 55%, #7fe3da 0%, transparent 70%);
+  --gv-base: linear-gradient(180deg, #cfe1fb 0%, #bfe8f3 30%, #8fe2d8 55%, #3f8f97 78%, #1c3f5a 100%);
+  --gv-mesh: var(--gv-spots), var(--gv-base);
   background: #9fdcdc;
 }
 
 .gv--dusk {
-  --gv-mesh: radial-gradient(70% 45% at 50% 0%, #4d7cc6 0%, transparent 72%),
+  --gv-spots: radial-gradient(70% 45% at 50% 0%, #4d7cc6 0%, transparent 72%),
     radial-gradient(45% 45% at 5% 62%, #f5b7d3 0%, transparent 70%),
-    radial-gradient(55% 50% at 100% 85%, #c3b0fb 0%, transparent 70%),
-    linear-gradient(180deg, #5582c8 0%, #9cb6ee 38%, #e8bde0 66%, #c8b6fb 100%);
+    radial-gradient(55% 50% at 100% 85%, #c3b0fb 0%, transparent 70%);
+  --gv-base: linear-gradient(180deg, #5582c8 0%, #9cb6ee 38%, #e8bde0 66%, #c8b6fb 100%);
+  --gv-mesh: var(--gv-spots), var(--gv-base);
   background: #9db3e8;
 }
 
 .gv--mint {
-  --gv-mesh: radial-gradient(70% 40% at 50% 0%, #4e8fdf 0%, transparent 72%),
+  --gv-spots: radial-gradient(70% 40% at 50% 0%, #4e8fdf 0%, transparent 72%),
     radial-gradient(70% 45% at 40% 58%, #a9e6ef 0%, transparent 72%),
-    radial-gradient(70% 40% at 50% 100%, #e9f6c6 0%, transparent 75%),
-    linear-gradient(180deg, #5b97e2 0%, #9fd8f0 40%, #cdeee3 70%, #eef6cf 100%);
+    radial-gradient(70% 40% at 50% 100%, #e9f6c6 0%, transparent 75%);
+  --gv-base: linear-gradient(180deg, #5b97e2 0%, #9fd8f0 40%, #cdeee3 70%, #eef6cf 100%);
+  --gv-mesh: var(--gv-spots), var(--gv-base);
   background: #a8d8ea;
 }
 
 .gv--lavender {
-  --gv-mesh: radial-gradient(60% 45% at 50% 0%, #b89ffa 0%, transparent 70%),
+  --gv-spots: radial-gradient(60% 45% at 50% 0%, #b89ffa 0%, transparent 70%),
     radial-gradient(50% 45% at 0% 70%, #eb8be7 0%, transparent 70%),
-    radial-gradient(60% 45% at 100% 90%, #6bb1ff 0%, transparent 72%),
-    linear-gradient(180deg, #c3adfb 0%, #dccffd 45%, #eae3fa 70%, #d7c5ff 100%);
+    radial-gradient(60% 45% at 100% 90%, #6bb1ff 0%, transparent 72%);
+  --gv-base: linear-gradient(180deg, #c3adfb 0%, #dccffd 45%, #eae3fa 70%, #d7c5ff 100%);
+  --gv-mesh: var(--gv-spots), var(--gv-base);
   background: #cdbafc;
 }
 
 .gv--teal {
-  --gv-mesh: radial-gradient(60% 45% at 50% 0%, #5ddfd7 0%, transparent 70%),
+  --gv-spots: radial-gradient(60% 45% at 50% 0%, #5ddfd7 0%, transparent 70%),
     radial-gradient(50% 45% at 0% 80%, #d4c2ff 0%, transparent 70%),
-    radial-gradient(60% 45% at 100% 85%, #6bb1ff 0%, transparent 72%),
-    linear-gradient(180deg, #7fe5de 0%, #baf0ec 45%, #dff6f3 70%, #cfe2ff 100%);
+    radial-gradient(60% 45% at 100% 85%, #6bb1ff 0%, transparent 72%);
+  --gv-base: linear-gradient(180deg, #7fe5de 0%, #baf0ec 45%, #dff6f3 70%, #cfe2ff 100%);
+  --gv-mesh: var(--gv-spots), var(--gv-base);
   background: #9be8e1;
 }
 
@@ -865,6 +871,61 @@ button {
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+
+/* Декор: плавающий градиент — пятна подложки (--gv-spots) превращены в отдельные мягкие круги-эллипсы,
+   которые медленно ходят по орбитам вокруг своих обычных мест; под ними остаётся только основа (--gv-base).
+   В покое плашка выглядит как обычно. Анимируется только transform — работа видеокарты, без перерисовки.
+   Пятна, их места и размеры — в GradientVisual.astro (BLOBS), радиус орбиты и скорость — пропсом blobs. */
+.gv--blobs::before {
+  background: var(--gv-base);
+}
+
+.gv__blobs {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* Safari на iPhone не всегда обрезает анимированные слои по скруглению родителя — обрезаем сами (как .gv::before) */
+  clip-path: inset(0 round calc(var(--gv-r) * var(--rclip)));
+}
+
+.gv__blobs i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
+  translate: -50% -50%;
+  border-radius: 50%;
+  /* мягкий край без filter: blur — спад цвета по косинусу, без заметного контура на краю пятна */
+  background: radial-gradient(
+    closest-side,
+    var(--c) 0%,
+    color-mix(in srgb, var(--c) 95%, transparent) 15%,
+    color-mix(in srgb, var(--c) 79%, transparent) 30%,
+    color-mix(in srgb, var(--c) 58%, transparent) 45%,
+    color-mix(in srgb, var(--c) 35%, transparent) 60%,
+    color-mix(in srgb, var(--c) 15%, transparent) 75%,
+    color-mix(in srgb, var(--c) 4%, transparent) 88%,
+    transparent 100%
+  );
+  animation: gv-orbit calc(var(--t) / var(--gv-speed, 1)) linear var(--dl) infinite var(--dir, normal);
+}
+
+.gv__blobs.is-paused i {
+  animation-play-state: paused;
+}
+
+/* круг по орбите; второй поворот возвращает эллипсу его наклон */
+@keyframes gv-orbit {
+  from {
+    transform: rotate(0deg) translateX(var(--gv-orbit, 12%)) rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg) translateX(var(--gv-orbit, 12%)) rotate(-360deg);
+  }
 }
 
 /* Декор полос выключен по всему сайту (05.10.2026, заказчик смотрит градиенты без них): «звуковая волна»
@@ -1161,6 +1222,7 @@ html.js [data-reveal].is-in {
     transition-delay: 0s !important;
   }
 
+  .gv__blobs i,
   .float {
     animation: none;
   }

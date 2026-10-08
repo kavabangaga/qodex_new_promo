@@ -1,6 +1,7 @@
 ---
-// Служебная страница: варианты шёлка поверх градиента подложки — заказчику для сравнения (закрыта от поисковиков).
-// На плашке «Импорт из Excel» (Кодекс ТКО) стоят «два цвета палитры». Удалить после выбора.
+// Служебная страница: варианты фона плашек — заказчику для сравнения (закрыта от поисковиков). Удалить после выбора.
+// Шёлк поверх градиента — на плашке «Импорт из Excel» (Кодекс ТКО) стоят «два цвета палитры».
+// Плавающий градиент — на главной, в блоке «Почему 2026» (пресет dusk), стоит обычный вариант.
 import Base from '../../layouts/Base.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
 
@@ -10,11 +11,34 @@ const VARIANTS = [
   { name: 'Два цвета палитры — плотно', note: 'шёлк заметнее, градиент тише', silk: { mode: 'duo', color: '#79b0ea', color2: '#eef8dc', strength: 1.3 } },
   { name: 'Белый шёлк', note: 'молочная ткань поверх градиента подложки', silk: { mode: 'white', color: '#bcd9f2' } },
 ] as const;
+
+const BLOB_VARIANTS = [
+  { preset: 'dusk', name: 'Плавающий градиент — спокойнее', note: 'меньше круг, медленнее', blobs: { orbit: 9, speed: 0.7 } },
+  { preset: 'dusk', name: 'Плавающий градиент — стоит на сайте', note: 'пятна подложки медленно ходят по кругу («Почему 2026»)', blobs: {} },
+  { preset: 'dusk', name: 'Плавающий градиент — живее', note: 'больше круг, быстрее', blobs: { orbit: 20, speed: 1.6 } },
+  { preset: 'mint', name: 'Плавающий градиент на другой палитре', note: 'голубая подложка, как у Кодекса ТКО', blobs: {} },
+] as const;
 ---
 
-<Base title="Шёлк — варианты фона | QODEX" noindex>
+<Base title="Фон плашек — варианты | QODEX" noindex>
   <main class="container sh">
-    <h1 class="t-h2">Шёлк на подложке — варианты</h1>
+    <h1 class="t-h2">Плавающий градиент</h1>
+    <div class="sh__grid">
+      {
+        BLOB_VARIANTS.map((v) => (
+          <figure class="sh__item">
+            <GradientVisual preset={v.preset} deco="blobs" blobs={v.blobs}>
+              <div class="ui sh__card">
+                <b>{v.name}</b>
+                <span>{v.note}</span>
+              </div>
+            </GradientVisual>
+          </figure>
+        ))
+      }
+    </div>
+
+    <h2 class="t-h2 sh__h">Шёлк на подложке</h2>
     <div class="sh__grid">
       {
         VARIANTS.map((v) => (
@@ -35,6 +59,10 @@ const VARIANTS = [
 <style>
   .sh {
     padding-block: 48px 80px;
+  }
+
+  .sh__h {
+    margin-top: 64px;
   }
 
   .sh__grid {
