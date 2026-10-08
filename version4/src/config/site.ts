@@ -69,6 +69,8 @@ export type ProductId = 'robot' | 'tracker' | 'tonn' | 'kodeks';
 export interface Product {
   id: ProductId;
   name: string;
+  /** Короткое название для меню «Продукты» (без «QODEX»), если отличается от name. */
+  menuName?: string;
   /** Текущий лендинг (этап 1). */
   url: string;
   /** Адрес страницы продукта на этом сайте (этап 2). */
@@ -94,6 +96,7 @@ export const PRODUCTS: Record<ProductId, Product> = {
   tracker: {
     id: 'tracker',
     name: 'QODEX Tracker',
+    menuName: 'Tracker',
     url: 'https://tracker.qodex.tech',
     stage2Path: '/tracker',
     onSite: true,
@@ -103,6 +106,7 @@ export const PRODUCTS: Record<ProductId, Product> = {
   tonn: {
     id: 'tonn',
     name: 'QODEX TONN',
+    menuName: 'TONN',
     url: 'https://tonn.qodex.tech',
     stage2Path: '/tonn',
     onSite: true,

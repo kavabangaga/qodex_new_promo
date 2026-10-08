@@ -68,7 +68,7 @@ const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined
                         <Icon name={PRODUCT_ICON[id]} size={17} strokeWidth={2} />
                       </span>
                       <span class="dd__text">
-                        <span class="dd__name">{PRODUCTS[id].name}</span>
+                        <span class="dd__name">{PRODUCTS[id].menuName ?? PRODUCTS[id].name}</span>
                         <span class="dd__host">{productHost(id)}</span>
                       </span>
                       <Icon name={isOnSite(id) ? 'arrow-right' : 'arrow-up-right'} size={16} class="dd__arrow" />
@@ -126,7 +126,7 @@ const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined
               <span class="dd__ico" aria-hidden="true">
                 <Icon name={PRODUCT_ICON[id]} size={16} strokeWidth={2} />
               </span>
-              {PRODUCTS[id].name}
+              {PRODUCTS[id].menuName ?? PRODUCTS[id].name}
               <Icon name={isOnSite(id) ? 'arrow-right' : 'arrow-up-right'} size={16} class="mnav__arrow" />
             </a>
           </li>
@@ -530,8 +530,21 @@ const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined
       corner-shape: var(--corner);
     }
 
-    .mnav__products {
-      grid-template-columns: 1fr;
+    /* продукты — сеткой 2 × 2: значок сверху, название под ним, стрелка в углу */
+    .mnav__product {
+      position: relative;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      min-height: 92px;
+      padding: 12px;
+    }
+
+    .mnav__product :global(.mnav__arrow) {
+      position: absolute;
+      top: 14px;
+      right: 12px;
+      margin: 0;
     }
   }
 
