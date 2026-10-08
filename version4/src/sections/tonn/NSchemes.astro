@@ -1,7 +1,7 @@
 ---
 // Раздел страницы «QODEX TONN» — «Как воруют на вашей весовой» [#shemy]. Фон страницы.
 // 1. Четыре схемы хищений: бежевые карточки 2×2 с мостиками (на телефоне — столбиком). Над текстом каждой —
-//    маленький рисунок весовой: самосвал на платформе весов и что делают с цифрами. Цифры в рисунках
+//    маленький рисунок весовой: мусоровоз на платформе весов и что делают с цифрами. Цифры в рисунках
 //    сходятся с примерами из текста (20 т и 18 т, 15 т при среднем 20 т, «ошибка» на 50 кг).
 //    Рисунок «проигрывается» один раз, когда карточка на экране.
 // 2. Полоса «Посчитаем ваши потенциальные потери»: четыре исходные цифры, итог и ссылка на калькулятор.
@@ -9,6 +9,7 @@
 // Тексты — с лендинга tonn.qodex.tech (блоки B10 и B15) с правками заказчика.
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
+import { TRUCK, TRUCK_WHEELS, TRUCK_WHEEL_Y, TRUCK_WHEEL } from '../../components/art/truck';
 
 // неразрывный пробел (U+00A0)
 const NB = String.fromCharCode(160);
@@ -73,53 +74,66 @@ const INPUTS = [
   { value: `1${NB}500${NB}₽`, label: 'цена за тонну' },
 ];
 
-// ── Рисунки. Сцена 360×210: дорога (верх на y = 176), платформа весов вровень с дорогой,
-//    будка весовщика справа, самосвал едет вправо. Дорога рисуется далеко за края сцены —
-//    до краёв рисунка любой ширины.
-//    Палитра — как у рисунков весовой в «Отраслях» (NFit) и «Как это работает» (NHow): плоские серо-голубые
-//    заливки без чёрных контуров, у белых деталей — тонкая рамка #cdd5de. Цвет — только у плашек и рамки оси.
+// ── Рисунки. Сцена 360×210 — та же весовая, что в «Как это работает» (NHow), в масштабе 0,6: небо, вдали
+//    тело полигона, ангар и холм, забор, дорога с разметкой, бордюр, тротуар. Настил весов вровень с дорогой:
+//    его верх и низ колёс — на y = 180. Будка весовщика справа. Мусоровоз — общий рисунок
+//    (components/art/truck.ts), кабиной вправо, на весах — x 40…258. Фон рисуется далеко за края сцены —
+//    до краёв рисунка любой ширины (на телефоне видно x 26…334, на широкой карточке — x −70…430).
+//    Палитра — как в NHow: плоские серо-голубые заливки без чёрных контуров. Цвет — только у плашек и рамки оси.
 
-/** Дорога и платформа весов от x0 до x1 с тремя датчиками под ней. */
-function ground(x0: number, x1: number): string {
-  const cells = [x0 + 24, (x0 + x1) / 2, x1 - 24]
-    .map((cx) => `<rect x="${cx - 8}" y="189" width="16" height="6" rx="1.5" fill="#6f7c88"/>`)
-    .join('');
+// Столбы забора — через 27,6 (46 · 0,6), как в NHow
+const POSTS = Array.from({ length: 44 }, (_, i) => `M${(i * 27.6 - 405.6).toFixed(1)} 99.6v30`).join('');
+
+const BACKDROP =
+  // вдали: тело полигона с уступами справа, холм и ангар слева, деревья
+  `<path d="M190 100.8C223.6 74.4 269.2 61.2 316 58.8L402.4 55.2C430 56.4 449.2 64.8 476.8 78V100.8Z" fill="#d6dfe6"/>` +
+  `<path d="M240.4 84C277.6 73.2 322 69.6 384.4 68.4M281.2 72C311.2 66 347.2 63.6 395.2 62.4" stroke="#cbd5dd" stroke-width="1.4" fill="none"/>` +
+  `<path d="M-150 100.8C-117.6 82.8-70.8 75.6-28.8 79.2C1.2 81.6 21.6 91.2 39.6 100.8Z" fill="#d9e1e7"/>` +
+  `<rect x="-78" y="72" width="88.8" height="28.8" fill="#d2dce3"/><path d="M-81.6 73.2Q-33.6 51.6 14.4 73.2Z" fill="#c8d3db"/>` +
+  `<rect x="-62.4" y="81.6" width="13.2" height="19.2" rx="1.2" fill="#c9d4dc"/><rect x="-39.6" y="82.8" width="38.4" height="7.2" rx="1.2" fill="#c9d4dc"/>` +
+  `<circle cx="30" cy="89.9" r="12" fill="#d2dce3"/><circle cx="342" cy="88.6" r="10.8" fill="#d2dce3"/>` +
+  // забор, дорога с разметкой, бордюр, тротуар
+  `<rect x="-420" y="98.4" width="1200" height="31.2" fill="#ccd6dd"/><path d="M-420 105H780${POSTS}" stroke="#bac5cd" stroke-width="1.4"/>` +
+  `<rect x="-420" y="129.6" width="1200" height="72" fill="#c3ccd4"/>` +
+  `<path d="M-420 156H780" stroke="#fff" stroke-opacity=".45" stroke-width="2" stroke-dasharray="17 14"/>` +
+  `<rect x="-420" y="200.4" width="1200" height="4.8" fill="#aab5be"/><rect x="-420" y="205.2" width="1200" height="140" fill="#d1d9df"/>`;
+
+/** Настил весов от x0 до x1 (как в NHow): стальная плита со светлой кромкой, рёбра на боковине, фундамент */
+function deck(x0: number, x1: number): string {
+  const ribs: string[] = [];
+  for (let x = x0 + 26.4; x < x1 - 12; x += 27.6) ribs.push(`M${x.toFixed(1)} 184.2v4.8`);
   return (
-    `<rect x="-420" y="176" width="1200" height="140" fill="#dce2e8"/>` +
-    `<path d="M-420 176H780" stroke="#ccd4dc" stroke-width="2"/>` +
-    `<rect x="${x0}" y="176" width="${x1 - x0}" height="11" rx="2.5" fill="#aab6c1"/>` +
-    `<rect x="${x0}" y="176" width="${x1 - x0}" height="3" rx="1.5" fill="#c2ccd5"/>` +
-    cells
+    `<rect x="${x0 - 5}" y="189" width="${x1 - x0 + 10}" height="4.2" rx="1" fill="#a3aeb7"/>` +
+    `<rect x="${x0}" y="180" width="${x1 - x0}" height="9.6" rx="1.2" fill="#8d99a4"/>` +
+    `<rect x="${x0}" y="180" width="${x1 - x0}" height="2.4" rx="1" fill="#b8c2ca"/>` +
+    `<path d="${ribs.join('')}" stroke="#7d8a95" stroke-width="1.2"/>`
   );
 }
 
+// Будка весовщика: стены и крыша в цветах кабины и заднего борта мусоровоза, окно — как стекло кабины
 const BOOTH =
-  `<rect x="302" y="120" width="40" height="56" rx="5" fill="#fff" stroke="#cdd5de" stroke-width="2"/>` +
-  `<rect x="296" y="111" width="52" height="11" rx="4" fill="#8f9ca7"/>` +
-  `<rect x="310" y="130" width="24" height="16" rx="3" fill="#c6d4e1"/>`;
+  `<rect x="280" y="121" width="40" height="59" rx="2.5" fill="#f4f6f9" stroke="#cdd5de" stroke-width="1.5"/>` +
+  `<rect x="275" y="113" width="50" height="9" rx="3" fill="#8f9ca7"/>` +
+  `<rect x="287" y="131" width="26" height="17" rx="3" fill="#9fb3c6"/>` +
+  `<path d="M291 148 299.5 131h5.5L296.5 148Z" fill="#fff" fill-opacity=".3"/>` +
+  `<rect x="285" y="150" width="30" height="2.4" rx="1.2" fill="#b9c4cc"/>` +
+  `<rect x="277" y="177.6" width="46" height="3.6" rx="1" fill="#aab5be"/>`;
 
-// Самосвал с грузом: кузов 52…200, кабина 206…256, колёса стоят на y = 176
-const TRUCK =
-  `<rect x="52" y="145" width="202" height="7" rx="3" fill="#4b5661"/>` +
-  `<path d="M58 99C76 84 98 81 118 87C140 77 168 80 194 99Z" fill="#e6dccb"/>` +
-  `<path d="M52 98H200L196 145H58Z" fill="#d8e1e9"/>` +
-  `<path d="M50 99H202" stroke="#c3ced8" stroke-width="4" stroke-linecap="round"/>` +
-  `<path d="M96 106v33M136 106v33M176 106v33" stroke="#c9d4de" stroke-width="2.5" stroke-linecap="round"/>` +
-  `<path d="M206 145V110a8 8 0 0 1 8-8h22a8 8 0 0 1 7 4l12 21a8 8 0 0 1 1 4V145Z" fill="#fff" stroke="#cdd5de" stroke-width="2" stroke-linejoin="round"/>` +
-  `<path d="M214 110h20l10 17h-30Z" fill="#c6d4e1"/>` +
-  `<rect x="249" y="133" width="6" height="6" rx="2" fill="#f6dc8a"/>` +
-  [70, 98, 230].map((cx) => `<circle cx="${cx}" cy="163" r="13" fill="#39434d"/><circle cx="${cx}" cy="163" r="5" fill="#a8b4bf"/>`).join('');
+// Мусоровоз в масштабе 0,6 (364×172 → 218×103): перед бампера — x 258, крыша кузова — y 76,8, низ колёс — y 180.
+// Колёса (r 13,2): задние — центры x 96,4 и 127,6 (вместе x 83…141), переднее — x 223,6
+const TRUCK_AT = 'translate(40 76.8) scale(0.6)';
 
-// Рамка вокруг задней оси, которая стоит мимо платформы (пунктир — в SVG: так его одинаково рисуют все браузеры)
+// Рамка вокруг задних колёс, которые стоят мимо платформы (пунктир — в SVG: так его одинаково рисуют все браузеры).
+// Лежит поверх машины — видна вся рамка
 const ZONE =
-  `<rect x="48" y="140" width="72" height="46" rx="14" fill="#d6293b" fill-opacity=".07" stroke="#d6293b" stroke-width="2" stroke-dasharray="5 5"/>`;
+  `<rect x="75" y="145" width="74" height="43" rx="12" fill="#d6293b" fill-opacity=".07" stroke="#d6293b" stroke-width="2" stroke-dasharray="5 5"/>`;
 
-// Платформа во всю длину машины; у «Манипуляций» она начинается за задней осью
+// Платформа во всю длину машины; у «Манипуляций» она начинается за задними колёсами
 const SCENE: Record<Art, string> = {
-  collusion: ground(24, 284) + BOOTH,
-  class: ground(24, 284) + BOOTH,
-  axle: ground(124, 284) + BOOTH,
-  manual: ground(24, 284) + BOOTH,
+  collusion: BACKDROP + deck(28, 270) + BOOTH,
+  class: BACKDROP + deck(28, 270) + BOOTH,
+  axle: BACKDROP + deck(158, 270) + BOOTH,
+  manual: BACKDROP + deck(28, 270) + BOOTH,
 };
 ---
 
@@ -141,9 +155,19 @@ const SCENE: Record<Art, string> = {
               <span class="nsch-stage">
                 <svg class="nsch-scene" viewBox="0 0 360 210" set:html={SCENE[s.art]} />
 
-                {s.art === 'axle' && <svg class="nsch-zone" viewBox="0 0 360 210" set:html={ZONE} />}
+                {/* мусоровоз на весах; колёса крутятся, пока он заезжает */}
+                <svg class="nsch-truck" viewBox="0 0 360 210">
+                  <g transform={TRUCK_AT}>
+                    <g set:html={TRUCK} />
+                    {TRUCK_WHEELS.map((cx) => (
+                      <g transform={`translate(${cx} ${TRUCK_WHEEL_Y})`}>
+                        <g class="nsch-wheel" set:html={TRUCK_WHEEL} />
+                      </g>
+                    ))}
+                  </g>
+                </svg>
 
-                <svg class="nsch-truck" viewBox="0 0 360 210" set:html={TRUCK} />
+                {s.art === 'axle' && <svg class="nsch-zone" viewBox="0 0 360 210" set:html={ZONE} />}
 
                 {/* 1. Весы показывают 20 т, в акт записано 18 т */}
                 {s.art === 'collusion' && (
@@ -432,7 +456,8 @@ const SCENE: Record<Art, string> = {
     isolation: isolate;
     border-radius: calc(calc(var(--nsch-r) - var(--nsch-in)) * var(--rk));
     corner-shape: var(--corner);
-    background: #edf3f5;
+    /* небо сцены — как в «Как это работает» */
+    background: #e2eaf0;
     color: var(--ink);
     text-align: left;
     -webkit-user-select: none;
@@ -459,6 +484,11 @@ const SCENE: Record<Art, string> = {
     max-width: none;
     height: 100%;
     overflow: visible;
+  }
+
+  .nsch-wheel {
+    transform-box: fill-box;
+    transform-origin: center;
   }
 
   /* плашки с цифрами над машиной */
@@ -519,10 +549,11 @@ const SCENE: Record<Art, string> = {
     color: #b81f30;
   }
 
-  /* 2. Ярлыки класса на кузове (рамка — в палитре рисунка, у нового ярлыка — красная) */
+  /* 2. Ярлыки класса на борту кузова (кузов — x 75…192, y 77…152; рамка — в палитре рисунка,
+        у нового ярлыка — красная) */
   .nsch-sticker {
     position: absolute;
-    top: 113px;
+    top: 86px;
     padding: 5px 10px;
     border: 1.5px solid #9aa6b1;
     border-radius: 7px;
@@ -534,12 +565,14 @@ const SCENE: Record<Art, string> = {
   }
 
   .nsch-sticker--old {
-    left: 56px;
+    left: 80px;
   }
 
+  /* новый ярлык наклеен ниже и правее, поверх угла прежнего; до кабины — тот же зазор (5 px),
+     что у прежнего до заднего края кузова */
   .nsch-sticker--new {
-    left: 126px;
-    top: 96px;
+    left: 110px;
+    top: 110px;
     border-color: var(--danger);
     background: #fff1f2;
     color: #b81f30;
@@ -562,9 +595,10 @@ const SCENE: Record<Art, string> = {
   /* 3. Задняя ось мимо платформы */
 
 
+  /* над машиной, с запасом до правого края рисунка на телефоне (видно x 26…334) */
   .nsch-chip--axle {
     position: absolute;
-    left: 132px;
+    left: 114px;
     top: 14px;
     grid-template-columns: auto auto;
     column-gap: 10px;
@@ -644,10 +678,15 @@ const SCENE: Record<Art, string> = {
     transform: scaleX(0);
   }
 
-  /* 1 и 3: самосвал заезжает на весы */
+  /* 1 и 3: мусоровоз заезжает на весы, колёса катятся (тот же ход и та же кривая) */
   .nsch-art--collusion.is-live .nsch-truck,
   .nsch-art--axle.is-live .nsch-truck {
     animation: nsch-drive 1.3s var(--ease-out) 0.1s both;
+  }
+
+  .nsch-art--collusion.is-live .nsch-wheel,
+  .nsch-art--axle.is-live .nsch-wheel {
+    animation: nsch-roll 1.3s var(--ease-out) 0.1s both;
   }
 
   .nsch-art--collusion.is-live .nsch-chip--a {
@@ -720,6 +759,16 @@ const SCENE: Record<Art, string> = {
     }
     35% {
       opacity: 1;
+    }
+  }
+
+  /* 120 / (2π · 22 · 0,6) ≈ 1,45 оборота — колёса катятся, а не скользят */
+  @keyframes nsch-roll {
+    from {
+      transform: rotate(-521deg);
+    }
+    to {
+      transform: none;
     }
   }
 

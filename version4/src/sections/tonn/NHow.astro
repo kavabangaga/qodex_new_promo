@@ -11,6 +11,7 @@
 import SectionIntro from '../../components/SectionIntro.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
+import { TRUCK, TRUCK_WHEELS, TRUCK_FRONT, TRUCK_BODY_TOP } from '../../components/art/truck';
 
 const NB = String.fromCharCode(160); // неразрывный пробел
 
@@ -93,50 +94,17 @@ const MAST =
   `<g transform="rotate(34 488 328)"><rect x="476" y="321" width="27" height="14" rx="4" fill="#f4f6f9" stroke="#8d9aa5" stroke-width="1.5"/>` +
   `<path d="M478 319.5h22" stroke="#8d9aa5" stroke-width="3" stroke-linecap="round"/><circle cx="498" cy="328" r="3.4" fill="#006bff"/></g>`;
 
-// Мусоровоз сбоку, кабиной вправо (тот же рисунок, что на странице QODEX Tracker). Свои координаты:
-// задний борт — x 0, крыша кузова — y 0, низ колёс — y 172. У шлагбаума: translate(−8 360)
-const TRUCK =
-  `<path d="M60 2H38q-8 0-11 7L4 90q-3 8 0 15l3 10q2 5 8 5h45Z" fill="#8f9ca7"/>` +
-  `<path d="M33 16 12 88" stroke="#7f8c97" stroke-width="2"/>` +
-  `<path d="M45 24 39 80" stroke="#6f7c88" stroke-width="4" stroke-linecap="round"/>` +
-  `<path d="M6 98h24v22H14q-4 0-5-4l-4-11q-1-4 1-7Z" fill="#76838e"/>` +
-  `<rect x="11" y="72" width="5" height="11" rx="1.5" fill="#e5484d"/>` +
-  `<rect x="58" width="196" height="126" rx="12" fill="#eef2f5" stroke="#cdd5de" stroke-width="2"/>` +
-  `<path d="M104 10v106M150 10v106M196 10v106" stroke="#dce3e9" stroke-width="3"/>` +
-  `<rect x="59" y="78" width="194" height="13" fill="#a8ddd7"/>` +
-  `<path d="M254 128V42q0-16 16-16h48q9 0 13 7l21 37q4 7 4 15v43Z" fill="#f4f6f9" stroke="#cdd5de" stroke-width="2"/>` +
-  `<path d="M268 38h46q5 0 8 5l17 28q2 4-3 4h-68q-3 0-3-3V41q0-3 3-3Z" fill="#9fb3c6"/>` +
-  `<path d="M282 72 302 40h12l-20 32Z" fill="#fff" fill-opacity=".3"/>` +
-  `<path d="M300 84v38" stroke="#dbe2e8" stroke-width="2"/><rect x="306" y="90" width="12" height="3.5" rx="1.75" fill="#b9c4cc"/>` +
-  `<path d="M347 58h11" stroke="#6f7c88" stroke-width="3"/><rect x="356" y="46" width="5" height="24" rx="2" fill="#6f7c88"/>` +
-  `<rect x="350" y="98" width="8" height="12" rx="2" fill="#fff3c4"/>` +
-  `<rect x="6" y="122" width="350" height="14" rx="4" fill="#45505b"/>` +
-  `<rect x="186" y="128" width="46" height="18" rx="5" fill="#6f7c88"/>` +
-  `<path d="M67 150a27 27 0 0 1 54 0ZM119 150a27 27 0 0 1 54 0ZM279 150a27 27 0 0 1 54 0Z" fill="#45505b"/>` +
-  `<rect x="250" y="132" width="24" height="6" rx="2" fill="#6f7c88"/>` +
-  `<rect x="336" y="118" width="28" height="18" rx="4" fill="#57636e"/>`;
-
-const WHEELS = [94, 146, 306];
+// Мусоровоз — общий рисунок (components/art/truck.ts). У шлагбаума: translate(−8 360)
+const WHEELS = TRUCK_WHEELS;
 
 // Красно-белая стрела шлагбаума: ось — точка (375, 495), длина 140
 const ARM_STRIPES = Array.from({ length: 6 }, (_, i) => `<rect x="${387 + i * 22}" y="491" width="11" height="8" fill="#e5484d"/>`).join('');
 
-// Кузов сверху — «фото кузова» с обзорной камеры (как в макете весовой на главной)
-const BODY =
-  `<rect width="120" height="80" fill="#9aa6b0"/><rect x="14" y="10" width="92" height="60" rx="6" fill="#55708a"/>` +
-  `<rect x="20" y="16" width="80" height="48" rx="4" fill="#6c7f74"/>` +
-  `<ellipse cx="40" cy="34" rx="16" ry="10" fill="#8a8f6e"/><ellipse cx="70" cy="44" rx="18" ry="11" fill="#a29373"/>` +
-  `<ellipse cx="62" cy="28" rx="11" ry="7" fill="#7f8c96"/><ellipse cx="86" cy="30" rx="9" ry="7" fill="#c2b28f"/>` +
-  `<ellipse cx="34" cy="52" rx="10" ry="6" fill="#5f6b5a"/>`;
+// Кузов сверху — «фото кузова» с обзорной камеры (общий рисунок, components/art/truck.ts)
+const BODY = TRUCK_BODY_TOP;
 
-// Морда машины крупно — кадр камеры номеров (номер — отдельной табличкой поверх)
-const FRONT =
-  `<rect width="240" height="96" fill="#dfe6ec"/>` +
-  `<rect x="22" y="-10" width="196" height="56" rx="8" fill="#f4f6f9" stroke="#cdd5de" stroke-width="2"/>` +
-  `<rect x="72" y="2" width="96" height="30" rx="5" fill="#57636e"/><path d="M80 10h80M80 17h80M80 24h80" stroke="#76838e" stroke-width="2"/>` +
-  `<rect x="32" y="12" width="28" height="15" rx="5" fill="#fff3c4"/><rect x="180" y="12" width="28" height="15" rx="5" fill="#fff3c4"/>` +
-  `<rect x="10" y="48" width="220" height="30" rx="7" fill="#45505b"/>` +
-  `<rect y="84" width="240" height="12" fill="#c3ccd4"/>`;
+// Морда машины крупно — кадр камеры номеров (общий рисунок, components/art/truck.ts)
+const FRONT = TRUCK_FRONT;
 
 // Брутто растёт на табло весов: промежуточные числа, затем итог
 const RISE = ['6 240', '12 970', '16 560'];

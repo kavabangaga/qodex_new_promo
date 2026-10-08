@@ -1,12 +1,13 @@
 ---
 // Раздел 2 страницы «QODEX TONN» [#komu-podhodit] — «Для каких предприятий подходит QODEX TONN» (лендинг, блок B06).
 // Бенто из бежевых плиток на фоне страницы: крупная плитка «Полигоны ТКО и МСК» (два столбца и два ряда) и пять
-// отраслей. В крупной плитке — текст лендинга и рисунок весовой (демо-данные): машина заезжает на платформу,
+// отраслей. В крупной плитке — текст лендинга и рисунок весовой (демо-данные): мусоровоз заезжает на весы,
 // камера читает номер, акт с весом уходит во ФГИС УТКО. Что видят регоператор и объект, рассказывает раздел
 // «Честный вес выгоден обеим сторонам» (NBoth) — здесь эти фразы не повторяем. Рисунок «проигрывается»
 // один раз, когда он на экране; без анимации виден итог. Стоковые фото лендинга не используем.
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
+import { TRUCK, TRUCK_WHEELS, TRUCK_WHEEL_Y, TRUCK_WHEEL } from '../../components/art/truck';
 
 const NB = ' ';
 
@@ -48,40 +49,56 @@ const FITS: { icon: IconName; title: string; text: string }[] = [
 // «ЗПП-28» не рвётся по дефису (типограф склеивает только буквы с буквами)
 const nobr = (s: string) => s.replace('ЗПП-28', '<span class="nobr">ЗПП-28</span>');
 
-// Рисунок весовой (вид сбоку), сцена 340×210, земля — y = 180. Один стиль с машинами в «Схемах хищений» (NSchemes)
-// и весовой на странице «Кодекса ТКО» (KFit): белые плашки с графитовым контуром, платформа вровень с землёй
-// на трёх датчиках. Фон, земля и холм полигона уходят далеко за края сцены — до краёв рисунка любой ширины.
-const INK = '#1d1d1f';
+// ── Рисунок весовой (вид сбоку) — как сцена «Как это работает» (NHow): плоская серо-голубая гамма, общий
+//    мусоровоз (components/art/truck.ts), стальной настил весов, мачта с камерами. Сцена 530×290 в единицах
+//    мусоровоза: настил — x 24…480, колёса стоят на y 230; машина на весах — x 68…432 (сдвиг 68 58), мачта —
+//    x 516. Небо, полигон, забор и дорога уходят далеко за края сцены — до краёв рисунка любой ширины ──
+const POSTS = Array.from({ length: 44 }, (_, i) => `M${-694 + i * 46} 96v50`).join('');
+const RIBS = Array.from({ length: 9 }, (_, i) => `M${68 + i * 46} 237v8`).join('');
 
-const scene =
-  // холм полигона и корпус сортировки вдали — бледные, без контура
-  `<path d="M120 180C190 146 250 122 330 116C420 110 560 138 760 180Z" fill="#dfe8e3"/>` +
-  `<rect x="-440" y="112" width="470" height="68" fill="#e2e9ee"/><rect x="-440" y="104" width="478" height="10" rx="3" fill="#d6dee5"/>` +
-  `<path d="M-200 124h28v20h-28zM-150 124h28v20h-28zM-100 124h28v20h-28zM-50 124h28v20h-28zM0 124h20v20H0z" fill="#d3dce3"/>` +
-  // земля
-  `<rect x="-460" y="180" width="1260" height="260" fill="#dfe7ec"/><path d="M-460 180H800" stroke="#ccd7de" stroke-width="2"/>` +
-  // платформа весов и датчики под ней
-  `<rect x="22" y="180" width="282" height="11" rx="2.5" fill="#fff" stroke="${INK}" stroke-width="2.5"/>` +
-  [46, 163, 280].map((cx) => `<rect x="${cx - 8}" y="193" width="16" height="6" rx="1.5" fill="${INK}"/>`).join('') +
-  // столб с камерой распознавания номеров перед машиной (объектив — слева, навстречу машине)
-  `<rect x="325" y="58" width="5" height="122" rx="2" fill="${INK}"/><path d="M326 62h-8" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>` +
-  `<rect x="295" y="54" width="24" height="14" rx="4" fill="#fff" stroke="${INK}" stroke-width="2.5"/>` +
-  `<rect x="289" y="56.5" width="7" height="9" rx="2" fill="${INK}"/><circle cx="312" cy="61" r="2" fill="#12b886"/>`;
+const BACKDROP =
+  `<rect x="-700" y="-600" width="2000" height="700" fill="#e2eaf0"/>` +
+  // вдали слева: холм, ангар сортировки, деревья
+  `<path d="M-430 98C-376 68 -298 56 -228 62C-178 66 -144 82 -114 98Z" fill="#d9e1e7"/>` +
+  `<circle cx="-92" cy="80" r="20" fill="#d2dce3"/><circle cx="-122" cy="88" r="13" fill="#d6e0e6"/>` +
+  `<rect x="-60" y="50" width="148" height="48" fill="#d2dce3"/><path d="M-66 52Q14 16 94 52Z" fill="#c8d3db"/>` +
+  `<rect x="-34" y="66" width="22" height="32" rx="2" fill="#c9d4dc"/><rect x="4" y="68" width="64" height="12" rx="2" fill="#c9d4dc"/>` +
+  // тело полигона с уступами — за весами и мачтой; справа пологий холм и дерево
+  `<path d="M150 98C206 54 286 32 370 28L600 22C660 24 716 40 780 66C840 88 900 96 960 98Z" fill="#d6dfe6"/>` +
+  `<path d="M240 70C306 52 392 46 520 44M310 50C364 40 440 36 560 34" stroke="#cbd5dd" stroke-width="2" fill="none"/>` +
+  `<path d="M930 98C1000 76 1090 70 1170 76C1220 80 1260 90 1300 98Z" fill="#d9e1e7"/>` +
+  `<circle cx="1010" cy="80" r="18" fill="#d2dce3"/>` +
+  // забор, дорога с разметкой, бордюр, тротуар
+  `<rect x="-700" y="94" width="2000" height="52" fill="#ccd6dd"/><path d="M-700 105H1300${POSTS}" stroke="#bac5cd" stroke-width="2"/>` +
+  `<rect x="-700" y="146" width="2000" height="120" fill="#c3ccd4"/>` +
+  `<path d="M-700 190H1300" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-dasharray="28 24"/>` +
+  `<rect x="-700" y="264" width="2000" height="8" fill="#aab5be"/><rect x="-700" y="272" width="2000" height="200" fill="#d1d9df"/>`;
 
-// луч камеры к передней части машины — отдельным слоем: появляется, когда машина встала на весы
-const beam = `<path d="M290 61 246 128 260 150Z" fill="#12b886" fill-opacity=".16"/><path d="M290 61 246 128M290 61 260 150" stroke="#12b886" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="3 4"/>`;
+// Весы: стальной настил со светлой кромкой, рёбра на боковине, пандусы, фундамент
+const DECK =
+  `<rect x="16" y="246" width="472" height="7" rx="1.5" fill="#a3aeb7"/>` +
+  `<path d="M24 230 4 246H24ZM480 230 500 246H480Z" fill="#9aa6b0"/>` +
+  `<rect x="24" y="230" width="456" height="16" rx="2" fill="#8d99a4"/>` +
+  `<rect x="24" y="230" width="456" height="4" rx="1.5" fill="#b8c2ca"/>` +
+  `<path d="${RIBS}" stroke="#7d8a95" stroke-width="2"/>`;
 
-// мусоровоз — отдельным слоем, заезжает на платформу. Кузов — как у весовой «Кодекса ТКО» (задний борт со скосом,
-// бирюзовая полоса), кабина и колёса — как у самосвала в «Схемах хищений»; колёса стоят на y = 180
-const truck =
-  `<g stroke="${INK}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">` +
-  `<rect x="50" y="149" width="206" height="7" rx="3" fill="${INK}" stroke="none"/>` +
-  `<path d="M73 94H192a8 8 0 0 1 8 8v47H58a9 9 0 0 1-9-9v-19a9 9 0 0 1 2.9-6.6L66 97a9 9 0 0 1 7-3Z" fill="#fff"/>` +
-  `<path d="M82 97v49" stroke-opacity=".22"/><rect x="98" y="115" width="86" height="10" rx="5" fill="#7fe5de" stroke="none"/>` +
-  `<path d="M206 149V114a8 8 0 0 1 8-8h22a8 8 0 0 1 7 4l12 21a8 8 0 0 1 1 4V149Z" fill="#fff"/>` +
-  `<path d="M214 114h20l10 17h-30Z" fill="#cfe2ff" stroke-width="2"/><path d="M216 139h7"/>` +
-  `<rect x="249" y="137" width="6" height="6" rx="2" fill="#eef3a6" stroke-width="1.75"/></g>` +
-  [90, 120, 234].map((cx) => `<circle cx="${cx}" cy="167" r="13" fill="${INK}"/><circle cx="${cx}" cy="167" r="5" fill="#fff"/>`).join('');
+// Мачта перед весами (как в NHow, зеркально): внизу камера номеров — объективом к морде машины, наверху на вылете —
+// обзорная камера над кузовом
+const MAST =
+  `<rect x="506" y="226" width="20" height="6" rx="2" fill="#6f7c88"/>` +
+  `<rect x="512" y="16" width="8" height="212" rx="3" fill="#6f7c88"/>` +
+  `<path d="M512 116h-8" stroke="#6f7c88" stroke-width="4"/>` +
+  `<rect x="474" y="108" width="30" height="15" rx="4" fill="#f4f6f9" stroke="#8d9aa5" stroke-width="1.5"/>` +
+  `<path d="M473 106.5h22" stroke="#8d9aa5" stroke-width="3" stroke-linecap="round"/>` +
+  `<circle cx="479" cy="115.5" r="3.6" fill="#006bff"/>` +
+  `<path d="M516 20H474" stroke="#6f7c88" stroke-width="5" stroke-linecap="round"/>` +
+  `<g transform="rotate(-34 472 26)"><rect x="457" y="19" width="27" height="14" rx="4" fill="#f4f6f9" stroke="#8d9aa5" stroke-width="1.5"/>` +
+  `<path d="M460 17.5h22" stroke="#8d9aa5" stroke-width="3" stroke-linecap="round"/><circle cx="462" cy="26" r="3.4" fill="#006bff"/></g>`;
+
+// Когда машина встала на весы: настил подсвечивается, камера номеров «видит» морду машины (луч — под машиной)
+const BEAM =
+  `<rect x="24" y="228" width="456" height="6" rx="3" fill="#5ddfd7"/>` +
+  `<path d="M476 116 430 160V210Z" fill="#006bff" fill-opacity=".16"/>`;
 ---
 
 <section class="section" id="komu-podhodit" aria-labelledby="komu-podhodit-title">
@@ -107,9 +124,25 @@ const truck =
         <div class="nfit-art" aria-hidden="true" data-nfit-art>
           <span class="tag tag--demo nfit-demo">демо-данные</span>
           <span class="nfit-stage">
-            <svg class="nfit-scene" viewBox="0 0 340 210" set:html={scene} />
-            <svg class="nfit-scene nfit-beam" viewBox="0 0 340 210" set:html={beam} />
-            <svg class="nfit-scene nfit-truck" viewBox="0 0 340 210" set:html={truck} />
+            <svg class="nfit-scene" viewBox="0 0 530 290" focusable="false">
+              <g set:html={BACKDROP} />
+              <g set:html={DECK} />
+              <g set:html={MAST} />
+              <g class="nfit-beam" set:html={BEAM} />
+              {/* мусоровоз — общий рисунок; заезжает на весы, колёса крутятся в движении */}
+              <g transform="translate(68 58)">
+                <g class="nfit-truck">
+                  <g set:html={TRUCK} />
+                  {
+                    TRUCK_WHEELS.map((cx) => (
+                      <g transform={`translate(${cx} ${TRUCK_WHEEL_Y})`}>
+                        <g class="nfit-wheel" set:html={TRUCK_WHEEL} />
+                      </g>
+                    ))
+                  }
+                </g>
+              </g>
+            </svg>
             <span class="nfit-act">
               <span class="nfit-act__no">Акт №{NB}4127</span>
               <span class="nfit-plate">
@@ -239,7 +272,7 @@ const truck =
     font-size: clamp(1rem, calc(var(--vw) * 1.2), 1.0625rem);
   }
 
-  /* ── Рисунок: светлая «карточка» внутри плитки (фон — как у рисунков «Схем хищений») ─────────── */
+  /* ── Рисунок: окно на сцену весовой внутри плитки (небо — как в «Как это работает») ─────────── */
   .nfit-art {
     position: relative;
     flex: 1;
@@ -249,7 +282,7 @@ const truck =
     isolation: isolate;
     border-radius: calc(calc(var(--nfit-r) - var(--nfit-in)) * var(--rk));
     corner-shape: var(--corner);
-    background: #edf3f5;
+    background: #e2eaf0;
     color: var(--ink);
     font-size: 12.5px;
     line-height: 1.25;
@@ -266,27 +299,34 @@ const truck =
     pointer-events: none;
   }
 
-  /* сцена фиксированного размера внизу по центру: весовая слева, карточка акта справа от камеры.
-     На компьютере рисунок занимает высоту двух соседних плиток (около 390 px) — весовая крупнее */
+  /* сцена 530×290 внизу по центру: весовая слева, карточка акта справа от мачты. --nfit-s — пикселей
+     на единицу сцены. На компьютере рисунок занимает высоту двух соседних плиток (около 390 px) — весовая крупнее */
   .nfit-stage {
-    --nfit-s: 1.45;
-    --nfit-sw: calc(340px * var(--nfit-s));
+    --nfit-s: 1;
+    --nfit-sw: calc(530px * var(--nfit-s));
     position: absolute;
     left: 50%;
     bottom: 0;
     width: calc(var(--nfit-sw) + 28px + 176px);
-    height: calc(210px * var(--nfit-s));
+    height: calc(290px * var(--nfit-s));
     transform: translateX(-50%);
   }
 
-  /* рисунок весовой крупнее на широкой плитке (векторный — не мылится) */
+  /* рисунок векторный — не мылится; фон сцены выходит за её края (overflow) */
   .nfit-scene {
     position: absolute;
     left: 0;
     top: 0;
     width: var(--nfit-sw);
+    max-width: none;
     height: 100%;
     overflow: visible;
+  }
+
+  /* колёса крутятся вокруг своего центра */
+  .nfit-wheel {
+    transform-box: fill-box;
+    transform-origin: center;
   }
 
   /* карточка акта: номер, вес нетто, передача во ФГИС УТКО */
@@ -394,6 +434,11 @@ const truck =
     animation: nfit-drive 1.6s var(--ease-out) 0.1s both;
   }
 
+  /* колёса — с тем же ходом, что и машина: катятся, а не скользят */
+  .nfit-art.is-live .nfit-wheel {
+    animation: nfit-roll 1.6s var(--ease-out) 0.1s both;
+  }
+
   .nfit-art.is-live .nfit-beam {
     animation: nfit-fade 0.5s ease-out 1.45s both;
   }
@@ -406,13 +451,21 @@ const truck =
     animation: nfit-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) 2.55s both;
   }
 
+  /* сдвиг — в единицах сцены (две трети машины) */
   @keyframes nfit-drive {
     from {
       opacity: 0;
-      transform: translateX(-150px);
+      transform: translateX(-240px);
     }
     25% {
       opacity: 1;
+    }
+  }
+
+  /* 240 / 22 рад ≈ 625° */
+  @keyframes nfit-roll {
+    from {
+      transform: rotate(-625deg);
     }
   }
 
@@ -470,8 +523,9 @@ const truck =
       height: 280px;
     }
 
+    /* сцена с карточкой — 607 px: помещается и в рисунок шириной 632 px (окно 700 px) */
     .nfit-stage {
-      --nfit-s: 1.1;
+      --nfit-s: 0.76;
     }
   }
 
@@ -537,15 +591,23 @@ const truck =
       right: 12px;
     }
 
+    /* полоса сцены — во всю ширину рисунка, сама сцена (286 px) — по центру */
     .nfit-stage {
-      --nfit-s: 1;
-      width: 340px;
+      --nfit-s: 0.54;
+      left: 0;
+      width: 100%;
+      transform: none;
     }
 
-    /* сцена стоит на нижнем крае рисунка (276 − 210 = 66 px сверху): карточка — в 12 px от верха и края */
+    .nfit-scene {
+      left: calc(50% - var(--nfit-sw) / 2);
+    }
+
+    /* сцена стоит на нижнем крае рисунка высотой 276 px: карточка — в 12 px от верха и края рисунка,
+       над крышей кузова */
     .nfit-act {
       left: 12px;
-      top: -54px;
+      top: calc(12px + 290px * var(--nfit-s) - 276px);
       gap: 6px;
       width: auto;
       padding: 10px 12px 12px;

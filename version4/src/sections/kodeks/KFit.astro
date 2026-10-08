@@ -1,13 +1,14 @@
 ---
 // Раздел страницы «Кодекс ТКО» — «Кому подходит сервис» [#komu-podhodit]. Бенто из белых плиток
-// на бежевой панели: первая плитка крупная, с рисунком весовой (машина заезжает на весы, рядом
-// карточка акта — демо-данные), четыре обычные. Ниже — графитовая плитка с оговоркой и следующий
-// шаг, QODEX TONN.
+// на бежевой панели: первая плитка крупная, с рисунком весовой (мусоровоз заезжает на весы, в будке
+// весовщика загорается терминал, появляется карточка акта — демо-данные), четыре обычные. Ниже — графитовая
+// плитка с оговоркой и следующий шаг, QODEX TONN.
 import SectionIntro from '../../components/SectionIntro.astro';
 import ProductLabel from '../../components/ProductLabel.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
 import { productHref } from '../../config/site';
+import { TRUCK, TRUCK_WHEELS, TRUCK_WHEEL_Y, TRUCK_WHEEL } from '../../components/art/truck';
 
 const NB = ' ';
 
@@ -20,6 +21,56 @@ const FITS: { text: string; icon: IconName }[] = [
   { text: 'Хочется быстрое и понятное решение', icon: 'zap' },
 ];
 const [main, ...rest] = FITS;
+
+// ── Рисунок весовой (вид сбоку) — как сцена «Как это работает» на странице QODEX TONN: плоская серо-голубая
+//    гамма, общий мусоровоз (components/art/truck.ts), стальной настил весов, будка весовщика с терминалом.
+//    Сцена 640×300 в единицах мусоровоза: настил — x 44…500, колёса стоят на y 232; машина на весах —
+//    x 88…452 (сдвиг 88 60), будка — x 528…624. Небо, полигон, забор и дорога уходят далеко за края сцены:
+//    в широком кадре видно больше улицы, по которой подъезжает машина ──
+const POSTS = Array.from({ length: 72 }, (_, i) => `M${-1366 + i * 46} 98v50`).join('');
+const RIBS = Array.from({ length: 9 }, (_, i) => `M${88 + i * 46} 239v8`).join('');
+
+const BACKDROP =
+  `<rect x="-1400" y="-700" width="3400" height="800" fill="#e2eaf0"/>` +
+  // вдали слева: холм, ангар сортировки, деревья. Ангар кончается левее x 30 — у края кадра на телефоне
+  // (кадр там начинается с x 30), иначе от него остаётся тонкая полоска, похожая на столб
+  `<path d="M-470 100C-416 70 -338 58 -268 64C-218 68 -184 84 -154 100Z" fill="#d9e1e7"/>` +
+  `<rect x="-130" y="52" width="148" height="48" fill="#d2dce3"/><path d="M-136 54Q-56 18 24 54Z" fill="#c8d3db"/>` +
+  `<rect x="-104" y="68" width="22" height="32" rx="2" fill="#c9d4dc"/><rect x="-66" y="70" width="64" height="12" rx="2" fill="#c9d4dc"/>` +
+  `<circle cx="70" cy="82" r="20" fill="#d2dce3"/><circle cx="100" cy="90" r="13" fill="#d6e0e6"/>` +
+  // тело полигона с уступами — за машиной и будкой; правее пологий холм и дерево
+  `<path d="M250 100C306 56 382 34 460 30L604 24C650 26 682 40 728 62C780 86 830 96 880 100Z" fill="#d6dfe6"/>` +
+  `<path d="M334 72C396 54 470 48 574 46M402 52C452 42 512 38 592 36" stroke="#cbd5dd" stroke-width="2" fill="none"/>` +
+  `<circle cx="760" cy="80" r="18" fill="#d2dce3"/>` +
+  `<path d="M860 100C930 78 1020 72 1100 78C1150 82 1190 92 1230 100Z" fill="#d9e1e7"/>` +
+  // забор, дорога с разметкой, бордюр, тротуар
+  `<rect x="-1400" y="96" width="3400" height="52" fill="#ccd6dd"/><path d="M-1400 107H2000${POSTS}" stroke="#bac5cd" stroke-width="2"/>` +
+  `<rect x="-1400" y="148" width="3400" height="120" fill="#c3ccd4"/>` +
+  `<path d="M-1400 192H2000" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-dasharray="28 24"/>` +
+  `<rect x="-1400" y="266" width="3400" height="8" fill="#aab5be"/><rect x="-1400" y="274" width="3400" height="200" fill="#d1d9df"/>`;
+
+// Весы: стальной настил со светлой кромкой, рёбра на боковине, пандусы, фундамент (как в NHow)
+const DECK =
+  `<rect x="36" y="248" width="472" height="7" rx="1.5" fill="#a3aeb7"/>` +
+  `<path d="M44 232 24 248H44ZM500 232 520 248H500Z" fill="#9aa6b0"/>` +
+  `<rect x="44" y="232" width="456" height="16" rx="2" fill="#8d99a4"/>` +
+  `<rect x="44" y="232" width="456" height="4" rx="1.5" fill="#b8c2ca"/>` +
+  `<path d="${RIBS}" stroke="#7d8a95" stroke-width="2"/>`;
+
+// Будка весовщика у съезда с весов: цоколь, стены, крыша с козырьком, окно к весам; в окне — терминал
+// (его экран — отдельным слоем: загорается, когда вес записан)
+const BOOTH =
+  `<rect x="532" y="240" width="88" height="10" rx="2" fill="#a3aeb7"/>` +
+  `<rect x="538" y="136" width="76" height="106" rx="5" fill="#eef2f5" stroke="#cdd5de" stroke-width="2"/>` +
+  `<path d="M539 218h74" stroke="#dce3e9" stroke-width="2"/>` +
+  `<rect x="528" y="124" width="96" height="14" rx="4" fill="#8f9ca7"/>` +
+  `<rect x="548" y="150" width="56" height="44" rx="4" fill="#9fb3c6"/>` +
+  `<rect x="558" y="165" width="32" height="22" rx="2.5" fill="#45505b"/><rect x="572" y="186" width="4" height="6" fill="#45505b"/>` +
+  `<rect x="545" y="192" width="62" height="4" rx="1.5" fill="#dce3e9"/>`;
+
+// Экран терминала с двумя строками данных и блик на стекле поверх него
+const SCREEN = `<rect x="561" y="168" width="26" height="16" rx="1.5" fill="#5ddfd7"/><path d="M565 173h15M565 179h9" stroke="#2c8f8a" stroke-width="2" stroke-linecap="round"/>`;
+const GLARE = `<path d="M552 190 576 152h10l-24 38Z" fill="#fff" fill-opacity=".22"/>`;
 ---
 
 <section class="section panel" id="komu-podhodit" aria-labelledby="komu-podhodit-title">
@@ -33,76 +84,38 @@ const [main, ...rest] = FITS;
           <h3 class="kfit__text">{main.text}</h3>
         </div>
 
-        <!-- Весовая объекта: машина на весах, будка оператора, карточка акта -->
+        <!-- Весовая объекта: машина на весах, будка весовщика с терминалом, карточка акта.
+             Белая рамка с кадром на градиенте — как сцена «Как это работает» на странице QODEX TONN -->
         <GradientVisual preset="teal" deco="none" class="kfit__vis" data-kfit-vis>
+          <div class="ui kfit__ui">
+          <div class="kfit__stage">
+          <svg class="kfit__scene" viewBox="0 0 640 300" preserveAspectRatio="xMidYMax meet" focusable="false">
+            <g set:html={BACKDROP} />
+            <g set:html={DECK} />
+            {/* вес записан: настил весов подсвечивается */}
+            <rect class="kfit__glow" x="44" y="230" width="456" height="6" rx="3" fill="#5ddfd7" />
+            <g set:html={BOOTH} />
+            <g class="kfit__screen" set:html={SCREEN} />
+            <g set:html={GLARE} />
+
+            {/* мусоровоз — общий рисунок; заезжает на весы, колёса крутятся в движении */}
+            <g transform="translate(88 60)">
+              <g class="kfit__truck">
+                <g set:html={TRUCK} />
+                {
+                  TRUCK_WHEELS.map((cx) => (
+                    <g transform={`translate(${cx} ${TRUCK_WHEEL_Y})`}>
+                      <g class="kfit__wheel" set:html={TRUCK_WHEEL} />
+                    </g>
+                  ))
+                }
+              </g>
+            </g>
+          </svg>
+
           <span class="tag tag--demo kfit__demo">демо-данные</span>
 
-          <div class="kfit__stage">
-          <svg
-            class="kfit__scene"
-            viewBox="0 0 640 220"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <!-- земля -->
-            <rect x="-600" y="200" width="2400" height="80" fill="#fff" fill-opacity=".6" stroke="none"></rect>
-            <!-- будка оператора -->
-            <rect x="542" y="120" width="58" height="80" rx="7" fill="#fff"></rect>
-            <rect x="533" y="109" width="76" height="13" rx="5" fill="currentColor" stroke="none"></rect>
-            <rect x="552" y="134" width="38" height="24" rx="4" fill="#cfe2ff" stroke-width="2"></rect>
-            <path d="M552 168h38" stroke-opacity=".22"></path>
-            <!-- платформа весов на датчиках, с пандусами -->
-            <g fill="currentColor" stroke="none">
-              <rect x="76" y="189" width="24" height="11" rx="2"></rect>
-              <rect x="243" y="189" width="24" height="11" rx="2"></rect>
-              <rect x="410" y="189" width="24" height="11" rx="2"></rect>
-            </g>
-            <path d="M42 200H14l28-21Z" fill="#fff"></path>
-            <path d="M468 200h28l-28-21Z" fill="#fff"></path>
-            <rect x="40" y="176" width="430" height="14" rx="5" fill="#fff"></rect>
-          </svg>
-
-          <svg
-            class="kfit__truck"
-            viewBox="0 0 640 220"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <!-- рама -->
-            <rect x="124" y="143" width="268" height="9" rx="3" fill="currentColor" stroke="none"></rect>
-            <!-- кузов мусоровоза с задним бортом -->
-            <path
-              d="M144 70H288a10 10 0 0 1 10 10v64H126a12 12 0 0 1-12-12v-26a12 12 0 0 1 3.5-8.5L136 74a12 12 0 0 1 8-4Z"
-              fill="#fff"></path>
-            <path d="M155 73v68" stroke-opacity=".22"></path>
-            <rect x="174" y="99" width="104" height="13" rx="6.5" fill="#7fe5de" stroke="none"></rect>
-            <!-- кабина -->
-            <path
-              d="M310 144V94a10 10 0 0 1 10-10h40a10 10 0 0 1 8.7 5l17.6 31a10 10 0 0 1 1.3 5V144Z"
-              fill="#fff"></path>
-            <path d="M323 96h36l14 25h-50Z" fill="#cfe2ff" stroke-width="2"></path>
-            <path d="M325 131h9"></path>
-            <rect x="379" y="129" width="9" height="8" rx="2.5" fill="#eef3a6" stroke-width="1.75"></rect>
-            <!-- колёса -->
-            <g fill="currentColor" stroke="none">
-              <circle cx="166" cy="158" r="18"></circle>
-              <circle cx="208" cy="158" r="18"></circle>
-              <circle cx="360" cy="158" r="18"></circle>
-            </g>
-            <g fill="#fff" stroke="none">
-              <circle cx="166" cy="158" r="7"></circle>
-              <circle cx="208" cy="158" r="7"></circle>
-              <circle cx="360" cy="158" r="7"></circle>
-            </g>
-          </svg>
-
-          <div class="ui kfit__act">
+          <div class="kfit__act">
             <span class="kfit__plate">В 121 АА 777</span>
             <p class="kfit__weight">
               <small>Вес груза (Нетто)</small>
@@ -115,6 +128,7 @@ const [main, ...rest] = FITS;
                 Отправлено
               </span>
             </p>
+          </div>
           </div>
           </div>
         </GradientVisual>
@@ -226,64 +240,101 @@ const [main, ...rest] = FITS;
   }
 
   /* ── Рисунок: весовая объекта на градиенте ─────────────── */
+  /* бирюзовая подложка с белой рамкой, в рамке — кадр сцены (как «Как это работает» на странице QODEX TONN) */
   .kfit__vis {
     --gv-r: 18px;
-    display: block;
+    display: flex;
+    place-items: stretch;
     flex: 1;
     min-height: 236px;
     margin: 22px 10px 10px;
-    padding: 0;
+    padding: 12px;
     color: var(--ink);
+  }
+
+  .kfit__ui {
+    display: flex;
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    padding: 8px;
+    border-radius: 16px;
+    box-shadow:
+      0 0 0 5px rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+  }
+
+  /* Кадр — окно на сцену 640×300: --u — единица сцены в пикселях. Сцена прижата к низу кадра, над ней —
+     небо под плашки. Весы с машиной и будкой стоят посередине кадра; на узком кадре сцена прижата
+     к правому краю — настил слева уходит за край */
+  .kfit__stage {
+    --u: 0.6px;
+    --pad: 12px;
+    container: kfit-stage / inline-size;
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: 10px;
+    background: #e2eaf0;
+    font-size: 13px;
+    line-height: 1.3;
+    text-align: left;
+  }
+
+  /* сцена 640 единиц, весы с будкой — x 24…620: по центру кадра, если помещаются */
+  .kfit__scene {
+    position: absolute;
+    right: max(0px, (100% - 636 * var(--u)) * 0.5);
+    bottom: 0;
+    width: calc(640 * var(--u));
+    max-width: none;
+    height: calc(300 * var(--u));
+    overflow: visible;
   }
 
   .kfit__demo {
     position: absolute;
-    top: 14px;
-    left: 14px;
+    z-index: 2;
+    top: var(--pad);
+    left: var(--pad);
+    box-shadow: 0 6px 16px -10px rgb(29 29 31 / 0.45);
   }
 
-  /* сцена не шире 720px и стоит по центру карточки: на широкой карточке рисунок не разрастается */
-  .kfit__stage {
-    position: absolute;
-    inset: 0;
-    width: min(100%, 720px);
-    margin-inline: auto;
+  /* колёса крутятся вокруг своего центра */
+  .kfit__wheel {
+    transform-box: fill-box;
+    transform-origin: center;
   }
 
-  /* сцена и машина — два рисунка одного размера друг на друге: машина едет отдельным слоем.
-     На узком экране рисунок не мельчает: машина встаёт по центру, платформа уходит за края карточки */
-  .kfit__scene,
-  .kfit__truck {
-    position: absolute;
-    left: min(0px, 50% - 191px);
-    bottom: 0;
-    width: 100%;
-    min-width: 480px;
-    height: auto;
-    overflow: visible;
-  }
-
-  /* карточка акта: над будкой оператора */
+  /* карточка акта. Узкий кадр: под плашкой «демо-данные» во всю ширину — номер и статус в строке,
+     под ними вес; широкий — в одну строку справа вверху, над будкой */
   .kfit__act {
     position: absolute;
-    top: 18px;
-    right: 18px;
+    z-index: 2;
+    top: calc(var(--pad) + 30px);
+    left: var(--pad);
+    right: var(--pad);
+    max-width: 360px;
     display: grid;
-    justify-items: start;
-    gap: 9px;
-    width: auto;
-    min-width: 176px;
-    padding: 14px 16px;
-    border-radius: 18px;
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+    align-items: center;
+    gap: 7px 10px;
+    padding: 9px 10px;
+    border-radius: 14px;
+    background: #fff;
     box-shadow:
-      0 0 0 6px rgb(255 255 255 / 0.4),
-      var(--shadow-card);
+      0 0 0 1px rgb(29 29 31 / 0.04),
+      0 14px 28px -14px rgb(29 29 31 / 0.45);
     line-height: 1.2;
   }
 
   /* госномер — как в сервисе: в рамке (рамка — внутренней тенью: border при дробном масштабе экрана
      в Safari не рисуется) */
   .kfit__plate {
+    justify-self: start;
     padding: 4.5px 9.5px;
     border-radius: 6px;
     box-shadow: inset 0 0 0 1.5px var(--ink);
@@ -293,9 +344,17 @@ const [main, ...rest] = FITS;
     white-space: nowrap;
   }
 
+  /* вес — второй строкой: подпись слева, число справа */
   .kfit__weight {
-    display: grid;
-    gap: 2px;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2px 10px;
+    padding: 5px 9px;
+    border-radius: 10px;
+    background: #f5f6f8;
   }
 
   .kfit__weight small {
@@ -304,16 +363,17 @@ const [main, ...rest] = FITS;
   }
 
   .kfit__weight b {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 600;
     letter-spacing: -0.015em;
     line-height: 1.1;
+    white-space: nowrap;
   }
 
   /* статус акта: «Не отправлено» сменяется на «Отправлено» */
   .kfit__state {
     display: grid;
-    justify-items: start;
+    justify-items: end;
   }
 
   .kfit__pill {
@@ -350,16 +410,89 @@ const [main, ...rest] = FITS;
     color: #fff;
   }
 
-  /* Движение — один раз, когда рисунок появился на экране: машина заезжает на весы, появляется
-     акт, статус меняется на «Отправлено». Классы is-armed и is-live ставит скрипт; без них
-     (нет скриптов, «уменьшить движение») сразу видно итоговое состояние. */
-  .kfit__vis.is-armed:not(.is-live) .kfit__truck,
-  .kfit__vis.is-armed:not(.is-live) .kfit__act {
+  /* широкий кадр: карточка в одну строку — номер, вес, статус — справа вверху, рядом с «демо-данными» */
+  @container kfit-stage (min-width: 520px) {
+    .kfit__act {
+      top: var(--pad);
+      left: auto;
+      max-width: none;
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      gap: 14px;
+      padding: 10px 12px 10px 14px;
+    }
+
+    .kfit__weight {
+      grid-column: auto;
+      grid-row: auto;
+      display: grid;
+      gap: 2px;
+      padding: 0;
+      background: none;
+    }
+
+    .kfit__weight b {
+      font-size: 24px;
+    }
+
+    .kfit__state {
+      justify-items: start;
+    }
+  }
+
+  /* самый узкий телефон: номер и статус мельче — помещаются в строку */
+  @container kfit-stage (max-width: 259px) {
+    .kfit__act {
+      gap: 7px 6px;
+      padding: 8px;
+    }
+
+    .kfit__plate {
+      padding: 4px 7px;
+      font-size: 12px;
+    }
+
+    .kfit__pill {
+      gap: 4px;
+      padding: 3px 7px;
+      font-size: 11.5px;
+    }
+
+    .kfit__pill--ok {
+      padding-left: 4px;
+    }
+
+    .kfit__weight small {
+      font-size: 11.5px;
+    }
+
+    .kfit__weight b {
+      font-size: 18px;
+    }
+  }
+
+  /* Движение — один раз, когда рисунок появился на экране: мусоровоз заезжает на весы (колёса крутятся),
+     настил подсвечивается, на терминале в будке появляются данные, затем — акт, статус меняется
+     на «Отправлено». Классы is-armed и is-live ставит скрипт; без них (нет скриптов, «уменьшить движение»)
+     сразу видно итоговое состояние. */
+  .kfit__vis.is-armed:not(.is-live) :is(.kfit__truck, .kfit__act, .kfit__glow, .kfit__screen) {
     opacity: 0;
   }
 
   .kfit__vis.is-live .kfit__truck {
     animation: kfit-drive 1.7s var(--ease-out) 0.15s both;
+  }
+
+  .kfit__vis.is-live .kfit__wheel {
+    animation: kfit-roll 1.7s var(--ease-out) 0.15s both;
+  }
+
+  .kfit__vis.is-live .kfit__glow {
+    animation: kfit-glow 1.4s ease 1.5s both;
+  }
+
+  .kfit__vis.is-live .kfit__screen {
+    animation: kfit-fade 0.35s ease 1.6s both;
   }
 
   .kfit__vis.is-live .kfit__act {
@@ -374,9 +507,38 @@ const [main, ...rest] = FITS;
     animation: kfit-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 3.05s both;
   }
 
+  /* старт — за левым краем кадра любой ширины (960 единиц сцены) */
   @keyframes kfit-drive {
     from {
-      transform: translateX(-62%);
+      transform: translateX(-960px);
+    }
+  }
+
+  /* 960 / 22 рад ≈ 2500° — колёса катятся, а не скользят */
+  @keyframes kfit-roll {
+    from {
+      transform: rotate(-2500deg);
+    }
+  }
+
+  @keyframes kfit-glow {
+    0% {
+      opacity: 0;
+    }
+    30% {
+      opacity: 1;
+    }
+    60% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes kfit-fade {
+    from {
+      opacity: 0;
     }
   }
 
@@ -404,9 +566,7 @@ const [main, ...rest] = FITS;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .kfit__vis .kfit__truck,
-    .kfit__vis .kfit__act,
-    .kfit__vis .kfit__pill {
+    .kfit__vis :is(.kfit__truck, .kfit__wheel, .kfit__glow, .kfit__screen, .kfit__act, .kfit__pill) {
       animation: none !important;
     }
   }
@@ -516,6 +676,11 @@ const [main, ...rest] = FITS;
       flex: none;
       height: 300px;
     }
+
+    /* кадр выше — сцена крупнее */
+    .kfit__stage {
+      --u: 0.7px;
+    }
   }
 
   /* ── Телефон: один столбец, обычные плитки — значок слева, текст справа ── */
@@ -561,23 +726,19 @@ const [main, ...rest] = FITS;
     .kfit__vis {
       height: 284px;
       margin: 18px 8px 8px;
+      padding: 8px;
     }
 
-    .kfit__demo {
-      top: 12px;
-      left: 12px;
+    .kfit__ui {
+      padding: 6px;
+      border-radius: 14px;
     }
 
-    .kfit__act {
-      top: 12px;
-      right: 12px;
-      min-width: 0;
-      padding: 12px 14px;
-      border-radius: 16px;
-    }
-
-    .kfit__weight b {
-      font-size: 22px;
+    /* сцена мельче, но целиком в кадре: весы с будкой — 610 единиц по ширине кадра */
+    .kfit__stage {
+      --u: min(0.5px, 100cqw / 610);
+      --pad: 10px;
+      border-radius: 9px;
     }
 
     .kfit__note {

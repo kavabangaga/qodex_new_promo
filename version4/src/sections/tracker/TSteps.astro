@@ -12,6 +12,7 @@ import SectionIntro from '../../components/SectionIntro.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
 import Icon from '../../components/Icon.astro';
 import { withBase } from '../../config/site';
+import { TRUCK, TRUCK_WHEELS } from '../../components/art/truck';
 
 const NB = String.fromCharCode(160); // неразрывный пробел
 
@@ -57,34 +58,8 @@ const BACKDROP =
   `<rect y="386" width="1100" height="8" fill="#aab5be"/><rect y="394" width="1100" height="46" fill="#d1d9df"/>` +
   `<rect x="248" y="394" width="262" height="14" rx="3" fill="#bcc6cd"/>`;
 
-// Мусоровоз сбоку, кабиной вправо. Свои координаты: задний борт — x 0, крыша кузова — y 0,
-// низ колёс — y 172. На сцене стоит у площадки: translate(540 210).
-const TRUCK =
-  // задний борт со скошенной стенкой, бункер внизу, гидроцилиндр
-  `<path d="M60 2H38q-8 0-11 7L4 90q-3 8 0 15l3 10q2 5 8 5h45Z" fill="#8f9ca7"/>` +
-  `<path d="M33 16 12 88" stroke="#7f8c97" stroke-width="2"/>` +
-  `<path d="M45 24 39 80" stroke="#6f7c88" stroke-width="4" stroke-linecap="round"/>` +
-  `<path d="M6 98h24v22H14q-4 0-5-4l-4-11q-1-4 1-7Z" fill="#76838e"/>` +
-  `<rect x="11" y="72" width="5" height="11" rx="1.5" fill="#e5484d"/>` +
-  // кузов
-  `<rect x="58" width="196" height="126" rx="12" fill="#eef2f5" stroke="#cdd5de" stroke-width="2"/>` +
-  `<path d="M104 10v106M150 10v106M196 10v106" stroke="#dce3e9" stroke-width="3"/>` +
-  `<rect x="59" y="78" width="194" height="13" fill="#a8ddd7"/>` +
-  // кабина
-  `<path d="M254 128V42q0-16 16-16h48q9 0 13 7l21 37q4 7 4 15v43Z" fill="#f4f6f9" stroke="#cdd5de" stroke-width="2"/>` +
-  `<path d="M268 38h46q5 0 8 5l17 28q2 4-3 4h-68q-3 0-3-3V41q0-3 3-3Z" fill="#9fb3c6"/>` +
-  `<path d="M282 72 302 40h12l-20 32Z" fill="#fff" fill-opacity=".3"/>` +
-  `<path d="M300 84v38" stroke="#dbe2e8" stroke-width="2"/><rect x="306" y="90" width="12" height="3.5" rx="1.75" fill="#b9c4cc"/>` +
-  `<path d="M347 58h11" stroke="#6f7c88" stroke-width="3"/><rect x="356" y="46" width="5" height="24" rx="2" fill="#6f7c88"/>` +
-  `<rect x="350" y="98" width="8" height="12" rx="2" fill="#fff3c4"/>` +
-  // рама, бак, арки колёс, ступенька, бампер
-  `<rect x="6" y="122" width="350" height="14" rx="4" fill="#45505b"/>` +
-  `<rect x="186" y="128" width="46" height="18" rx="5" fill="#6f7c88"/>` +
-  `<path d="M67 150a27 27 0 0 1 54 0ZM119 150a27 27 0 0 1 54 0ZM279 150a27 27 0 0 1 54 0Z" fill="#45505b"/>` +
-  `<rect x="250" y="132" width="24" height="6" rx="2" fill="#6f7c88"/>` +
-  `<rect x="336" y="118" width="28" height="18" rx="4" fill="#57636e"/>`;
-
-const WHEELS = [94, 146, 306];
+// Мусоровоз — общий рисунок (components/art/truck.ts). На сцене стоит у площадки: translate(540 210).
+const WHEELS = TRUCK_WHEELS;
 
 // Четыре камеры слева направо: над подъёмником, на крыше кузова, на крыше кабины, над лобовым стеклом.
 // n — номер камеры, как на всей странице: 1 спереди, 2 слева, 3 справа, 4 сзади (над подъёмником)

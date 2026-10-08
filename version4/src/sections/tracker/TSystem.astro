@@ -5,13 +5,15 @@
 // иллюстрация: мусоровоз сверху с четырьмя камерами → ИИ считает контейнеры → оповещение о погрузке
 // вне маршрута → видео погрузок уходят в облако.
 // В кадрах камер — настоящие снимки с прежнего лендинга (людей нет, служебные надписи размыты), данные
-// вокруг них — демо. Мусоровоз сверху, карта и машина сбоку нарисованы.
+// вокруг них — демо. Карта нарисована; мусоровоз — общий рисунок сайта (components/art/truck.ts, эталон —
+// «Как это работает» на странице QODEX TONN): сверху — на схеме камер, сбоку на улице — в «Облаке».
 // Тексты — с лендинга tracker.qodex.tech дословно. Картинку описывают пункты рядом, поэтому для
 // скринридера она скрыта (aria-hidden ставит GradientVisual).
 import GradientVisual from '../../components/GradientVisual.astro';
 import FeatureAccordion, { type AccItem } from '../../components/FeatureAccordion.astro';
 import Icon from '../../components/Icon.astro';
 import { withBase } from '../../config/site';
+import { TRUCK, TRUCK_WHEELS, TRUCK_WHEEL, TRUCK_WHEEL_Y, TRUCK_TOP } from '../../components/art/truck';
 
 const NB = String.fromCharCode(160);
 
@@ -34,12 +36,43 @@ const SNT = `СНТ${NB}«Рассвет»`;
 // настоящие кадры камер лежат в public/media/tracker/
 const media = (file: string) => withBase(`/media/tracker/${file}`);
 
-// ── Схема 460×420: мусоровоз сверху, четыре камеры, их поля обзора и кадры ──
+// ── Схема 460×420: улица сверху, мусоровоз, четыре камеры, их поля обзора и кадры ──
 const SW = 460;
 const SH = 420;
 const FW = 150;
 const FH = 94;
 const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
+
+// Мусоровоз сверху — общий рисунок (TRUCK_TOP) в масштабе 0,45: ось — x 230 (середина дороги), перед — y 128,
+// задний борт — y 292. Камеры стоят на нём (координаты рисунка × 0,45): спереди над стеклом (0, 12) → (230, 133),
+// по бортам кузова (±62, 182) → (202 и 258, 210) — на высоте середины боковых кадров, сзади над подъёмником
+// (0, 356) → (230, 288). Поле обзора — от камеры к краю кадра; на машине его закрывает рисунок
+const TOP = { x: 230, y: 128, s: 0.45 };
+
+// Улица сверху в гамме сцен сайта: земля, тротуары, бордюры, дорога с прерывистой осевой; по углам —
+// дома (двускатная крыша: светлый и тёмный скаты) и кроны деревьев. Большую часть закрывают кадры камер
+const roof = (x: number, y: number, w: number, h: number, ridge: 'x' | 'y') =>
+  ridge === 'x'
+    ? `<rect x="${x}" y="${y}" width="${w}" height="${h / 2}" fill="#d8e0e7"/><rect x="${x}" y="${y + h / 2}" width="${w}" height="${h / 2}" fill="#cdd7de"/>`
+    : `<rect x="${x}" y="${y}" width="${w / 2}" height="${h}" fill="#d8e0e7"/><rect x="${x + w / 2}" y="${y}" width="${w / 2}" height="${h}" fill="#cdd7de"/>`;
+// крона — два круга рядом, как деревья вдали в сценах страниц
+const tree = (cx: number, cy: number, r: number) =>
+  `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#d2dce3"/>` +
+  `<circle cx="${cx + r * 1.15}" cy="${cy + r * 0.4}" r="${(r * 0.65).toFixed(1)}" fill="#d6e0e6"/>`;
+
+const STREET =
+  `<rect width="460" height="420" fill="#e2eaf0"/>` +
+  roof(24, 30, 100, 72, 'x') +
+  tree(106, 134, 12) +
+  tree(344, 58, 22) +
+  tree(388, 112, 13) +
+  tree(52, 318, 20) +
+  tree(94, 372, 12) +
+  roof(336, 298, 96, 78, 'y') +
+  `<rect x="156" width="148" height="420" fill="#d1d9df"/>` +
+  `<rect x="172" width="116" height="420" fill="#aab5be"/>` +
+  `<rect x="176" width="108" height="420" fill="#c3ccd4"/>` +
+  `<path d="M230 0V420" stroke="#fff" stroke-opacity=".5" stroke-width="2.5" stroke-dasharray="16 14"/>`;
 
 // Кадры камер: спереди — улица по ходу машины, слева и справа — обочины (справа контейнер у забора),
 // сзади — камера над подъёмником. Задняя снимает контейнер до и после погрузки: кадр «до» лежит сверху
@@ -65,8 +98,8 @@ const CAMS: Cam[] = [
     side: 'спереди',
     x: 155,
     y: 8,
-    dot: [230, 140],
-    cone: 'M230 140 162 102H298Z',
+    dot: [230, 133],
+    cone: 'M230 133 162 102H298Z',
     img: 'cam-front.webp',
     w: 418,
     h: 176,
@@ -77,8 +110,8 @@ const CAMS: Cam[] = [
     side: 'слева',
     x: 10,
     y: 163,
-    dot: [206, 210],
-    cone: 'M206 210 160 170V250Z',
+    dot: [202, 210],
+    cone: 'M202 210 160 170V250Z',
     img: 'cam-left.webp',
     w: 316,
     h: 177,
@@ -88,8 +121,8 @@ const CAMS: Cam[] = [
     side: 'справа',
     x: 300,
     y: 163,
-    dot: [254, 210],
-    cone: 'M254 210 300 170V250Z',
+    dot: [258, 210],
+    cone: 'M258 210 300 170V250Z',
     img: 'cam-right.webp',
     w: 313,
     h: 177,
@@ -99,27 +132,14 @@ const CAMS: Cam[] = [
     side: 'сзади',
     x: 155,
     y: 318,
-    dot: [230, 279],
-    cone: 'M230 279 162 318H298Z',
+    dot: [230, 288],
+    cone: 'M230 288 162 318H298Z',
     img: 'thumb-cam-a-after.webp',
     w: 320,
     h: 180,
     before: 'thumb-cam-a-before.webp',
   },
 ];
-
-// мусоровоз сверху: кабина спереди (вверху), кузов, задний борт с подъёмником
-const truckTop =
-  `<rect x="211" y="146" width="46" height="138" rx="9" fill="#1d1d1f" fill-opacity=".07"/>` +
-  `<rect x="202" y="156" width="6" height="13" rx="2" fill="#2f3840"/><rect x="252" y="156" width="6" height="13" rx="2" fill="#2f3840"/>` +
-  `<rect x="202" y="229" width="6" height="13" rx="2" fill="#2f3840"/><rect x="252" y="229" width="6" height="13" rx="2" fill="#2f3840"/>` +
-  `<rect x="202" y="246" width="6" height="13" rx="2" fill="#2f3840"/><rect x="252" y="246" width="6" height="13" rx="2" fill="#2f3840"/>` +
-  `<rect x="207" y="177" width="46" height="93" rx="5" fill="#e3e9ee" stroke="#c3ccd4" stroke-width="1.5"/>` +
-  `<path d="M211 192h38M211 207h38M211 222h38M211 237h38M211 252h38" stroke="#cfd7de" stroke-width="1.5"/>` +
-  `<rect x="211" y="269" width="38" height="9" rx="2" fill="#7d8a95"/>` +
-  `<rect x="209" y="141" width="42" height="33" rx="9" fill="#f7f9fb" stroke="#c3ccd4" stroke-width="1.5"/>` +
-  `<rect x="213" y="145" width="34" height="8" rx="3" fill="#9fb3c6"/>` +
-  `<rect x="202" y="149" width="7" height="4" rx="1.5" fill="#6f7c88"/><rect x="251" y="149" width="7" height="4" rx="1.5" fill="#6f7c88"/>`;
 
 // ── ИИ: крупный кадр боковой камеры — площадка с полными контейнерами, ул. Лесная, 3 в 08:31 (снимок 1200×675) ──
 // В окне 320×190 виден участок снимка: VIEW — левый край, верх и высота участка в % снимка, ширина —
@@ -165,24 +185,40 @@ const PLOTS = [
   .map(([x, y]) => `M${x} ${y}h22v16h-22Z`)
   .join('');
 
-// ── Облако: мусоровоз сбоку (240×108) ──
-const truckSide =
-  `<rect y="100" width="240" height="8" rx="4" fill="#eef2f5"/>` +
-  `<rect x="80" y="34" width="128" height="54" rx="8" fill="#e3e9ee" stroke="#c3ccd4" stroke-width="2"/>` +
-  `<path d="M100 42v38M120 42v38M140 42v38M160 42v38M180 42v38" stroke="#cfd7de" stroke-width="2"/>` +
-  `<path d="M208 38h12a4 4 0 0 1 4 4v50h-16Z" fill="#7d8a95"/>` +
-  `<rect x="22" y="86" width="202" height="6" rx="2" fill="#57636e"/>` +
-  `<path d="M24 90V58c0-5 2-9 6-12l12-10h32a4 4 0 0 1 4 4v50Z" fill="#f7f9fb" stroke="#c3ccd4" stroke-width="2"/>` +
-  `<path d="M36 58 47 46h21v12Z" fill="#9fb3c6"/><rect x="25" y="74" width="8" height="5" rx="2" fill="#f4e3a6"/>` +
-  `<circle cx="50" cy="94" r="11" fill="#26313a"/><circle cx="50" cy="94" r="4" fill="#8a97a3"/>` +
-  `<circle cx="154" cy="94" r="11" fill="#26313a"/><circle cx="154" cy="94" r="4" fill="#8a97a3"/>` +
-  `<circle cx="182" cy="94" r="11" fill="#26313a"/><circle cx="182" cy="94" r="4" fill="#8a97a3"/>` +
-  `<rect x="50" y="28" width="18" height="8" rx="2.5" fill="#57636e"/><path d="M63 28v-8" stroke="#57636e" stroke-width="2" stroke-linecap="round"/>`;
+// ── Облако: мусоровоз сбоку на улице — общий рисунок (TRUCK + колёса) в его же координатах. Кадр
+//    x −58…422, y −30…186 — пропорции прежнего рисунка (0,45), чтобы картинка не выросла («Облако» на телефоне —
+//    самая высокая панель): за машиной забор, она стоит на дороге (колёса — на y 172), по низу кадра — бордюр;
+//    вдали — ангар и тело полигона, как в сценах страниц. Машина въезжает слева, колёса крутятся ──
+const CL_VIEW = '-58 -30 480 216';
+const CL_POSTS = Array.from({ length: 11 }, (_, i) => `M${-54 + i * 46} 38v50`).join('');
+const CL_STREET =
+  `<rect x="-58" y="-30" width="480" height="216" fill="#e2eaf0"/>` +
+  `<path d="M226 36C262 18 320 8 380 8C396 8 414 10 424 12V36Z" fill="#d6dfe6"/>` +
+  `<rect x="-66" y="6" width="80" height="30" fill="#d2dce3"/><path d="M-72 8Q-26-14 20 8Z" fill="#c8d3db"/>` +
+  `<circle cx="196" cy="24" r="16" fill="#d2dce3"/>` +
+  `<rect x="-58" y="36" width="480" height="52" fill="#ccd6dd"/><path d="M-58 47H422${CL_POSTS}" stroke="#bac5cd" stroke-width="2"/>` +
+  `<rect x="-58" y="88" width="480" height="92" fill="#c3ccd4"/>` +
+  `<path d="M-58 132H422" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-dasharray="28 24"/>` +
+  `<rect x="-58" y="180" width="480" height="6" fill="#aab5be"/>`;
 
-// дуги сигнала над антенной модуля связи (кончик антенны — 63, 19)
-const SIG = [5, 9.5, 14].map((r) => {
-  const d = (r * Math.SQRT1_2).toFixed(2);
-  return `M${(63 - +d).toFixed(2)} ${(19 - +d).toFixed(2)}A${r} ${r} 0 0 1 ${(63 + +d).toFixed(2)} ${(19 - +d).toFixed(2)}`;
+// модуль связи на крыше кабины и антенна (кончик — 300, 2)
+const CL_MODULE =
+  `<rect x="280" y="16" width="26" height="11" rx="3" fill="#57636e"/>` +
+  `<path d="M300 16V3" stroke="#57636e" stroke-width="3" stroke-linecap="round"/>`;
+
+// четыре камеры, как в «Алгоритме работы»: над подъёмником (на углу заднего борта), на кузове, на кабине,
+// над стеклом
+const CL_CAMS = [
+  [33, 5],
+  [150, 0],
+  [268, 26],
+  [334, 38],
+];
+
+// дуги сигнала над антенной модуля связи (кончик антенны — 300, 2)
+const SIG = [10, 18, 26].map((r) => {
+  const d = r * Math.SQRT1_2;
+  return `M${(300 - d).toFixed(2)} ${(2 - d).toFixed(2)}A${r} ${r} 0 0 1 ${(300 + d).toFixed(2)} ${(2 - d).toFixed(2)}`;
 });
 
 // видео погрузок за смену: первое уже в облаке, два догружаются. Погрузки, время и превью — те же,
@@ -245,8 +281,7 @@ const UPLOADS = [
 
                 <div class="sch">
                   <svg class="sch__svg" viewBox={`0 0 ${SW} ${SH}`}>
-                    <rect x="186" width="88" height={SH} fill="#e7edf1"></rect>
-                    <path d="M186 0V420M274 0V420" stroke="#fff" stroke-width="2" stroke-dasharray="10 10"></path>
+                    <g set:html={STREET} />
                     {
                       CAMS.map((c, k) => (
                         <g style={`--k:${k}`}>
@@ -255,12 +290,13 @@ const UPLOADS = [
                         </g>
                       ))
                     }
-                    <g set:html={truckTop} />
+                    <g transform={`translate(${TOP.x} ${TOP.y}) scale(${TOP.s})`} set:html={TRUCK_TOP} />
                     {
                       CAMS.map((c, k) => (
                         <g style={`--k:${k}`}>
-                          <circle class="cdot__ring" cx={c.dot[0]} cy={c.dot[1]} r="6" />
-                          <circle class="cdot" cx={c.dot[0]} cy={c.dot[1]} r="6" />
+                          <circle class="cdot__ring" cx={c.dot[0]} cy={c.dot[1]} r="6.5" />
+                          <circle class="cam-body" cx={c.dot[0]} cy={c.dot[1]} r="6.5" />
+                          <circle class="cam-lens" cx={c.dot[0]} cy={c.dot[1]} r="3.4" />
                         </g>
                       ))
                     }
@@ -486,13 +522,31 @@ const UPLOADS = [
                     <span class="th__title th__title--sm">Мусоровоз 07</span>
                     <span class="tp tp--mute">4{NB}камеры</span>
                   </div>
-                  <svg class="cl-truck__svg" viewBox="0 0 240 108">
-                    <g set:html={truckSide} />
-                    {SIG.map((d, k) => <path class="sig" d={d} style={`--s:${k}`} />)}
-                    <circle class="cl-cam" cx="31" cy="50" r="4.5" />
-                    <circle class="cl-cam" cx="86" cy="40" r="4.5" />
-                    <circle class="cl-cam" cx="216" cy="44" r="4.5" />
-                  </svg>
+                  <div class="cl-stage">
+                    <svg class="cl-truck__svg" viewBox={CL_VIEW} focusable="false">
+                      <g set:html={CL_STREET} />
+                      <g class="cl-drive">
+                        <g set:html={TRUCK} />
+                        {
+                          TRUCK_WHEELS.map((cx) => (
+                            <g transform={`translate(${cx} ${TRUCK_WHEEL_Y})`}>
+                              <g class="cl-wheel" set:html={TRUCK_WHEEL} />
+                            </g>
+                          ))
+                        }
+                        <g set:html={CL_MODULE} />
+                        {SIG.map((d, k) => <path class="sig" d={d} style={`--s:${k}`} />)}
+                        {
+                          CL_CAMS.map(([x, y]) => (
+                            <g transform={`translate(${x} ${y})`}>
+                              <circle class="cam-body" r="6.5" />
+                              <circle class="cam-lens" r="3.4" />
+                            </g>
+                          ))
+                        }
+                      </g>
+                    </svg>
+                  </div>
                 </div>
 
                 <span class="cl-link">
@@ -812,7 +866,7 @@ const UPLOADS = [
     aspect-ratio: 460 / 420;
     overflow: hidden;
     border-radius: clamp(10px, 3cqi, 16px);
-    background: #f1f5f8;
+    background: #e2eaf0;
   }
 
   .sch__svg {
@@ -839,10 +893,15 @@ const UPLOADS = [
     opacity: 0;
   }
 
-  .cdot {
+  /* камера на машине — как на мачте весовой в сценах страниц: светлый корпус, синий объектив */
+  .cam-body {
+    fill: #f4f6f9;
+    stroke: #8d9aa5;
+    stroke-width: 1.5;
+  }
+
+  .cam-lens {
     fill: var(--u-blue);
-    stroke: #fff;
-    stroke-width: 2.5;
   }
 
   .cdot__ring {
@@ -1309,15 +1368,23 @@ const UPLOADS = [
     margin-bottom: 6px;
   }
 
+  /* улица с машиной — окно со скруглёнными углами, как кадр сцены на странице TONN */
+  .cl-stage {
+    overflow: hidden;
+    border-radius: clamp(9px, 2.6cqi, 12px);
+    background: #e2eaf0;
+    isolation: isolate;
+  }
+
   .cl-truck__svg {
+    display: block;
     width: 100%;
     height: auto;
   }
 
-  .cl-cam {
-    fill: var(--u-blue);
-    stroke: #fff;
-    stroke-width: 2;
+  .cl-wheel {
+    transform-box: fill-box;
+    transform-origin: center;
   }
 
   .sig {
@@ -1599,7 +1666,16 @@ const UPLOADS = [
     animation: ts-note 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) 1.9s both;
   }
 
-  /* 4. Модуль связи передаёт, по пунктиру бегут пакеты, видео догружаются */
+  /* 4. Машина въезжает слева (колёса катятся), модуль связи передаёт, по пунктиру бегут пакеты,
+     видео догружаются */
+  .tsp.is-active .cl-drive {
+    animation: ts-drive-in 1.7s cubic-bezier(0.3, 0.55, 0.25, 1) 0.1s both;
+  }
+
+  .tsp.is-active .cl-wheel {
+    animation: ts-roll-in 1.7s cubic-bezier(0.3, 0.55, 0.25, 1) 0.1s both;
+  }
+
   .tsp.is-active .sig {
     animation: ts-sig 1.8s ease-in-out infinite;
     animation-delay: calc(var(--s) * 0.22s);
@@ -1897,6 +1973,20 @@ const UPLOADS = [
     from {
       opacity: 0;
       transform: translateX(-10px) scale(0.92);
+    }
+  }
+
+  /* старт — за левым краем кадра: 440 единиц рисунка */
+  @keyframes ts-drive-in {
+    from {
+      transform: translateX(-440px);
+    }
+  }
+
+  /* 440 / (2π · 22) ≈ 3,18 оборота — колёса катятся, а не скользят */
+  @keyframes ts-roll-in {
+    from {
+      transform: rotate(-1146deg);
     }
   }
 
