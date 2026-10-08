@@ -6,7 +6,7 @@ interface Props {
   /** Декор: «звуковая волна» из полос по бокам, горизонтальные полосы, переливающийся шёлк или ничего. */
   deco?: 'bars' | 'stripes' | 'silk' | 'none';
   /** Шёлк: цвет и параметры узора (как в коде заказчика с другого его сайта). */
-  silk?: { color?: string; color2?: string; mode?: 'dark' | 'white' | 'sheen' | 'duo'; speed?: number; scale?: number; noise?: number; rotation?: number };
+  silk?: { color?: string; color2?: string; mode?: 'dark' | 'white' | 'sheen' | 'duo'; strength?: number; speed?: number; scale?: number; noise?: number; rotation?: number };
   class?: string;
   /** Подпись для скринридера; без неё иллюстрация скрыта от него. */
   label?: string;
@@ -61,7 +61,8 @@ const SILK_COLOR: Record<string, string> = {
         data-gv-silk
         data-color={silk.color ?? SILK_COLOR[preset]}
         data-color2={silk.color2 ?? '#ffffff'}
-        data-mode={silk.mode ?? 'sheen'}
+        data-mode={silk.mode ?? 'duo'}
+        data-strength={silk.strength ?? 1}
         data-speed={silk.speed ?? 5}
         data-scale={silk.scale ?? 1}
         data-noise={silk.noise ?? 1.5}
@@ -98,6 +99,7 @@ const SILK_COLOR: Record<string, string> = {
     uniform float uNoiseIntensity;
     uniform vec3  uColor2;
     uniform int   uMode;
+    uniform float uStrength;
     const float e = 2.71828182845904523536;
     float noise(vec2 texCoord) {
       float G = e;
@@ -128,17 +130,21 @@ const SILK_COLOR: Record<string, string> = {
         col.a = 1.0;
         gl_FragColor = col;
       } else if (uMode == 1) {
-        // белый шёлк: от светлого тона подложки (uColor) к белому
-        vec3 c = mix(uColor, vec3(1.0), smoothstep(0.2, 1.0, pattern)) - grain * 0.35;
-        gl_FragColor = vec4(c, 1.0);
+        // белый шёлк поверх градиента подложки: молочные складки, в бликах почти белый
+        float t = smoothstep(0.2, 1.0, pattern);
+        vec3 c = mix(uColor, vec3(1.0), t);
+        float a = clamp((mix(0.28, 0.82, t) - grain * 0.08) * uStrength, 0.0, 1.0);
+        gl_FragColor = vec4(c * a, a);
       } else if (uMode == 2) {
-        // блики шёлка поверх градиента подложки: белый с прозрачностью, складки прозрачные
+        // только блики шёлка поверх градиента подложки: белый с прозрачностью, складки прозрачные
         float a = smoothstep(0.5, 1.0, pattern) * 0.62 + grain * 0.06;
         gl_FragColor = vec4(vec3(a), a);
       } else {
-        // два цвета палитры: тёмные складки — uColor, светлые — uColor2
-        vec3 c = mix(uColor, uColor2, smoothstep(0.2, 1.0, pattern)) - grain * 0.3;
-        gl_FragColor = vec4(c, 1.0);
+        // два цвета палитры поверх градиента подложки: складки — uColor, блики — uColor2, градиент просвечивает
+        float t = smoothstep(0.2, 1.0, pattern);
+        vec3 c = mix(uColor, uColor2, t);
+        float a = clamp((mix(0.32, 0.72, t) - grain * 0.08) * uStrength, 0.0, 1.0);
+        gl_FragColor = vec4(c * a, a);
       }
     }
   `;
@@ -152,9 +158,9 @@ const SILK_COLOR: Record<string, string> = {
 
   const initSilk = (cv: HTMLCanvasElement) => {
     const MODES: Record<string, number> = { dark: 0, white: 1, sheen: 2, duo: 3 };
-    const mode = MODES[cv.dataset.mode || 'sheen'] ?? 2;
-    // блики (sheen) — прозрачный холст поверх градиента подложки, остальные режимы — непрозрачные
-    const gl = cv.getContext('webgl', { alpha: mode === 2, antialias: false, premultipliedAlpha: true });
+    const mode = MODES[cv.dataset.mode || 'duo'] ?? 3;
+    // все режимы, кроме исходного тёмного, — полупрозрачный слой поверх градиента подложки
+    const gl = cv.getContext('webgl', { alpha: mode !== 0, antialias: false, premultipliedAlpha: true });
     if (!gl) return;
     const compile = (type: number, src: string) => {
       const sh = gl.createShader(type)!;
@@ -186,6 +192,8 @@ const SILK_COLOR: Record<string, string> = {
     gl.uniform1f(u('uRotation'), Number(d.rotation) || 0);
     gl.uniform3fv(u('uColor2'), hexToRgb(d.color2 || '#ffffff'));
     gl.uniform1i(u('uMode'), mode);
+    // сила слоя шёлка: меньше — сильнее просвечивает градиент подложки
+    gl.uniform1f(u('uStrength'), Number(d.strength ?? 1));
     const uTime = u('uTime');
 
     let time = 0;
