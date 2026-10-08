@@ -281,13 +281,16 @@ const CASES: Case[] = [
     color: var(--muted);
   }
 
-  /* ── Главная цифра ── */
+  /* ── Главная цифра — акцент карточки: мягкая плашка цвета РО-БОТа, цифра фиолетовая (заказчик, 2026-10-08:
+        «очень блеклые и белые»; акцент — на главном результате кейса) ── */
   .rcs-lead {
     display: grid;
     gap: 12px;
     align-content: start;
-    padding-top: clamp(22px, calc(var(--vw) * 2.2), 32px);
-    border-top: 1px solid var(--line);
+    padding: clamp(22px, calc(var(--vw) * 2.2), 32px);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
+    background: color-mix(in oklab, var(--c-robot) 9%, white);
   }
 
   /* табличные цифры, чтобы ширина не прыгала при досчёте; в «4 548» есть пара 48 — разрядка не теснее −0,025em */
@@ -299,7 +302,7 @@ const CASES: Case[] = [
     letter-spacing: -0.025em;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
-    color: var(--ink);
+    color: color-mix(in oklab, var(--c-robot) 80%, var(--ink));
   }
 
   .rcs-lead__fix {
