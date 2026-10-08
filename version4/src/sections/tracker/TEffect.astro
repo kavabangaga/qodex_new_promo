@@ -622,10 +622,13 @@ const SHOTS = [
     text-align: right;
   }
 
+  /* ширина, а не отступ слева: проценты отступа у элемента сетки Safari считает от всего блока,
+     и скобка уезжала за край (iPhone, 2026-10-08); ширина в % считается от колонки — как у полосы */
   .ef-diff__gap {
     grid-column: 2;
+    justify-self: end;
     position: relative;
-    margin-left: calc(60% + 4px);
+    width: calc(40% - 4px);
     padding-top: 9px;
     font-size: 13px;
     font-weight: 560;
