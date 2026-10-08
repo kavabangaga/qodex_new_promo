@@ -172,7 +172,9 @@ export function productHref(id: ProductId, content: string): string {
 export const METRIKA_ID: number | null = Number(import.meta.env.PUBLIC_METRIKA_ID) || null;
 
 /**
- * Адрес, куда форма отправляет заявку (POST, JSON). Пока пустой — отправка имитируется.
+ * Адрес, куда форма отправляет заявку (POST, JSON). Задаётся при сборке переменной PUBLIC_FORM_ENDPOINT:
+ * для qodex.tech — /api/lead (приёмник server/lead-mailer шлёт заявку на info@qodex.tech, решение заказчика
+ * 2026-10-08). Без переменной (GitHub Pages, разработка) отправка имитируется.
  * Прежде чем задать адрес: CRM и приём заявок — с хранением данных в России; приёмник сохраняет блок
  * consent из заявки и время получения по часам сервера; обработчиков (хостинг, почта, CRM, SMS) назвать
  * в согласии (pages/consent.astro, раздел 4) и поменять дату в CONSENT_EDITION.form; в договорах поручения
@@ -181,7 +183,7 @@ export const METRIKA_ID: number | null = Number(import.meta.env.PUBLIC_METRIKA_I
  * и дописать записи разговоров в раздел 2 согласия. Демонстрации — только в российских сервисах видеосвязи
  * (согласие это обещает).
  */
-export const FORM_ENDPOINT = '';
+export const FORM_ENDPOINT: string = import.meta.env.PUBLIC_FORM_ENDPOINT ?? '';
 
 export const SKOLKOVO_URL = 'https://navigator.sk.ru/orn/1125740';
 
@@ -210,21 +212,21 @@ export const DOC_LINKS = {
  * параметром визита (cookie). Прежние тексты согласия обещают хранить — их хранит история git.
  */
 export const CONSENT_EDITION = {
-  form: '05.10.2026',
-  cookies: '05.10.2026',
+  form: '09.10.2026',
+  cookies: '09.10.2026',
 };
 
 /**
- * Редакции Политики и Пользовательского соглашения (даты). Редакция соглашения от 06.10.2026 вступает в силу
- * 09.10.2026 — в день запуска сайта на qodex.tech (решение заказчика); основание — п. 7.2 прежней редакции
+ * Редакции Политики и Пользовательского соглашения (даты). Все редакции — от 09.10.2026, дня запуска сайта на qodex.tech
+ * (решение заказчика 2026-10-08); соглашение вступает в силу в тот же день; основание — п. 7.2 прежней редакции
  * («если иной срок вступления в силу не определён при размещении»). Её же п. 4.2.2 требует уведомить
  * Пользователей за 30 дней — уведомление разослать как можно раньше. Будущие изменения — по п. 4.2.2 и 7.2
  * новой редакции (не раньше чем через 30 дней). agreementPrevUntil — день перед agreementFrom.
  * Текст Политики зависит от METRIKA_ID — включили Метрику, поменяйте DOC_EDITION.policy; проверить и CONSENT_EDITION.
  */
 export const DOC_EDITION = {
-  policy: '06.10.2026',
-  agreement: '06.10.2026',
+  policy: '09.10.2026',
+  agreement: '09.10.2026',
   agreementFrom: '09.10.2026',
   agreementPrev: '25.05.2023',
   agreementPrevUntil: '08.10.2026',

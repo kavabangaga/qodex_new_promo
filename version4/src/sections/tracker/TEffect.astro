@@ -8,6 +8,15 @@ import ProductLabel from '../../components/ProductLabel.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
 import { productHref, withBase } from '../../config/site';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Презентация Tracker — файл с прежнего сайта (решение заказчика 2026-10-08: пока выкладываем ту, что есть).
+// Размер — при сборке; нет файла — сборка останавливается.
+const DECK = 'tracker.pdf';
+const deckPath = path.join(process.cwd(), 'public', 'files', DECK);
+if (!fs.existsSync(deckPath)) throw new Error(`Нет файла презентации public/files/${DECK}`);
+const DECK_META = `PDF, ${(fs.statSync(deckPath).size / 1024 / 1024).toFixed(1).replace('.', ',')}${String.fromCharCode(160)}МБ`;
 
 // Пять эффектов — с лендинга, дословно
 const EFFECTS: { text: string; icon: IconName }[] = [
@@ -127,6 +136,14 @@ const SHOTS = [
         </a>
       </p>
     </article>
+
+    <p class="ef__deck" data-reveal>
+      <a class="btn btn--outline" href={withBase(`/files/${DECK}`)} download="QODEX Tracker Презентация.pdf" aria-describedby="ef-deck-meta">
+        <Icon name="download" />
+        Скачать презентацию
+      </a>
+      <span class="ef__deck-meta" id="ef-deck-meta">{DECK_META}</span>
+    </p>
   </div>
 </section>
 
@@ -525,6 +542,22 @@ const SHOTS = [
   .ef__next-more {
     grid-area: more;
     align-self: start;
+  }
+
+  /* презентация — под плиткой связки с TONN, по центру */
+  .ef__deck {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px 16px;
+    margin-top: clamp(28px, calc(var(--vw) * 3), 44px);
+  }
+
+  .ef__deck-meta {
+    font-size: 14px;
+    color: var(--muted);
+    white-space: nowrap;
   }
 
   /* ссылка невысокая: область нажатия больше её самой — не меньше 44 px */

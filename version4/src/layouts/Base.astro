@@ -8,13 +8,15 @@ interface Props {
   description?: string;
   /** Схема schema.org для страницы (например, FAQPage). */
   jsonLd?: Record<string, unknown>[];
+  /** Служебная страница (например, копия на согласование): закрыть от поисковиков и на qodex.tech. */
+  noindex?: boolean;
 }
 
-const { title = SITE.title, description = SITE.description, jsonLd = [] } = Astro.props;
+const { title = SITE.title, description = SITE.description, jsonLd = [], noindex: hidden = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
 const ogImage = new URL(withBase(SITE.ogImage), Astro.site ?? SITE.url).href;
 // предварительная версия (не на qodex.tech) закрыта от поисковиков
-const noindex = Astro.site?.hostname !== 'qodex.tech';
+const noindex = hidden || Astro.site?.hostname !== 'qodex.tech';
 // версия значка: при замене фавикона увеличьте — браузеры держат старый значок в своём кэше
 const ICON_V = 2;
 ---

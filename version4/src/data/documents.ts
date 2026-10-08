@@ -36,6 +36,7 @@ export const GENERAL_DOCS: Doc[] = [
   ...(METRIKA_ID ? [{ title: 'Согласие на использование файлов cookie и Яндекс Метрики', page: '/cookies/' }] : []),
   { title: 'Карта партнёра', file: 'partners_map.pdf' },
   { title: 'Для представителей власти', file: 'gov.pdf', kind: 'Презентация' },
+  { title: 'Для региональных операторов ТКО', file: 'qodex-presentation-ro.pdf', kind: 'Презентация' },
 ];
 
 /** Документы по продуктам (на прежнем сайте — «документы по системе QODEX TONN» и презентации из подвала). */

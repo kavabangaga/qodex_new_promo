@@ -5,7 +5,9 @@
 import SectionIntro from '../components/SectionIntro.astro';
 import LeadForm from '../components/LeadForm.astro';
 import Icon from '../components/Icon.astro';
-import { CONTACTS } from '../config/site';
+import { CONTACTS, withBase } from '../config/site';
+import fs from 'node:fs';
+import path from 'node:path';
 
 // Тексты по умолчанию — главная страница; страница продукта передаёт свои.
 interface Props {
@@ -20,6 +22,8 @@ interface Props {
   compact?: boolean;
   /** Шаги «как начать» над формой (страница продукта); последний — с галочкой. Без них блок как на главной. */
   steps?: { title: string; text: string }[];
+  /** Презентация рядом с формой (главная): файл в public/files/, надпись ссылки, имя при скачивании. */
+  deck?: { file: string; label: string; download: string };
 }
 
 const {
@@ -29,7 +33,16 @@ const {
   personLabel = 'Ваш контакт по пилоту',
   compact = false,
   steps = [],
+  deck,
 } = Astro.props;
+
+// размер презентации — при сборке; нет файла — сборка останавливается
+let deckMeta = '';
+if (deck) {
+  const p = path.join(process.cwd(), 'public', 'files', deck.file);
+  if (!fs.existsSync(p)) throw new Error(`Нет файла презентации public/files/${deck.file}`);
+  deckMeta = `PDF, ${(fs.statSync(p).size / 1024 / 1024).toFixed(1).replace('.', ',')}${String.fromCharCode(160)}МБ`;
+}
 
 // Высоты полос «звуковой волны» в центральной карточке
 const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
@@ -79,6 +92,18 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
     <div class="contact__form" data-reveal>
       <LeadForm prefix="ft" layout="row" tone="light" />
     </div>
+
+    {
+      deck && (
+        <p class="contact__deck">
+          <a class="link-arrow" href={withBase(`/files/${deck.file}`)} download={deck.download} aria-describedby="contact-deck-meta">
+            {deck.label}
+            <Icon name="download" />
+          </a>
+          <span class="contact__deck-meta" id="contact-deck-meta">{deckMeta}</span>
+        </p>
+      )
+    }
 
     <ul class="cc" aria-label="Контакты">
       <li class="cc__item cc__item--person" data-reveal style="--d:1">
@@ -213,6 +238,33 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
     .contact__steps {
       grid-template-columns: minmax(0, 1fr);
     }
+  }
+
+  /* Презентация под формой (главная) */
+  .contact__deck {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 14px;
+    margin-top: 22px;
+  }
+
+  .contact__deck .link-arrow {
+    position: relative;
+  }
+
+  /* ссылка невысокая: область нажатия больше её самой — не меньше 44 px */
+  .contact__deck .link-arrow::after {
+    content: '';
+    position: absolute;
+    inset: -12px -6px;
+  }
+
+  .contact__deck-meta {
+    font-size: 14px;
+    color: var(--muted);
+    white-space: nowrap;
   }
 
   /* Горизонтальная форма на белой карточке */
