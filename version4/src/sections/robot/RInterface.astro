@@ -18,8 +18,6 @@ const NB = String.fromCharCode(160); // неразрывный пробел
 interface Screen extends AccItem {
   file: string;
   alt: string;
-  /** Телефон: участок снимка 4:3, который показываем крупнее, — левый край, верх и ширина в пикселях снимка 1600×900. */
-  crop: [number, number, number];
 }
 
 // Заголовки и тексты — с лендинга дословно
@@ -29,7 +27,6 @@ const SCREENS: Screen[] = [
     title: 'Видно, сколько денег приносит сверка',
     text: 'Не отчёт ради отчёта — вы видите потенциал доначислений в рублях.',
     file: 'shot-reports',
-    crop: [0, 0, 800],
     alt:
       'Экран «Отчёты и аналитика»: найдено 604 лицевых счёта с расхождениями, обработано оператором 392, ' +
       'внесено в биллинг 305, отклонено 87; причины отклонений и динамика за период',
@@ -39,7 +36,6 @@ const SCREENS: Screen[] = [
     title: `Весь регион как на${NB}ладони`,
     text: 'Сразу понятно, где работа идёт, а где встала.',
     file: 'shot-regions',
-    crop: [540, 90, 800],
     alt:
       'Экран «ГИС ЖКХ» по Башкортостану: районы и города, число домов, квартир и жильцов по ГИС, ' +
       'ход выгрузки, сверки и проверки по каждому городу',
@@ -49,7 +45,6 @@ const SCREENS: Screen[] = [
     title: `Разница в${NB}жильцах — до${NB}каждой квартиры`,
     text: 'Точность, до которой вручную никто не доходит.',
     file: 'shot-house',
-    crop: [540, 90, 800],
     alt:
       'Многоквартирный дом: по каждой квартире — лицевой счёт, жильцы по ГИС ЖКХ и по биллингу, ' +
       'разница и даты обновления',
@@ -59,7 +54,6 @@ const SCREENS: Screen[] = [
     title: `Неделя ручной${NB}работы — за${NB}пару часов`,
     text: `Сверка ГИС${NB}ЖКХ и вашего биллинга в${NB}одном месте, чтобы сразу увидеть разницу.`,
     file: 'shot-workplace',
-    crop: [250, 225, 900],
     alt:
       'Экран «Рабочее место»: к обработке 47, повторно 4, обновлено 9, отклонено 5; адреса с лицевым счётом, ' +
       'числом жильцов по ГИС и по биллингу, разницей и датами обновления',
@@ -69,7 +63,6 @@ const SCREENS: Screen[] = [
     title: `Одна кнопка — и${NB}биллинг обновлён`,
     text: `Скриншот из${NB}ГИС прикладывается сам, как доказательство.`,
     file: 'shot-card',
-    crop: [800, 0, 800],
     alt:
       'Карточка расхождения по квартире: по ГИС 5 жильцов, в биллинге 3, разница +2; кнопки «Отклонить» ' +
       'и «Обновить в биллинге», отмечено автоматическое скачивание скриншота',
@@ -78,12 +71,6 @@ const SCREENS: Screen[] = [
 
 const items: AccItem[] = SCREENS.map(({ icon, title, text }) => ({ icon, title, text }));
 const src = (file: string, w: number) => withBase(`/media/robot/${file}-${w}.webp`);
-
-// На телефоне снимок целиком слишком мелкий: в рамке 4:3 виден участок экрана с его главными цифрами.
-// Ширина картинки и сдвиг — в долях рамки.
-const cropStyle = ([x, y, w]: [number, number, number]) =>
-  `--crop-w:${((1600 / w) * 100).toFixed(3)}%; --crop-x:${((-x / w) * 100).toFixed(3)}%; ` +
-  `--crop-y:${((-y / (w * 0.75)) * 100).toFixed(3)}%`;
 ---
 
 <section class="section rif" id="interfeys" aria-labelledby="interfeys-title">
@@ -101,12 +88,12 @@ const cropStyle = ([x, y, w]: [number, number, number]) =>
             {
               SCREENS.map((s, i) => (
                 <div class:list={['rif-pane', { 'is-active': i === 0 }]} data-pane aria-hidden={i === 0 ? 'false' : 'true'}>
-                  <div class="rif-frame" style={cropStyle(s.crop)}>
+                  <div class="rif-frame">
                     <img
                       class="rif-frame__img"
                       src={src(s.file, 1600)}
                       srcset={`${src(s.file, 800)} 800w, ${src(s.file, 1600)} 1600w`}
-                      sizes="(max-width: 620px) 200vw, (max-width: 1199.98px) calc(100vw - 48px), 920px"
+                      sizes="(max-width: 1199.98px) calc(100vw - 48px), 920px"
                       width="1600"
                       height="900"
                       alt={`Демо-данные. ${s.alt}`}
@@ -257,21 +244,12 @@ const cropStyle = ([x, y, w]: [number, number, number]) =>
       padding: 52px 14px 14px;
     }
 
+    /* снимок целиком, в своих пропорциях (без обрезки рамкой 4:3 — заказчик, 2026-10-08) */
     .rif-frame {
-      position: relative;
-      aspect-ratio: 4 / 3;
       border-radius: 12px;
       box-shadow:
         0 0 0 5px rgb(255 255 255 / 0.4),
         var(--shadow-card);
-    }
-
-    .rif-frame__img {
-      position: absolute;
-      top: var(--crop-y);
-      left: var(--crop-x);
-      width: var(--crop-w);
-      max-width: none;
     }
   }
 </style>

@@ -42,6 +42,8 @@ const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined
 ---
 
 <header class="hdr" data-hdr>
+  <!-- подложка под открытым мобильным меню: затемняет страницу, нажатие закрывает меню -->
+  <div class="mnav-scrim" data-mnav-scrim aria-hidden="true"></div>
   <div class="hdr__bar">
     <a href={withBase('/')} class="hdr__logo" aria-label="QODEX — на главную"><Logo height={21} /></a>
 
@@ -410,7 +412,34 @@ const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined
   }
 
   /* Мобильное меню: белая карточка под плашкой */
+  /* под открытым меню страница затемнена и не прокручивается (заказчик, 2026-10-08) */
+  .mnav-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: rgb(29 29 31 / 0.32);
+    backdrop-filter: blur(6px);
+    touch-action: none;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.25s var(--ease-out),
+      visibility 0s linear 0.25s;
+  }
+
+  .hdr.is-open .mnav-scrim {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.25s var(--ease-out);
+  }
+
+  /* только html: у body overflow сделал бы его отдельной прокруткой, и липкая шапка уехала бы из окна */
+  :global(html.is-menu) {
+    overflow: hidden;
+  }
+
   .mnav {
+    overscroll-behavior: contain;
     position: absolute;
     top: calc(100% + 16px);
     left: var(--page-pad);
@@ -576,12 +605,20 @@ const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
 
+  const scrim = hdr.querySelector<HTMLElement>('[data-mnav-scrim]')!;
   const setMenu = (open: boolean) => {
     mnav.hidden = !open;
     hdr.classList.toggle('is-open', open);
+    // страница под открытым меню не прокручивается
+    document.documentElement.classList.toggle('is-menu', open);
     burger.setAttribute('aria-expanded', String(open));
   };
   burger.addEventListener('click', () => setMenu(mnav.hidden));
+  scrim.addEventListener('click', () => setMenu(false));
+  // окно расширили до компьютерной раскладки — мобильное меню закрываем
+  window.matchMedia('(min-width: 1200px)').addEventListener('change', (e) => {
+    if (e.matches && !mnav.hidden) setMenu(false);
+  });
   mnav.addEventListener('click', (e) => {
     if ((e.target as Element).closest('a')) setMenu(false);
   });

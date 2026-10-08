@@ -139,9 +139,13 @@ const MODULES = [
         </a>
       </div>
 
-      <!-- Как считали: дословно с лендинга -->
-      <div class="rcalc-rules" data-reveal style="--d:3">
-        <h3 class="rcalc-rules-title">Правила подсчёта</h3>
+      <!-- Как считали: дословно с лендинга. До 1200 px — свёрнуто под плашкой (заказчик, 2026-10-08),
+           на широком экране всегда открыто: карточка стоит рядом с высокой карточкой результата -->
+      <details class="rcalc-rules" data-rcalc-rules open data-reveal style="--d:3">
+        <summary class="rcalc-rules-sum">
+          <h3 class="rcalc-rules-title">Правила подсчёта</h3>
+          <Icon name="chevron-down" size={18} strokeWidth={2} class="rcalc-rules-chev" />
+        </summary>
         <p class="rcalc-rules-text">
           Оценка по статистике реальных прогонов и пилотных проектов: ≈2,87&nbsp;неучтённого жителя на дом, из них
           в начисления попадает пятая часть; ≈7%&nbsp;жилфонда вне базы; 26%&nbsp;договоров с юрлицами подтверждается; средний
@@ -149,7 +153,7 @@ const MODULES = [
           подтверждения&nbsp;0,8: часть найденного отсеивается при проверке вашими сотрудниками. Итог показан вилкой: нижняя
           граница — половина расчётной суммы. Фактический объём по вашей зоне покажем на демонстрации.
         </p>
-      </div>
+      </details>
     </div>
   </div>
 </section>
@@ -460,6 +464,32 @@ const MODULES = [
     mask: var(--bridge-mask-col);
   }
 
+  /* плашка-заголовок: на широком экране — просто заголовок, уже 1200 px — кнопка раскрытия */
+  .rcalc-rules-sum {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    list-style: none;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .rcalc-rules-sum::-webkit-details-marker {
+    display: none;
+  }
+
+  .rcalc-rules-sum :global(.rcalc-rules-chev) {
+    display: none;
+    flex: none;
+    color: var(--ink-2);
+    transition: transform 0.3s var(--ease-out);
+  }
+
+  .rcalc-rules[open] .rcalc-rules-sum :global(.rcalc-rules-chev) {
+    transform: rotate(180deg);
+  }
+
   .rcalc-rules-title {
     font-size: 1.0625rem;
     line-height: 1.35;
@@ -495,6 +525,32 @@ const MODULES = [
 
     .rcalc-rules::before {
       content: none;
+    }
+
+    /* свёрнутые правила: вся плашка — кнопка, область нажатия не меньше 44 px */
+    .rcalc-rules {
+      padding-block: 0;
+    }
+
+    .rcalc-rules-sum {
+      min-height: 56px;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .rcalc-rules-sum :global(.rcalc-rules-chev) {
+      display: block;
+    }
+
+    .rcalc-rules-sum:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 4px;
+      border-radius: 8px;
+    }
+
+    .rcalc-rules-text {
+      margin-top: 0;
+      padding-bottom: var(--rcalc-pad);
     }
 
     .rcalc-mod {
@@ -569,6 +625,21 @@ const MODULES = [
 
 <script>
   import { reducedMotion } from '../../scripts/motion';
+
+  // «Правила подсчёта»: на широком экране всегда открыты, уже 1200 px — свёрнуты, пока их не раскроют
+  {
+    const rules = document.querySelector<HTMLDetailsElement>('[data-rcalc-rules]');
+    const wide = window.matchMedia('(min-width: 1200px)');
+    if (rules) {
+      const sync = () => (rules.open = wide.matches);
+      sync();
+      wide.addEventListener('change', sync);
+      // на широком экране не сворачиваются и с клавиатуры
+      rules.addEventListener('toggle', () => {
+        if (wide.matches && !rules.open) rules.open = true;
+      });
+    }
+  }
 
   interface Calc {
     residentsPerHome: number;
