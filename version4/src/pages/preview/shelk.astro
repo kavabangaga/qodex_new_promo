@@ -1,0 +1,64 @@
+---
+// Служебная страница: три варианта шёлка на одной подложке — заказчику для сравнения (закрыта от поисковиков).
+// На плашке «Импорт из Excel» (Кодекс ТКО) стоит вариант «блики» (по умолчанию). Удалить после выбора.
+import Base from '../../layouts/Base.astro';
+import GradientVisual from '../../components/GradientVisual.astro';
+
+const VARIANTS = [
+  { name: 'Белый шёлк', note: 'ткань от светлого тона подложки до белого', silk: { mode: 'white', color: '#bcd9f2' } },
+  { name: 'Блики по градиенту — стоит на сайте', note: 'фирменный градиент подложки + белые переливы шёлка', silk: { mode: 'sheen' } },
+  { name: 'Два цвета палитры', note: 'голубой и светло-мятный', silk: { mode: 'duo', color: '#79b0ea', color2: '#eef8dc' } },
+  { name: 'Как в исходном коде', note: 'цвет × узор — складки почти чёрные', silk: { mode: 'dark' } },
+] as const;
+---
+
+<Base title="Шёлк — варианты фона | QODEX" noindex>
+  <main class="container sh">
+    <h1 class="t-h2">Шёлк на подложке — варианты</h1>
+    <div class="sh__grid">
+      {
+        VARIANTS.map((v) => (
+          <figure class="sh__item">
+            <GradientVisual preset="mint" deco="silk" silk={v.silk}>
+              <div class="ui sh__card">
+                <b>{v.name}</b>
+                <span>{v.note}</span>
+              </div>
+            </GradientVisual>
+          </figure>
+        ))
+      }
+    </div>
+  </main>
+</Base>
+
+<style>
+  .sh {
+    padding-block: 48px 80px;
+  }
+
+  .sh__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 28px;
+  }
+
+  .sh__card {
+    display: grid;
+    gap: 6px;
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  .sh__card b {
+    color: var(--ink);
+    font-size: 17px;
+  }
+
+  @media (max-width: 760px) {
+    .sh__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
