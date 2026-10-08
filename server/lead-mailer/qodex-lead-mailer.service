@@ -1,0 +1,58 @@
+# QODEX: приёмник заявок с сайта qodex.tech → почта (см. README.md).
+# Установка: /etc/systemd/system/qodex-lead-mailer.service, затем
+#   systemctl daemon-reload && systemctl enable --now qodex-lead-mailer
+
+[Unit]
+Description=QODEX lead mailer: заявки с сайта qodex.tech на почту
+After=network-online.target
+Wants=network-online.target
+# ошибка в настройках не должна перезапускать службу бесконечно: после 5 неудачных запусков за 2 минуты — стоп
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+[Service]
+Type=simple
+# Отдельный системный пользователь (создаётся при установке, README.md шаг 1). Не DynamicUser: очистка
+# записей о согласии по cron работает от того же пользователя и не меняет владельца файла.
+User=qodex-lead
+Group=qodex-lead
+EnvironmentFile=/etc/qodex/lead-mailer.env
+ExecStart=/usr/bin/python3 -I /opt/qodex-lead-mailer/lead_mailer.py
+Restart=on-failure
+RestartSec=5
+# при остановке приёмник дописывает заявки, которые как раз отправляются (худший случай — 130 с)
+TimeoutStopSec=150
+
+# /var/lib/qodex-lead — записи о согласии; доступ только у службы. Остальная файловая система для службы —
+# только чтение (ProtectSystem=strict): если CONSENT_LOG перенесли в другую папку, впишите её сюда
+# (ReadWritePaths=/var/lib/qodex-lead /новая/папка) и выполните systemctl daemon-reload.
+StateDirectory=qodex-lead
+StateDirectoryMode=0700
+ReadWritePaths=/var/lib/qodex-lead
+UMask=0077
+
+# Ограничения: служба только принимает HTTP на 127.0.0.1 и ходит на почтовый сервер
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target
