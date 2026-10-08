@@ -6,8 +6,10 @@
 // Анимации — только transform и opacity: идут у активной панели и только пока картинка на экране,
 // при «уменьшить движение» выключены (видно итоговое состояние). Картинку описывает текст рядом,
 // поэтому для скринридера она скрыта (aria-hidden ставит GradientVisual или блок «Пилот»).
+// Настоящие кадры (заказчик, 2026-10-08): Tracker, шаги 1–2 — камеры мусоровоза, TONN, шаг 2 — фото взвешивания.
+// Кадр показывается целиком, в своих пропорциях; карточки не шире и не выше прежних рисунков.
 import Icon from './Icon.astro';
-import type { ProductId } from '../config/site';
+import { withBase, type ProductId } from '../config/site';
 
 interface Props {
   id: ProductId | 'registry';
@@ -52,36 +54,31 @@ const diffs = [
 // Реестр для «Пилота»: первой — строка юрлица, на ней метки 1–3
 const registry = [diffs[1], diffs[0], diffs[2]];
 
-// Мусорный контейнер для «кадров с камер» (рисунок, не фото): x, y — левый верх, w — ширина
-function bin(x: number, y: number, w: number, color: string, full = false): string {
-  const s = w / 40;
-  const bags = full
-    ? '<ellipse cx="13" cy="7" rx="9" ry="6" fill="#4d5a66"/><ellipse cx="26" cy="6" rx="10" ry="7" fill="#6b7884"/><ellipse cx="20" cy="4" rx="6" ry="4" fill="#3e4954"/>'
-    : '';
-  const lid = full
-    ? '<rect x="2" y="2" width="36" height="5" rx="2" fill="#2b3a33" transform="rotate(-24 2 7)"/>'
-    : '<rect x="1" y="5" width="38" height="6" rx="2" fill="#2b3a33" fill-opacity=".55"/>';
-  return `<g transform="translate(${x} ${y}) scale(${s})">${bags}<path d="M3.5 10h33l-3 28a3 3 0 0 1-3 2.7H9.5a3 3 0 0 1-3-2.7Z" fill="${color}"/>${lid}<path d="M13 16v17M20 16v17M27 16v17" stroke="#000" stroke-opacity=".14" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="43" r="3.2" fill="#26313a"/><circle cx="29" cy="43" r="3.2" fill="#26313a"/></g>`;
-}
+// ── QODEX Tracker: настоящие кадры с камер мусоровоза (public/media/tracker), демо-данные — как на странице
+// Tracker: Мусоровоз 07, ул. Садовая, 21, 08:42. Кадры спереди и слева есть одним файлом (418 и 316 px),
+// ячейка не шире 200 px — не растягиваются. Ячейка 16:9, как у кадров; широкий кадр спереди (418 × 176)
+// вписан целиком, над ним тёмная полоса, как на мониторе видеорегистратора.
+const media = (p: string) => withBase(`/media/${p}`);
+const CAMS = [
+  { side: 'спереди', file: 'cam-front', w: 418, h: 176, wide: true, alt: 'Кадр камеры 1, спереди: улица по ходу мусоровоза' },
+  { side: 'слева', file: 'cam-left', w: 316, h: 177, alt: 'Кадр камеры 2, слева: грунтовая улица и обочина' },
+  { side: 'справа', file: 'cam-b-before', set: [720, 1200], w: 1200, h: 675, alt: 'Кадр камеры 3, справа: контейнерная площадка, контейнеры заполнены' },
+  { side: 'сзади', file: 'cam-a-before', set: [720, 1200], w: 1200, h: 675, alt: 'Кадр камеры 4, над подъёмником: контейнер с отходами перед погрузкой' },
+];
+const camSrc = (c: (typeof CAMS)[number]) => media(`tracker/${c.file}${c.set ? `-${c.set[1]}` : ''}.webp`);
+const camSet = (c: (typeof CAMS)[number]) =>
+  c.set ? c.set.map((w) => `${media(`tracker/${c.file}-${w}.webp`)} ${w}w`).join(', ') : `${camSrc(c)} ${c.w}w`;
+// ширина ячейки: телефон — половина карточки без полей, иначе не больше 200 px
+const CAM_SIZES = '(max-width: 520px) calc((100vw - 116px) / 2), 200px';
 
-// Площадка ТКО «до» (контейнеры полные) и «после» погрузки — для сетки из четырёх камер
-const site = (full: boolean) =>
-  `<rect width="160" height="100" fill="#dbe5eb"/><rect y="30" width="160" height="26" fill="#c8d3da"/>` +
-  `<path d="M0 36h160M8 30v26M40 30v26M72 30v26M104 30v26M136 30v26" stroke="#b5c1c9" stroke-width="1.5"/>` +
-  `<rect y="56" width="160" height="44" fill="#b3bfc7"/><rect x="16" y="62" width="128" height="24" rx="3" fill="#c5cdd3"/>` +
-  bin(28, 38, 30, '#3f8a6c', full) +
-  bin(65, 38, 30, '#3f8a6c', full) +
-  bin(102, 38, 30, '#4a76ad', full);
-
-// Крупный кадр: три контейнера, которые ИИ обводит рамками
-const yard =
-  `<rect width="320" height="190" fill="#dde7ed"/><rect y="52" width="320" height="44" fill="#ccd6dd"/>` +
-  `<path d="M0 62h320M20 52v44M80 52v44M140 52v44M200 52v44M260 52v44" stroke="#b9c4cc" stroke-width="2"/>` +
-  `<rect y="96" width="320" height="94" fill="#b6c2ca"/><rect x="40" y="132" width="240" height="30" rx="4" fill="#c6ced4"/>` +
-  bin(62, 86, 48, '#3f8a6c', true) +
-  bin(136, 86, 48, '#3f8a6c', true) +
-  bin(210, 86, 48, '#4a76ad', true) +
-  `<rect x="292" y="20" width="40" height="170" fill="#7d8a95"/><rect x="298" y="36" width="22" height="70" rx="3" fill="#94a2ad"/>`;
+// Кадр камеры 3 (cam-b-before, 1200 × 675): рамки ИИ вокруг четырёх контейнеров, спереди назад —
+// левый край, верх, ширина, высота в % кадра
+const BINS = [
+  [48.2, 67, 26.5, 32.6],
+  [59.3, 50.8, 19.8, 26.2],
+  [66.3, 39.7, 14.4, 16.6],
+  [71.6, 34.1, 10.8, 10.4],
+];
 
 // Мусоровоз анфас на въезде весовой (номер — отдельной табличкой поверх рисунка)
 const truck =
@@ -95,7 +92,16 @@ const truck =
   `<rect x="90" y="124" width="140" height="22" rx="6" fill="#45505b"/>` +
   `<rect x="100" y="146" width="22" height="26" rx="5" fill="#222a31"/><rect x="198" y="146" width="22" height="26" rx="5" fill="#222a31"/>`;
 
-// Кузов сверху — «фото кузова» на весовой и в актах
+// ── QODEX TONN: фото с камеры весовой (галерея страницы TONN, госномер размыт), 1080 × 672 ──
+const WEIGH_PHOTO = {
+  src: media('tonn/gallery-11-1080.webp'),
+  set: `${media('tonn/gallery-11-540.webp')} 540w, ${media('tonn/gallery-11-1080.webp')} 1080w`,
+  // узкая карточка (телефон уже 404 px) — фото не шире 244 px, иначе полкарточки, не больше 200 px
+  sizes: '(max-width: 403.98px) 244px, 200px',
+  alt: 'Фото взвешивания с камеры весовой: оранжевый КамАЗ под навесом весовой, на въезде шлагбаум',
+};
+
+// Кузов сверху — миниатюры фото в актах
 const body =
   `<rect width="120" height="80" fill="#9aa6b0"/><rect x="14" y="10" width="92" height="60" rx="6" fill="#55708a"/>` +
   `<rect x="20" y="16" width="80" height="48" rx="4" fill="#6c7f74"/>` +
@@ -254,7 +260,7 @@ const acts = [
       {/* ── QODEX Tracker ─────────────────────────────────────── */}
       {id === 'tracker' && (
         <>
-          {/* 1. Четыре камеры снимают площадку до и после погрузки */}
+          {/* 1. Четыре камеры снимают площадку до и после погрузки — настоящие кадры */}
           <div class="pane is-active" data-pane>
             <div class="ui card">
               <div class="u-head">
@@ -265,18 +271,24 @@ const acts = [
                 </span>
               </div>
               <div class="cams">
-                {[1, 2, 3, 4].map((n, k) => (
-                  <div class="cam a-fade" style={`--t:${0.15 + k * 0.18}s`}>
-                    <svg
-                      viewBox="0 0 160 100"
-                      preserveAspectRatio="xMidYMid slice"
-                      class:list={{ 'is-flip': k > 1 }}
-                      set:html={site(k % 2 === 0)}
+                {CAMS.map((c, k) => (
+                  <div class:list={['cam', 'a-fade', { 'cam--wide': c.wide }]} style={`--t:${0.15 + k * 0.18}s`}>
+                    <img
+                      class="cam__img"
+                      src={camSrc(c)}
+                      srcset={camSet(c)}
+                      sizes={CAM_SIZES}
+                      width={c.w}
+                      height={c.h}
+                      alt={c.alt}
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
                     />
                     <span class="cam__tag">
-                      Кам. {n} · {k % 2 === 0 ? 'до' : 'после'}
+                      Кам.{NB}{k + 1} · {c.side}
                     </span>
-                    <span class="cam__time">08:4{2 + (k % 2)}</span>
+                    <span class="cam__time">08:42</span>
                     <span class="cam__flash a-flash" style={`--t:${0.9 + k * 0.25}s`} />
                   </div>
                 ))}
@@ -291,40 +303,55 @@ const acts = [
             </div>
           </div>
 
-          {/* 2. ИИ считает контейнеры, спорные — диспетчеру */}
+          {/* 2. ИИ считает контейнеры, спорные — диспетчеру: настоящий кадр камеры 3, рамки ИИ поверх */}
           <div class="pane" data-pane>
             <div class="ui card">
-              <div class="frame">
-                <svg viewBox="0 0 320 190" preserveAspectRatio="xMidYMid slice" set:html={yard} />
-                {[0, 1, 2].map((k) => (
-                  <span class="det a-pop" style={`--k:${k}; --t:${0.5 + k * 0.45}s`}>
+              <div class="frame frame--photo">
+                <img
+                  class="frame__img"
+                  src={media('tracker/cam-b-before-1200.webp')}
+                  srcset={`${media('tracker/cam-b-before-720.webp')} 720w, ${media('tracker/cam-b-before-1200.webp')} 1200w`}
+                  sizes="(max-width: 520px) calc(100vw - 108px), 404px"
+                  width="1200"
+                  height="675"
+                  alt="Кадр камеры 3: контейнерная площадка, ИИ обвёл рамками четыре заполненных контейнера"
+                  loading="lazy"
+                  decoding="async"
+                  draggable="false"
+                />
+                {BINS.map(([x, y, w, h], k) => (
+                  <span
+                    class="det a-pop"
+                    style={`left:${x}%; top:${y}%; width:${w}%; height:${h}%; --t:${0.5 + k * 0.4}s`}
+                  >
                     <i>{k + 1}</i>
                   </span>
                 ))}
-                <span class="frame__tag">Кам. 2 · 08:43</span>
+                <span class="frame__tag">Кам.{NB}3 · 08:42</span>
                 <span class="frame__count">
                   <span class="u-dot u-dot--ok" />
                   Погружено:
                   <span class="num">
                     <b class="a-blip" style="--t:0s; --dur:0.5s">0</b>
-                    <b class="a-blip" style="--t:0.5s; --dur:0.45s">1</b>
-                    <b class="a-blip" style="--t:0.95s; --dur:0.45s">2</b>
-                    <b class="a-pop" style="--t:1.4s">3</b>
+                    <b class="a-blip" style="--t:0.5s; --dur:0.4s">1</b>
+                    <b class="a-blip" style="--t:0.9s; --dur:0.4s">2</b>
+                    <b class="a-blip" style="--t:1.3s; --dur:0.4s">3</b>
+                    <b class="a-pop" style="--t:1.7s">4</b>
                   </span>
                 </span>
               </div>
               <ul class="u-list u-list--tight">
-                <li class="u-row a-in" style="--t:1.7s">
+                <li class="u-row a-in" style="--t:2s">
                   <span class="u-row__main">
                     <b>Площадка 14</b>
                     <small>посчитал ИИ</small>
                   </span>
                   <span class="u-pill u-pill--ok">
                     <Icon name="check" size={12} strokeWidth={3} />
-                    3 из 3
+                    4 из 4
                   </span>
                 </li>
-                <li class="u-row a-in" style="--t:1.9s">
+                <li class="u-row a-in" style="--t:2.2s">
                   <span class="u-row__main">
                     <b>Площадка 15</b>
                     <small>спорный кадр</small>
@@ -436,9 +463,9 @@ const acts = [
             </div>
           </div>
 
-          {/* 2. Вес и фото кузова — без ручного ввода */}
+          {/* 2. Вес и фото — без ручного ввода (настоящее фото с камеры весовой) */}
           <div class="pane" data-pane>
-            <div class="ui card">
+            <div class="ui card card--weigh">
               <div class="u-head">
                 <span class="u-title">Взвешивание</span>
                 <span class="u-sub">А983ВВ 102</span>
@@ -461,23 +488,36 @@ const acts = [
                   </span>
                 </div>
                 <div class="weigh__photo a-in" style="--t:0.6s">
-                  <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" set:html={body} />
-                  <span class="cam__flash a-flash" style="--t:0.9s" />
+                  <span class="weigh__pic">
+                    <img
+                      class="weigh__img"
+                      src={WEIGH_PHOTO.src}
+                      srcset={WEIGH_PHOTO.set}
+                      sizes={WEIGH_PHOTO.sizes}
+                      width="1080"
+                      height="672"
+                      alt={WEIGH_PHOTO.alt}
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
+                    />
+                    <span class="cam__flash a-flash" style="--t:0.9s" />
+                  </span>
                   <span class="weigh__ph">
                     <Icon name="camera" size={12} strokeWidth={2.2} />
-                    Фото кузова
+                    Фото взвешивания
                   </span>
                 </div>
-              </div>
-              <div class="u-two">
-                <span class="u-row u-row--stat">
-                  <small>Тара</small>
-                  <b>8{NB}310 кг</b>
-                </span>
-                <span class="u-row u-row--stat">
-                  <small>Нетто</small>
-                  <b>4{NB}170 кг</b>
-                </span>
+                <div class="u-two">
+                  <span class="u-row u-row--stat">
+                    <small>Тара</small>
+                    <b>8{NB}310 кг</b>
+                  </span>
+                  <span class="u-row u-row--stat">
+                    <small>Нетто</small>
+                    <b>4{NB}170 кг</b>
+                  </span>
+                </div>
               </div>
               <p class="u-note a-in" style="--t:1.5s">
                 <Icon name="check" size={14} strokeWidth={2.6} />
@@ -1294,7 +1334,7 @@ const acts = [
     font-weight: 560;
   }
 
-  /* ── Камеры (рисунки, не фото) ─────────────────────────── */
+  /* ── Камеры: настоящие кадры (Tracker) и рисунок въезда (TONN) ── */
   .cams {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1310,30 +1350,47 @@ const acts = [
     isolation: isolate;
   }
 
+  /* ячейка в пропорциях кадров 16:9; тёмный фон — полоса над широким кадром спереди */
   .cam {
-    aspect-ratio: 16 / 10;
+    container-type: inline-size;
+    aspect-ratio: 16 / 9;
+    background: #171b1f;
   }
 
-  .cam svg,
+  .cam__img,
+  .frame__img,
+  .weigh__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* широкий кадр (418 × 176) — целиком, прижат к низу: метка и время стоят в полосе над ним */
+  .cam--wide .cam__img {
+    object-fit: contain;
+    object-position: 50% 100%;
+  }
+
   .frame svg,
-  .weigh__photo svg,
   .act__ph svg {
     width: 100%;
     height: 100%;
   }
 
-  .cam svg.is-flip {
-    transform: scaleX(-1);
-  }
-
-  /* лёгкая «камера»: виньетка */
-  .cam::after,
+  /* лёгкая «камера»: виньетка на рисунке въезда */
   .frame::after {
     content: '';
     position: absolute;
     inset: 0;
     background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgb(29 29 31 / 0.22));
     pointer-events: none;
+  }
+
+  .frame--photo::after {
+    content: none;
   }
 
   .cam__tag,
@@ -1358,8 +1415,40 @@ const acts = [
 
   .cam__time {
     right: 6px;
-    bottom: 6px;
+    top: 6px;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* над широким кадром метка и время целиком в полосе (на 1024 px полоса всего 24 px) */
+  @container (min-width: 160px) {
+    .cam--wide .cam__tag,
+    .cam--wide .cam__time {
+      top: 5px;
+    }
+  }
+
+  /* в узкой ячейке (телефон) метка и время сверху не помещаются рядом — время уходит вниз,
+     плашки ниже, чтобы метка широкого кадра осталась в полосе */
+  @container (max-width: 159.98px) {
+    .cam__tag,
+    .cam__time {
+      padding: 1px 5px;
+    }
+
+    .cam__tag {
+      left: 4px;
+      top: 4px;
+    }
+
+    .cam--wide .cam__tag {
+      top: 2px;
+    }
+
+    .cam__time {
+      top: auto;
+      right: 4px;
+      bottom: 4px;
+    }
   }
 
   .frame__tag {
@@ -1383,33 +1472,63 @@ const acts = [
     aspect-ratio: 320 / 190;
   }
 
-  /* рамки распознавания вокруг контейнеров */
+  /* кадр камеры 16:9 целиком. Он ниже прежнего рисунка 320 × 190 на 3,125% ширины — столько же
+     добавлено к отступу списка под ним (у margin проценты считаются от ширины): высота шага не меняется,
+     и градиентная карточка остаётся прежней */
+  .frame--photo {
+    container-type: inline-size;
+    aspect-ratio: 16 / 9;
+    background: #c9d2d6;
+  }
+
+  /* узкий кадр (телефон, две колонки при окне 901–1000 px): плашка «Погружено» компактнее,
+     чтобы не заходить на рамку контейнера 1 */
+  @container (max-width: 329.98px) {
+    .frame--photo .frame__count {
+      left: 4px;
+      bottom: 4px;
+      gap: 4px;
+      padding: 3px 8px 3px 6px;
+      font-size: 12px;
+    }
+
+    .frame--photo .frame__count .u-dot {
+      width: 8px;
+      height: 8px;
+    }
+  }
+
+  .frame.frame--photo + .u-list {
+    margin-top: calc(12px + 3.125%);
+  }
+
+  /* рамки распознавания вокруг контейнеров; положение и размер — в % кадра (BINS), номер — над рамкой */
   .det {
     position: absolute;
     z-index: 1;
-    top: 43%;
-    left: calc(17.5% + var(--k) * 23.1%);
-    width: 18.8%;
-    height: 36%;
-    border: 2px solid #6bb1ff;
-    border-radius: 8px;
-    background: rgb(107 177 255 / 0.12);
+    border: 2px solid #2f86ff;
+    border-radius: 4px;
+    background: rgb(47 134 255 / 0.1);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.35);
+    transform-origin: 0 0;
   }
 
   .det i {
     position: absolute;
-    top: -2px;
+    bottom: 100%;
     left: -2px;
     display: grid;
     place-items: center;
-    width: 20px;
-    height: 20px;
-    border-radius: 6px 0 6px 0;
-    background: #6bb1ff;
+    min-width: 16px;
+    height: 15px;
+    padding: 0 3px;
+    border-radius: 4px 4px 0 0;
+    background: #2f86ff;
     color: #fff;
-    font-size: 11px;
+    font-size: 10.5px;
     font-style: normal;
     font-weight: 600;
+    line-height: 1;
   }
 
   .frame__count {
@@ -1624,13 +1743,27 @@ const acts = [
     letter-spacing: 0.01em;
   }
 
+  /* взвешивание: брутто и фото рядом, под ними тара и нетто. Раскладку выбирает ширина карточки */
+  .card--weigh {
+    container-type: inline-size;
+  }
+
   .weigh {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'val photo'
+      'two two';
     gap: 10px;
   }
 
+  .weigh .u-two {
+    grid-area: two;
+    margin-top: 0;
+  }
+
   .weigh__val {
+    grid-area: val;
     display: grid;
     align-content: center;
     justify-items: start;
@@ -1671,33 +1804,73 @@ const acts = [
     color: var(--muted);
   }
 
+  /* фото целиком (1080 × 672), под ним подпись; высота ячейки — по фото с подписью или по брутто, если оно выше
+     (тогда подпись получает остаток) */
   .weigh__photo {
+    grid-area: photo;
     position: relative;
-    min-height: 120px;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     border-radius: 16px;
+    background: var(--u-row);
+  }
+
+  .weigh__pic {
+    position: relative;
+    flex: none;
+    aspect-ratio: 1080 / 672;
+    overflow: hidden;
     background: #9aa6b0;
   }
 
-  .weigh__photo svg {
-    position: absolute;
-    inset: 0;
-  }
-
   .weigh__ph {
-    position: absolute;
-    z-index: 1;
-    left: 8px;
-    bottom: 8px;
-    display: inline-flex;
+    display: flex;
+    flex: 1;
     align-items: center;
     gap: 5px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    background: rgb(29 29 31 / 0.62);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 500;
+    min-height: 22px;
+    padding: 3px 10px;
+    font-size: 11.5px;
+    font-weight: 560;
+    line-height: 1.3;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* узкая карточка (телефон уже 404 px): брутто рядом с тарой и нетто, фото ниже по центру, подпись — на фото.
+     Порог ниже ширины карточки в сетке из двух колонок (окно 901–1000 px, карточка 300–335 px): иначе там она
+     выше соседних. Фото не шире 244 px — высота как у прежнего рисунка */
+  @container (max-width: 295.98px) {
+    .weigh {
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-areas:
+        'val two'
+        'photo photo';
+    }
+
+    .weigh .u-two {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .weigh__photo {
+      justify-self: center;
+      width: min(100%, 244px);
+    }
+
+    .weigh__ph {
+      position: absolute;
+      z-index: 1;
+      left: 8px;
+      bottom: 8px;
+      min-height: 0;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgb(29 29 31 / 0.62);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+    }
   }
 
   /* Кабинет регоператора */
@@ -2369,14 +2542,6 @@ const acts = [
     .frame__count .u-dot {
       width: 8px;
       height: 8px;
-    }
-
-    .weigh {
-      grid-template-columns: 1fr;
-    }
-
-    .weigh__photo {
-      min-height: 92px;
     }
 
     .cam__tag,
