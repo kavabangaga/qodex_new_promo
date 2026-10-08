@@ -1,13 +1,15 @@
 ---
 // Блок 12 «Пилот» — как раскрытая панель первого экрана Calendly: большая градиентная панель,
-// внутри белая карточка: слева факты пилота РО-БОТа и кнопка, справа — реестр расхождений
-// с метками 1–3 и пояснение «Так выглядит результат первого дня». Ниже в той же панели —
+// внутри белая карточка: слева факты пилота РО-БОТа и кнопка, справа — настоящий снимок экрана «ГИС ЖКХ»
+// РО-БОТа в окне приложения и пояснение «Так выглядит результат первого дня». Ниже в той же панели —
 // пилоты QODEX TONN и Кодекса ТКО (строки таблицы пилотов из ТЗ).
+// Снимок 1600×900 — экран дома в «ГИС ЖКХ» — показан целиком (заказчик, 2026-10-08) и по ширине колонки:
+// карточка остаётся в сетке 1120 px. Три выноски, как на первом экране /ro-bot/: дельта (главная, цвета РО-БОТа),
+// источник и дата. На узком окне снимка (телефон; окно браузера 961–1170 px) — номера 1–3 на снимке и легенда под ним.
 import SectionIntro from '../components/SectionIntro.astro';
 import ProductLabel from '../components/ProductLabel.astro';
-import Shot from '../components/Shot.astro';
 import Icon, { type IconName } from '../components/Icon.astro';
-import type { ProductId } from '../config/site';
+import { withBase, type ProductId } from '../config/site';
 
 const NB = ' ';
 
@@ -15,6 +17,27 @@ const steps: { icon: IconName; text: string }[] = [
   { icon: 'lock', text: 'NDA' },
   { icon: 'file-spreadsheet', text: 'Выгрузка биллинга по одному району' },
   { icon: 'list-checks', text: `Реестр неплательщиков в рублях — за 1${NB}день` },
+];
+
+// Экран дома в разделе «ГИС ЖКХ» из демо-доступа РО-БОТа (тот же снимок, что в «Интерфейсе» на /ro-bot/)
+const SHOT = {
+  src: withBase('/media/robot/shot-house-1600.webp'),
+  srcset: `${withBase('/media/robot/shot-house-800.webp')} 800w, ${withBase('/media/robot/shot-house-1600.webp')} 1600w`,
+  alt:
+    `Демо-данные. Экран «ГИС${NB}ЖКХ» РО-БОТа по дому: МКД, д.${NB}1 на ул.${NB}Достоевского в Уфе, ` +
+    `84${NB}квартиры и 227${NB}жильцов. В таблице квартир — лицевой счёт, тип дома, число жильцов по ГИС${NB}ЖКХ ` +
+    `и по биллингу, столбец «Дельта» с разницей между ними (+2, +3, +1…), дата обновления ФМС и дата биллинга`,
+};
+
+// Выноски: рамка вокруг столбца (заголовок и первые три квартиры), координаты — в пикселях снимка 1600×900.
+// Подпись дельты — над таблицей, на пустом поле между кнопками «Выгрузка…» и «Сортировка»; подписи источника
+// и даты — под рамкой, на строках 5–6 своего столбца (дельты всех строк остаются открыты).
+// ax — где стрелка: там, где в строке 4 под рамкой пусто; tx — сдвиг подписи от стрелки. bx, by — кружок
+// с номером на узком снимке: по центру верхнего края рамки, на заголовке столбца, значения не закрывает.
+const MARKS = [
+  { lines: ['дельта —', 'неучтённые жильцы'], key: true, up: true, x: 1170, y: 372, w: 62, h: 147, ax: 1201, tx: '-69%', bx: 1201, by: 372 },
+  { lines: ['источник'], x: 879, y: 372, w: 94, h: 147, ax: 926, tx: '-69%', bx: 926, by: 372 },
+  { lines: ['дата'], x: 1257, y: 372, w: 126, h: 147, ax: 1358, tx: '-77%', bx: 1320, by: 372 },
 ];
 
 const others: { id: ProductId; first: string; payback: string; need: string; pilot: string }[] = [
@@ -89,9 +112,54 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
         </div>
 
         <figure class="pilot__example">
-          <div class="pilot__shot">
-            <div class="pilot__shot-in" role="img" aria-label="Реестр расхождений из демо-аккаунта РО-БОТа">
-              <Shot id="registry" />
+          <div class="pilot__shot" data-pilot-vis data-pilot-wait>
+            <div class="pilot__win">
+              <!-- окно приложения: снимок «ГИС ЖКХ» целиком, в своих пропорциях, и выноски поверх -->
+              <div class="pilot__screen">
+                <div class="pilot__clip">
+                  <img
+                    class="pilot__win-img"
+                    src={SHOT.src}
+                    srcset={SHOT.srcset}
+                    sizes="(max-width: 520px) calc(100vw - 66px), (max-width: 960px) calc(100vw - 150px), 470px"
+                    width="1600"
+                    height="900"
+                    alt={SHOT.alt}
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                  />
+                </div>
+                <ol class="pilot__marks" aria-label="Обозначения на скриншоте">
+                  {
+                    MARKS.map((m, i) => (
+                      <li
+                        class:list={['pilot__mark', { 'pilot__mark--key': m.key, 'pilot__mark--up': m.up }]}
+                        style={`--x:${m.x};--y:${m.y};--w:${m.w};--h:${m.h};--ax:${m.ax};--bx:${m.bx};--by:${m.by};--i:${i}${m.tx ? `;--tx:${m.tx}` : ''}`}
+                      >
+                        <span class="pilot__mark-ring" aria-hidden="true" />
+                        <span class="pilot__mark-caret" aria-hidden="true" />
+                        <span class="pilot__mark-num" aria-hidden="true">{i + 1}</span>
+                        <span class="pilot__mark-tip">
+                          {m.lines.map((line, j) => (j ? [<br />, line] : line))}
+                        </span>
+                      </li>
+                    ))
+                  }
+                </ol>
+              </div>
+
+              <!-- легенда к номерам на снимке — только на узком снимке -->
+              <ol class="pilot__legend" aria-hidden="true">
+                {
+                  MARKS.map((m, i) => (
+                    <li class:list={['pilot__legend-item', { 'pilot__legend-item--key': m.key }]} style={`--i:${i}`}>
+                      <span class="pilot__legend-num">{i + 1}</span>
+                      <span>{m.lines.join(' ')}</span>
+                    </li>
+                  ))
+                }
+              </ol>
             </div>
             <span class="tag tag--demo pilot__demo" aria-hidden="true">демо-данные</span>
           </div>
@@ -101,11 +169,6 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
               сотрудник проверяет расхождения и отправляет подтверждённые в биллинг или 1С одной кнопкой. Ничего не
               начисляется автоматически.
             </p>
-            <ol class="pilot__legend" aria-label="Обозначения на скриншоте">
-              <li><span class="pilot__mk" aria-hidden="true">1</span>источник</li>
-              <li><span class="pilot__mk" aria-hidden="true">2</span>дата</li>
-              <li><span class="pilot__mk" aria-hidden="true">3</span>решение принимает сотрудник</li>
-            </ol>
           </figcaption>
         </figure>
       </article>
@@ -300,7 +363,7 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     margin-top: 4px;
   }
 
-  /* Реестр на мягкой подложке (как интерфейс в раскрытой вкладке Calendly) */
+  /* Снимок экрана на мягкой подложке (как интерфейс в раскрытой вкладке Calendly) */
   .pilot__example {
     display: grid;
     gap: 20px;
@@ -310,16 +373,325 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     position: relative;
     display: grid;
     place-items: center;
-    padding: clamp(36px, calc(var(--vw) * 4), 52px) clamp(12px, calc(var(--vw) * 2.4), 28px) clamp(16px, calc(var(--vw) * 2.4), 28px);
+    /* сверху место под «демо-данные»: метка не заходит на белое кольцо окна */
+    padding: clamp(48px, calc(var(--vw) * 4), 52px) clamp(12px, calc(var(--vw) * 2.4), 28px) clamp(16px, calc(var(--vw) * 2.4), 28px);
     border-radius: calc(clamp(20px, calc(var(--vw) * 2), 28px) * var(--rk));
     corner-shape: var(--corner);
     background: linear-gradient(160deg, #dcebff 0%, #e6f1fb 55%, #e9e4fb 100%);
   }
 
-  .pilot__shot-in {
+  /* ── Окно приложения, как на /ro-bot/: белая рамка с мягким кольцом и тенью, снимок 1600×900 целиком
+     по ширине колонки (на компьютере ≈470 px, файл 800 или 1600 px — не растягивается). От ширины окна
+     зависят кегль выносок (cqi) и то, подписи на снимке или номера с легендой (@container). ── */
+  .pilot__win {
+    --win-r: 12px;
+    container: pilot-win / inline-size;
     width: 100%;
-    display: grid;
-    place-items: center;
+  }
+
+  .pilot__screen {
+    position: relative;
+    aspect-ratio: 1600 / 900;
+    border-radius: var(--win-r);
+    background: #fff;
+    box-shadow:
+      0 0 0 6px rgb(255 255 255 / 0.45),
+      var(--shadow-card);
+  }
+
+  .pilot__clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    /* страховка для Safari на iPhone: скругление обрезает и слой снимка */
+    clip-path: inset(0 round var(--win-r));
+  }
+
+  .pilot__win-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Выноски: рамка вокруг столбца и подпись со стрелкой. Кегль растёт с окном (2,25cqi: 10,5 px при окне 467 px,
+     17 px при 750 px), отступы и стрелка — в em, поэтому подписи на любом окне ложатся на те же ячейки снимка:
+     подпись под рамкой закрывает строки 5–6 целиком, без срезанных букв над и под ней. */
+  .pilot__marks {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    pointer-events: none;
+  }
+
+  .pilot__mark {
+    --tx: -50%;
+    --rise: 6px;
+    --mc: var(--ink);
+    --mt: rgb(29 29 31 / 0.04);
+    --ring-w: 2px;
+    position: absolute;
+    left: calc(var(--x) / 1600 * 100%);
+    top: calc(var(--y) / 900 * 100%);
+    width: calc(var(--w) / 1600 * 100%);
+    height: calc(var(--h) / 900 * 100%);
+    font-size: 10.5px;
+    font-size: 2.25cqi;
+  }
+
+  /* Автомасштаб (окно 1200–1760 px, zoom < 1): окно снимка всегда 466,7 px — кегль 10,5 px и без контейнера.
+     Safari внутри контейнера применяет zoom к кеглю дважды: подписи мельче и съезжают на строку 4 */
+  :global(html.is-autoscale) .pilot__win {
+    container-type: normal;
+  }
+
+  :global(html.is-autoscale) .pilot__mark {
+    font-size: 10.5px;
+  }
+
+  /* главная выноска — дельта, цветом РО-БОТа */
+  .pilot__mark--key {
+    --mc: var(--c-robot);
+    --mt: rgb(107 77 255 / 0.08);
+  }
+
+  /* подпись над рамкой, стрелка вниз */
+  .pilot__mark--up {
+    --rise: -6px;
+  }
+
+  .pilot__mark-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 0.5em;
+    background: var(--mt);
+    box-shadow: 0 0 0 var(--ring-w) var(--mc);
+  }
+
+  .pilot__mark-caret {
+    position: absolute;
+    top: calc(100% + 0.4em);
+    left: calc((var(--ax) - var(--x)) / var(--w) * 100%);
+    width: 0.84em;
+    height: 0.5em;
+    margin-left: -0.42em;
+    background: var(--mc);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  /* основание стрелки чуть заходит под подпись — без щели между ними */
+  .pilot__mark-tip {
+    position: absolute;
+    top: calc(100% + 0.86em);
+    left: calc((var(--ax) - var(--x)) / var(--w) * 100%);
+    display: block;
+    padding: 0.52em 0.62em 0.6em;
+    border-radius: 0.66em;
+    background: var(--mc);
+    box-shadow: 0 8px 20px -10px rgb(29 29 31 / 0.6);
+    color: #fff;
+    font-weight: 560;
+    line-height: 1.2;
+    white-space: nowrap;
+    transform: translateX(var(--tx));
+  }
+
+  .pilot__mark--key .pilot__mark-tip {
+    box-shadow: 0 8px 20px -10px rgb(107 77 255 / 0.7);
+  }
+
+  .pilot__mark--up .pilot__mark-caret {
+    top: auto;
+    bottom: calc(100% + 0.3em);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+
+  .pilot__mark--up .pilot__mark-tip {
+    top: auto;
+    bottom: calc(100% + 0.76em);
+    padding-block: 0.4em 0.48em;
+    line-height: 1.16;
+  }
+
+  /* номер выноски и легенда к номерам — только на узком снимке */
+  .pilot__mark-num,
+  .pilot__legend {
+    display: none;
+  }
+
+  /* Узкое окно снимка (телефон; окно браузера 961–1170 px): подписи закрыли бы полснимка — вместо них кружки
+     с номерами по центру верхнего края рамок, слова — легендой под снимком */
+  @container pilot-win (max-width: 444.98px) {
+    .pilot__mark {
+      --ring-w: 1.5px;
+    }
+
+    .pilot__mark-ring {
+      border-radius: 3px;
+    }
+
+    .pilot__mark-caret {
+      display: none;
+    }
+
+    /* подпись не видна, но остаётся в списке «Обозначения на скриншоте» для чтения с экрана */
+    .pilot__mark-tip {
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      box-shadow: none;
+    }
+
+    .pilot__mark-num {
+      position: absolute;
+      left: calc((var(--bx) - var(--x)) / var(--w) * 100%);
+      top: calc((var(--by) - var(--y)) / var(--h) * 100%);
+      display: grid;
+      place-items: center;
+      width: 14px;
+      height: 14px;
+      margin: -7px 0 0 -7px;
+      border-radius: 50%;
+      background: var(--mc);
+      box-shadow:
+        0 0 0 1.5px #fff,
+        0 3px 8px -3px rgb(29 29 31 / 0.6);
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 600;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* дельта — первой строкой, источник и дата — второй (перенос — пустой ::after во всю ширину) */
+    .pilot__legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 3px 6px;
+      margin: 16px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .pilot__legend::after {
+      content: '';
+      flex-basis: 100%;
+      order: 1;
+    }
+
+    .pilot__legend-item {
+      order: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px 4px 5px;
+      border-radius: calc(8px * var(--rk));
+      corner-shape: var(--corner);
+      background: rgb(255 255 255 / 0.85);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.25;
+    }
+
+    .pilot__legend-num {
+      display: grid;
+      flex: none;
+      place-items: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 600;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pilot__legend-item--key {
+      order: 0;
+    }
+
+    .pilot__legend-item--key .pilot__legend-num {
+      background: var(--c-robot);
+    }
+  }
+
+  /* на телефоне снимок ≈ 290–330 px: кружок на 2 px меньше */
+  @container pilot-win (max-width: 359.98px) {
+    .pilot__mark-num {
+      width: 12px;
+      height: 12px;
+      margin: -6px 0 0 -6px;
+      font-size: 8.5px;
+    }
+  }
+
+  /* Выноски появляются по одной (дельта, источник, дата — через 0,7 с), когда снимок на экране. Один раз;
+     без анимации видны сразу. */
+  @media (prefers-reduced-motion: no-preference) {
+    .pilot__mark-ring {
+      transition:
+        opacity 0.5s ease,
+        transform 0.7s var(--ease-out);
+      transition-delay: calc(var(--i) * 0.7s);
+    }
+
+    .pilot__mark-caret,
+    .pilot__mark-tip,
+    .pilot__mark-num,
+    .pilot__legend-item {
+      transition:
+        opacity 0.5s ease,
+        transform 0.6s var(--ease-out);
+      transition-delay: calc(var(--i) * 0.7s + 0.2s);
+    }
+
+    /* до показа: data-pilot-wait снимает скрипт ниже */
+    .pilot__shot[data-pilot-wait] .pilot__mark-ring {
+      opacity: 0;
+      transform: scale(1.18);
+    }
+
+    .pilot__shot[data-pilot-wait] .pilot__mark-caret,
+    .pilot__shot[data-pilot-wait] .pilot__legend-item {
+      opacity: 0;
+      transform: translateY(var(--rise, 6px));
+    }
+
+    .pilot__shot[data-pilot-wait] .pilot__mark-tip {
+      opacity: 0;
+      transform: translate(var(--tx), var(--rise));
+    }
+
+    .pilot__shot[data-pilot-wait] .pilot__mark-num {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  /* без скриптов и при печати выноски видны сразу */
+  @media (scripting: none), print {
+    .pilot__shot[data-pilot-wait] .pilot__mark-ring,
+    .pilot__shot[data-pilot-wait] .pilot__mark-caret,
+    .pilot__shot[data-pilot-wait] .pilot__mark-num,
+    .pilot__shot[data-pilot-wait] .pilot__legend-item {
+      opacity: 1;
+      transform: none;
+    }
+
+    .pilot__shot[data-pilot-wait] .pilot__mark-tip {
+      opacity: 1;
+      transform: translateX(var(--tx));
+    }
   }
 
   .pilot__demo {
@@ -343,36 +715,6 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
   .pilot__text strong {
     font-weight: 600;
     color: var(--ink);
-  }
-
-  .pilot__legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 20px;
-  }
-
-  .pilot__legend li {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14.5px;
-    font-weight: 560;
-    color: var(--ink);
-  }
-
-  /* метки 1–3 — как на картинке реестра */
-  .pilot__mk {
-    display: grid;
-    place-items: center;
-    width: 21px;
-    height: 21px;
-    flex: none;
-    border-radius: 50%;
-    background: var(--ink);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1;
   }
 
   /* Пилоты QODEX TONN и Кодекса ТКО */
@@ -422,5 +764,50 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
     .pilot__cta {
       justify-self: stretch;
     }
+
+    /* подложка снимка шире текста: 6 px от краёв карточки (отступ карточки — то же выражение), снимок крупнее */
+    .pilot__shot {
+      margin-inline: calc(6px - clamp(22px, calc(var(--vw) * 3.4), 48px));
+      padding: 46px 7px 14px;
+    }
+
+    .pilot__win {
+      --win-r: 10px;
+    }
+
+    .pilot__screen {
+      box-shadow:
+        0 0 0 5px rgb(255 255 255 / 0.45),
+        var(--shadow-card);
+    }
   }
 </style>
+
+<script>
+  import { reducedMotion } from '../scripts/motion';
+
+  // Выноски на снимке появляются по одной, когда он на экране (один раз), — после того как карточка проявилась.
+  // При «уменьшить движение» всё видно сразу.
+  document.querySelectorAll<HTMLElement>('[data-pilot-vis]').forEach((vis) => {
+    if (reducedMotion() || !('IntersectionObserver' in window)) {
+      delete vis.dataset.pilotWait;
+      return;
+    }
+    let seen = false;
+    const start = () => {
+      if (!seen || document.hidden) return;
+      io.disconnect();
+      document.removeEventListener('visibilitychange', start);
+      window.setTimeout(() => delete vis.dataset.pilotWait, 500);
+    };
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        seen = entry.isIntersecting;
+        start();
+      },
+      { threshold: 0.5 },
+    );
+    io.observe(vis);
+    document.addEventListener('visibilitychange', start);
+  });
+</script>
