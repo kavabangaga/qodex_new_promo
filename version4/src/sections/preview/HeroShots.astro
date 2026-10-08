@@ -1,0 +1,1100 @@
+---
+// Копия первого экрана главной на согласование (/preview/zhivye-skrinshoty/, просмотр /s/p-hero).
+// Всё как в sections/Hero.astro: заголовок, кнопки, сцена с вкладками четырёх мест и поведение при прокрутке.
+// Отличие одно: в карточках продуктов вместо нарисованных макетов — настоящие снимки экранов в окне приложения,
+// как на первых экранах страниц продуктов (RHero, NHero). Тексты не менялись.
+// Снимок в окне — целиком и в своих пропорциях на любой ширине (правило заказчика от 2026-10-08: кадрировать
+// нельзя). Можно срезать только пустые поля фона вокруг интерфейса (trim) — окно тогда в пропорциях обрезанного
+// снимка. Окна разной формы: высота окна ограничена, ширина подстраивается. Крупнее исходника снимок не бывает.
+import Icon from '../../components/Icon.astro';
+import ProductLabel, { PRODUCT_ICON } from '../../components/ProductLabel.astro';
+import { PRODUCTS, withBase, type ProductId } from '../../config/site';
+
+interface Shot {
+  /** путь без ширины и расширения: /media/robot/shot-reports → shot-reports-1600.webp */
+  base: string;
+  w: number;
+  h: number;
+  /** ширина уменьшенного файла */
+  small: number;
+  /** только пустые поля фона: видимая часть [x0, y0, ширина, высота] в пикселях исходника; без trim — весь снимок */
+  trim?: [number, number, number, number];
+  alt: string;
+  /** метка «демо-данные»: у экранов с данными, у фото мусоровоза её нет */
+  demo: boolean;
+}
+
+interface Place {
+  id: ProductId;
+  label: string;
+  text: string;
+  figure: { pre?: string; big: string; post?: string };
+  shot: Shot;
+}
+
+// Четыре места из заголовка = четыре продукта (тексты блока «Четыре продукта» из ТЗ)
+const places: Place[] = [
+  {
+    id: 'robot',
+    label: 'База начислений',
+    text: 'Находит жильцов, дома и юрлица, которые должны платить за вывоз ТКО, но не платят. Рост сбора без роста тарифа',
+    figure: { big: '+10%', post: 'жильцов в базе за один день сверки' },
+    // «Отчёты и аналитика» целиком, 16 : 9
+    shot: {
+      base: '/media/robot/shot-reports',
+      w: 1600,
+      h: 900,
+      small: 800,
+      alt:
+        'Демо-данные. Экран «Отчёты и аналитика» в РО-БОТе: найдено 604 лицевых счёта с расхождениями, в них 1 486 новых ' +
+        'жителей; обработано оператором 392, в очереди 212; внесено в биллинг 305, отклонено 87; причины отклонений ' +
+        'и динамика за период',
+      demo: true,
+    },
+  },
+  {
+    id: 'tracker',
+    label: 'Маршрут',
+    text: 'Камеры на мусоровозе снимают сами, ИИ считает контейнеры и сверяет с планом маршрута. Платите перевозчику за фактический вывоз и видите левак',
+    figure: { big: '+17%', post: 'контейнеров сверх плана' },
+    // кадр из видео о продукте целиком, 16 : 9: мусоровоз и три врезки с камерами
+    shot: {
+      base: '/media/tracker/poster',
+      w: 1600,
+      h: 900,
+      small: 800,
+      alt: 'Мусоровоз с камерами QODEX Tracker: на врезках крупно — камера в кабине и камеры на кузове',
+      demo: false,
+    },
+  },
+  {
+    id: 'tonn',
+    label: 'Весы',
+    text: 'Номер, фото и вес машины на весовой — без ручного ввода. Платите объекту только за реальный вес',
+    figure: { big: '−57%', post: 'тоннажа в актах' },
+    // «Акты» целиком, 4 : 3
+    shot: {
+      base: '/media/tonn/cab-act',
+      w: 1000,
+      h: 750,
+      small: 600,
+      alt:
+        'Демо-данные. Экран «Акты» в кабинете QODEX TONN: тоннаж 288,23 т, 71 взвешивание; акт № 888 с фото машины ' +
+        'и госномером, брутто 11 280, тара 7 860, нетто 3 420; перевозчик, площадка и клиент; ниже ещё два акта, ' +
+        'фильтры и меню разделов',
+      demo: true,
+    },
+  },
+  {
+    id: 'kodeks',
+    label: 'ФГИС',
+    text: 'Принимает Excel объекта, проверяет ошибки и дубли и отправляет данные во ФГИС УТКО по API. Данные объектов уходят в срок',
+    figure: { pre: 'Подключение за', big: '15 минут' },
+    // «Настройки» — интеграция с ФГИС УТКО активна (импорт из Excel не берём: на нём логотип Excel).
+    // Срезаны только пустые поля фона слева и справа (там же курсор мыши): шапка с логотипом и «Выйти»,
+    // карточки и нижнее меню — целиком, по 24 px поля вокруг них
+    shot: {
+      base: '/media/kodeks/ui-nastroyki',
+      w: 1680,
+      h: 954,
+      small: 840,
+      trim: [236, 0, 1206, 954],
+      alt:
+        'Демо-данные. Настройки в «Кодексе ТКО»: интеграция с ФГИС УТКО активна; поля ObjectID и AccessKey, ' +
+        'кнопка «Сохранить настройки интеграции»; ниже — как получить ObjectID и AccessKey у РЭО',
+      demo: true,
+    },
+  },
+];
+
+const file = (s: Shot, w: number) => withBase(`${s.base}-${w}.webp`);
+const frame = (s: Shot) => s.trim ?? [0, 0, s.w, s.h];
+// ширина картинки = ширина окна × (ширина исходника ÷ видимая ширина). Окно: на телефоне — экран минус поля
+// (393 − 321 = 72 px), на планшете и компьютере — не шире колонки (~720 и ~600 px) и не выше 400 px
+const sizes = (s: Shot) => {
+  const [, , cw, ch] = frame(s);
+  const k = s.w / cw;
+  const win = (maxW: number) => Math.round(Math.min(maxW, (400 * cw) / ch) * k);
+  return `(max-width: 640px) calc((100vw - 72px) * ${k.toFixed(3)}), (max-width: 1023.98px) ${win(720)}px, ${win(600)}px`;
+};
+const winStyle = (s: Shot) => {
+  const [x0, y0, cw, ch] = frame(s);
+  return `--W:${s.w};--H:${s.h};--x0:${x0};--y0:${y0};--cw:${cw};--ch:${ch}`;
+};
+---
+
+<section class="hero" data-hero>
+  <div class="hero__box">
+    <div class="hero__intro container">
+      <p class="hero__kicker" data-reveal>
+        <span class="hero__kicker-dot" aria-hidden="true"></span>
+        Для региональных операторов ТКО
+      </p>
+      <h1 class="t-display hero__title" data-reveal style="--d:1">
+        Находим деньги регоператора в&nbsp;четырёх местах: база начислений, маршрут, весы, ФГИС
+      </h1>
+      <p class="t-lead hero__sub" data-reveal style="--d:2">
+        С 2020 года автоматизируем учёт отходов — от базы начислений регоператора до весовой на полигоне и передачи данных
+        во ФГИС УТКО. Вы начисляете и платите по фактическим данным.
+      </p>
+      <div class="hero__cta" data-reveal style="--d:3">
+        <a href="#forma" class="btn btn--primary" data-goal="pilot_click">
+          Запустить бесплатный пилот
+          <Icon name="arrow-right" />
+        </a>
+        <a href="#poteri" class="btn btn--outline">
+          Где вы теряете деньги
+          <Icon name="arrow-down" />
+        </a>
+      </div>
+    </div>
+
+    <div class="hero__track" data-hero-track>
+      <div class="hero__sticky">
+        <div class="stage" id="produkty" data-stage style="--i:0">
+          <div class="stage__bg" aria-hidden="true">
+            <div class="stage__mesh">
+              <span class="zone zone--a"></span>
+              <span class="zone zone--b"></span>
+              <span class="zone zone--c"></span>
+              <span class="zone zone--d"></span>
+            </div>
+          </div>
+
+          <div class="stage__in">
+            <h2 class="stage__title" data-reveal>Четыре продукта — одна цепочка учёта</h2>
+
+            <div class="stage__tabs" role="tablist" aria-label="Четыре места, где мы находим деньги" data-reveal style="--d:1">
+              {
+                places.map((pl, i) => (
+                  <button
+                    class:list={['stab', `p-${pl.id}`]}
+                    type="button"
+                    role="tab"
+                    id={`stab-${pl.id}`}
+                    aria-selected={i === 0 ? 'true' : 'false'}
+                    aria-controls={`spane-${pl.id}`}
+                    tabindex={i === 0 ? 0 : -1}
+                    data-tab
+                  >
+                    <span class="stab__ico" aria-hidden="true">
+                      <Icon name={PRODUCT_ICON[pl.id]} size={22} strokeWidth={1.9} />
+                    </span>
+                    <span class="stab__label">
+                      <span>
+                        {
+                          /* подпись из двух слов на узком телефоне встаёт в две строки (см. .stab__br) */
+                          pl.label.split(' ').map((word, k) => (k ? [' ', <br class="stab__br" />, word] : word))
+                        }
+                      </span>
+                    </span>
+                  </button>
+                ))
+              }
+            </div>
+
+            <div class="stage__card" data-reveal style="--d:2">
+              {
+                places.map((pl, i) => (
+                  <div
+                    class:list={['spane', `p-${pl.id}`, { 'is-active': i === 0 }]}
+                    role="tabpanel"
+                    id={`spane-${pl.id}`}
+                    aria-labelledby={`stab-${pl.id}`}
+                    aria-hidden={i === 0 ? 'false' : 'true'}
+                    data-pane-hero
+                  >
+                    <div class="spane__text">
+                      <ProductLabel id={pl.id} size="lg" />
+                      <h3 class="t-h3 spane__title">{pl.label}</h3>
+                      <p class="spane__desc">{pl.text}</p>
+                      <p class="spane__fig">
+                        {pl.figure.pre && <span class="spane__fig-pre">{pl.figure.pre}</span>}
+                        <span class="spane__fig-big t-num">{pl.figure.big}</span>
+                        {pl.figure.post && <span class="spane__fig-post">{pl.figure.post}</span>}
+                      </p>
+                      <a
+                        href={`#${pl.id}`}
+                        class="link-arrow spane__more"
+                        tabindex={i === 0 ? 0 : -1}
+                        aria-label={`Подробнее: ${PRODUCTS[pl.id].name}`}
+                      >
+                        Подробнее
+                        <Icon name="arrow-right" />
+                      </a>
+                    </div>
+
+                    <div class:list={['spane__visual', 'ps-h-vis', { 'ps-h-vis--demo': pl.shot.demo }]}>
+                      {/* скринридеру пометку читает начало alt снимка: плашка сама по себе ему не нужна */}
+                      {pl.shot.demo && (
+                        <span class="tag tag--demo ps-h-demo" aria-hidden="true">
+                          демо-данные
+                        </span>
+                      )}
+                      <div class="ps-h-win" style={winStyle(pl.shot)}>
+                        <div class="ps-h-win__clip">
+                          <img
+                            class="ps-h-win__img"
+                            src={file(pl.shot, pl.shot.w)}
+                            srcset={`${file(pl.shot, pl.shot.small)} ${pl.shot.small}w, ${file(pl.shot, pl.shot.w)} ${pl.shot.w}w`}
+                            sizes={sizes(pl.shot)}
+                            width={pl.shot.w}
+                            height={pl.shot.h}
+                            alt={pl.shot.alt}
+                            loading="lazy"
+                            decoding="async"
+                            draggable="false"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding: 0 var(--page-pad);
+  }
+
+  /* Большая тёплая панель первого экрана, как у Calendly */
+  .hero__box {
+    position: relative;
+    border-radius: calc(var(--r-2xl) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+    padding-top: clamp(48px, calc(var(--vw) * 7), 104px);
+    padding-bottom: clamp(16px, calc(var(--vw) * 2), 24px);
+  }
+
+  .hero__intro {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .hero__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    padding: 7px 14px 7px 12px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 0 0 1px var(--line);
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .hero__kicker-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 0 4px rgb(10 159 106 / 0.14);
+  }
+
+  .hero__title {
+    max-width: 1120px;
+    font-size: clamp(2.4rem, calc(var(--vw) * 4.7), 4.25rem);
+  }
+
+  .hero__sub {
+    max-width: 650px;
+    margin-top: 24px;
+  }
+
+  .hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 36px;
+  }
+
+  /* ── Сцена с вкладками ─────────────────────────────── */
+  .hero__track {
+    position: relative;
+    margin-top: clamp(48px, calc(var(--vw) * 6), 80px);
+  }
+
+  .stage {
+    position: relative;
+    isolation: isolate;
+    --stage-r: clamp(28px, calc(var(--vw) * 3.4), 48px);
+    padding: clamp(28px, calc(var(--vw) * 3.4), 48px) clamp(12px, calc(var(--vw) * 3), 40px) clamp(28px, calc(var(--vw) * 4), 64px);
+    border-radius: calc(var(--stage-r) * var(--rk));
+    corner-shape: var(--corner);
+    scroll-margin-top: calc(var(--header-h) + 16px);
+  }
+
+  .stage__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    corner-shape: inherit;
+    overflow: hidden;
+    /* внутри лента, которая сдвигается через transform: Safari на iPhone может не обрезать её
+       по скруглению, поэтому обрезка продублирована (--rclip — см. :root в global.css) */
+    clip-path: inset(0 round calc(var(--stage-r) * var(--rclip)));
+    background: #a9cff7;
+  }
+
+  /* Длинная лента цветных зон палитры Calendly — сдвигается к зоне активной вкладки */
+  .stage__mesh {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: flex;
+    width: 400%;
+    background: linear-gradient(
+      90deg,
+      #a7cdf6 0%,
+      #c3dcf8 11%,
+      #cdc2fa 25%,
+      #dccdf8 36%,
+      #a9d6f2 50%,
+      #b6e7ea 61%,
+      #a9e6df 75%,
+      #d5ecdf 100%
+    );
+    transform: translateX(calc(var(--i) * -25%));
+    transition: transform 1.5s var(--ease-in-out);
+  }
+
+  .zone {
+    flex: 1;
+    margin-inline: -8%;
+  }
+
+  .zone--a {
+    background:
+      radial-gradient(34% 58% at 50% 22%, #3d84df 0%, transparent 72%),
+      radial-gradient(30% 50% at 26% 78%, #c3b2fb 0%, transparent 72%),
+      radial-gradient(30% 50% at 72% 24%, #c7ecfb 0%, transparent 72%),
+      radial-gradient(34% 50% at 62% 90%, #8fd7ef 0%, transparent 72%);
+  }
+
+  .zone--b {
+    background:
+      radial-gradient(34% 56% at 34% 26%, #b89ffa 0%, transparent 72%),
+      radial-gradient(26% 50% at 70% 32%, #6bb1ff 0%, transparent 72%),
+      radial-gradient(32% 50% at 56% 92%, #f1b5e6 0%, transparent 72%);
+  }
+
+  .zone--c {
+    background:
+      radial-gradient(34% 58% at 42% 22%, #4890e3 0%, transparent 72%),
+      radial-gradient(30% 52% at 70% 72%, #5ddfd7 0%, transparent 72%),
+      radial-gradient(28% 48% at 28% 86%, #baf0ec 0%, transparent 72%);
+  }
+
+  .zone--d {
+    background:
+      radial-gradient(34% 56% at 56% 22%, #5ddfd7 0%, transparent 72%),
+      radial-gradient(28% 50% at 28% 72%, #d4c2ff 0%, transparent 72%),
+      radial-gradient(30% 50% at 72% 88%, #eef3a6 0%, transparent 72%);
+  }
+
+  /* карточка шире, чем на главной (1040 px): настоящему снимку нужно место, чтобы цифры на нём читались */
+  .stage__in {
+    display: grid;
+    justify-items: center;
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+
+  .stage__title {
+    margin-bottom: 18px;
+    font-size: clamp(1rem, calc(var(--vw) * 1.3), 1.15rem);
+    font-weight: 560;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-align: center;
+  }
+
+  /* Вкладки: плитки-значки в белой рамке; активная — в цвете продукта и с подписью */
+  .stage__tabs {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    padding-bottom: 14px;
+  }
+
+  .stab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 58px;
+    padding: 0;
+    border: 3px solid var(--card-warm);
+    border-radius: calc(18px * var(--rk));
+    corner-shape: var(--corner);
+    background: rgb(255 255 255 / 0.6);
+    color: var(--ink);
+    box-shadow: 0 6px 18px -10px rgb(29 29 31 / 0.35);
+    transition:
+      background-color 0.35s var(--ease),
+      color 0.35s var(--ease),
+      transform 0.3s var(--ease-out);
+  }
+
+  /* «Капля», соединяющая активную вкладку с карточкой: начинается от нижней рамки вкладки
+     и плавно расширяется к карточке. Стоит у самой вкладки — двигается вместе с ней. */
+  .stab::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 2px);
+    width: 44px;
+    height: 17px;
+    margin-left: -22px;
+    background: var(--card-warm);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 17' preserveAspectRatio='none'%3E%3Cpath d='M0 17C14 17 16 12 16 6V0h12v6c0 6 2 11 16 11Z'/%3E%3C/svg%3E")
+      center / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 17' preserveAspectRatio='none'%3E%3Cpath d='M0 17C14 17 16 12 16 6V0h12v6c0 6 2 11 16 11Z'/%3E%3C/svg%3E")
+      center / 100% 100% no-repeat;
+    opacity: 0;
+    transform: scaleY(0.2);
+    transform-origin: 50% 100%;
+    transition:
+      opacity 0.2s,
+      transform 0.45s var(--ease-out);
+    pointer-events: none;
+  }
+
+  .stab[aria-selected='true']::after {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0.08s;
+  }
+
+  .stab:hover {
+    transform: translateY(-2px);
+    background: rgb(255 255 255 / 0.85);
+  }
+
+  .stab__ico {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: none;
+  }
+
+  /* Подпись раскрывается ровно до своей ширины (сетка 0fr → 1fr), поэтому соседние подписи
+     сворачиваются и разворачиваются синхронно и ряд вкладок плавно перецентрируется */
+  .stab__label {
+    display: grid;
+    grid-template-columns: 0fr;
+    font-size: 15.5px;
+    font-weight: 560;
+    white-space: nowrap;
+    opacity: 0;
+    transition:
+      grid-template-columns 0.5s var(--ease-in-out),
+      opacity 0.3s;
+  }
+
+  .stab__label > span {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* Поле справа от подписи лежит внутри неё: у свёрнутой вкладки его нет,
+     плитка квадратная и значок стоит ровно по центру */
+  .stab__label > span::after {
+    content: '';
+    display: inline-block;
+    width: 18px;
+  }
+
+  .stab__br {
+    display: none;
+  }
+
+  .stab[aria-selected='true'] {
+    background: var(--pc);
+    color: #fff;
+  }
+
+  .stab[aria-selected='true'] .stab__label {
+    grid-template-columns: 1fr;
+    opacity: 1;
+  }
+
+  .stage__card {
+    display: grid;
+    width: min(100%, 1180px);
+    border-radius: calc(clamp(24px, calc(var(--vw) * 2.6), 34px) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card-warm);
+    box-shadow:
+      0 4px 5px rgb(96 96 102 / 0.04),
+      0 10px 15px rgb(96 96 102 / 0.04),
+      0 40px 50px rgb(96 96 102 / 0.12);
+  }
+
+  .spane {
+    grid-area: 1 / 1;
+    display: grid;
+    grid-template-columns: minmax(0, 0.74fr) minmax(0, 1.26fr);
+    gap: clamp(24px, calc(var(--vw) * 3.6), 48px);
+    align-items: center;
+    padding: clamp(20px, calc(var(--vw) * 3.6), 48px);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.45s var(--ease-out),
+      visibility 0s linear 0.45s;
+  }
+
+  .spane.is-active {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .spane__text {
+    display: grid;
+    justify-items: start;
+    gap: 14px;
+  }
+
+  .spane.is-active .spane__text > * {
+    animation: rise 0.7s var(--ease-out) both;
+  }
+
+  .spane.is-active .spane__text > :nth-child(2) {
+    animation-delay: 0.06s;
+  }
+
+  .spane.is-active .spane__text > :nth-child(3) {
+    animation-delay: 0.12s;
+  }
+
+  .spane.is-active .spane__text > :nth-child(4) {
+    animation-delay: 0.18s;
+  }
+
+  .spane.is-active .spane__text > :nth-child(5) {
+    animation-delay: 0.24s;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  .spane__title {
+    margin-top: 4px;
+  }
+
+  .spane__desc {
+    max-width: 44ch;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .spane__fig {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    margin-top: 2px;
+  }
+
+  .spane__fig-big {
+    font-size: clamp(2rem, calc(var(--vw) * 3), 2.6rem);
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .spane__fig-pre,
+  .spane__fig-post {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  .spane__more {
+    margin-top: 10px;
+  }
+
+  /* Подложка окна со снимком: те же оттенки продуктов и «ручки» по бокам, что у макетов на главной.
+     Растянута на всю высоту карточки — при смене вкладки не прыгает. Сверху — поле для «демо-данные». */
+  .spane__visual {
+    position: relative;
+    display: grid;
+    place-items: center;
+    align-self: stretch;
+    padding: 34px 30px;
+    border-radius: calc(24px * var(--rk));
+    corner-shape: var(--corner);
+    overflow: hidden;
+    isolation: isolate;
+    background: #dbe9ff;
+  }
+
+  /* поле сверху — под метку (12 + 24 px) и зазор ~8 px до белого кольца окна (8 px) */
+  .ps-h-vis--demo {
+    padding-top: 52px;
+    padding-bottom: 22px;
+  }
+
+  .spane__visual::before,
+  .spane__visual::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 34%;
+    border-radius: 0 14px 14px 0;
+    background: rgb(255 255 255 / 0.5);
+    transform: translateY(-50%);
+    z-index: -1;
+  }
+
+  .spane__visual::before {
+    left: 0;
+  }
+
+  .spane__visual::after {
+    right: 0;
+    border-radius: 14px 0 0 14px;
+  }
+
+  .p-tracker .spane__visual {
+    background: #e8e1fc;
+  }
+
+  .p-tonn .spane__visual {
+    background: #d9f3f1;
+  }
+
+  .p-kodeks .spane__visual {
+    background: #e3f4ef;
+  }
+
+  .ps-h-demo {
+    position: absolute;
+    z-index: 1;
+    top: 12px;
+    left: 14px;
+    pointer-events: none;
+  }
+
+  /* ── Окно приложения со снимком ──────────────────────
+     Снимок целиком: --cw × --ch — видимая часть (весь снимок или он же без пустых полей), --W × --H — исходник;
+     всё в пикселях исходника, приходит из разметки. Окно в пропорциях видимой части: не шире колонки
+     и не выше --win-h, поэтому у снимков 16 : 9 и 4 : 3 окна разной ширины. */
+  .ps-h-win {
+    --win-h: min(380px, calc(var(--vh) * 60));
+    --win-r: 16px;
+    position: relative;
+    width: min(100%, calc(var(--win-h) * var(--cw) / var(--ch)));
+    aspect-ratio: var(--cw) / var(--ch);
+    border-radius: var(--win-r);
+    background: #fff;
+    box-shadow:
+      0 0 0 8px rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+  }
+
+  .ps-h-win__clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    /* страховка для Safari на iPhone: скругление обрезает и слой снимка */
+    clip-path: inset(0 round var(--win-r));
+  }
+
+  .ps-h-win__img {
+    position: absolute;
+    top: calc(var(--y0) / var(--ch) * -100%);
+    left: calc(var(--x0) / var(--cw) * -100%);
+    width: calc(var(--W) / var(--cw) * 100%);
+    max-width: none;
+    height: calc(var(--H) / var(--ch) * 100%);
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Спокойное появление: окно проявляется и чуть поднимается, когда вкладка открывается.
+     При «уменьшить движение» анимации нет — окно видно сразу (global.css) */
+  .spane.is-active .ps-h-win {
+    animation: ps-h-in 0.8s var(--ease-out) 0.1s both;
+  }
+
+  .spane.is-active .ps-h-demo {
+    animation: ps-h-fade 0.6s var(--ease-out) 0.35s both;
+  }
+
+  @keyframes ps-h-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.985);
+    }
+  }
+
+  @keyframes ps-h-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* ── Режим прокрутки (компьютер): сцена закреплена, вкладки идут по мере прокрутки ── */
+  .hero.is-scroll .hero__track {
+    height: calc(var(--vh) * 370);
+  }
+
+  .hero.is-scroll .hero__sticky {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    height: calc(var(--vh) * 100);
+    padding-top: calc(var(--header-h) + 24px);
+    padding-bottom: 16px;
+  }
+
+  .hero.is-scroll .stage {
+    width: 100%;
+    max-height: 100%;
+  }
+
+  /* панель раскрывается от ширины контейнера до краёв сцены: масштаб слоя по горизонтали
+     (его задаёт скрипт) — это дёшево, в отличие от перерисовки маски на каждом кадре */
+  .hero.is-scroll .stage__bg {
+    will-change: transform;
+  }
+
+  .hero.is-scroll .stage__mesh {
+    will-change: transform;
+  }
+
+  /* окно со снимком не выше, чем помещается в закреплённую сцену: --ps-h-rest — всё остальное по высоте
+     (шапка, заголовок сцены, вкладки, поля карточки и подложки); у невысокого окна — меньше */
+  .hero.is-scroll .ps-h-win {
+    --ps-h-rest: 524px;
+    --win-h: calc(var(--vh) * 100 - var(--ps-h-rest));
+  }
+
+  /* невысокое окно (класс is-short ставит скрипт по высоте раскладки): сцена компактнее,
+     чтобы целиком помещалась при закреплении */
+  .hero.is-scroll.is-short .stage {
+    padding-block: 20px 28px;
+  }
+
+  .hero.is-scroll.is-short .stage__title {
+    margin-bottom: 10px;
+  }
+
+  .hero.is-scroll.is-short .spane {
+    padding: 28px 36px;
+  }
+
+  .hero.is-scroll.is-short .ps-h-win {
+    --ps-h-rest: 432px;
+  }
+
+  .hero.is-scroll.is-short .spane__text {
+    gap: 10px;
+  }
+
+  @media (max-width: 1023px) {
+    /* столбиком: лишняя высота (окна вкладок разной высоты) уходит в подложку снимка, текст не сдвигается */
+    .spane {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+    }
+
+    /* снимки 4 : 3 не вытягивают карточку в высоту: окно не выше 400 px */
+    .ps-h-win {
+      --win-h: min(400px, calc(var(--vh) * 62));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero__title {
+      font-size: clamp(2.05rem, calc(var(--vw) * 9), 2.6rem);
+    }
+
+    .hero__cta {
+      display: grid;
+      width: 100%;
+    }
+
+    .stage__tabs {
+      gap: 6px;
+    }
+
+    .stab {
+      height: 50px;
+      border-width: 2px;
+      border-radius: calc(15px * var(--rk));
+      corner-shape: var(--corner);
+    }
+
+    .stab__ico {
+      width: 46px;
+      height: 46px;
+    }
+
+    .stab__label {
+      font-size: 13.5px;
+    }
+
+    .stab__label > span::after {
+      width: 12px;
+    }
+
+    /* на телефоне снимок целиком во всю ширину: подложка заходит на поля карточки (до 8 px от края),
+       окно — во всю подложку, его высота — по пропорциям снимка */
+    .spane__visual {
+      margin-inline: -12px;
+      padding: 18px 8px;
+      border-radius: calc(20px * var(--rk));
+    }
+
+    .ps-h-vis--demo {
+      padding-top: 46px;
+      padding-bottom: 14px;
+    }
+
+    .spane__visual::before,
+    .spane__visual::after {
+      display: none;
+    }
+
+    .ps-h-demo {
+      top: 11px;
+      left: 12px;
+    }
+
+    .ps-h-win {
+      --win-r: 12px;
+      width: 100%;
+      box-shadow:
+        0 0 0 5px rgb(255 255 255 / 0.4),
+        var(--shadow-card);
+    }
+  }
+
+  /* Узкий телефон: «База начислений» в одну строку рядом с тремя плитками не помещается —
+     подпись встаёт в две строки */
+  @media (max-width: 389.98px) {
+    .stab__br {
+      display: inline;
+    }
+
+    .stab__label {
+      font-size: 13px;
+      line-height: 1.15;
+      text-align: left;
+    }
+
+    .stab__label > span::after {
+      width: 10px;
+    }
+  }
+
+  @media (max-width: 359.98px) {
+    .stage__tabs {
+      gap: 5px;
+    }
+
+    .stab {
+      height: 46px;
+    }
+
+    .stab__ico {
+      width: 42px;
+      height: 42px;
+    }
+
+    .stab__label {
+      font-size: 12px;
+    }
+
+    .stab__label > span::after {
+      width: 8px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  if (hero) {
+    const track = hero.querySelector<HTMLElement>('[data-hero-track]')!;
+    const stage = hero.querySelector<HTMLElement>('[data-stage]')!;
+    const bg = stage.querySelector<HTMLElement>('.stage__bg')!;
+    const tabs = [...stage.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panes = [...stage.querySelectorAll<HTMLElement>('[data-pane-hero]')];
+    // размеры раскладки: окно ÷ автомасштаб страницы (--z ставит скрипт в <head>)
+    const layout = () => {
+      const z = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--z')) || 1;
+      return { w: window.innerWidth / z, h: window.innerHeight / z };
+    };
+
+    let active = 0;
+    let scrollMode = false;
+    let autoTimer = 0;
+    let autoStopped = false;
+    let inView = false;
+
+    const setActive = (i: number) => {
+      if (i === active) return;
+      active = i;
+      stage.style.setProperty('--i', String(i));
+      tabs.forEach((tab, k) => {
+        const on = k === i;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+      });
+      panes.forEach((pane, k) => {
+        const on = k === i;
+        pane.classList.toggle('is-active', on);
+        pane.setAttribute('aria-hidden', String(!on));
+        pane.querySelectorAll<HTMLElement>('a').forEach((a) => (a.tabIndex = on ? 0 : -1));
+      });
+    };
+
+    // ── Режим прокрутки: прогресс по высоте трека → раскрытие панели и номер вкладки
+    const EXPAND = 0.14;
+    // после нажатия на вкладку страница плавно едет к её отрезку — пока едет, вкладку не трогаем
+    let lockTarget = -1;
+    let lockUntil = 0;
+    let lastScale = '';
+    let ticking = false;
+
+    const indexAt = (p: number) =>
+      p <= EXPAND ? 0 : Math.min(3, Math.max(0, Math.floor(((p - EXPAND) / (1 - EXPAND)) * 4)));
+
+    const update = () => {
+      ticking = false;
+      if (!scrollMode) return;
+      // всё в пикселях окна (getBoundingClientRect, innerHeight): так верно и при CSS-масштабе страницы
+      const rect = track.getBoundingClientRect();
+      const total = rect.height - window.innerHeight;
+      const p = Math.min(1, Math.max(0, -rect.top / total));
+      // раскрытие начинается чуть раньше, пока сцена въезжает снизу
+      const enter = Math.min(1, Math.max(0, 1 - rect.top / (window.innerHeight * 0.6)));
+      const e = Math.min(1, Math.max(0, p / EXPAND)) * 0.75 + enter * 0.25;
+      // видимая ширина панели: от ширины контейнера (1240 px) до краёв сцены
+      const w = bg.offsetWidth;
+      const inset = Math.max(24, (w - 1240) / 2) * (1 - e);
+      const scale = ((w - 2 * inset) / w).toFixed(4);
+      if (scale !== lastScale) {
+        bg.style.transform = `scaleX(${scale})`;
+        lastScale = scale;
+      }
+
+      const k = indexAt(p);
+      if (lockTarget >= 0) {
+        if (k === lockTarget || performance.now() > lockUntil) lockTarget = -1;
+        else return;
+      }
+      setActive(k);
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+
+    // ── Без режима прокрутки: вкладки сами переключаются, пока сцена на экране
+    const stopAuto = () => {
+      autoStopped = true;
+      window.clearInterval(autoTimer);
+    };
+    const syncAuto = () => {
+      window.clearInterval(autoTimer);
+      if (scrollMode || autoStopped || !inView || reducedMotion()) return;
+      autoTimer = window.setInterval(() => setActive((active + 1) % tabs.length), 7000);
+    };
+
+    const applyMode = () => {
+      const { w, h } = layout();
+      scrollMode = w >= 1024 && h >= 660 && !reducedMotion();
+      hero.classList.toggle('is-scroll', scrollMode);
+      hero.classList.toggle('is-short', h <= 860);
+      if (scrollMode) {
+        lastScale = '';
+        update();
+      } else {
+        bg.style.transform = '';
+      }
+      syncAuto();
+    };
+
+    // переход к вкладке: в режиме прокрутки — плавно едем к её отрезку трека
+    const goTo = (i: number) => {
+      if (scrollMode) {
+        const r = track.getBoundingClientRect();
+        const top = r.top + window.scrollY;
+        const total = r.height - window.innerHeight;
+        const p = EXPAND + ((i + 0.5) / tabs.length) * (1 - EXPAND);
+        const smooth = !reducedMotion();
+        lockTarget = i;
+        lockUntil = performance.now() + (smooth ? 1500 : 200);
+        window.scrollTo({ top: top + total * p, behavior: smooth ? 'smooth' : 'auto' });
+      }
+      setActive(i);
+    };
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => {
+        stopAuto();
+        goTo(i);
+      });
+      tab.addEventListener('keydown', (e) => {
+        const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        const edge = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : -1;
+        if (!dir && edge < 0) return;
+        e.preventDefault();
+        stopAuto();
+        const next = edge >= 0 ? edge : (active + dir + tabs.length) % tabs.length;
+        goTo(next);
+        tabs[next].focus();
+      });
+    });
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting;
+          syncAuto();
+        },
+        { threshold: 0.35 },
+      ).observe(stage);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('scrollend', () => {
+      lockTarget = -1;
+      onScroll();
+    });
+    window.addEventListener('resize', () => {
+      lastScale = '';
+      applyMode();
+    });
+    applyMode();
+  }
+</script>

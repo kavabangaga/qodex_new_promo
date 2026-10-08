@@ -184,6 +184,13 @@ const p = PRODUCTS[id];
     text-wrap: pretty;
   }
 
+  /* текст пункта может сжаться: длинная связка с неразрывными пробелами («п. 36 ПП № 567 и…») в узкой
+     колонке переносится, а не выходит за край (на 761–765 px давала прокрутку вбок) */
+  .how__list li > span:last-child {
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
+
   .how__check {
     display: grid;
     place-items: center;

@@ -1,0 +1,766 @@
+---
+// КОПИЯ sections/Pilot.astro для /preview/zhivye-skrinshoty/ (на согласование): вместо нарисованного реестра —
+// настоящий снимок «Рабочего места» РО-БОТа с тремя выносками, как на первом экране /ro-bot/ (RHero.astro).
+// Блок 12 «Пилот» — как раскрытая панель первого экрана Calendly: большая градиентная панель,
+// внутри белая карточка: слева факты пилота РО-БОТа и кнопка, справа — реестр расхождений
+// с выносками и пояснение «Так выглядит результат первого дня». Ниже в той же панели —
+// пилоты QODEX TONN и Кодекса ТКО (строки таблицы пилотов из ТЗ).
+// Снимок 1600×900 показан целиком на всех ширинах (кадрировать нельзя — заказчик, 2026-10-08), поэтому
+// карточка на компьютере шире главной (1400 вместо 1120 px) и колонка фактов уже: окно снимка ~820 px.
+// На телефоне выноски — номера 1–3 на снимке и легенда под ним, как на /ro-bot/.
+import SectionIntro from '../../components/SectionIntro.astro';
+import ProductLabel from '../../components/ProductLabel.astro';
+import Icon, { type IconName } from '../../components/Icon.astro';
+import { withBase, type ProductId } from '../../config/site';
+
+const SHOT = {
+  src: withBase('/media/robot/shot-workplace-1600.webp'),
+  srcset: `${withBase('/media/robot/shot-workplace-800.webp')} 800w, ${withBase('/media/robot/shot-workplace-1600.webp')} 1600w`,
+};
+
+// Выноски — те же, что на /ro-bot/: рамка вокруг ячеек, координаты в пикселях снимка 1600×900.
+// Лесенкой (строки 1, 3, 5), чтобы подписи не налезали друг на друга; ax — где под рамкой стрелка и подпись.
+// bx, by — кружок с номером на телефоне: в строке между «5» и «3», между двумя датами, у правого края кнопки «Открыть».
+const MARKS = [
+  { text: 'источник', x: 910, y: 467, w: 124, h: 38, bx: 972, by: 486, end: false }, // ГИС 5 и биллинг 3 в первой строке
+  { text: 'дата', x: 1171, y: 590, w: 252, h: 38, ax: 1368, bx: 1289, by: 586, end: false }, // даты обновления ФМС и биллинга, третья строка
+  { text: 'решение принимает сотрудник', x: 1461, y: 711, w: 90, h: 40, bx: 1568, by: 731, end: true }, // «Открыть», пятая строка
+];
+
+const NB = ' ';
+
+const steps: { icon: IconName; text: string }[] = [
+  { icon: 'lock', text: 'NDA' },
+  { icon: 'file-spreadsheet', text: 'Выгрузка биллинга по одному району' },
+  { icon: 'list-checks', text: `Реестр неплательщиков в рублях — за 1${NB}день` },
+];
+
+const others: { id: ProductId; first: string; payback: string; need: string; pilot: string }[] = [
+  {
+    id: 'tonn',
+    first: 'Акты с фото с первого дня',
+    payback: `45${NB}дней — кейс объекта`,
+    need: 'Доступ к весовой',
+    pilot: `1${NB}месяц бесплатно после запуска`,
+  },
+  {
+    id: 'kodeks',
+    first: `Подключение за 15${NB}минут`,
+    payback: 'Сразу',
+    need: 'Ключ доступа к ФГИС',
+    pilot: 'Неделя бесплатно',
+  },
+];
+---
+
+<section class="section pilot" id="pilot" aria-labelledby="pilot-title">
+  <div class="container">
+    <SectionIntro eyebrow="Пилот" titleId="pilot-title">Первый результат — в первый же день пилота</SectionIntro>
+  </div>
+
+  <div class="pilot__stage">
+    <div class="gv gv--aqua pilot__bg" aria-hidden="true"></div>
+
+    <div class="pilot__in">
+      <!-- РО-БОТ: белая карточка, как раскрытая вкладка первого экрана Calendly -->
+      <article class="pilot__card" aria-labelledby="pilot-robot" data-reveal>
+        <div class="pilot__info">
+          <h3 class="pilot__product" id="pilot-robot">
+            <ProductLabel id="robot" size="lg" />
+            <span class="tag">Бесплатно</span>
+          </h3>
+
+          <dl class="pilot__facts">
+            <div class="pilot__first">
+              <dt>Первый результат</dt>
+              <dd>Реестр неплательщиков за 1&nbsp;день</dd>
+            </div>
+            <div>
+              <dt>Окупаемость</dt>
+              <dd>9 из 247 найденных юрлиц окупают внедрение</dd>
+            </div>
+            <div>
+              <dt>Что нужно от вас</dt>
+              <dd>Выгрузка биллинга по одному району</dd>
+            </div>
+          </dl>
+
+          <div class="pilot__plan">
+            <p class="pilot__plan-title">Начнём с РО-БОТа: пилот бесплатный.</p>
+            <ol class="pilot__steps">
+              {
+                steps.map((s) => (
+                  <li>
+                    <span class="pilot__step-ico" aria-hidden="true">
+                      <Icon name={s.icon} size={15} strokeWidth={2} />
+                    </span>
+                    <span>{s.text}</span>
+                  </li>
+                ))
+              }
+            </ol>
+            <a href="#forma" class="btn btn--primary pilot__cta" data-interest="robot" data-goal="pilot_click">
+              Запустить пилот
+              <Icon name="arrow-right" />
+            </a>
+          </div>
+        </div>
+
+        <figure class="pilot__example">
+          <div class="pilot__shot" data-ps-p-vis data-ps-p-wait>
+            <div class="ps-p-win">
+              <!-- окно приложения: снимок «Рабочего места» целиком и выноски поверх -->
+              <div class="ps-p-win__screen">
+                <div class="ps-p-win__clip">
+                  <img
+                    class="ps-p-win__img"
+                    src={SHOT.src}
+                    srcset={SHOT.srcset}
+                    sizes="(max-width: 520px) calc(100vw - 52px), (max-width: 1199.98px) calc(100vw - 150px), 840px"
+                    width="1600"
+                    height="900"
+                    alt="Демо-данные. Реестр расхождений в «Рабочем месте» РО-БОТа: счётчики «К обработке 47», «Повторно 4», «Обновлено 9», «Отклонено 5» и таблица квартир — по каждой число жильцов по ГИС ЖКХ и по биллингу, разница, даты обновления ФМС и биллинга и кнопка «Открыть»"
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                  />
+                </div>
+                <!-- выноски заменили легенду 1–3 главной: те же слова стоят прямо на ячейках -->
+                <ol class="ps-p-marks" aria-label="Обозначения на скриншоте">
+                  {
+                    MARKS.map((m, i) => (
+                      <li
+                        class:list={['ps-p-mark', { 'ps-p-mark--end': m.end }]}
+                        style={`--x:${m.x};--y:${m.y};--w:${m.w};--h:${m.h};--ax:${m.ax ?? m.x + m.w / 2};--bx:${m.bx};--by:${m.by};--i:${i}`}
+                      >
+                        <span class="ps-p-mark__ring" aria-hidden="true" />
+                        <span class="ps-p-mark__caret" aria-hidden="true" />
+                        <span class="ps-p-mark__num" aria-hidden="true">{i + 1}</span>
+                        <span class="ps-p-mark__tip">{m.text}</span>
+                      </li>
+                    ))
+                  }
+                </ol>
+              </div>
+
+              <!-- легенда к номерам на снимке — только на телефоне -->
+              <ol class="ps-p-legend" aria-hidden="true">
+                {
+                  MARKS.map((m, i) => (
+                    <li class="ps-p-legend__item" style={`--i:${i}`}>
+                      <span class="ps-p-legend__num">{i + 1}</span>
+                      <span>{m.text}</span>
+                    </li>
+                  ))
+                }
+              </ol>
+            </div>
+            <span class="tag tag--demo pilot__demo" aria-hidden="true">демо-данные</span>
+          </div>
+          <figcaption class="pilot__caption">
+            <p class="pilot__text">
+              <strong>Так выглядит результат первого дня:</strong> реестр расхождений по району с источником и датой. Ваш
+              сотрудник проверяет расхождения и отправляет подтверждённые в биллинг или 1С одной кнопкой. Ничего не
+              начисляется автоматически.
+            </p>
+          </figcaption>
+        </figure>
+      </article>
+
+      <!-- QODEX TONN и Кодекс ТКО -->
+      <div class="pilot__more">
+        {
+          others.map((o, i) => (
+            <article class="pilot__mini" aria-labelledby={`pilot-${o.id}`} data-reveal style={`--d:${i + 1}`}>
+              <h3 class="pilot__product" id={`pilot-${o.id}`}>
+                <ProductLabel id={o.id} />
+                <span class="tag">{o.pilot}</span>
+              </h3>
+              <dl class="pilot__facts pilot__facts--mini">
+                <div class="pilot__first">
+                  <dt>Первый результат</dt>
+                  <dd>{o.first}</dd>
+                </div>
+                <div>
+                  <dt>Окупаемость</dt>
+                  <dd>{o.payback}</dd>
+                </div>
+                <div>
+                  <dt>Что нужно от вас</dt>
+                  <dd>{o.need}</dd>
+                </div>
+              </dl>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Большая градиентная панель во всю ширину (с отступом от края экрана) */
+  .pilot__stage {
+    position: relative;
+    margin-inline: var(--page-pad);
+    padding: clamp(16px, calc(var(--vw) * 5), 80px) 0;
+    border-radius: calc(var(--r-2xl) * var(--rk));
+    corner-shape: var(--corner);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .pilot__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    --gv-r: var(--r-2xl);
+    min-height: 0;
+    padding: 0;
+  }
+
+  /* шире, чем на главной (1120 px): снимок справа целиком, окно ~820 px */
+  .pilot__in {
+    display: grid;
+    gap: clamp(12px, calc(var(--vw) * 1.4), 18px);
+    width: min(1400px, 100% - var(--gutter) * 2);
+    margin-inline: auto;
+  }
+
+  /* Белая карточка: факты слева, реестр справа */
+  .pilot__card {
+    display: grid;
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+    align-items: center;
+    gap: 48px;
+    padding: clamp(22px, calc(var(--vw) * 3.4), 48px);
+    border-radius: calc(clamp(24px, calc(var(--vw) * 2.6), 36px) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card-warm);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* метка продукта и плашка срока пилота; на узком экране плашка уходит на новую строку */
+  .pilot__product {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  .pilot__card,
+  .pilot__mini,
+  .pilot__info,
+  .pilot__example {
+    min-width: 0;
+  }
+
+  .pilot__facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 24px;
+    margin-top: 22px;
+  }
+
+  .pilot__facts > div {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+  }
+
+  .pilot__facts dt {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+
+  .pilot__facts dd {
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+
+  .pilot__first {
+    grid-column: 1 / -1;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .pilot__first dd {
+    font-size: clamp(1.6rem, calc(var(--vw) * 2.5), 2.3rem);
+    font-weight: 560;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  /* План пилота: шаги цепочкой, как список у Calendly в карточке Capture */
+  .pilot__plan {
+    display: grid;
+    gap: 16px;
+    margin-top: 26px;
+    padding: clamp(18px, calc(var(--vw) * 2), 24px);
+    border-radius: calc(var(--r) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--panel);
+  }
+
+  .pilot__plan-title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .pilot__steps {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    gap: 12px;
+  }
+
+  /* связка шагов — одна линия за значками, от первого до последнего: в узкой колонке шаг переносится
+     на две строки, значок опускается, а отдельные отрезки между значками до него не доставали */
+  .pilot__steps::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 14px;
+    top: 14px;
+    bottom: 14px;
+    width: 1px;
+    background: var(--line-2);
+  }
+
+  .pilot__steps li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15.5px;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .pilot__step-ico {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    border-radius: calc(8px * var(--rk));
+    corner-shape: var(--corner);
+    background: #fff;
+    color: var(--blue);
+    box-shadow: 0 1px 2px rgb(29 29 31 / 0.08);
+  }
+
+  .pilot__cta {
+    justify-self: start;
+    margin-top: 4px;
+  }
+
+  /* Реестр на мягкой подложке (как интерфейс в раскрытой вкладке Calendly) */
+  .pilot__example {
+    display: grid;
+    gap: 20px;
+  }
+
+  .pilot__shot {
+    position: relative;
+    display: grid;
+    place-items: center;
+    /* сверху место под «демо-данные»: метка не заходит на кольцо окна */
+    padding: clamp(48px, calc(var(--vw) * 4), 52px) clamp(12px, calc(var(--vw) * 2.4), 28px) clamp(16px, calc(var(--vw) * 2.4), 28px);
+    border-radius: calc(clamp(20px, calc(var(--vw) * 2), 28px) * var(--rk));
+    corner-shape: var(--corner);
+    background: linear-gradient(160deg, #dcebff 0%, #e6f1fb 55%, #e9e4fb 100%);
+  }
+
+  .pilot__demo {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+  }
+
+  /* ── Окно приложения, как на /ro-bot/: белая рамка с мягким кольцом и тенью. Снимок 1600×900 целиком
+     на всех ширинах; выноски считают место в пикселях снимка. Не шире 1000 px — снимок не растягивается. ── */
+  .ps-p-win {
+    --win-r: 14px;
+    position: relative;
+    width: min(100%, 1000px);
+  }
+
+  .ps-p-win__screen {
+    position: relative;
+    aspect-ratio: 1600 / 900;
+    /* от ширины окна считается кегль подписей на планшете (cqi) */
+    container-type: inline-size;
+    border-radius: var(--win-r);
+    background: #fff;
+    box-shadow:
+      0 0 0 7px rgb(255 255 255 / 0.45),
+      var(--shadow-card);
+  }
+
+  .ps-p-win__clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    /* страховка для Safari на iPhone: скругление обрезает и слой снимка */
+    clip-path: inset(0 round var(--win-r));
+  }
+
+  .ps-p-win__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Выноски: рамка вокруг ячеек и тёмная подпись под ней */
+  .ps-p-marks {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    pointer-events: none;
+  }
+
+  .ps-p-mark {
+    --tip-x: -50%;
+    position: absolute;
+    left: calc(var(--x) / 1600 * 100%);
+    top: calc(var(--y) / 900 * 100%);
+    width: calc(var(--w) / 1600 * 100%);
+    height: calc(var(--h) / 900 * 100%);
+  }
+
+  .ps-p-mark__ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    background: rgb(29 29 31 / 0.035);
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+
+  .ps-p-mark__caret {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: calc((var(--ax) - var(--x)) / var(--w) * 100%);
+    width: 10px;
+    height: 6px;
+    margin-left: -5px;
+    background: var(--ink);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  /* основание стрелки на полпикселя заходит под подпись — без щели между ними */
+  .ps-p-mark__tip {
+    position: absolute;
+    top: calc(100% + 9.5px);
+    left: calc((var(--ax) - var(--x)) / var(--w) * 100%);
+    display: block;
+    padding: 5px 9px 6px;
+    border-radius: 8px;
+    background: var(--ink);
+    box-shadow: 0 8px 20px -10px rgb(29 29 31 / 0.6);
+    color: #fff;
+    /* 12,5 px: при окне 820 px подпись «решение…» закрывает даты шестой строки целиком и не срезает «+1» */
+    font-size: 12.5px;
+    font-weight: 560;
+    line-height: 1.2;
+    white-space: nowrap;
+    transform: translateX(var(--tip-x));
+  }
+
+  /* у правого края снимка подпись прижата к правому краю рамки */
+  .ps-p-mark--end {
+    --tip-x: 0;
+  }
+
+  .ps-p-mark--end .ps-p-mark__tip {
+    left: auto;
+    right: -2px;
+  }
+
+  /* Планшет (окно 600–940 px): кегль растёт со снимком, и подпись «решение…» всегда ложится между «+1»
+     и датами шестой строки, ничего не срезая. На компьютере окно всегда ~820 px — там 12,5 px. */
+  @media (min-width: 760.02px) and (max-width: 1199.98px) {
+    .ps-p-mark__tip {
+      font-size: clamp(11px, 1.42cqi, 13px);
+    }
+  }
+
+  /* номер выноски и легенда к номерам — только на телефоне */
+  .ps-p-mark__num,
+  .ps-p-legend {
+    display: none;
+  }
+
+  /* Выноски появляются по одной (0; 0,7; 1,4 с), когда снимок на экране. Один раз; без анимации видны сразу. */
+  @media (prefers-reduced-motion: no-preference) {
+    .ps-p-mark__ring {
+      transition:
+        opacity 0.5s ease,
+        transform 0.7s var(--ease-out);
+      transition-delay: calc(var(--i) * 0.7s);
+    }
+
+    .ps-p-mark__caret,
+    .ps-p-mark__tip,
+    .ps-p-mark__num,
+    .ps-p-legend__item {
+      transition:
+        opacity 0.5s ease,
+        transform 0.6s var(--ease-out);
+      transition-delay: calc(var(--i) * 0.7s + 0.2s);
+    }
+
+    /* до показа: data-ps-p-wait снимает скрипт ниже */
+    .pilot__shot[data-ps-p-wait] .ps-p-mark__ring {
+      opacity: 0;
+      transform: scale(1.18);
+    }
+
+    .pilot__shot[data-ps-p-wait] .ps-p-mark__caret,
+    .pilot__shot[data-ps-p-wait] .ps-p-legend__item {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    .pilot__shot[data-ps-p-wait] .ps-p-mark__tip {
+      opacity: 0;
+      transform: translate(var(--tip-x), 6px);
+    }
+
+    .pilot__shot[data-ps-p-wait] .ps-p-mark__num {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  @media (scripting: none) {
+    .pilot__shot[data-ps-p-wait] .ps-p-mark__ring,
+    .pilot__shot[data-ps-p-wait] .ps-p-mark__caret,
+    .pilot__shot[data-ps-p-wait] .ps-p-mark__num,
+    .pilot__shot[data-ps-p-wait] .ps-p-legend__item {
+      opacity: 1;
+      transform: none;
+    }
+
+    .pilot__shot[data-ps-p-wait] .ps-p-mark__tip {
+      opacity: 1;
+      transform: translateX(var(--tip-x));
+    }
+  }
+
+  .pilot__caption {
+    display: grid;
+    gap: 16px;
+  }
+
+  .pilot__text {
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .pilot__text strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* Пилоты QODEX TONN и Кодекса ТКО */
+  .pilot__more {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(12px, calc(var(--vw) * 1.4), 18px);
+  }
+
+  .pilot__mini {
+    padding: clamp(22px, calc(var(--vw) * 2.6), 32px);
+    border-radius: calc(clamp(22px, calc(var(--vw) * 2.2), 30px) * var(--rk));
+    corner-shape: var(--corner);
+    background: var(--card-warm);
+    box-shadow: var(--shadow-card);
+  }
+
+  .pilot__facts--mini .pilot__first dd {
+    font-size: clamp(1.3rem, calc(var(--vw) * 1.8), 1.6rem);
+  }
+
+  /* Уже 1200 px карточка столбиком: факты, план, ниже снимок во всю ширину карточки */
+  @media (max-width: 1199.98px) {
+    .pilot__card {
+      grid-template-columns: minmax(0, 1fr);
+      gap: clamp(28px, calc(var(--vw) * 4), 40px);
+    }
+  }
+
+  @media (max-width: 700px) {
+    .pilot__more {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Окно уже ~600 px (телефон и узкий планшет): подписи закрывали бы полснимка — вместо них кружки
+     с номерами, слова — легендой под снимком */
+  @media (max-width: 760px) {
+    .ps-p-win {
+      --win-r: 11px;
+    }
+
+    .ps-p-win__screen {
+      box-shadow:
+        0 0 0 5px rgb(255 255 255 / 0.45),
+        var(--shadow-card);
+    }
+
+    .ps-p-mark__ring {
+      border-radius: 3px;
+      box-shadow: 0 0 0 1.5px var(--ink);
+    }
+
+    .ps-p-mark__caret {
+      display: none;
+    }
+
+    /* подпись не видна, но остаётся в списке «Обозначения на скриншоте» для чтения с экрана */
+    .ps-p-mark__tip {
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      box-shadow: none;
+    }
+
+    .ps-p-mark__num {
+      position: absolute;
+      left: calc((var(--bx) - var(--x)) / var(--w) * 100%);
+      top: calc((var(--by) - var(--y)) / var(--h) * 100%);
+      display: grid;
+      place-items: center;
+      width: 14px;
+      height: 14px;
+      margin: -7px 0 0 -7px;
+      border-radius: 50%;
+      background: var(--ink);
+      box-shadow:
+        0 0 0 1.5px #fff,
+        0 3px 8px -3px rgb(29 29 31 / 0.6);
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 600;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ps-p-legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 16px;
+    }
+
+    .ps-p-legend__item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px 4px 5px;
+      border-radius: calc(8px * var(--rk));
+      corner-shape: var(--corner);
+      background: rgb(255 255 255 / 0.85);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.25;
+    }
+
+    .ps-p-legend__num {
+      display: grid;
+      flex: none;
+      place-items: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 600;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .pilot__stage {
+      padding-block: 24px;
+    }
+
+    .pilot__in {
+      width: calc(100% - 24px);
+    }
+
+    .pilot__facts {
+      grid-template-columns: 1fr;
+    }
+
+    .pilot__cta {
+      justify-self: stretch;
+    }
+
+    /* подложка снимка шире текста: 6 px от краёв карточки, снимок крупнее */
+    .pilot__shot {
+      margin-inline: calc(6px - clamp(22px, calc(var(--vw) * 3.4), 48px));
+      padding: 46px 7px 14px;
+    }
+
+    /* окно здесь меньше, чем на /ro-bot/ (≈ 280–330 px): кружок на 2 px меньше, чтобы встать между «5» и «3»,
+       между датами и перед словом «Открыть», не задевая их */
+    .ps-p-mark__num {
+      width: 12px;
+      height: 12px;
+      margin: -6px 0 0 -6px;
+      font-size: 8.5px;
+    }
+  }
+</style>
+
+<script>
+  import { reducedMotion } from '../../scripts/motion';
+
+  // Выноски на снимке появляются по одной, когда он на экране (один раз), — после того как карточка проявилась.
+  // При «уменьшить движение» всё видно сразу.
+  document.querySelectorAll<HTMLElement>('[data-ps-p-vis]').forEach((vis) => {
+    if (reducedMotion() || !('IntersectionObserver' in window)) {
+      delete vis.dataset.psPWait;
+      return;
+    }
+    let seen = false;
+    const start = () => {
+      if (!seen || document.hidden) return;
+      io.disconnect();
+      document.removeEventListener('visibilitychange', start);
+      window.setTimeout(() => delete vis.dataset.psPWait, 500);
+    };
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        seen = entry.isIntersecting;
+        start();
+      },
+      { threshold: 0.5 },
+    );
+    io.observe(vis);
+    document.addEventListener('visibilitychange', start);
+  });
+</script>

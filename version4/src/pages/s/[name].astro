@@ -82,6 +82,14 @@ const N = {
   'n-trust': 'NTrust',
 } as const;
 
+// Разделы копии главной с живыми скриншотами (на согласование): /s/p-hero …
+const PREVIEW = import.meta.glob('../../sections/preview/*.astro');
+const P = {
+  'p-hero': 'HeroShots',
+  'p-interfaces': 'InterfacesShots',
+  'p-pilot': 'PilotShots',
+} as const;
+
 const MAP = {
   header: Header,
   hero: Hero,
@@ -166,11 +174,15 @@ export function getStaticPaths() {
     'n-results',
     'n-both',
     'n-trust',
+    // те же имена, что в P
+    'p-hero',
+    'p-interfaces',
+    'p-pilot',
   ].map((name) => ({ params: { name } }));
 }
 
 const { name } = Astro.params as {
-  name: keyof typeof MAP | keyof typeof K | keyof typeof T | keyof typeof R | keyof typeof N;
+  name: keyof typeof MAP | keyof typeof K | keyof typeof T | keyof typeof R | keyof typeof N | keyof typeof P;
 };
 const Section =
   name in K
@@ -181,7 +193,9 @@ const Section =
         ? ((await ROBOT[`../../sections/robot/${R[name as keyof typeof R]}.astro`]()) as { default: typeof Header }).default
         : name in N
           ? ((await TONN[`../../sections/tonn/${N[name as keyof typeof N]}.astro`]()) as { default: typeof Header }).default
-          : MAP[name as keyof typeof MAP];
+          : name in P
+            ? ((await PREVIEW[`../../sections/preview/${P[name as keyof typeof P]}.astro`]()) as { default: typeof Header }).default
+            : MAP[name as keyof typeof MAP];
 ---
 
 <Base title={`Раздел: ${name}`}>
