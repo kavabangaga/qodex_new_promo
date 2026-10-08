@@ -412,13 +412,12 @@ const here = (href: string) => (href === Astro.url.pathname ? 'page' : undefined
   }
 
   /* Мобильное меню: белая карточка под плашкой */
-  /* под открытым меню страница затемнена и не прокручивается (заказчик, 2026-10-08) */
+  /* под открытым меню страница затемнена (без размытия — заказчик) и не прокручивается (2026-10-08) */
   .mnav-scrim {
     position: fixed;
     inset: 0;
     z-index: -1;
     background: rgb(29 29 31 / 0.32);
-    backdrop-filter: blur(6px);
     touch-action: none;
     opacity: 0;
     visibility: hidden;
