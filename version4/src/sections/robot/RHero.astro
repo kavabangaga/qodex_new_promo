@@ -5,6 +5,7 @@
 // Ниже в той же панели — градиентная карточка с настоящим снимком экрана «Рабочее место» (сверка жильцов
 // по ГИС ЖКХ с биллингом) и три выноски на нём: источник, дата, решение за сотрудником. Поверх угла —
 // карточка расхождения той же квартиры, что в первой строке таблицы (ГИС 5 · биллинг 3 · Δ +2).
+// На телефоне снимок тоже целиком: выноски — номера 1–3 на снимке и легенда под ним, карточка — под легендой.
 import Icon from '../../components/Icon.astro';
 import ProductLabel from '../../components/ProductLabel.astro';
 import GradientVisual from '../../components/GradientVisual.astro';
@@ -30,10 +31,13 @@ const CARD = shot('shot-card');
 // Идут лесенкой (строки 1, 3, 5), чтобы подписи под рамками не налезали друг на друга.
 // ax — где под рамкой стоят стрелка и подпись (по умолчанию середина рамки). «Дата» сдвинута под дату биллинга:
 // подпись закрывает дату биллинга следующей строки целиком, а не срезает у неё первую цифру («4.02.2026»).
+// На телефоне снимок целиком и мелкий: вместо подписей — кружок с номером в точке (bx, by), слова — легендой
+// под снимком. Точки выбраны так, чтобы кружок не закрывал сами значения: между «5» и «3», между двумя датами,
+// слева у кнопки «Открыть» (она видна правее кружка).
 const MARKS = [
-  { text: 'источник', x: 910, y: 467, w: 124, h: 38, end: false }, // ГИС 5 и биллинг 3 в первой строке
-  { text: 'дата', x: 1171, y: 590, w: 252, h: 38, ax: 1368, end: false }, // даты обновления ФМС и биллинга, третья строка
-  { text: 'решение принимает сотрудник', x: 1461, y: 711, w: 90, h: 40, end: true }, // «Открыть», пятая строка
+  { text: 'источник', x: 910, y: 467, w: 124, h: 38, bx: 972, by: 455, end: false }, // ГИС 5 и биллинг 3 в первой строке
+  { text: 'дата', x: 1171, y: 590, w: 252, h: 38, ax: 1368, bx: 1289, by: 586, end: false }, // даты обновления ФМС и биллинга, третья строка
+  { text: 'решение принимает сотрудник', x: 1461, y: 711, w: 90, h: 40, bx: 1446, by: 731, end: true }, // «Открыть», пятая строка
 ];
 ---
 
@@ -100,7 +104,7 @@ const MARKS = [
                 class="rh-win__img"
                 src={WORK.src}
                 srcset={WORK.srcset}
-                sizes="(max-width: 640px) 800px, 1040px"
+                sizes="(max-width: 640px) calc(100vw - 36px), 1040px"
                 width="1600"
                 height="900"
                 alt="Экран «Рабочее место» РО-БОТ: к обработке 47, повторно 4, обновлено 9, отклонено 5; таблица квартир с адресом, лицевым счётом, числом жильцов по ГИС и биллингу, разницей, датами обновления и кнопкой «Открыть»"
@@ -114,16 +118,29 @@ const MARKS = [
                 MARKS.map((m, i) => (
                   <span
                     class:list={['rh-mark', { 'rh-mark--end': m.end }]}
-                    style={`--x:${m.x};--y:${m.y};--w:${m.w};--h:${m.h};--ax:${m.ax ?? m.x + m.w / 2};--i:${i}`}
+                    style={`--x:${m.x};--y:${m.y};--w:${m.w};--h:${m.h};--ax:${m.ax ?? m.x + m.w / 2};--bx:${m.bx};--by:${m.by};--i:${i}`}
                   >
                     <span class="rh-mark__ring" />
                     <span class="rh-mark__caret" />
                     <span class="rh-mark__tip">{m.text}</span>
+                    <span class="rh-mark__num">{i + 1}</span>
                   </span>
                 ))
               }
             </div>
           </div>
+
+          <!-- легенда к номерам на снимке — только на телефоне -->
+          <ol class="rh-legend" aria-hidden="true">
+            {
+              MARKS.map((m, i) => (
+                <li class="rh-legend__item" style={`--i:${i}`}>
+                  <span class="rh-legend__num">{i + 1}</span>
+                  <span>{m.text}</span>
+                </li>
+              ))
+            }
+          </ol>
 
           <!-- карточка расхождения: правая панель снимка «Карточка», та же квартира, что в первой строке -->
           <div class="rh-card">
@@ -323,7 +340,7 @@ const MARKS = [
     pointer-events: none;
   }
 
-  /* ── Окно приложения: снимок 1600×900 целиком (на телефоне — кадр таблицы, см. ниже).
+  /* ── Окно приложения: снимок 1600×900 целиком на всех ширинах (кадрировать нельзя — заказчик, 2026-10-08).
      --x0, --y0, --cw, --ch — какая часть снимка видна, в его пикселях; выноски считают место от них же. ── */
   .rh-win {
     --x0: 0;
@@ -427,6 +444,12 @@ const MARKS = [
     right: -2px;
   }
 
+  /* номер выноски и легенда к номерам — только на телефоне */
+  .rh-mark__num,
+  .rh-legend {
+    display: none;
+  }
+
   /* Карточка расхождения — правая панель снимка «Карточка» (x 1168–1600, y 0–436) */
   .rh-card {
     position: absolute;
@@ -471,7 +494,9 @@ const MARKS = [
     }
 
     .rh-mark__caret,
-    .rh-mark__tip {
+    .rh-mark__tip,
+    .rh-mark__num,
+    .rh-legend__item {
       transition:
         opacity 0.5s ease,
         transform 0.6s var(--ease-out);
@@ -501,6 +526,16 @@ const MARKS = [
       transform: translate(var(--tip-x), 6px);
     }
 
+    .rh__vis[data-rh-wait] .rh-mark__num {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+
+    .rh__vis[data-rh-wait] .rh-legend__item {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
     .rh__vis[data-rh-wait] .rh-card {
       opacity: 0;
       transform: translateY(28px) scale(0.98);
@@ -511,6 +546,8 @@ const MARKS = [
     .rh__vis[data-rh-wait] .rh-mark__ring,
     .rh__vis[data-rh-wait] .rh-mark__caret,
     .rh__vis[data-rh-wait] .rh-mark__tip,
+    .rh__vis[data-rh-wait] .rh-mark__num,
+    .rh__vis[data-rh-wait] .rh-legend__item,
     .rh__vis[data-rh-wait] .rh-card {
       opacity: 1;
       transform: none;
@@ -521,7 +558,7 @@ const MARKS = [
     }
   }
 
-  /* ── Планшет и телефон: карточка расхождения — под снимком, с заходом на его нижний край ── */
+  /* ── Планшет: карточка расхождения — под снимком, с заходом на его нижний край (телефон — ниже) ── */
   @media (max-width: 1199.98px) {
     .rh-figs {
       margin-top: 36px;
@@ -624,42 +661,90 @@ const MARKS = [
       left: 14px;
     }
 
-    /* на телефоне виден кадр таблицы: от столбца «ГИС» до «Открыть», с заголовка до седьмой строки */
+    /* снимок целиком, во всю ширину карточки; выноски — тонкая рамка вокруг ячеек и кружок с номером */
     .rh-win {
-      --x0: 880;
-      --y0: 414;
-      --cw: 690;
-      --ch: 470;
-      --win-r: 14px;
+      --win-r: 12px;
     }
 
     .rh-win__screen {
       box-shadow:
-        0 0 0 6px rgb(255 255 255 / 0.4),
+        0 0 0 5px rgb(255 255 255 / 0.4),
         var(--shadow-card);
     }
 
     .rh-mark__ring {
-      border-radius: 7px;
+      border-radius: 3px;
+      box-shadow: 0 0 0 1.5px var(--ink);
     }
 
-    .rh-mark__caret {
-      top: calc(100% + 3px);
-      width: 8px;
-      height: 5px;
-      margin-left: -4px;
-    }
-
+    .rh-mark__caret,
     .rh-mark__tip {
-      top: calc(100% + 8px);
-      padding: 4px 8px 5px;
-      border-radius: 7px;
-      font-size: 11.5px;
+      display: none;
     }
 
+    .rh-mark__num {
+      position: absolute;
+      left: calc((var(--bx) - var(--x)) / var(--w) * 100%);
+      top: calc((var(--by) - var(--y)) / var(--h) * 100%);
+      display: grid;
+      place-items: center;
+      width: 14px;
+      height: 14px;
+      margin: -7px 0 0 -7px;
+      border-radius: 50%;
+      background: var(--ink);
+      box-shadow:
+        0 0 0 1.5px #fff,
+        0 3px 8px -3px rgb(29 29 31 / 0.6);
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 600;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* легенда под снимком: те же номера и слова выносок */
+    .rh-legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 16px;
+    }
+
+    .rh-legend__item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px 4px 5px;
+      border-radius: calc(8px * var(--rk));
+      corner-shape: var(--corner);
+      background: rgb(255 255 255 / 0.85);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.25;
+    }
+
+    .rh-legend__num {
+      display: grid;
+      flex: none;
+      place-items: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 600;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* карточка расхождения — под легендой, снимок не закрывает */
     .rh-card {
-      width: 88%;
-      margin: -26px 0 0 -4px;
+      width: min(296px, 86%);
+      margin: 14px auto 0;
       border-radius: 14px;
       box-shadow:
         0 0 0 5px rgb(255 255 255 / 0.5),
