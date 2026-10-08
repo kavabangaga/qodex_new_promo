@@ -8,8 +8,8 @@ interface Props {
   deco?: 'bars' | 'stripes' | 'silk' | 'blobs' | 'none';
   /** Шёлк: цвет и параметры узора (как в коде заказчика с другого его сайта). */
   silk?: { color?: string; color2?: string; mode?: 'dark' | 'white' | 'sheen' | 'duo'; strength?: number; speed?: number; scale?: number; noise?: number; rotation?: number };
-  /** Плавающий градиент: радиус орбиты пятен в % ширины плашки (по умолчанию 26) и множитель скорости
-   *  (1 — круг за 30–40 с; по умолчанию 2.2 — за 14–18 с: заказчик просил движение заметнее). */
+  /** Плавающий градиент: радиус орбиты пятен в % ширины плашки (по умолчанию 34) и множитель скорости
+   *  (1 — круг за 30–40 с; по умолчанию 2.8 — за 11–14 с: вариант «ещё заметнее», выбран заказчиком 08.10.2026). */
   blobs?: { orbit?: number; speed?: number };
   class?: string;
   /** Подпись для скринридера; без неё иллюстрация скрыта от него. */
@@ -71,7 +71,7 @@ const BLOBS: Record<string, Blob[]> = {
   ],
 };
 // радиус орбиты задан в % ширины плашки, а translateX считает % от ширины самого пятна — пересчёт
-const ORBIT = blobs.orbit ?? 26;
+const ORBIT = blobs.orbit ?? 34;
 ---
 
 <div
@@ -117,7 +117,7 @@ const ORBIT = blobs.orbit ?? 26;
   }
   {
     deco === 'blobs' && (
-      <div class="gv__blobs" data-gv-blobs style={`--gv-speed:${blobs.speed ?? 2.2}`}>
+      <div class="gv__blobs" data-gv-blobs style={`--gv-speed:${blobs.speed ?? 2.8}`}>
         {BLOBS[preset].map((b, i) => (
           <i
             style={`--c:${b.c};--x:${b.x}%;--y:${b.y}%;--w:${b.w}%;--h:${b.h}%;--t:${b.t}s;--dl:-${(i * 11) % b.t}s;--dir:${i % 2 ? 'reverse' : 'normal'};--gv-orbit:${+(((ORBIT * (b.o ?? 1)) / b.w) * 100).toFixed(2)}%;z-index:${BLOBS[preset].length - i}`}
