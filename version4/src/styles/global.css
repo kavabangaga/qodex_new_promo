@@ -1125,9 +1125,12 @@ button {
   left: 0;
   bottom: -1px;
   height: 2px;
-  width: 0;
+  width: 100%;
   background: var(--acc-color, var(--blue));
   opacity: 0;
+  /* полоса растёт через transform, а не width: так её считает видеокарта, без перерисовки страницы каждый кадр */
+  transform: scaleX(0);
+  transform-origin: left center;
 }
 
 .acc__item.is-open .acc__progress {
@@ -1141,10 +1144,10 @@ button {
 
 @keyframes acc-progress {
   from {
-    width: 0;
+    transform: scaleX(0);
   }
   to {
-    width: 100%;
+    transform: scaleX(1);
   }
 }
 
