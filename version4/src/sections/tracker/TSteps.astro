@@ -134,9 +134,26 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     <SectionIntro eyebrow="Как это работает" titleId="algoritm-title">Алгоритм работы</SectionIntro>
 
     <div class="tst__player" data-tst data-idle>
+      {/* Подпись активного шага — над шкалой (заказчик, 2026-10-08). В разметке все шесть: тексты остаются на странице, высота — по самой длинной */}
+      <div class="tst-caps" data-reveal style="--d:1">
+        {
+          STEPS.map((s, i) => (
+            <div class:list={['tst-cap', { 'is-on': i === 0 }]} data-tst-cap>
+              <p class="tst-cap__n">{`Шаг${NB}${i + 1}`}</p>
+              <h3 class="tst-cap__t">{s.title}</h3>
+              {s.text && (
+                <p class="tst-cap__d" id={`algoritm-d${i + 1}`}>
+                  {s.text}
+                </p>
+              )}
+            </div>
+          ))
+        }
+      </div>
+
       {/* Шкала: отрезок на шаг, как главы ролика. Кнопка — отрезок с подписью; в aria-label сначала видимая подпись
           («1 Прибытие» — её можно назвать голосом), затем полное название шага */}
-      <ol class="tst-tl" aria-label="Шаги алгоритма" data-tst-list data-reveal style="--d:1">
+      <ol class="tst-tl" aria-label="Шаги алгоритма" data-tst-list data-reveal style="--d:2">
         {
           STEPS.map((s, i) => (
             <li class:list={['tst-tl__item', { 'is-on': i === 0 }]} style={`--ms:${s.ms}ms`}>
@@ -159,23 +176,6 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
           ))
         }
       </ol>
-
-      {/* Подпись активного шага. В разметке все шесть: тексты остаются на странице, высота — по самой длинной */}
-      <div class="tst-caps" data-reveal style="--d:2">
-        {
-          STEPS.map((s, i) => (
-            <div class:list={['tst-cap', { 'is-on': i === 0 }]} data-tst-cap>
-              <p class="tst-cap__n">{`Шаг${NB}${i + 1}`}</p>
-              <h3 class="tst-cap__t">{s.title}</h3>
-              {s.text && (
-                <p class="tst-cap__d" id={`algoritm-d${i + 1}`}>
-                  {s.text}
-                </p>
-              )}
-            </div>
-          ))
-        }
-      </div>
       <div class="tst__visual" data-reveal style="--d:3">
         <GradientVisual preset="teal" deco="none">
           <div class="ui tst-ui">
@@ -424,7 +424,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
 </section>
 
 <style>
-  /* ── Плеер: сверху шкала шагов и подпись активного шага, под ними широкая сцена ── */
+  /* ── Плеер: сверху подпись активного шага, под ней шкала шагов, ниже широкая сцена ── */
   .tst__visual {
     position: relative;
     margin-top: clamp(22px, calc(var(--vw) * 2.4), 36px);
@@ -451,7 +451,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     --tl-x: 5px;
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    margin: 0 calc(var(--tl-x) * -1);
+    margin: clamp(14px, calc(var(--vw) * 1.6), 22px) calc(var(--tl-x) * -1) 0;
   }
 
   .tst-tl__btn {
@@ -556,12 +556,14 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
   .tst-caps {
     display: grid;
     max-width: 780px;
-    margin: 14px auto 0;
+    margin: 0 auto;
     text-align: center;
   }
 
+  /* подпись прижата к шкале под ней: запас высоты под самую длинную подпись — сверху, а не между подписью и шкалой */
   .tst-cap {
     grid-area: 1 / 1;
+    align-self: end;
     opacity: 0;
     visibility: hidden;
     transform: translateY(6px);
@@ -1634,7 +1636,7 @@ const shotAt = (k: number) => (0.43 + k * 0.45).toFixed(2);
     }
   }
 
-  /* на узкой шкале подписи отрезков не помещаются — только номера; название шага — в подписи ниже */
+  /* на узкой шкале подписи отрезков не помещаются — только номера; название шага — в подписи над шкалой */
   @media (max-width: 719.98px) {
     .tst-tl {
       --tl-x: 3px;
