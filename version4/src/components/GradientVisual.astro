@@ -8,7 +8,8 @@ interface Props {
   deco?: 'bars' | 'stripes' | 'silk' | 'blobs' | 'none';
   /** Шёлк: цвет и параметры узора (как в коде заказчика с другого его сайта). */
   silk?: { color?: string; color2?: string; mode?: 'dark' | 'white' | 'sheen' | 'duo'; strength?: number; speed?: number; scale?: number; noise?: number; rotation?: number };
-  /** Плавающий градиент: радиус орбиты пятен в % ширины плашки и множитель скорости (1 — круг за 30–40 с). */
+  /** Плавающий градиент: радиус орбиты пятен в % ширины плашки (по умолчанию 26) и множитель скорости
+   *  (1 — круг за 30–40 с; по умолчанию 2.2 — за 14–18 с: заказчик просил движение заметнее). */
   blobs?: { orbit?: number; speed?: number };
   class?: string;
   /** Подпись для скринридера; без неё иллюстрация скрыта от него. */
@@ -39,38 +40,38 @@ const SILK_COLOR: Record<string, string> = {
 type Blob = { c: string; x: number; y: number; w: number; h: number; t: number; o?: number };
 const BLOBS: Record<string, Blob[]> = {
   sky: [
-    { c: '#6bb1ff', x: 50, y: -12, w: 104, h: 78, t: 34, o: 0.55 },
+    { c: '#6bb1ff', x: 50, y: -12, w: 104, h: 78, t: 34, o: 0.75 },
     { c: '#d3f4f6', x: 50, y: 47.5, w: 125, h: 71, t: 40 },
-    { c: '#133f78', x: 50, y: 112, w: 149, h: 84, t: 30, o: 0.55 },
+    { c: '#133f78', x: 50, y: 112, w: 149, h: 84, t: 30, o: 0.75 },
   ],
   aqua: [
-    { c: '#c7dcfb', x: 50, y: -12, w: 96, h: 69, t: 34, o: 0.55 },
+    { c: '#c7dcfb', x: 50, y: -12, w: 96, h: 69, t: 34, o: 0.75 },
     { c: '#f3eb8f', x: 102, y: 60, w: 78, h: 61, t: 28 },
     { c: '#7fe3da', x: 6.6, y: 56, w: 104, h: 69, t: 38 },
   ],
   dusk: [
-    { c: '#4d7cc6', x: 50, y: -12, w: 125, h: 80, t: 36, o: 0.55 },
+    { c: '#4d7cc6', x: 50, y: -12, w: 125, h: 80, t: 36, o: 0.75 },
     { c: '#f5b7d3', x: -5.8, y: 65, w: 78, h: 78, t: 30 },
     { c: '#c3b0fb', x: 112, y: 93, w: 95, h: 87, t: 40 },
   ],
   mint: [
-    { c: '#4e8fdf', x: 50, y: -12, w: 125, h: 71, t: 36, o: 0.55 },
+    { c: '#4e8fdf', x: 50, y: -12, w: 125, h: 71, t: 36, o: 0.75 },
     { c: '#a9e6ef', x: 37.6, y: 60, w: 125, h: 80, t: 30 },
-    { c: '#e9f6c6', x: 50, y: 112, w: 130, h: 74, t: 40, o: 0.55 },
+    { c: '#e9f6c6', x: 50, y: 112, w: 130, h: 74, t: 40, o: 0.75 },
   ],
   lavender: [
-    { c: '#b89ffa', x: 50, y: -12, w: 104, h: 78, t: 36, o: 0.55 },
+    { c: '#b89ffa', x: 50, y: -12, w: 104, h: 78, t: 36, o: 0.75 },
     { c: '#eb8be7', x: -12, y: 75, w: 87, h: 78, t: 30 },
     { c: '#6bb1ff', x: 112, y: 99.6, w: 107, h: 80, t: 40 },
   ],
   teal: [
-    { c: '#5ddfd7', x: 50, y: -12, w: 104, h: 78, t: 36, o: 0.55 },
+    { c: '#5ddfd7', x: 50, y: -12, w: 104, h: 78, t: 36, o: 0.75 },
     { c: '#d4c2ff', x: -12, y: 87, w: 87, h: 78, t: 30 },
     { c: '#6bb1ff', x: 112, y: 93, w: 107, h: 80, t: 40 },
   ],
 };
 // радиус орбиты задан в % ширины плашки, а translateX считает % от ширины самого пятна — пересчёт
-const ORBIT = blobs.orbit ?? 14;
+const ORBIT = blobs.orbit ?? 26;
 ---
 
 <div
@@ -116,7 +117,7 @@ const ORBIT = blobs.orbit ?? 14;
   }
   {
     deco === 'blobs' && (
-      <div class="gv__blobs" data-gv-blobs style={`--gv-speed:${blobs.speed ?? 1}`}>
+      <div class="gv__blobs" data-gv-blobs style={`--gv-speed:${blobs.speed ?? 2.2}`}>
         {BLOBS[preset].map((b, i) => (
           <i
             style={`--c:${b.c};--x:${b.x}%;--y:${b.y}%;--w:${b.w}%;--h:${b.h}%;--t:${b.t}s;--dl:-${(i * 11) % b.t}s;--dir:${i % 2 ? 'reverse' : 'normal'};--gv-orbit:${+(((ORBIT * (b.o ?? 1)) / b.w) * 100).toFixed(2)}%;z-index:${BLOBS[preset].length - i}`}
