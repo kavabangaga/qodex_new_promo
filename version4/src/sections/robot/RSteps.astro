@@ -16,7 +16,8 @@ type Art = 'upload' | 'match' | 'list' | 'confirm';
 const STEPS: { title: string; text: string; note: string; icon: IconName; noteIcon: IconName; art: Art }[] = [
   {
     title: 'Загрузка базы',
-    text: 'Выгрузка начислений и договоров в Excel — интеграция с биллингом не требуется.',
+    // 09.10.2026: два пути загрузки — Excel (запуск за день) или интеграция с биллингом клиента
+    text: `Загрузите начисления и${NB}договоры из${NB}Excel — или подключим ваш биллинг.`,
     note: 'Запуск за один день',
     icon: 'cloud-upload',
     noteIcon: 'zap',
