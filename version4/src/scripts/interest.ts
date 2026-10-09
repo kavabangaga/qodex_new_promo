@@ -1,29 +1,23 @@
 // Общее состояние поля «Что интересно» в форме заявки.
-// Пишут в него: самопроверка (блок 3), «Подобрать решение для объекта» (блок 5),
-// кнопки «Подробнее» у продуктов. Читает форма. Хранится, пока посетитель на сайте.
+// Пишут в него: самопроверка (блок 3), «Подобрать решение для объекта» (блок 5), кнопки с data-interest,
+// страница продукта (её продукт отмечен в формах этой страницы). Читает форма.
+// Живёт только на текущей странице: между страницами не переносится (решение заказчика 09.10.2026 —
+// посмотрел страницу Tracker, вернулся на главную, открыл заявку — ничего не отмечено, выбирает сам).
 
 import type { ProductId } from '../config/site';
 
-const KEY = 'qodex:interest';
 export const INTEREST_EVENT = 'qodex:interest';
 
-function read(): Set<ProductId> {
-  try {
-    const raw = sessionStorage.getItem(KEY);
-    return new Set(raw ? (JSON.parse(raw) as ProductId[]) : []);
-  } catch {
-    return new Set();
-  }
+// прежние версии сайта хранили выбор в sessionStorage — убираем, чтобы он не всплыл у вернувшихся посетителей
+try {
+  sessionStorage.removeItem('qodex:interest');
+} catch {
+  /* приватный режим */
 }
 
-let state = read();
+let state = new Set<ProductId>();
 
 function commit(): void {
-  try {
-    sessionStorage.setItem(KEY, JSON.stringify([...state]));
-  } catch {
-    /* приватный режим — состояние живёт только в памяти */
-  }
   document.dispatchEvent(new CustomEvent(INTEREST_EVENT, { detail: [...state] }));
 }
 
