@@ -1,0 +1,301 @@
+# Выкладка сайта на боевой qodex.tech (сервер 82.146.59.244). Работает только в рабочем репозитории
+# SIGNALL-D/qodex-site; в личном kavabangaga/qodex_new_promo этот файл ничего не делает (там —
+# предварительная версия на GitHub Pages, deploy.yml).
+#
+# Ветки:
+#   dev  — сборка и проверки, без выкладки;
+#   main — сборка, проверки и выкладка на qodex.tech.
+# Цепочка выкладки: сборка version4 для qodex.tech → проверки сборки (deploy/ci/check-dist.sh) и приёмника
+# (deploy/server/test-qodex-release.sh) → архив с контрольными суммами (deploy/ci/pack.sh) → по ssh приёмнику
+# на сервере /opt/qodex-site/bin/qodex-release (ключ выкладки умеет запускать только его): он проверяет архив
+# и переключает сайт → проверка qodex.tech снаружи (deploy/ci/smoke.sh); если сайт показывает не ту версию —
+# возврат предыдущей и ошибка.
+#
+# Порядок выкладок: выкладки и откаты идут по одной (concurrency prod-deploy) и ждут друг друга в очереди
+# (queue: max — ожидающие не отменяются). Сборки двух быстрых отправок в main идут параллельно и могут
+# закончиться не по порядку, поэтому выкладка сначала сверяется с GitHub: если её коммит уже не последний
+# в main, она пропускается (зелёная, с пометкой) — последний коммит выложит своя выкладка. Вторая защита —
+# на сервере: номер версии — время коммита, и приёмник не принимает версию старше той, что на сайте.
+#
+# Вручную: Actions → «Выкладка на боевой» → Run workflow, ветка main:
+#   status   — какие версии на сервере и какая на сайте;
+#   rollback — вернуть версию, бывшую на сайте до последнего переключения (или указанную в поле «Номер версии»);
+#   deploy   — собрать main и выложить заново.
+#
+# Настройки репозитория (deploy/README.md): окружение production (Settings → Environments) — секреты
+# DEPLOY_SSH_KEY и DEPLOY_KNOWN_HOSTS, переменные DEPLOY_HOST и DEPLOY_USER; после переключения nginx
+# на новый сайт — переменная SMOKE_REQUIRE_BUILD=1 (прежний сайт на qodex.tech — уже ошибка проверки).
+name: Выкладка на боевой
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'status — версии на сервере; rollback — вернуть предыдущую версию; deploy — выложить main заново'
+        type: choice
+        options: [status, rollback, deploy]
+        default: status
+      release:
+        description: 'Номер версии для rollback (например 20261009-121500-cb1061a); пусто — предыдущая'
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Сборка и проверки
+    if: github.repository == 'SIGNALL-D/qodex-site' && (github.event_name == 'push' || inputs.action == 'deploy')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      id: ${{ steps.id.outputs.id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: version4/package-lock.json
+
+      - name: Установка зависимостей
+        run: npm ci --prefix version4
+
+      # ГГГГММДД-ЧЧММСС-коммит, время — время коммита (не сборки) по UTC: по нему сервер сортирует версии
+      # и не принимает версию старше текущей, а проверка узнаёт свою версию на сайте. Повторный запуск того же
+      # коммита даёт тот же номер — тогда выкладка переключает сайт на версию, которая уже лежит на сервере.
+      - name: Номер версии
+        id: id
+        run: echo "id=$(date -u -d "@$(git show -s --format=%ct HEAD)" +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}" >>"$GITHUB_OUTPUT"
+
+      - name: Сборка для qodex.tech
+        working-directory: version4
+        env:
+          SITE_URL: https://qodex.tech
+          SITE_BASE: /
+          PUBLIC_FORM_ENDPOINT: /api/request
+          PUBLIC_BUILD_ID: ${{ steps.id.outputs.id }}
+        run: npx astro build
+
+      - name: Проверка сборки
+        env:
+          ID: ${{ steps.id.outputs.id }}
+        run: bash deploy/ci/check-dist.sh version4/dist "$ID"
+
+      - name: Проверка приёмника выкладки
+        run: bash deploy/server/test-qodex-release.sh
+
+      - name: Упаковка
+        run: bash deploy/ci/pack.sh version4/dist "$RUNNER_TEMP/site.tar.gz"
+
+      - name: Архив для выкладки
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: ${{ runner.temp }}/site.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  deploy:
+    name: Выкладка на qodex.tech
+    needs: build
+    if: github.repository == 'SIGNALL-D/qodex-site' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.action == 'deploy')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://qodex.tech
+    # Одна выкладка или откат за раз. queue: max — ожидающие ждут по очереди и не отменяются (без него GitHub
+    # оставляет в очереди одно задание и отменяет ожидающую выкладку, если следом пришла другая или откат).
+    # Состояние сервера (status) в эту очередь не встаёт.
+    concurrency:
+      group: prod-deploy
+      cancel-in-progress: false
+      queue: max
+    env:
+      ID: ${{ needs.build.outputs.id }}
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      SMOKE_REQUIRE_BUILD: ${{ vars.SMOKE_REQUIRE_BUILD }}
+    steps:
+      # Сборка старого коммита могла закончиться позже сборки нового: тогда её не выкладываем. Последний коммит
+      # main выложит своя выкладка (она в той же очереди). Не удалось спросить GitHub — выкладываем: старую
+      # версию поверх новой всё равно не примет сервер (номер версии — время коммита).
+      - name: Коммит — последний в main?
+        id: head
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          head=''
+          for i in 1 2 3; do
+            head="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha 2>/dev/null)" && break
+            head=''
+            sleep 5
+          done
+          if [[ -z "$head" ]]; then
+            echo "::warning::Не удалось узнать последний коммит main — выкладываю $ID (версию старше текущей сервер не примет)"
+          elif [[ "$head" != "$GITHUB_SHA" ]]; then
+            echo "::notice::Пропущено: в main уже более новый коммит ${head::7} — его выложит своя выкладка, $ID не выкладываю"
+            echo "skip=true" >>"$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.head.outputs.skip != 'true'
+        with:
+          persist-credentials: false
+          sparse-checkout: deploy/ci
+
+      - uses: actions/download-artifact@v4
+        if: steps.head.outputs.skip != 'true'
+        with:
+          name: site
+          path: ${{ runner.temp }}/site
+
+      - name: Ключ выкладки
+        if: steps.head.outputs.skip != 'true'
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: bash deploy/ci/ssh-setup.sh
+
+      # deploy/ci/deploy.sh: версия уже есть на сервере (повторный запуск) — переключить на неё (rollback <id>);
+      # ответ сервера не дошёл — спросить status, какая версия текущая
+      - name: Выкладка на сервер
+        if: steps.head.outputs.skip != 'true'
+        run: bash deploy/ci/deploy.sh "$ID" "$RUNNER_TEMP/site/site.tar.gz"
+
+      # Откат — только когда сайт показывает не ту версию или её страницы не открываются (код 3). Сервер
+      # не отвечает или отвечает 5xx (5), не те настройки nginx (4) — ошибка без отката: он не поможет.
+      - name: Проверка qodex.tech
+        if: steps.head.outputs.skip != 'true'
+        run: |
+          set +e
+          bash deploy/ci/smoke.sh "$ID"
+          rc=$?
+          set -e
+          case "$rc" in
+            0) ;;
+            3)
+              echo "::error::qodex.tech показывает не версию $ID или её страницы не открываются — возвращаю предыдущую версию"
+              bash deploy/ci/remote.sh rollback </dev/null || echo "::error::Откат не удался — нужен человек (deploy/README.md, «Откат»)"
+              ;;
+            4) echo "::error::Версия $ID на сервере, но настройки nginx не те — откат не поможет, нужен человек (deploy/README.md)" ;;
+            5) echo "::error::qodex.tech не отвечает или отвечает 5xx — откат не поможет, версия $ID оставлена, нужен человек" ;;
+            *) echo "::error::Проверка qodex.tech завершилась с кодом $rc" ;;
+          esac
+          exit "$rc"
+
+      - name: Итог
+        if: always()
+        env:
+          RESULT: ${{ job.status }}
+          SKIPPED: ${{ steps.head.outputs.skip }}
+        run: |
+          {
+            echo "### Выкладка на qodex.tech"
+            echo "- версия: \`$ID\`"
+            echo "- коммит: \`$GITHUB_SHA\`"
+            if [[ "$SKIPPED" == true ]]; then
+              echo "- итог: пропущена — в main уже более новый коммит"
+            else
+              echo "- итог: $RESULT"
+            fi
+          } >>"$GITHUB_STEP_SUMMARY"
+
+      - name: Убрать ключ
+        if: always()
+        run: rm -f "$RUNNER_TEMP/deploy_key" "$RUNNER_TEMP/known_hosts"
+
+  ops:
+    name: Сервер — ${{ inputs.action }}
+    if: github.repository == 'SIGNALL-D/qodex-site' && github.event_name == 'workflow_dispatch' && inputs.action != 'deploy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: https://qodex.tech
+    # rollback — в общую очередь с выкладками (queue: max: ожидающую выкладку он не отменит и сам не отменится);
+    # status только читает — своя группа на каждый запуск, то есть без очереди: замок приёмника и так даёт
+    # ему дождаться конца идущего переключения
+    concurrency:
+      group: ${{ inputs.action == 'rollback' && 'prod-deploy' || format('prod-status-{0}', github.run_id) }}
+      cancel-in-progress: false
+      queue: max
+    env:
+      ACTION: ${{ inputs.action }}
+      RELEASE_ID: ${{ inputs.release }}
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      SMOKE_REQUIRE_BUILD: ${{ vars.SMOKE_REQUIRE_BUILD }}
+    steps:
+      - name: Ветка
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Откат и состояние сервера запускаются с ветки main (Run workflow → Use workflow from: main)"
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: deploy/ci
+
+      - name: Ключ выкладки
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: bash deploy/ci/ssh-setup.sh
+
+      - name: Команда серверу
+        id: op
+        run: |
+          args=("$ACTION")
+          if [[ "$ACTION" == rollback && -n "$RELEASE_ID" ]]; then
+            if [[ ! "$RELEASE_ID" =~ ^[0-9]{8}-[0-9]{6}-[0-9a-f]{7,40}$ ]]; then
+              echo "::error::Неверный номер версии «$RELEASE_ID». Номера — в выводе status"
+              exit 1
+            fi
+            args+=("$RELEASE_ID")
+          fi
+          set +e
+          out="$(bash deploy/ci/remote.sh "${args[@]}" </dev/null 2>&1)"
+          rc=$?
+          set -e
+          printf '%s\n' "$out"
+          if [[ $rc -ne 0 ]]; then
+            echo "::error::$(tail -n 1 <<<"$out")"
+            exit 1
+          fi
+          if [[ "$ACTION" == rollback ]]; then
+            id="$(sed -nE 's/^OK rollback ([0-9a-f-]+)$/\1/p' <<<"$out")"
+            echo "id=$id" >>"$GITHUB_OUTPUT"
+            echo "### Откат: на qodex.tech версия \`$id\`" >>"$GITHUB_STEP_SUMMARY"
+          else
+            served="$(curl -sS --max-time 20 https://qodex.tech/ | sed -nE 's/.*<meta name="qodex-build" content="([^"]*)".*/\1/p' | head -n 1 || true)"
+            {
+              echo "### Версии на сервере"
+              echo "Посетители qodex.tech сейчас видят: ${served:-прежний сайт (nginx не переключён на новый)}"
+              echo
+              echo "| Версия | |"
+              echo "|---|---|"
+              awk '$1 == "release" { m = ($3 == "current") ? "на сервере текущая" : ($3 == "previous") ? "предыдущая (rollback вернёт её)" : ""; print "| `" $2 "` | " m " |" }' <<<"$out"
+            } >>"$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Проверка qodex.tech после отката
+        if: inputs.action == 'rollback'
+        env:
+          ID: ${{ steps.op.outputs.id }}
+        run: bash deploy/ci/smoke.sh "$ID"
+
+      - name: Убрать ключ
+        if: always()
+        run: rm -f "$RUNNER_TEMP/deploy_key" "$RUNNER_TEMP/known_hosts"

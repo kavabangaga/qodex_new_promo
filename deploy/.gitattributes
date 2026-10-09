@@ -1,0 +1,3 @@
+# Файлы ставятся на Linux-сервер и запускаются в Linux (GitHub Actions): только LF, даже в checkout
+# на Windows — иначе bash не запустит скрипт с переводами строк Windows.
+* text=auto eol=lf

@@ -25,5 +25,9 @@ npm run dev
 
 ## Публикация
 
-При каждой отправке в ветку `main` GitHub сам собирает сайт и выкладывает его на GitHub Pages
-(`.github/workflows/deploy.yml`). Предварительная версия закрыта от поисковиков.
+- **Боевой сайт https://qodex.tech** — из ветки `main` рабочего репозитория SIGNALL-D/qodex-site:
+  GitHub Actions собирает, проверяет и выкладывает сайт на сервер (`.github/workflows/deploy-prod.yml`).
+  Ветка `dev` — черновики: сборка и проверки без выкладки. Как устроено, как откатить версию и что
+  настроено на сервере — [`deploy/README.md`](deploy/README.md).
+- **Предварительная версия** — GitHub Pages личного репозитория kavabangaga/qodex_new_promo при отправке
+  в его ветку `main` (`.github/workflows/deploy.yml`). Закрыта от поисковиков, форма заявки письма не отправляет.

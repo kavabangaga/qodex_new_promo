@@ -1,0 +1,429 @@
+#!/usr/bin/env bash
+# qodex-release — приёмник выкладки сайта qodex.tech на сервере (/opt/qodex-site/bin/qodex-release).
+#
+# Это единственное, что может запустить ключ выкладки GitHub Actions. В ~qodex/.ssh/authorized_keys ключ
+# записан так:
+#     restrict,command="/opt/qodex-site/bin/qodex-release" ssh-ed25519 AAAA… github-actions-qodex-site
+# Какую бы команду ни прислал владелец ключа, sshd запускает этот файл, а присланную строку кладёт
+# в SSH_ORIGINAL_COMMAND. Строку разбираем здесь сами, оболочке она не передаётся. restrict запрещает
+# терминал, проброс портов и агента.
+#
+# Команды:
+#   deploy <id>     принять сборку сайта (.tar.gz на стандартном входе) и переключить сайт на неё;
+#   rollback        вернуть версию, которая была на сайте до последнего переключения
+#                   (повторный rollback вернёт обратно — как «отменить»);
+#   rollback <id>   переключить сайт на указанную версию из releases/ (так же выкладка из GitHub
+#                   при повторном запуске переключает сайт на версию, которая уже лежит на сервере);
+#   status          текущая и предыдущая версии и все версии на сервере.
+# Всё остальное — отказ.
+#
+# Номер версии <id>: ГГГГММДД-ЧЧММСС-<начало хеша коммита>, например 20261009-121500-cb1061a, где время —
+# время коммита по UTC (не сборки). Номера сортируются по времени коммитов, и deploy не принимает версию
+# старше той, что сейчас на сайте: сборка старого коммита, закончившаяся позже новой, не перекроет новую.
+# Вернуть старую версию — только rollback.
+#
+# Архив принимается во временный файл upload/ (не дольше RECV_TIMEOUT секунд) и проверяется до распаковки
+# ещё без замка: только обычные файлы и папки (никаких ссылок и устройств) с правами владельца rw (у папок
+# rwx), имена из латиницы, цифр и знаков ._-/@+=,~ — без «..» и без «/» в начале; записей не больше
+# MAX_FILES, после распаковки не больше MAX_UNPACKED байт. Под замком — распаковка и MANIFEST.sha256
+# из архива: сначала список (ровно все файлы архива, без «..»), затем контрольные суммы; есть index.html
+# и 404.html. Каждый тяжёлый шаг — под timeout (STEP_TIMEOUT), чтобы замок не держался бесконечно.
+# Только после этого сайт переключается: символьная ссылка current заменяется одной операцией rename,
+# и nginx видит либо прежнюю версию целиком, либо новую целиком.
+#
+# Ответ — строка «OK <команда> <id>» на стандартный вывод при успехе или «ERR <команда>: <причина>»
+# в поток ошибок при отказе (код выхода 1; неверная команда или номер — 2). Каждое действие
+# записывается в log/deploy.log.
+#
+# Каталог — QODEX_SITE_DIR (по умолчанию /opt/qodex-site); его и пределы ниже переопределяют только
+# для проверки на своём компьютере (deploy/server/test-qodex-release.sh). Через ssh переменные
+# окружения не передать: restrict отключает ~/.ssh/environment, а AcceptEnv в Debian пропускает
+# только LANG и LC_* — их перекрывает LC_ALL=C ниже.
+#
+# Требует bash 5, GNU tar, GNU coreutils (timeout, mktemp), flock (Debian 12: всё есть в базовой системе).
+
+set -euo pipefail
+export LC_ALL=C
+umask 022
+
+BASE="${QODEX_SITE_DIR:-/opt/qodex-site}"
+RELEASES="$BASE/releases"
+UPLOADS="$BASE/upload"
+CURRENT="$BASE/current"
+PREVIOUS_FILE="$BASE/previous"
+LOG_FILE="$BASE/log/deploy.log"
+LOCK_FILE="$BASE/.lock"
+
+KEEP=5                                                # сколько последних версий хранить
+MAX_ARCHIVE="${QODEX_MAX_ARCHIVE:-314572800}"         # архив, байт (300 МБ)
+MAX_UNPACKED="${QODEX_MAX_UNPACKED:-1073741824}"      # после распаковки, байт (1 ГБ)
+MAX_FILES="${QODEX_MAX_FILES:-20000}"                 # записей в архиве (файлы и папки)
+LOCK_WAIT="${QODEX_LOCK_WAIT:-120}"                   # сколько секунд ждать чужую выкладку или откат
+RECV_TIMEOUT="${QODEX_RECV_TIMEOUT:-600}"             # сколько секунд принимать архив
+STEP_TIMEOUT="${QODEX_STEP_TIMEOUT:-300}"             # предел каждого шага проверки (tar, sha256sum), секунд
+
+ID_RE='^[0-9]{8}-[0-9]{6}-[0-9a-f]{7,40}$'
+# имя в архиве: ./путь из безопасных символов (проверяется вместе с запретом «..» и «/» в начале)
+NAME_RE='^[A-Za-z0-9._/@+=,~-]+$'
+
+VERB='?'        # команда — для строк ответа и журнала
+ANSWERED=0      # строка OK/ERR уже напечатана
+ARCHIVE=''      # временные файлы выкладки — убираются при любом выходе
+INCOMING=''
+WHO="${SSH_CONNECTION:-local}"   # «адрес порт адрес порт» — в журнал идёт адрес клиента
+WHO="${WHO%% *}"
+
+log() {
+  printf '%s [%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S %z')" "$WHO" "$*" >>"$LOG_FILE" 2>/dev/null || true
+}
+
+ok() {
+  ANSWERED=1
+  log "OK $*"
+  printf 'OK %s\n' "$*"
+}
+
+# fail — отказ по существу (код 1), refuse — неверная команда или номер (код 2)
+fail() {
+  ANSWERED=1
+  log "ERR $VERB: $1"
+  printf 'ERR %s: %s\n' "$VERB" "$1" >&2
+  exit "${2:-1}"
+}
+
+refuse() {
+  fail "$1" 2
+}
+
+# Удалить папку целиком. Перед rm -rf — права владельца на всё внутри: папка без права записи
+# (след прерванной выкладки) иначе не удалится, и все следующие выкладки упадут на её уборке.
+# Символьную ссылку удаляем саму, не заходя по ней (chmod пошёл бы по ссылке).
+remove_tree() {
+  local d="$1"
+  if [[ -L "$d" || ! -d "$d" ]]; then
+    rm -f -- "$d"
+    return 0
+  fi
+  chmod -R u+rwX -- "$d" 2>/dev/null || true
+  rm -rf -- "$d"
+}
+
+on_exit() {
+  local rc=$?
+  if [[ -n "$INCOMING" ]]; then remove_tree "$INCOMING" || true; fi
+  if [[ -n "$ARCHIVE" ]]; then rm -f -- "$ARCHIVE" || true; fi
+  if (( rc != 0 && ANSWERED == 0 )); then
+    log "ERR $VERB: внутренняя ошибка, код $rc"
+    printf 'ERR %s: внутренняя ошибка, код %s\n' "$VERB" "$rc" >&2
+  fi
+  exit "$rc"
+}
+trap on_exit EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+for n in "$MAX_ARCHIVE" "$MAX_UNPACKED" "$MAX_FILES" "$LOCK_WAIT" "$RECV_TIMEOUT" "$STEP_TIMEOUT"; do
+  [[ "$n" =~ ^[0-9]+$ ]] || fail "неверный предел: $n"
+done
+[[ -d "$BASE" ]] || fail "нет каталога $BASE"
+mkdir -p -- "$RELEASES" "$UPLOADS" "$BASE/log"
+
+# --- состояние --------------------------------------------------------------------------------------
+
+# все версии по возрастанию номера (= времени коммита); временные .incoming-* и символьные ссылки не входят
+list_releases() {
+  local d n
+  shopt -s nullglob
+  for d in "$RELEASES"/*/; do
+    d="${d%/}"
+    n="${d##*/}"
+    if [[ "$n" =~ $ID_RE && ! -L "$d" ]]; then printf '%s\n' "$n"; fi
+  done | sort
+}
+
+# версия на сайте (пусто — ещё не было)
+current_id() {
+  local t
+  if [[ ! -L "$CURRENT" ]]; then return 0; fi
+  t="$(readlink -- "$CURRENT")"
+  t="${t#releases/}"
+  if [[ "$t" =~ $ID_RE ]]; then printf '%s\n' "$t"; fi
+}
+
+# версия, бывшая на сайте до последнего переключения. Если записи нет (или та версия удалена
+# вручную) — ближайшая более ранняя по номеру.
+previous_id() {
+  local cur p=''
+  cur="$(current_id)"
+  if [[ -f "$PREVIOUS_FILE" ]]; then IFS= read -r p <"$PREVIOUS_FILE" || true; fi
+  if [[ "$p" =~ $ID_RE && "$p" != "$cur" && -d "$RELEASES/$p" && ! -L "$RELEASES/$p" ]]; then
+    printf '%s\n' "$p"
+    return 0
+  fi
+  if [[ -n "$cur" ]]; then
+    list_releases | awk -v cur="$cur" '$0 < cur { p = $0 } END { if (p != "") print p }'
+  fi
+}
+
+check_current_link() {
+  if [[ -e "$CURRENT" && ! -L "$CURRENT" ]]; then
+    fail "$CURRENT — не символьная ссылка; исправить вручную"
+  fi
+}
+
+# замок: deploy и rollback — единственные (-x), status — общий (-s): ждёт, пока закончится чужое
+# переключение, и показывает уже его итог
+lock() {
+  exec 9>>"$LOCK_FILE"
+  flock -x -w "$LOCK_WAIT" 9 || fail "занято: идёт другая выкладка или откат"
+}
+
+lock_shared() {
+  exec 9>>"$LOCK_FILE"
+  flock -s -w "$LOCK_WAIT" 9 || fail "занято: идёт выкладка или откат, повторите позже"
+}
+
+# переключить сайт на версию: новая ссылка рядом и rename поверх current — атомарно
+switch_to() {
+  local id="$1" old
+  old="$(current_id)"
+  ln -sfn -- "releases/$id" "$BASE/current.tmp"
+  mv -Tf -- "$BASE/current.tmp" "$CURRENT"
+  if [[ -n "$old" && "$old" != "$id" ]]; then
+    printf '%s\n' "$old" >"$PREVIOUS_FILE.tmp"
+    mv -f -- "$PREVIOUS_FILE.tmp" "$PREVIOUS_FILE"
+  fi
+  log "switch ${old:-нет} -> $id"
+}
+
+# оставить KEEP последних версий; текущую и предыдущую не трогаем никогда
+prune() {
+  local cur prev id i n
+  local -a all
+  cur="$(current_id)"
+  prev="$(previous_id)"
+  mapfile -t all < <(list_releases)
+  n=${#all[@]}
+  for (( i = 0; i < n - KEEP; i++ )); do
+    id="${all[i]}"
+    if [[ "$id" == "$cur" || "$id" == "$prev" ]]; then continue; fi
+    remove_tree "${RELEASES:?}/$id"
+    log "prune $id"
+  done
+}
+
+# следы прерванных выкладок (мы под замком, значит, они ничьи): распакованные папки .incoming-*
+# и архивы в upload/, которые старше всего пути одной выкладки до замка (приём, проверки, ожидание
+# замка) с запасом — свежий архив может быть чужим: приём и проверки архива идут до замка
+clean_stale() {
+  local d stale_min=$(( (RECV_TIMEOUT + 3 * STEP_TIMEOUT + LOCK_WAIT) / 60 + 5 ))
+  shopt -s nullglob
+  for d in "$RELEASES"/.incoming-*; do
+    remove_tree "$d"
+  done
+  find "$UPLOADS" -mindepth 1 -maxdepth 1 -mmin "+$stale_min" -exec rm -rf -- {} + 2>/dev/null || true
+}
+
+# --- проверки архива --------------------------------------------------------------------------------
+
+# новую версию принимаем, только если её ещё нет и она не старше текущей (по времени коммита в номере).
+# Вызывается дважды: до приёма архива (не принимать его зря) и под замком (окончательно).
+check_new_id() {
+  local id="$1" cur
+  if [[ -e "$RELEASES/$id" || -L "$RELEASES/$id" ]]; then fail "версия $id уже есть на сервере"; fi
+  cur="$(current_id)"
+  if [[ -n "$cur" && "${id:0:15}" < "${cur:0:15}" ]]; then
+    fail "версия $id старше текущей $cur — не принята (вернуть прежнюю версию: rollback <id>)"
+  fi
+}
+
+# архив со стандартного входа — во временный файл, не дольше RECV_TIMEOUT секунд
+receive() {
+  local id="$1" size rc=0
+  ARCHIVE="$(mktemp -p "$UPLOADS" "$id.XXXXXXXX")"
+  timeout "$RECV_TIMEOUT" head -c "$((MAX_ARCHIVE + 1))" >"$ARCHIVE" || rc=$?
+  (( rc != 124 )) || fail "архив не пришёл за $RECV_TIMEOUT с"
+  (( rc == 0 )) || fail "архив не принят (код $rc)"
+  size="$(stat -c %s -- "$ARCHIVE")"
+  (( size > 0 )) || fail "пустой архив"
+  (( size <= MAX_ARCHIVE )) || fail "архив больше $MAX_ARCHIVE байт"
+  log "deploy $id: принят архив, $size байт"
+}
+
+# до распаковки: число записей, имена, типы и права записей, общий размер
+check_members() {
+  local a="$1" names verbose count rc=0
+  # сначала только счёт, потоком: head останавливает чтение на MAX_FILES + 1, в памяти не больше этого.
+  # -P: показать имена как есть (без -P tar молча срезает «/» в начале и проверка бы его не увидела)
+  count="$(set +o pipefail
+    timeout "$STEP_TIMEOUT" tar --force-local -tzPf "$a" 2>/dev/null | head -n "$((MAX_FILES + 1))" | wc -l)"
+  (( count > 0 )) || fail "архив пуст или не читается"
+  (( count <= MAX_FILES )) || fail "в архиве больше $MAX_FILES записей"
+
+  # записей не больше MAX_FILES — теперь полный список, с проверкой, что tar прочитал его без ошибки
+  names="$(timeout "$STEP_TIMEOUT" tar --force-local -tzPf "$a" 2>/dev/null)" || fail "архив не читается"
+  if grep -Evq -- "$NAME_RE" <<<"$names"; then fail "недопустимые символы в именах файлов"; fi
+  if grep -Eq -- '^/' <<<"$names"; then fail "абсолютный путь в архиве"; fi
+  if grep -Eq -- '(^|/)\.\.(/|$)' <<<"$names"; then fail "путь с «..» в архиве"; fi
+
+  # подробный список: первая буква — тип записи («-» файл, «d» папка), следующие три — права владельца,
+  # третье поле — размер
+  verbose="$(timeout "$STEP_TIMEOUT" tar --force-local -tvzPf "$a" --numeric-owner 2>/dev/null)" ||
+    fail "архив не читается"
+  awk -v max="$MAX_UNPACKED" '
+    { t = substr($1, 1, 1); u = substr($1, 2, 3)
+      if (t != "-" && t != "d") { err = 3; exit }
+      if ((t == "d" && u != "rwx") || (t == "-" && u !~ /^rw[-x]$/)) { err = 6; exit }
+      if ($3 !~ /^[0-9]+$/) { err = 4; exit }
+      total += $3 }
+    END { if (err) exit err; if (total > max) exit 5 }' <<<"$verbose" || rc=$?
+  case "$rc" in
+    0) ;;
+    3) fail "в архиве есть ссылки, устройства или другие особые записи" ;;
+    5) fail "после распаковки больше $MAX_UNPACKED байт" ;;
+    6) fail "права записей в архиве: у владельца нужны rw (у папок rwx), без setuid" ;;
+    *) fail "не удалось разобрать список архива" ;;
+  esac
+}
+
+# после распаковки: MANIFEST.sha256 перечисляет ровно все файлы, и суммы сходятся. Сначала список —
+# до того, как sha256sum откроет хоть один файл по нему: строка «./../…» или «./../../dev/zero» прочитала
+# бы файл вне версии или повисла бы, держа замок
+verify_manifest() {
+  local m="$INCOMING/MANIFEST.sha256" out listed actual rc=0
+  [[ -f "$m" ]] || fail "нет MANIFEST.sha256"
+  [[ -s "$m" ]] || fail "MANIFEST.sha256 пуст"
+  (( $(stat -c %s -- "$m") <= MAX_FILES * 1024 )) || fail "MANIFEST.sha256 слишком большой"
+  if grep -Evq -- '^[0-9a-f]{64}  \./[A-Za-z0-9._/@+=,~-]+$' "$m"; then fail "MANIFEST.sha256: неверный формат строк"; fi
+  listed="$(sed -E 's/^[0-9a-f]{64}  //' "$m" | sort)"
+  if grep -Eq -- '(^|/)\.\.(/|$)' <<<"$listed"; then fail "MANIFEST.sha256: путь с «..»"; fi
+  if grep -Eq -- '^/' <<<"$listed"; then fail "MANIFEST.sha256: абсолютный путь"; fi
+  actual="$(cd -- "$INCOMING" && find . -type f ! -path ./MANIFEST.sha256 | sort)"
+  [[ "$listed" == "$actual" ]] || fail "MANIFEST.sha256 не совпадает со списком файлов архива"
+  out="$(cd -- "$INCOMING" && timeout "$STEP_TIMEOUT" sha256sum -c --strict --quiet MANIFEST.sha256 2>&1)" || rc=$?
+  (( rc != 124 )) || fail "контрольные суммы не проверены за $STEP_TIMEOUT с"
+  (( rc == 0 )) || fail "контрольные суммы не сходятся: $(head -n 1 <<<"$out")"
+}
+
+# --- команды ----------------------------------------------------------------------------------------
+
+cmd_deploy() {
+  local id="$1" target
+  [[ "$id" =~ $ID_RE ]] || refuse "неверный номер версии"
+  check_new_id "$id"
+  # приём и проверка архива — до замка: медленная загрузка не держит замок (и rollback, и status)
+  receive "$id"
+  timeout "$STEP_TIMEOUT" gzip -t -- "$ARCHIVE" 2>/dev/null || fail "архив повреждён или оборван"
+  check_members "$ARCHIVE"
+
+  lock
+  check_current_link
+  check_new_id "$id"
+  clean_stale
+  target="$RELEASES/$id"
+  INCOMING="$RELEASES/.incoming-$id"
+  mkdir -- "$INCOMING"
+  timeout "$STEP_TIMEOUT" tar --force-local -xzf "$ARCHIVE" -C "$INCOMING" \
+    --no-same-owner --no-same-permissions --no-overwrite-dir --delay-directory-restore 2>/dev/null ||
+    fail "архив не распаковался"
+  rm -f -- "$ARCHIVE"
+  ARCHIVE=''
+
+  # ещё раз, по факту: только обычные файлы и папки
+  if [[ -n "$(find "$INCOMING" -mindepth 1 ! -type f ! -type d -print -quit)" ]]; then
+    fail "в архиве есть ссылки, устройства или другие особые записи"
+  fi
+  verify_manifest
+  [[ -f "$INCOMING/index.html" ]] || fail "в сборке нет index.html"
+  [[ -f "$INCOMING/404.html" ]] || fail "в сборке нет 404.html"
+
+  find "$INCOMING" -type d -exec chmod 755 {} +
+  find "$INCOMING" -type f -exec chmod 644 {} +
+  mv -T -- "$INCOMING" "$target"
+  INCOMING=''
+  log "deploy $id: проверен, файлов $(grep -c '' "$target/MANIFEST.sha256")"
+
+  switch_to "$id"
+  prune
+  ok "deploy $id"
+}
+
+cmd_rollback() {
+  local id="$1" cur
+  if [[ -n "$id" && ! "$id" =~ $ID_RE ]]; then refuse "неверный номер версии"; fi
+  lock
+  check_current_link
+  cur="$(current_id)"
+  if [[ -z "$id" ]]; then
+    id="$(previous_id)"
+    [[ -n "$id" ]] || fail "нет предыдущей версии"
+  fi
+  # версия — только настоящая папка, которую положил сюда deploy: ссылку из releases/ на что-то
+  # другое сайт не покажет
+  [[ ! -L "$RELEASES/$id" ]] || fail "releases/$id — символьная ссылка, а не папка версии; исправить вручную"
+  [[ -f "$RELEASES/$id/index.html" ]] || fail "версии $id нет на сервере"
+  if [[ "$id" == "$cur" ]]; then
+    ok "rollback $id"
+    return 0
+  fi
+  switch_to "$id"
+  ok "rollback $id"
+}
+
+cmd_status() {
+  local cur prev id mark
+  lock_shared
+  cur="$(current_id)"
+  prev="$(previous_id)"
+  printf 'current %s\n' "${cur:--}"
+  printf 'previous %s\n' "${prev:--}"
+  while IFS= read -r id; do
+    mark='-'
+    if [[ "$id" == "$cur" ]]; then mark='current'; elif [[ "$id" == "$prev" ]]; then mark='previous'; fi
+    printf 'release %s %s\n' "$id" "$mark"
+  done < <(list_releases | sort -r)
+  ANSWERED=1
+  printf 'OK status\n'
+}
+
+# --- разбор команды ---------------------------------------------------------------------------------
+
+if [[ -n "${SSH_ORIGINAL_COMMAND+x}" ]]; then
+  RAW="$SSH_ORIGINAL_COMMAND"
+else
+  RAW="$*"
+fi
+
+# только латиница, цифры, пробел и ._- — в журнал строка попадает уже проверенной
+CMD_RE='^[A-Za-z0-9 ._-]*$'
+if (( ${#RAW} > 200 )) || [[ ! "$RAW" =~ $CMD_RE ]]; then
+  SAFE="${RAW//[^A-Za-z0-9 ._-]/?}"
+  VERB='command'
+  refuse "недопустимая команда: ${SAFE:0:80}"
+fi
+
+read -r -a ARGS <<<"$RAW" || true
+VERB="${ARGS[0]:-}"
+case "$VERB" in
+  deploy)
+    (( ${#ARGS[@]} == 2 )) || refuse "нужно: deploy <id>"
+    cmd_deploy "${ARGS[1]}"
+    ;;
+  rollback)
+    (( ${#ARGS[@]} <= 2 )) || refuse "нужно: rollback [<id>]"
+    cmd_rollback "${ARGS[1]:-}"
+    ;;
+  status)
+    (( ${#ARGS[@]} == 1 )) || refuse "нужно: status"
+    cmd_status
+    ;;
+  '')
+    VERB='command'
+    refuse "пустая команда; есть deploy <id>, rollback [<id>], status"
+    ;;
+  *)
+    VERB='command'
+    refuse "неизвестная команда: ${RAW:0:80}"
+    ;;
+esac

@@ -1,6 +1,11 @@
-# Публикация на GitHub Pages при каждой отправке в ветку main.
+# Предварительная версия на GitHub Pages: https://kavabangaga.github.io/qodex_new_promo/v4/ — при каждой
+# отправке в ветку main личного репозитория kavabangaga/qodex_new_promo (туда отправляется состояние ветки dev
+# рабочего репозитория). В рабочем SIGNALL-D/qodex-site этот файл ничего не делает: боевой qodex.tech
+# выкладывает deploy-prod.yml.
 # Сайт — только version4, по адресу /v4/. Прежние версии удалены (2026-10-07): корень и /v2/, /v3/
 # перенаправляют на /v4/, чтобы старые ссылки не вели в пустоту; неизвестные адреса — страница 404 из v4.
+# PUBLIC_NOINDEX=1: все страницы закрыты от поисковиков (noindex, nofollow), canonical указывает на qodex.tech,
+# robots.txt запрещает всё (src/config/build.ts).
 name: Публикация сайта
 
 on:
@@ -8,10 +13,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Права на публикацию в Pages — только у задания deploy (ниже): сборке с чужим кодом из npm они не нужны
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -19,6 +23,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.repository == 'kavabangaga/qodex_new_promo'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +44,7 @@ jobs:
           export SITE_URL="https://${OWNER}.github.io"
           # репозиторий вида логин.github.io открывается с корня домена
           if [[ "$REPO" == *.github.io ]]; then BASE="/"; else BASE="/${REPO}/"; fi
-          (cd version4 && SITE_BASE="${BASE}v4/" npx astro build --outDir ../_site/v4)
+          (cd version4 && SITE_BASE="${BASE}v4/" PUBLIC_NOINDEX=1 npx astro build --outDir ../_site/v4)
 
           # корень и адреса прежних версий — переход на /v4/ (с сохранением #якоря)
           TO="${BASE}v4/"
@@ -70,7 +75,11 @@ jobs:
 
   deploy:
     needs: build
+    if: github.repository == 'kavabangaga/qodex_new_promo'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
