@@ -4,10 +4,8 @@
 interface Props {
   preset?: 'sky' | 'aqua' | 'dusk' | 'mint' | 'lavender' | 'teal';
   /** Декор поверх подложки: «звуковая волна» из полос по бокам, горизонтальные полосы (обе выключены
-   *  по всему сайту), переливающийся шёлк (тест) или ничего. 'blobs' — то же, что 'none' (пятна и так идут). */
-  deco?: 'bars' | 'stripes' | 'silk' | 'blobs' | 'none';
-  /** Шёлк: цвет и параметры узора (как в коде заказчика с другого его сайта). */
-  silk?: { color?: string; color2?: string; mode?: 'dark' | 'white' | 'sheen' | 'duo'; strength?: number; speed?: number; scale?: number; noise?: number; rotation?: number };
+   *  по всему сайту) или ничего. 'blobs' — то же, что 'none' (пятна и так идут). */
+  deco?: 'bars' | 'stripes' | 'blobs' | 'none';
   /** Плавающий градиент — на всех плашках по умолчанию (решение заказчика 09.10.2026): пятна подложки ходят
    *  по кругу (GvBlobs.astro). Радиус орбиты и скорость можно задать; false — неподвижный градиент. */
   blobs?: false | { orbit?: number; speed?: number };
@@ -19,27 +17,16 @@ interface Props {
 
 import GvBlobs from './GvBlobs.astro';
 
-const { preset = 'sky', deco = 'bars', silk = {}, blobs = {}, class: className, label, ...rest } = Astro.props;
-// под шёлком пятна не нужны: он сам закрывает подложку
-const moving = blobs !== false && deco !== 'silk';
+const { preset = 'sky', deco = 'bars', blobs = {}, class: className, label, ...rest } = Astro.props;
+const moving = blobs !== false;
 
 // Высоты полос «звуковой волны» — фиксированные, чтобы картинка не прыгала между сборками
 const LEFT = [38, 62, 84, 56, 92, 70, 44];
 const RIGHT = [52, 80, 46, 96, 64, 88, 40];
-
-// Цвет шёлка по умолчанию — основной тон подложки
-const SILK_COLOR: Record<string, string> = {
-  sky: '#6fb0f5',
-  aqua: '#8fe2d8',
-  dusk: '#9db3e8',
-  mint: '#7fb8ea',
-  lavender: '#b89ffa',
-  teal: '#7fe5de',
-};
 ---
 
 <div
-  class:list={['gv', `gv--${preset}`, { 'gv--silk': deco === 'silk', 'gv--blobs': moving }, className]}
+  class:list={['gv', `gv--${preset}`, { 'gv--blobs': moving }, className]}
   role={label ? 'img' : undefined}
   aria-label={label}
   aria-hidden={label ? undefined : 'true'}
@@ -62,205 +49,6 @@ const SILK_COLOR: Record<string, string> = {
     )
   }
   {deco === 'stripes' && <div class="gv__stripes" />}
-  {
-    deco === 'silk' && (
-      <canvas
-        class="gv__silk"
-        data-gv-silk
-        data-color={silk.color ?? SILK_COLOR[preset]}
-        data-color2={silk.color2 ?? '#ffffff'}
-        data-mode={silk.mode ?? 'duo'}
-        data-strength={silk.strength ?? 1}
-        data-speed={silk.speed ?? 5}
-        data-scale={silk.scale ?? 1}
-        data-noise={silk.noise ?? 1.5}
-        data-rotation={silk.rotation ?? 0}
-        aria-hidden="true"
-      />
-    )
-  }
   {moving && <GvBlobs preset={preset} {...blobs} />}
   <slot />
 </div>
-
-<script>
-  // Переливающийся шёлк на подложке — шейдер с другого сайта заказчика (там на three.js), здесь на чистом
-  // WebGL: без библиотеки и без запросов к чужим CDN. Плоскость на весь холст, uv 0..1, как в оригинале.
-  // Идёт, только пока подложка на экране и вкладка видна; при «уменьшить движение» — один неподвижный кадр.
-  // Нет WebGL — остаётся обычный градиент подложки.
-  const VERT = `
-    attribute vec2 aPos;
-    varying vec2 vUv;
-    void main() {
-      vUv = aPos * 0.5 + 0.5;
-      gl_Position = vec4(aPos, 0.0, 1.0);
-    }
-  `;
-
-  const FRAG = `
-    precision highp float;
-    varying vec2 vUv;
-    uniform float uTime;
-    uniform vec3  uColor;
-    uniform float uSpeed;
-    uniform float uScale;
-    uniform float uRotation;
-    uniform float uNoiseIntensity;
-    uniform vec3  uColor2;
-    uniform int   uMode;
-    uniform float uStrength;
-    const float e = 2.71828182845904523536;
-    float noise(vec2 texCoord) {
-      float G = e;
-      vec2  r = (G * sin(G * texCoord));
-      return fract(r.x * r.y * (1.0 + texCoord.x));
-    }
-    vec2 rotateUvs(vec2 uv, float angle) {
-      float c = cos(angle);
-      float s = sin(angle);
-      mat2  rot = mat2(c, -s, s, c);
-      return rot * uv;
-    }
-    void main() {
-      float rnd     = noise(gl_FragCoord.xy);
-      vec2  uv      = rotateUvs(vUv * uScale, uRotation);
-      vec2  tex     = uv * uScale;
-      float tOffset = uSpeed * uTime;
-      tex.y += 0.03 * sin(8.0 * tex.x - tOffset);
-      float pattern = 0.6 +
-                      0.4 * sin(5.0 * (tex.x + tex.y +
-                                        cos(3.0 * tex.x + 5.0 * tex.y) +
-                                        0.02 * tOffset) +
-                                sin(20.0 * (tex.x + tex.y - 0.1 * tOffset)));
-      float grain = rnd / 15.0 * uNoiseIntensity;
-      if (uMode == 0) {
-        // как в оригинале: цвет × узор — в складках почти чёрный
-        vec4 col = vec4(uColor, 1.0) * vec4(pattern) - grain;
-        col.a = 1.0;
-        gl_FragColor = col;
-      } else if (uMode == 1) {
-        // белый шёлк поверх градиента подложки: молочные складки, в бликах почти белый
-        float t = smoothstep(0.2, 1.0, pattern);
-        vec3 c = mix(uColor, vec3(1.0), t);
-        float a = clamp((mix(0.28, 0.82, t) - grain * 0.08) * uStrength, 0.0, 1.0);
-        gl_FragColor = vec4(c * a, a);
-      } else if (uMode == 2) {
-        // только блики шёлка поверх градиента подложки: белый с прозрачностью, складки прозрачные
-        float a = smoothstep(0.5, 1.0, pattern) * 0.62 + grain * 0.06;
-        gl_FragColor = vec4(vec3(a), a);
-      } else {
-        // два цвета палитры поверх градиента подложки: складки — uColor, блики — uColor2, градиент просвечивает
-        float t = smoothstep(0.2, 1.0, pattern);
-        vec3 c = mix(uColor, uColor2, t);
-        float a = clamp((mix(0.32, 0.72, t) - grain * 0.08) * uStrength, 0.0, 1.0);
-        gl_FragColor = vec4(c * a, a);
-      }
-    }
-  `;
-
-  const hexToRgb = (hex: string) => {
-    const h = hex.replace('#', '');
-    return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
-  };
-
-  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const initSilk = (cv: HTMLCanvasElement) => {
-    const MODES: Record<string, number> = { dark: 0, white: 1, sheen: 2, duo: 3 };
-    const mode = MODES[cv.dataset.mode || 'duo'] ?? 3;
-    // все режимы, кроме исходного тёмного, — полупрозрачный слой поверх градиента подложки
-    const gl = cv.getContext('webgl', { alpha: mode !== 0, antialias: false, premultipliedAlpha: true });
-    if (!gl) return;
-    const compile = (type: number, src: string) => {
-      const sh = gl.createShader(type)!;
-      gl.shaderSource(sh, src);
-      gl.compileShader(sh);
-      return sh;
-    };
-    const prog = gl.createProgram()!;
-    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
-    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
-    gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
-    gl.useProgram(prog);
-
-    // один треугольник на весь холст
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-    const aPos = gl.getAttribLocation(prog, 'aPos');
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-    const u = (name: string) => gl.getUniformLocation(prog, name);
-    const d = cv.dataset;
-    gl.uniform3fv(u('uColor'), hexToRgb(d.color || '#7fb8ea'));
-    gl.uniform1f(u('uSpeed'), Number(d.speed) || 5);
-    gl.uniform1f(u('uScale'), Number(d.scale) || 1);
-    gl.uniform1f(u('uNoiseIntensity'), Number(d.noise ?? 1.5));
-    gl.uniform1f(u('uRotation'), Number(d.rotation) || 0);
-    gl.uniform3fv(u('uColor2'), hexToRgb(d.color2 || '#ffffff'));
-    gl.uniform1i(u('uMode'), mode);
-    // сила слоя шёлка: меньше — сильнее просвечивает градиент подложки
-    gl.uniform1f(u('uStrength'), Number(d.strength ?? 1));
-    const uTime = u('uTime');
-
-    let time = 0;
-    let last = 0;
-    let raf = 0;
-    let visible = false;
-
-    const draw = () => {
-      gl.uniform1f(uTime, time);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-    };
-
-    // размер холста — в пикселях экрана (не больше 2×), с учётом автомасштаба страницы
-    const resize = () => {
-      const rect = cv.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const w = Math.round(rect.width * dpr);
-      const h = Math.round(rect.height * dpr);
-      if (cv.width !== w || cv.height !== h) {
-        cv.width = w;
-        cv.height = h;
-        gl.viewport(0, 0, w, h);
-      }
-      draw();
-    };
-
-    // как в оригинале: время растёт на 0,1 в секунду
-    const frame = (now: number) => {
-      raf = 0;
-      if (last) time += 0.1 * Math.min((now - last) / 1000, 0.1);
-      last = now;
-      draw();
-      loop();
-    };
-
-    const loop = () => {
-      const run = visible && !document.hidden && !reduced();
-      if (run && !raf) raf = requestAnimationFrame(frame);
-      if (!run) {
-        if (raf) cancelAnimationFrame(raf);
-        raf = 0;
-        last = 0;
-      }
-    };
-
-    new ResizeObserver(resize).observe(cv);
-    new IntersectionObserver(
-      (entries) => {
-        visible = entries[0].isIntersecting;
-        loop();
-      },
-      { rootMargin: '100px' },
-    ).observe(cv);
-    document.addEventListener('visibilitychange', loop);
-    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', loop);
-    resize();
-  };
-
-  document.querySelectorAll<HTMLCanvasElement>('[data-gv-silk]').forEach(initSilk);
-</script>
