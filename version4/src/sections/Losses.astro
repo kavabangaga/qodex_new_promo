@@ -1177,7 +1177,7 @@ const rows: Row[] = [
     // Правило первого шага из ТЗ
     const firstStep = (ids: ProductId[]): string => {
       if (ids.includes('robot')) return 'бесплатный пилот РО-БОТа на одном районе';
-      if (ids.includes('tonn')) return 'месяц бесплатно после запуска';
+      if (ids.includes('tonn')) return 'демо на реальном объекте, монтаж от 3 дней'; // акции «месяц бесплатно после запуска» у TONN нет (заказчик, 09.10.2026)
       if (ids.includes('kodeks')) return 'неделя бесплатно';
       return 'покажем демо';
     };
