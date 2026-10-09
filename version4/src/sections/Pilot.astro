@@ -41,20 +41,19 @@ const MARKS = [
   { lines: ['дата'], x: 1257, y: 372, w: 126, h: 147, ax: 1358, tx: '-77%', bx: 1320, by: 372 },
 ];
 
-const others: { id: ProductId; first: string; payback: string; need: string; pilot: string }[] = [
+// плашек о бесплатном периоде у TONN и Кодекса ТКО здесь нет (заказчик, 09.10.2026); у РО-БОТа «Бесплатно» остаётся
+const others: { id: ProductId; first: string; payback: string; need: string }[] = [
   {
     id: 'tonn',
     first: 'Акты с фото с первого дня',
     payback: `45${NB}дней — кейс объекта`,
     need: 'Доступ к весовой',
-    pilot: `Монтаж от 3${NB}дней`, // акции «месяц бесплатно после запуска» у TONN нет (заказчик, 09.10.2026)
   },
   {
     id: 'kodeks',
     first: `Подключение за 15${NB}минут`,
     payback: 'Сразу',
     need: 'Ключ доступа к ФГИС',
-    pilot: 'Неделя бесплатно',
   },
 ];
 ---
@@ -181,7 +180,6 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
             <article class="pilot__mini" aria-labelledby={`pilot-${o.id}`} data-reveal style={`--d:${i + 1}`}>
               <h3 class="pilot__product" id={`pilot-${o.id}`}>
                 <ProductLabel id={o.id} />
-                <span class="tag">{o.pilot}</span>
               </h3>
               <dl class="pilot__facts pilot__facts--mini">
                 <div class="pilot__first">
