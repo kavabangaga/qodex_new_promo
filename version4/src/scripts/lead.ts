@@ -17,6 +17,17 @@ export const NAME_MAX = 120;
 export const PHONE_MAX = 40;
 
 /**
+ * Телефон похож на настоящий: российский — 10 цифр или 11 с 7/8 в начале; иностранный (с «+», код не 7) —
+ * от 10 до 15 цифр (международный предел). Иначе в заявку уходили номера вроде 79173500000000000.
+ */
+export function phoneOk(value: string): boolean {
+  const raw = value.trim();
+  const digits = raw.replace(/\D/g, '');
+  if (raw.startsWith('+') && !raw.startsWith('+7')) return digits.length >= 10 && digits.length <= 15;
+  return digits.length === 10 || (digits.length === 11 && /^[78]/.test(digits));
+}
+
+/**
  * Сколько ждать ответа на заявку, мс. nginx сам отвечает 504, если отправщик молчит дольше 30 с (+5 с
  * на соединение), — этот предел на случай, когда до сервера не доходит сама связь: без него запрос
  * висел бы минутами, а окно заявки, пока заявка уходит, не закрывается (LeadModal.astro).
