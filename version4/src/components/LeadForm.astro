@@ -5,6 +5,7 @@
 // Нужна и на страницах продуктов (этап 2).
 import Icon from './Icon.astro';
 import { PRODUCTS, PRODUCT_ORDER, CONTACTS, CONSENT_LABEL, DOC_LINKS, FORM_ENDPOINT } from '../config/site';
+import { NAME_MAX, PHONE_MAX } from '../scripts/lead';
 
 interface Props {
   prefix?: string;
@@ -29,6 +30,7 @@ const id = (s: string) => `${prefix}-${s}`;
         name="name"
         type="text"
         autocomplete="name"
+        maxlength={NAME_MAX}
         required
         aria-describedby={id('name-err')}
       />
@@ -43,6 +45,7 @@ const id = (s: string) => `${prefix}-${s}`;
         type="tel"
         inputmode="tel"
         autocomplete="tel"
+        maxlength={PHONE_MAX}
         required
         aria-describedby={id('phone-err')}
       />
@@ -105,7 +108,7 @@ const id = (s: string) => `${prefix}-${s}`;
     </div>
 
     <p class="lf__fail" data-fail role="alert" hidden>
-      Не получилось отправить заявку. Позвоните <a href={CONTACTS.phoneHref} data-goal="phone_click">{CONTACTS.phone}</a>
+      Не получилось отправить заявку. Позвоните <a href={CONTACTS.phoneHref} data-goal="phone_click">{CONTACTS.phone}</a>{' '}
       или напишите на <a href={CONTACTS.emailHref}>{CONTACTS.email}</a>
     </p>
   </div>
@@ -592,6 +595,7 @@ const id = (s: string) => `${prefix}-${s}`;
   import { CONSENT_EDITION, DOC_LINKS, PRODUCT_ORDER, type ProductId } from '../config/site';
   import { getInterest, setInterest, INTEREST_EVENT } from '../scripts/interest';
   import { goal } from '../scripts/goals';
+  import { LEAD_SETTLED_EVENT, sectionOf, sendLead, toRequest, type Lead } from '../scripts/lead';
 
   const UTM_KEY = 'qodex:utm';
 
@@ -666,6 +670,8 @@ const id = (s: string) => `${prefix}-${s}`;
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      // Enter в поле, пока заявка уходит, не отправляет второе письмо
+      if (form.classList.contains('is-sending')) return;
       fail.hidden = true;
       const results = Object.keys(validators).map(check);
       if (results.includes(false)) {
@@ -681,39 +687,37 @@ const id = (s: string) => `${prefix}-${s}`;
         /* пусто */
       }
       const data = new FormData(form);
-      const payload = {
+      // окно заявки помнит кнопку, которой его открыли (LeadModal.astro); форма в блоке заявки — свой раздел
+      const modal = form.closest<HTMLElement>('[data-lead-modal]');
+      const where = modal ? modal.dataset.opener : sectionOf(form);
+      const lead: Lead = {
         name: String(data.get('name') ?? '').trim(),
         phone: String(data.get('phone') ?? '').trim(),
         interest: PRODUCT_ORDER.filter((pid) => interest.includes(pid)),
-        // заявку с отмеченным Tracker обрабатываем как запрос демо, пилот по нему не обещаем
-        trackerDemo: interest.includes('tracker'),
-        utm,
+        place: [modal ? 'окно заявки' : 'форма на странице', where].filter(Boolean).join(' — '),
         page: location.href,
-        sentAt: new Date().toISOString(),
-        // доказательство согласия (ч. 3 ст. 9 152-ФЗ): галочка отмечена, какая редакция текста и где он лежит;
-        // на стороне приёма заявки к этому добавляется время получения по часам сервера
+        utm,
+        sentAt: new Date(),
+        // доказательство согласия (ч. 3 ст. 9 152-ФЗ): галочка отмечена (без неё сюда не дойти), какая редакция
+        // текста и где он лежит — строкой в письме; время приёма по часам сервера — в заголовках Received письма
         consent: {
-          given: true,
           edition: CONSENT_EDITION.form,
           text: new URL(DOC_LINKS.consent, location.origin).href,
         },
       };
+      // пять полей прежнего отправщика (scripts/lead.ts): продукты, страница, метки и согласие — в comment
+      const request = toRequest(lead);
 
       form.classList.add('is-sending');
       try {
         const endpoint = form.dataset.endpoint;
         if (endpoint) {
-          const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) throw new Error(String(res.status));
+          await sendLead(endpoint, request);
         } else {
           // Адрес отправки ещё не подключён: имитация. ?form=error показывает состояние ошибки.
           await new Promise((r) => setTimeout(r, 900));
           if (new URLSearchParams(location.search).get('form') === 'error') throw new Error('demo');
-          console.info('[QODEX] Заявка (адрес отправки не задан):', payload);
+          console.info('[QODEX] Заявка (адрес отправки не задан):', request);
         }
         // без значений полей формы: данные заявки в Метрику не передаются (согласия, раздел 2 /cookies/)
         goal('form_submit');
@@ -723,6 +727,8 @@ const id = (s: string) => `${prefix}-${s}`;
         fail.hidden = false;
       } finally {
         form.classList.remove('is-sending');
+        // окно заявки показывает ответ, даже если браузер успел закрыть его во время отправки (LeadModal.astro)
+        form.dispatchEvent(new CustomEvent(LEAD_SETTLED_EVENT, { bubbles: true }));
       }
     });
   }

@@ -325,6 +325,12 @@ const {
     background: var(--bg);
   }
 
+  /* пока заявка уходит, окно не закрывается (скрипт ниже) — крестик приглушён */
+  .lm:has(:global(.is-sending)) .lm__close {
+    opacity: 0.5;
+    cursor: progress;
+  }
+
   /* на телефоне кнопка лежит на цветной панели: белое кольцо отделяет синюю рамку фокуса от фона */
   .lm__close:focus-visible {
     box-shadow: 0 0 0 3px #fff;
@@ -399,6 +405,8 @@ const {
 </style>
 
 <script>
+  import { describeOpener, LEAD_SETTLED_EVENT } from '../scripts/lead';
+
   const dlg = document.querySelector<HTMLDialogElement>('[data-lead-modal]');
 
   if (dlg && typeof dlg.showModal === 'function') {
@@ -423,8 +431,13 @@ const {
       dlg.querySelector<HTMLInputElement>('input[name="name"]')?.focus({ preventScroll: true });
     };
 
+    // Пока заявка уходит, окно не закрывается (Esc, крестик, клик по подложке): иначе ответ придёт в закрытое
+    // окно, посетитель не узнает, ушла ли заявка, а при следующем открытии форма сбросится. Навсегда окно так
+    // не застрянет: sendLead (scripts/lead.ts) прекращает ждать ответа через 45 с и показывает ошибку.
+    const sending = () => dlg.querySelector('[data-lead-form]')?.classList.contains('is-sending') ?? false;
+
     const close = () => {
-      if (!dlg.open || closing) return;
+      if (!dlg.open || closing || sending()) return;
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduced) {
         dlg.close();
@@ -440,6 +453,14 @@ const {
     };
 
     dlg.addEventListener('close', () => html.classList.remove('is-modal'));
+    // Chrome закрывает окно и при отменённом cancel, если Esc нажать несколько раз подряд (второй раз отменить
+    // закрытие без клика посетителя нельзя). Если окно так закрылось, пока заявка уходила, — открываем его,
+    // когда пришёл ответ: посетитель увидит, ушла ли заявка, а при ошибке — телефон и почту.
+    dlg.addEventListener(LEAD_SETTLED_EVENT, () => {
+      if (dlg.open) return;
+      dlg.showModal();
+      html.classList.add('is-modal');
+    });
     // Esc — закрываем с анимацией
     dlg.addEventListener('cancel', (e) => {
       e.preventDefault();
@@ -456,6 +477,8 @@ const {
       const link = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[href="#forma"]');
       if (!link || dlg.contains(link)) return;
       e.preventDefault();
+      // какой кнопкой и из какого раздела открыли — уходит с заявкой строкой «Откуда» (LeadForm.astro)
+      if (!dlg.open) dlg.dataset.opener = describeOpener(link);
       open();
     });
   }
