@@ -49,7 +49,7 @@ const id = (s: string) => `${prefix}-${s}`;
         required
         aria-describedby={id('phone-err')}
       />
-      <p class="lf__err" id={id('phone-err')} data-err>Укажите телефон, например +7&nbsp;912&nbsp;345-67-89</p>
+      <p class="lf__err" id={id('phone-err')} data-err>Укажите телефон полностью</p>
     </div>
 
     <fieldset class="lf__field lf__interest">
@@ -595,7 +595,7 @@ const id = (s: string) => `${prefix}-${s}`;
   import { CONSENT_EDITION, DOC_LINKS, PRODUCT_ORDER, type ProductId } from '../config/site';
   import { getInterest, setInterest, INTEREST_EVENT } from '../scripts/interest';
   import { goal } from '../scripts/goals';
-  import { LEAD_SETTLED_EVENT, phoneOk, sectionOf, sendLead, toRequest, type Lead } from '../scripts/lead';
+  import { LEAD_SETTLED_EVENT, attachPhoneMask, phoneOk, sectionOf, sendLead, toRequest, type Lead } from '../scripts/lead';
 
   const UTM_KEY = 'qodex:utm';
 
@@ -617,6 +617,7 @@ const id = (s: string) => `${prefix}-${s}`;
   function setup(form: HTMLFormElement) {
     // дальше проверяет скрипт: ошибки — под полями, а не всплывающие подсказки браузера
     form.noValidate = true;
+    attachPhoneMask(form.elements.namedItem('phone') as HTMLInputElement);
     const boxes = [...form.querySelectorAll<HTMLInputElement>('[data-interest-box]')];
     const all = form.querySelector<HTMLInputElement>('[data-interest-all]')!;
     const fields = form.querySelector<HTMLElement>('[data-lf-fields]')!;
