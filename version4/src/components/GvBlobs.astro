@@ -12,9 +12,12 @@ interface Props {
   orbit?: number;
   /** Множитель скорости: 1 — круг за 30–40 с */
   speed?: number;
+  /** mono — все пятна одного цвета разной глубины (светлое, почти белое, тёмное), как у пресета sky:
+   *  без розовых и голубых пятен на фиолетовом и бирюзовом. Решение заказчика 09.10.2026 по карточкам контактов. */
+  tone?: 'mono';
 }
 
-const { preset, orbit, speed = 2.8 } = Astro.props;
+const { preset, orbit, speed = 2.8, tone } = Astro.props;
 
 // Плавающий градиент: те же пятна, что в --gv-spots пресета (global.css), — центр и размер в % плашки
 // пересчитаны из radial-gradient слоя .gv::before (он выступает на 12% за края). t — секунд на круг.
@@ -53,13 +56,21 @@ const BLOBS: Record<string, Blob[]> = {
     { c: '#6bb1ff', x: 112, y: 93, w: 107, h: 80, t: 40 },
   ],
 };
+// Одноцветные пятна (tone="mono"): те же места и размеры, цвета — из семейства пресета, как у sky
+// (светлый тон сверху, почти белый в середине, глубокий внизу). Пресеты, которых тут нет, остаются как есть.
+const MONO: Record<string, string[]> = {
+  lavender: ['#b89ffa', '#ece4ff', '#7b5cf0'],
+  teal: ['#5ddfd7', '#dcf8f4', '#17a59d'],
+};
+const blobsOf = (preset: string) =>
+  tone === 'mono' && MONO[preset] ? BLOBS[preset].map((b, i) => ({ ...b, c: MONO[preset][i] })) : BLOBS[preset];
 // радиус орбиты задан в % ширины плашки, а translateX считает % от ширины самого пятна — пересчёт
 const ORBIT = orbit ?? 34;
 ---
 
 <span class="gv__blobs" data-gv-blobs aria-hidden="true" style={`--gv-speed:${speed}`}>
   {
-    BLOBS[preset].map((b, i) => (
+    blobsOf(preset).map((b, i) => (
       <i
         style={`--c:${b.c};--x:${b.x}%;--y:${b.y}%;--w:${b.w}%;--h:${b.h}%;--t:${b.t}s;--dl:-${(i * 11) % b.t}s;--dir:${i % 2 ? 'reverse' : 'normal'};--gv-orbit:${+(((ORBIT * (b.o ?? 1)) / b.w) * 100).toFixed(2)}%;z-index:${BLOBS[preset].length - i}`}
       />
