@@ -8,6 +8,7 @@ import Icon from '../components/Icon.astro';
 import { CONTACTS, withBase } from '../config/site';
 import fs from 'node:fs';
 import path from 'node:path';
+import GvBlobs from '../components/GvBlobs.astro';
 
 // Тексты по умолчанию — главная страница; страница продукта передаёт свои.
 interface Props {
@@ -107,7 +108,8 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
 
     <ul class="cc" aria-label="Контакты">
       <li class="cc__item cc__item--person" data-reveal style="--d:1">
-        <a href={CONTACTS.phoneHref} class="cc__card gv gv--sky" data-goal="phone_click">
+        <a href={CONTACTS.phoneHref} class="cc__card gv gv--sky gv--blobs" data-goal="phone_click">
+          <GvBlobs preset="sky" />
           <span class="cc__bars" aria-hidden="true">
             {BARS.map((h) => <i style={`--h:${h}%`} />)}
           </span>
@@ -130,7 +132,8 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
         </a>
       </li>
       <li class="cc__item cc__item--mail" data-reveal>
-        <a href={CONTACTS.emailHref} class="cc__card gv gv--lavender">
+        <a href={CONTACTS.emailHref} class="cc__card gv gv--lavender gv--blobs">
+          <GvBlobs preset="lavender" />
           <span class="cc__label">Почта</span>
           <span class="cc__chips">
             <span class="cc__chip">
@@ -143,11 +146,12 @@ const BARS = [40, 64, 86, 58, 94, 72, 48, 80];
       <li class="cc__item cc__item--tg" data-reveal style="--d:2">
         <a
           href={CONTACTS.telegramHref}
-          class="cc__card gv gv--teal"
+          class="cc__card gv gv--teal gv--blobs"
           target="_blank"
           rel="noopener"
           data-goal="telegram_click"
         >
+          <GvBlobs preset="teal" />
           <span class="cc__label">Telegram</span>
           <span class="cc__chips">
             <span class="cc__chip">

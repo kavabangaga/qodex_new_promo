@@ -4,6 +4,7 @@
 // появляются по очереди; справа, бежевая, — без чего обходится подключение.
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
+import GvBlobs from '../../components/GvBlobs.astro';
 
 const NB = ' ';
 
@@ -25,7 +26,8 @@ const SPARED = ['сложных внедрений', `доработок${NB}1С
 
     <div class="ksv">
       <!-- Что делает сервис: три шага на градиенте -->
-      <article class="ksv__card ksv__ours gv gv--aqua" aria-labelledby="ksv-ours" data-ksv-live data-reveal>
+      <article class="ksv__card ksv__ours gv gv--aqua gv--blobs" aria-labelledby="ksv-ours" data-ksv-live data-reveal>
+        <GvBlobs preset="aqua" />
         <h3 class="ksv__title" id="ksv-ours">Наш сервис:</h3>
         <ol class="ksv__flow bridged">
           {

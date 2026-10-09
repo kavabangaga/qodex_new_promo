@@ -9,6 +9,7 @@
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
 import { withBase } from '../../config/site';
+import GvBlobs from '../../components/GvBlobs.astro';
 
 const NB = '\u00a0';
 
@@ -63,7 +64,8 @@ const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
 
     <div class="nkit-grid" data-nkit data-active="0">
       <!-- Фото въезда на бирюзовой панели: точки узлов и лупа -->
-      <div class="gv gv--aqua nkit-stage" data-reveal data-nkit-stage>
+      <div class="gv gv--aqua gv--blobs nkit-stage" data-reveal data-nkit-stage>
+        <GvBlobs preset="aqua" />
         <div class="nkit-card">
           <div class="nkit-photo">
             <img

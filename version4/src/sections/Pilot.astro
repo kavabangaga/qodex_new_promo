@@ -10,6 +10,7 @@ import SectionIntro from '../components/SectionIntro.astro';
 import ProductLabel from '../components/ProductLabel.astro';
 import Icon, { type IconName } from '../components/Icon.astro';
 import { withBase, type ProductId } from '../config/site';
+import GvBlobs from '../components/GvBlobs.astro';
 
 const NB = ' ';
 
@@ -64,7 +65,7 @@ const others: { id: ProductId; first: string; payback: string; need: string; pil
   </div>
 
   <div class="pilot__stage">
-    <div class="gv gv--aqua pilot__bg" aria-hidden="true"></div>
+    <div class="gv gv--aqua gv--blobs pilot__bg" aria-hidden="true"><GvBlobs preset="aqua" /></div>
 
     <div class="pilot__in">
       <!-- РО-БОТ: белая карточка, как раскрытая вкладка первого экрана Calendly -->

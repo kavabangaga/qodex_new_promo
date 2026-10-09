@@ -8,6 +8,7 @@
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
 import { withBase } from '../../config/site';
+import GvBlobs from '../../components/GvBlobs.astro';
 
 const NB = '\u00a0';
 
@@ -45,7 +46,8 @@ const POINTS: { icon: IconName; text: string }[] = [
       Автоматическая фотофиксация «до» и&nbsp;«после»
     </SectionIntro>
 
-    <div class="gv gv--mint tph__stage" data-tph data-reveal>
+    <div class="gv gv--mint gv--blobs tph__stage" data-tph data-reveal>
+      <GvBlobs preset="mint" />
       <!-- Камеры (если пар кадров несколько): выбранная соединена «каплей» с карточкой кадра -->
       {
         PAIRS.length > 1 && (
@@ -178,7 +180,7 @@ const POINTS: { icon: IconName; text: string }[] = [
     padding-top: clamp(10px, calc(var(--vw) * 3.6), 64px);
   }
 
-  .tph__stage > * {
+  .tph__stage > :not(.gv__blobs) {
     width: min(100%, 1000px);
   }
 

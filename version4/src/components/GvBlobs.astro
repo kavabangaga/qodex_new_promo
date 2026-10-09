@@ -1,0 +1,77 @@
+---
+// Плавающий градиент подложки: пятна пресета (те же, что в --gv-spots в global.css) отдельными мягкими
+// эллипсами медленно ходят по кругу вокруг своих обычных мест. Кладётся первым ребёнком в любую плашку .gv —
+// GradientVisual делает это сам, плашки, собранные классами .gv, добавляют <GvBlobs preset="…" /> вручную
+// и класс gv--blobs (без него под пятнами останутся неподвижные пятна слоя .gv::before).
+// Стили — .gv__blobs в global.css. Только transform (работа видеокарты), вне экрана — пауза,
+// при «уменьшить движение» пятна стоят на своих местах. Решение заказчика 09.10.2026: на всех плашках,
+// вариант «ещё заметнее» (орбита 34% ширины плашки, оборот за 11–14 с).
+interface Props {
+  preset: 'sky' | 'aqua' | 'dusk' | 'mint' | 'lavender' | 'teal';
+  /** Радиус орбиты пятен в % ширины плашки */
+  orbit?: number;
+  /** Множитель скорости: 1 — круг за 30–40 с */
+  speed?: number;
+}
+
+const { preset, orbit, speed = 2.8 } = Astro.props;
+
+// Плавающий градиент: те же пятна, что в --gv-spots пресета (global.css), — центр и размер в % плашки
+// пересчитаны из radial-gradient слоя .gv::before (он выступает на 12% за края). t — секунд на круг.
+// Первое пятно — сверху (z-index), как первый слой в --gv-spots.
+// o — множитель орбиты: пятна над и под плашкой ходят по меньшему кругу, иначе почти уходят за край.
+type Blob = { c: string; x: number; y: number; w: number; h: number; t: number; o?: number };
+const BLOBS: Record<string, Blob[]> = {
+  sky: [
+    { c: '#6bb1ff', x: 50, y: -12, w: 104, h: 78, t: 34, o: 0.75 },
+    { c: '#d3f4f6', x: 50, y: 47.5, w: 125, h: 71, t: 40 },
+    { c: '#133f78', x: 50, y: 112, w: 149, h: 84, t: 30, o: 0.75 },
+  ],
+  aqua: [
+    { c: '#c7dcfb', x: 50, y: -12, w: 96, h: 69, t: 34, o: 0.75 },
+    { c: '#f3eb8f', x: 102, y: 60, w: 78, h: 61, t: 28 },
+    { c: '#7fe3da', x: 6.6, y: 56, w: 104, h: 69, t: 38 },
+  ],
+  dusk: [
+    { c: '#4d7cc6', x: 50, y: -12, w: 125, h: 80, t: 36, o: 0.75 },
+    { c: '#f5b7d3', x: -5.8, y: 65, w: 78, h: 78, t: 30 },
+    { c: '#c3b0fb', x: 112, y: 93, w: 95, h: 87, t: 40 },
+  ],
+  mint: [
+    { c: '#4e8fdf', x: 50, y: -12, w: 125, h: 71, t: 36, o: 0.75 },
+    { c: '#a9e6ef', x: 37.6, y: 60, w: 125, h: 80, t: 30 },
+    { c: '#e9f6c6', x: 50, y: 112, w: 130, h: 74, t: 40, o: 0.75 },
+  ],
+  lavender: [
+    { c: '#b89ffa', x: 50, y: -12, w: 104, h: 78, t: 36, o: 0.75 },
+    { c: '#eb8be7', x: -12, y: 75, w: 87, h: 78, t: 30 },
+    { c: '#6bb1ff', x: 112, y: 99.6, w: 107, h: 80, t: 40 },
+  ],
+  teal: [
+    { c: '#5ddfd7', x: 50, y: -12, w: 104, h: 78, t: 36, o: 0.75 },
+    { c: '#d4c2ff', x: -12, y: 87, w: 87, h: 78, t: 30 },
+    { c: '#6bb1ff', x: 112, y: 93, w: 107, h: 80, t: 40 },
+  ],
+};
+// радиус орбиты задан в % ширины плашки, а translateX считает % от ширины самого пятна — пересчёт
+const ORBIT = orbit ?? 34;
+---
+
+<span class="gv__blobs" data-gv-blobs aria-hidden="true" style={`--gv-speed:${speed}`}>
+  {
+    BLOBS[preset].map((b, i) => (
+      <i
+        style={`--c:${b.c};--x:${b.x}%;--y:${b.y}%;--w:${b.w}%;--h:${b.h}%;--t:${b.t}s;--dl:-${(i * 11) % b.t}s;--dir:${i % 2 ? 'reverse' : 'normal'};--gv-orbit:${+(((ORBIT * (b.o ?? 1)) / b.w) * 100).toFixed(2)}%;z-index:${BLOBS[preset].length - i}`}
+      />
+    ))
+  }
+</span>
+
+<script>
+  // Вне экрана анимацию ставим на паузу, чтобы не тратить видеокарту
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((e) => e.target.classList.toggle('is-paused', !e.isIntersecting)),
+    { rootMargin: '100px' },
+  );
+  document.querySelectorAll('[data-gv-blobs]').forEach((el) => io.observe(el));
+</script>

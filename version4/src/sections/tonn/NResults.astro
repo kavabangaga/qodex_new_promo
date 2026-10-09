@@ -12,6 +12,7 @@
 // «0 дней», «1 дней» по дороге читаются как ошибка, а «1 200» в досчёте не совпало бы с итоговым «1200».
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
+import GvBlobs from '../../components/GvBlobs.astro';
 
 const NB = String.fromCharCode(160); // неразрывный пробел
 
@@ -109,7 +110,8 @@ const DONE: { icon: IconName; text: string }[] = [
         </article>
 
         <!-- −57%: рисунок «до / после» на градиенте mint -->
-        <div class="gv gv--mint nres-vis" data-reveal style="--d:2">
+        <div class="gv gv--mint gv--blobs nres-vis" data-reveal style="--d:2">
+          <GvBlobs preset="mint" />
           <div class="ui nres-chart" data-nres-chart>
             <p class="nres-num nres-num--chart">
               <span class="nres-num__fix" aria-hidden="true">−57<span class="nres-unit nres-unit--pct">%</span></span>

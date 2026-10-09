@@ -5,6 +5,7 @@
 // Нужна и на страницах продуктов (этап 2).
 import ProductLabel from './ProductLabel.astro';
 import { PRODUCTS, type ProductId } from '../config/site';
+import GvBlobs from './GvBlobs.astro';
 
 interface Props {
   client: string;
@@ -69,7 +70,8 @@ const nb = (t: string) =>
     </div>
   </div>
 
-  <div class:list={['story__visual', 'gv', `gv--${preset}`]} aria-hidden="true">
+  <div class:list={['story__visual', 'gv', `gv--${preset}`, 'gv--blobs']} aria-hidden="true">
+    <GvBlobs preset={preset} />
     <div class="gv__stripes"></div>
     <span class="tag tag--demo story__demo">демо-данные</span>
     <slot name="visual" />

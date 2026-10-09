@@ -7,6 +7,7 @@ import StoryCard from '../components/StoryCard.astro';
 import Icon from '../components/Icon.astro';
 import { PRODUCT_ICON } from '../components/ProductLabel.astro';
 import { PRODUCTS, type ProductId } from '../config/site';
+import GvBlobs from '../components/GvBlobs.astro';
 
 const NB = '\u00a0';
 
@@ -78,10 +79,12 @@ const N = STORIES.length;
                     'sc__mini',
                     'gv',
                     `gv--${s.preset}`,
+                    'gv--blobs',
                     { 'is-shown': side === 'prev' ? i === N - 1 : i === 1 },
                   ]}
                   data-mini={i}
                 >
+                  <GvBlobs preset={s.preset} />
                   <span class="sc__mini-card">
                     <span class="sc__mini-prod">
                       <span class:list={['plabel__ico', `p-${s.product}`]}>
@@ -355,6 +358,14 @@ const N = STORIES.length;
     transition-delay: 0s;
   }
 
+  /* в стопке видно только активный слайд — у остальных пятна подложки не двигаем
+     (на узких экранах слайды идут лентой, там паузу ставит наблюдатель видимости) */
+  @media (min-width: 980px) {
+    .sc__slide:not(.is-active) :global(.gv__blobs i) {
+      animation-play-state: paused;
+    }
+  }
+
   .sc__slide.is-leaving {
     transform: translateX(calc(var(--sc-dir, 1) * -36px)) scale(0.985);
   }
@@ -426,6 +437,11 @@ const N = STORIES.length;
 
   .sc__mini.is-shown {
     opacity: 1;
+  }
+
+  /* анонсы стоят стопкой и прозрачны, кроме показанного — у скрытых пятна не двигаем */
+  .sc__mini:not(.is-shown) :global(.gv__blobs i) {
+    animation-play-state: paused;
   }
 
   /* Анонс соседней истории: продукт → крупная цифра результата → клиент */

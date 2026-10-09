@@ -12,6 +12,7 @@
 import SectionIntro from '../../components/SectionIntro.astro';
 import FeatureAccordion, { type AccItem } from '../../components/FeatureAccordion.astro';
 import { withBase } from '../../config/site';
+import GvBlobs from '../../components/GvBlobs.astro';
 
 const NB = String.fromCharCode(160); // неразрывный пробел
 
@@ -83,7 +84,8 @@ const src = (file: string, w: number) => withBase(`/media/robot/${file}-${w}.web
       </div>
 
       <div class="rif__visual" data-reveal style="--d:3">
-        <div class="gv gv--dusk rif__gv">
+        <div class="gv gv--dusk gv--blobs rif__gv">
+          <GvBlobs preset="dusk" />
           <div class="rif-panes" data-panes>
             {
               SCREENS.map((s, i) => (

@@ -5,6 +5,7 @@
 import SectionIntro from '../components/SectionIntro.astro';
 import Icon from '../components/Icon.astro';
 import Logo from '../components/Logo.astro';
+import GvBlobs from '../components/GvBlobs.astro';
 
 const criteria = [
   'Кто фиксирует вывоз',
@@ -54,7 +55,11 @@ const tools: { name: string; qodex?: boolean; values: string[] }[] = [
         {
           tools.map((t) => (
             <article class:list={['cmp__col', { 'cmp__col--qodex': t.qodex }]}>
-              {t.qodex && <div class="gv gv--sky cmp__bg" aria-hidden="true" />}
+              {t.qodex && (
+                <div class="gv gv--sky gv--blobs cmp__bg" aria-hidden="true">
+                  <GvBlobs preset="sky" />
+                </div>
+              )}
               <h3 class="cmp__name">
                 {t.qodex ? (
                   <span class="cmp__logo">

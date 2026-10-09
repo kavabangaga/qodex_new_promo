@@ -6,6 +6,7 @@
 // не листаются: тексты длинные. Все пять панелей есть в HTML, неактивные скрыты классом.
 import SectionIntro from '../../components/SectionIntro.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
+import GvBlobs from '../../components/GvBlobs.astro';
 
 const NB = ' ';
 
@@ -97,7 +98,7 @@ const clients = [
   </div>
 
   <div class="kfe__stage" data-kfe>
-    <div class="gv gv--lavender kfe__bg" aria-hidden="true"></div>
+    <div class="gv gv--lavender gv--blobs kfe__bg" aria-hidden="true"><GvBlobs preset="lavender" /></div>
 
     <div class="kfe__in" data-reveal>
       <div class="kfe__tabs" role="tablist" aria-labelledby="funkcional-title" data-kfe-tabs>

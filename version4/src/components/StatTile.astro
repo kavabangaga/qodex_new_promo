@@ -5,6 +5,7 @@
 // forecast — прогноз: видимая метка «прогноз», плитка с пунктиром и приглушённой цифрой.
 import ProductLabel from './ProductLabel.astro';
 import type { ProductId } from '../config/site';
+import GvBlobs from './GvBlobs.astro';
 
 interface Props {
   /** Знак перед числом: «+», «−», «>». */
@@ -60,7 +61,7 @@ const RIGHT = [52, 80, 46, 96, 64, 88];
   class:list={[
     'stat',
     product && `p-${product}`,
-    feature && ['stat--feature', 'gv', `gv--${preset}`],
+    feature && ['stat--feature', 'gv', `gv--${preset}`, 'gv--blobs'],
     { 'stat--forecast': forecast },
     className,
   ]}
@@ -68,6 +69,7 @@ const RIGHT = [52, 80, 46, 96, 64, 88];
   data-reveal
   {...rest}
 >
+  {feature && <GvBlobs preset={preset} />}
   {
     feature && (
       <div class="gv__bars" aria-hidden="true">
