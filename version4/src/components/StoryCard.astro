@@ -210,4 +210,15 @@ const nb = (t: string) =>
       padding-top: 20px;
     }
   }
+
+  /* Телефон: без иллюстрации — сразу цифра результата и текст (решение заказчика 09.10.2026) */
+  @media (max-width: 719.98px) {
+    .story__visual {
+      display: none;
+    }
+
+    .story__text {
+      padding-top: 8px;
+    }
+  }
 </style>
