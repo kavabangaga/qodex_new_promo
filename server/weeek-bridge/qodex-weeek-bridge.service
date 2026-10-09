@@ -1,0 +1,31 @@
+# Мост «заявка с сайта → карточка в CRM Weeek». Копия: /etc/systemd/system/qodex-weeek-bridge.service
+# Заявку сюда копирует nginx (mirror в location = /api/request vhost'а qodex.tech), письмо шлёт mail.service.
+[Unit]
+Description=QODEX: заявки с сайта в CRM Weeek
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=qodex
+Group=qodex
+EnvironmentFile=/etc/qodex/weeek-bridge.env
+ExecStart=/usr/bin/python3 /opt/qodex-weeek/weeek_bridge.py
+Restart=always
+RestartSec=5
+# очередь заявок — единственное место, куда мосту можно писать
+ReadWritePaths=/var/lib/qodex-weeek
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=yes
+MemoryMax=128M
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
