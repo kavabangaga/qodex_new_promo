@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { SITE, METRIKA_ID, withBase } from '../config/site';
+import { BUILD_ID, NOINDEX_ALL, prodUrl } from '../config/build';
 import { LAYOUT } from '../config/layout';
 
 interface Props {
@@ -13,10 +14,11 @@ interface Props {
 }
 
 const { title = SITE.title, description = SITE.description, jsonLd = [], noindex: hidden = false } = Astro.props;
-const canonical = new URL(Astro.url.pathname, SITE.url).href;
+// canonical — всегда адрес на qodex.tech, и у предварительной версии на GitHub Pages тоже (config/build.ts)
+const canonical = prodUrl(Astro.url.pathname);
 const ogImage = new URL(withBase(SITE.ogImage), Astro.site ?? SITE.url).href;
-// предварительная версия (не на qodex.tech) закрыта от поисковиков
-const noindex = hidden || Astro.site?.hostname !== 'qodex.tech';
+// предварительная версия (PUBLIC_NOINDEX=1 или не qodex.tech) закрыта от поисковиков целиком
+const noindex = hidden || NOINDEX_ALL;
 // версия значка: при замене фавикона увеличьте — браузеры держат старый значок в своём кэше
 const ICON_V = 2;
 ---
@@ -34,6 +36,8 @@ const ICON_V = 2;
     <link rel="icon" href={withBase(`/favicon.svg?v=${ICON_V}`)} type="image/svg+xml" />
     <link rel="apple-touch-icon" href={withBase(`/apple-touch-icon.png?v=${ICON_V}`)} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {/* номер версии на боевом сервере: по нему проверка после выкладки узнаёт свою версию (deploy/ci/smoke.sh) */}
+    {BUILD_ID && <meta name="qodex-build" content={BUILD_ID} />}
     <meta name="theme-color" content="#fcfbf8" />
 
     <meta property="og:type" content="website" />

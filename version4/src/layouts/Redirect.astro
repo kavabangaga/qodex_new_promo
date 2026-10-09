@@ -4,7 +4,7 @@
 // «qodex.tech/documents/user_agreement» в пользовательском соглашении. На прежнем сайте они открывали
 // главную, здесь — сам документ. Статичный хостинг не умеет 301, поэтому meta refresh и видимая ссылка.
 import '../styles/global.css';
-import { SITE } from '../config/site';
+import { prodUrl } from '../config/build';
 
 interface Props {
   /** Куда ведём (путь с учётом подпапки сайта — через withBase). */
@@ -14,7 +14,8 @@ interface Props {
 }
 
 const { to, title } = Astro.props;
-const canonical = new URL(to, SITE.url).href;
+// адрес на qodex.tech и у предварительной версии (без подпапки GitHub Pages)
+const canonical = prodUrl(to);
 ---
 
 <!doctype html>
