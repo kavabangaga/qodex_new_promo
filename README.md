@@ -1,9 +1,11 @@
-# QODEX — сайт qodex.tech (предварительная версия)
+# QODEX — сайт qodex.tech
 
 Сайт QODEX: автоматизация учёта отходов для региональных операторов ТКО.
 Статический сайт на [Astro](https://astro.build), код — в папке `version4/`.
 
-- сайт: https://kavabangaga.github.io/qodex_new_promo/v4/
+- сайт: https://qodex.tech
+- **как проект выкладывается на сервер после push — [`DEPLOY.md`](DEPLOY.md)**
+- превью (закрыто от поисковиков): https://kavabangaga.github.io/qodex_new_promo/v4/
 - описание дизайн-системы и правила страниц — `version4/DESIGN.md`
 
 Прежние версии (`version 2`, `version2_wide`, пробная /v3/) удалены 7 октября 2026 года — они остались в истории git.
