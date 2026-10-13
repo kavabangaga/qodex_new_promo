@@ -34,6 +34,9 @@ class FakeWeeek:
         self.calls = []
         self.fail_next = 0  # столько следующих запросов ответят 500
         self.fail_code = 500
+        self.drop_tags = False  # как будто Weeek не принял теги вместе со сделкой
+        self.tag_objects = False  # как настоящий Weeek: теги в ответе — объекты {id, title, color}
+        self.attached = []  # (сделка, тег), повешенные отдельным запросом
         fake = self
 
         class H(http.server.BaseHTTPRequestHandler):
@@ -69,8 +72,15 @@ class FakeWeeek:
                     return self.send(200, {"success": True, "contact": c})
                 if method == "POST" and self.path.startswith("/crm/contacts/") and self.path.endswith(("/phones", "/emails")):
                     return self.send(200, {"success": True})
+                if method == "POST" and self.path.startswith("/crm/deals/") and self.path.endswith("/tags"):
+                    fake.attached.append((self.path.split("/")[3], body["tag"]))
+                    return self.send(200, {"success": True})
                 if method == "POST" and self.path.startswith("/crm/statuses/") and self.path.endswith("/deals"):
                     d = dict(body, id=f"d{len(fake.deals) + 1}", statusId=self.path.split("/")[3])
+                    if fake.drop_tags:
+                        d.pop("tags", None)
+                    elif fake.tag_objects and "tags" in d:
+                        d = dict(d, tags=[{"id": t, "title": f"t{t}", "color": "#000000"} for t in d["tags"]])
                     fake.deals.append(d)
                     return self.send(200, {"success": True, "deal": d})
                 return self.send(404, {"error": "no route"})
@@ -94,7 +104,8 @@ class BridgeTest(unittest.TestCase):
         self.fake = FakeWeeek()
         self.tmp = tempfile.TemporaryDirectory()
         os.environ.update({"WEEEK_TOKEN": "test-token", "WEEEK_STATUS_ID": "ST-NEW", "WEEEK_BASE": self.fake.url,
-                           "QUEUE_DIR": str(Path(self.tmp.name) / "q"), "WEEEK_ASSIGNEES": "u-1", "LISTEN_PORT": "0"})
+                           "QUEUE_DIR": str(Path(self.tmp.name) / "q"), "WEEEK_ASSIGNEES": "u-1", "LISTEN_PORT": "0",
+                           "WEEEK_PRODUCT_TAGS": "РО-БОТ=109;QODEX Tracker=110;QODEX TONN=111;Кодекс ТКО=112"})
         self.cfg = wb.Config()
         self.queue = wb.Queue(self.cfg.queue)
         self.worker = wb.Worker(self.cfg, self.queue, wb.Weeek(self.cfg))
@@ -207,6 +218,36 @@ class BridgeTest(unittest.TestCase):
         self.fake.fail_next = 5
         self.worker.process_all()
         self.assertEqual(len(list(self.queue.failed.glob("*.json"))), 1)
+
+    def test_products_parsed(self):
+        c = lambda v: "\nЧто интересно: " + v + "\nОткуда: окно заявки\n" + CONSENT
+        self.assertEqual(wb.lead_products(c("не отмечено")), [])
+        self.assertEqual(wb.lead_products(c("Кодекс ТКО, QODEX Tracker")), ["Кодекс ТКО", "QODEX Tracker"])
+        self.assertEqual(wb.lead_products(c("всё вместе — РО-БОТ, QODEX Tracker, QODEX TONN, Кодекс ТКО")),
+                         ["РО-БОТ", "QODEX Tracker", "QODEX TONN", "Кодекс ТКО"])
+        self.assertEqual(wb.lead_products("\n" + CONSENT), [])  # строки нет — тегов нет
+
+    def test_product_tags_on_deal(self):
+        self.run_one(self.lead(comment="\nЧто интересно: QODEX Tracker, Кодекс ТКО\n" + CONSENT))
+        self.assertEqual(self.fake.deals[0]["tags"], [110, 112])
+
+    def test_no_products_no_tags(self):
+        self.run_one(self.lead(comment="\nЧто интересно: не отмечено\n" + CONSENT))
+        self.assertNotIn("tags", self.fake.deals[0])
+
+    def test_all_products_and_unknown_name(self):
+        self.run_one(self.lead(comment="\nЧто интересно: всё вместе — РО-БОТ, QODEX Tracker, QODEX TONN, Кодекс ТКО, Новинка\n" + CONSENT))
+        self.assertEqual(self.fake.deals[0]["tags"], [109, 110, 111, 112])
+
+    def test_tag_objects_in_answer_no_extra_calls(self):
+        self.fake.tag_objects = True
+        self.run_one(self.lead(comment="\nЧто интересно: QODEX Tracker, Кодекс ТКО\n" + CONSENT))
+        self.assertEqual(self.fake.attached, [])
+
+    def test_tags_attached_if_weeek_dropped_them(self):
+        self.fake.drop_tags = True
+        self.run_one(self.lead(comment="\nЧто интересно: QODEX TONN\n" + CONSENT))
+        self.assertEqual(self.fake.attached, [("d1", 111)])
 
     def test_http_endpoint(self):
         wb.Handler.cfg, wb.Handler.queue, wb.Handler.worker = self.cfg, self.queue, self.worker

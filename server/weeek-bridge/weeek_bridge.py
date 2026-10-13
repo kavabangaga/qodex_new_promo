@@ -48,6 +48,7 @@ MAX_BODY = 16 * 1024  # байт, как client_max_body_size у /api/request в
 LIMITS = {"name": 200, "phone": 60, "email": 200, "company": 255, "comment": 6000}
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]+\.[^@\s]{2,}$")
 CONSENT_MARK = "Согласие на обработку персональных данных"
+INTEREST_MARK = "Что интересно:"  # строка формы: «не отмечено», «всё вместе — A, B, …» или «A, B»
 API_TIMEOUT = 15  # секунд на один запрос к Weeek
 BACKOFF = [30, 60, 120, 300, 600, 1800]  # пауза перед повтором; дальше — каждые 30 минут
 
@@ -66,6 +67,12 @@ class Config:
         self.base = env("WEEEK_BASE", "https://api.weeek.net/public/v1").rstrip("/")
         self.assignees = [a.strip() for a in os.environ.get("WEEEK_ASSIGNEES", "").split(",") if a.strip()]
         self.tags = [int(t) for t in os.environ.get("WEEEK_TAGS", "").split(",") if t.strip()]
+        # теги продуктов: «Название продукта на сайте=id тега Weeek» через «;» — вешаются по отметкам «Что интересно»
+        self.product_tags: Dict[str, int] = {}
+        for pair in os.environ.get("WEEEK_PRODUCT_TAGS", "").split(";"):
+            name, _, tag = pair.partition("=")
+            if name.strip() and tag.strip():
+                self.product_tags[name.strip().lower()] = int(tag)
         self.host = os.environ.get("LISTEN_HOST", "127.0.0.1")
         self.port = int(os.environ.get("LISTEN_PORT", "9031"))
         self.queue = Path(env("QUEUE_DIR", "/var/lib/qodex-weeek/queue"))
@@ -189,12 +196,48 @@ class Weeek:
         }
         if self.cfg.assignees:
             body["assignees"] = self.cfg.assignees
-        if self.cfg.tags:
-            body["tags"] = self.cfg.tags
+        tags = deal_tags(lead, self.cfg)
+        if tags:
+            body["tags"] = tags
         deal = self.call("POST", f"/crm/statuses/{self.cfg.status_id}/deals", body).get("deal") or {}
         if not deal.get("id"):
             raise WeeekError(200, "сделка создана без id", retry=False)
+        # если Weeek не принял теги вместе со сделкой — вешаем по одному; ошибка тега сделку не проваливает.
+        # В ответе Weeek теги — объекты {id, title, color}, а не числа
+        present = {t.get("id") if isinstance(t, dict) else t for t in deal.get("tags") or []}
+        for tag in [t for t in tags if t not in present]:
+            try:
+                self.call("POST", f"/crm/deals/{deal['id']}/tags", {"tag": tag})
+            except WeeekError as e:
+                log(f"сделка {deal['id']}: тег {tag} не повешен: {e}")
         return str(deal["id"])
+
+
+def lead_products(comment: str) -> List[str]:
+    """Продукты из строки «Что интересно: …» в comment формы. «не отмечено» — пусто; «всё вместе — A, B» — A и B."""
+    for line in comment.split("\n"):
+        line = line.strip()
+        if not line.startswith(INTEREST_MARK):
+            continue
+        value = line[len(INTEREST_MARK):].strip()
+        if value.lower().startswith("не отмечено"):
+            return []
+        if value.lower().startswith("всё вместе") or value.lower().startswith("все вместе"):
+            value = value.split("—", 1)[1] if "—" in value else ""
+        return [name.strip() for name in value.split(",") if name.strip()]
+    return []
+
+
+def deal_tags(lead: Dict[str, str], cfg: "Config") -> List[int]:
+    """Постоянные теги (WEEEK_TAGS) и теги отмеченных продуктов, без повторов."""
+    tags = list(cfg.tags)
+    for name in lead_products(lead["comment"]):
+        tag = cfg.product_tags.get(name.lower())
+        if tag is None:
+            log(f"продукт «{name}» без тега в WEEEK_PRODUCT_TAGS — пропущен")
+        elif tag not in tags:
+            tags.append(tag)
+    return tags
 
 
 def deal_title(lead: Dict[str, str], prefix: str) -> str:
