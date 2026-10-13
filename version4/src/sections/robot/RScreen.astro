@@ -1,0 +1,132 @@
+---
+// Настоящий экран модуля РО-БОТа под нарисованной сценой раздела модуля: «Новые помещения» в «Модуле 02 ·
+// Объекты» [#obekty] и «Поиск юрлиц» в «Модуле 03 · Юрлица» [#yurlica] (заказчик, 13.10.2026: новые экраны —
+// и в «Интерфейс», и в разделы модулей). Сверху — заголовок и пояснение, ниже снимок 1600×900 целиком,
+// в своих пропорциях, в белой рамке на градиентной плашке цвета модуля, как в «Интерфейсе» (.rif-frame).
+// Плашка собрана классами .gv, а не компонентом GradientVisual: компонент прячет содержимое от скринридера,
+// а у настоящего снимка есть смысловая подпись (alt). Данные на снимке — демо.
+import GvBlobs from '../../components/GvBlobs.astro';
+import { withBase } from '../../config/site';
+
+interface Props {
+  /** имя файла в /media/robot/ без ширины и расширения: ui-premises → ui-premises-1600.webp */
+  file: string;
+  alt: string;
+  title: string;
+  text: string;
+  preset: 'mint' | 'lavender';
+  /** id заголовка — для aria-labelledby */
+  id: string;
+}
+
+const { file, alt, title, text, preset, id } = Astro.props;
+const src = (w: number) => withBase(`/media/robot/${file}-${w}.webp`);
+---
+
+<figure class="rsc" aria-labelledby={id}>
+  <figcaption class="rsc__cap" data-reveal>
+    <h3 class="t-h3 rsc__title" id={id}>{title}</h3>
+    <p class="rsc__text">{text}</p>
+  </figcaption>
+
+  <div class="rsc__visual" data-reveal style="--d:1">
+    <div class={`gv gv--${preset} gv--blobs rsc__gv`}>
+      <GvBlobs preset={preset} />
+      <div class="rsc__frame">
+        <img
+          class="rsc__img"
+          src={src(1600)}
+          srcset={[800, 1600, 2400, 3200].map((w) => `${src(w)} ${w}w`).join(', ')}
+          sizes="(max-width: 620px) calc(100vw - 60px), (max-width: 1199.98px) calc(100vw - 110px), 1000px"
+          width="1600"
+          height="900"
+          alt={`Демо-данные. ${alt}`}
+          loading="lazy"
+          decoding="async"
+          draggable="false"
+        />
+      </div>
+    </div>
+    {/* скринридеру пометку читает начало alt: плашка вне снимка прозвучала бы после него */}
+    <span class="tag tag--demo rsc__demo" aria-hidden="true">демо-данные</span>
+  </div>
+</figure>
+
+<style>
+  .rsc {
+    margin: clamp(56px, calc(var(--vw) * 7), 96px) 0 0;
+  }
+
+  /* заголовок слева, пояснение справа — одной строкой над снимком; уже 900 px — друг под другом */
+  .rsc__cap {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: baseline;
+    gap: 12px clamp(32px, calc(var(--vw) * 4.4), 72px);
+    margin-bottom: clamp(20px, calc(var(--vw) * 2.2), 32px);
+  }
+
+  .rsc__text {
+    max-width: 40em;
+    color: var(--muted);
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .rsc__visual {
+    position: relative;
+  }
+
+  /* верхнее поле выше остальных — в нём плашка «демо-данные» */
+  .rsc__gv {
+    min-height: 0;
+    padding: clamp(14px, calc(var(--vw) * 3), 52px);
+    padding-top: 58px;
+  }
+
+  .rsc__frame {
+    width: min(100%, 1000px);
+    overflow: hidden;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow:
+      0 0 0 8px rgb(255 255 255 / 0.4),
+      var(--shadow-card);
+  }
+
+  .rsc__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .rsc__demo {
+    position: absolute;
+    z-index: 1;
+    top: clamp(14px, calc(var(--vw) * 1.3), 18px);
+    left: clamp(14px, calc(var(--vw) * 1.3), 18px);
+    pointer-events: none;
+  }
+
+  @media (max-width: 899.98px) {
+    .rsc__cap {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 620px) {
+    .rsc__gv {
+      padding: 52px 14px 14px;
+    }
+
+    .rsc__frame {
+      border-radius: 12px;
+      box-shadow:
+        0 0 0 5px rgb(255 255 255 / 0.4),
+        var(--shadow-card);
+    }
+  }
+</style>
